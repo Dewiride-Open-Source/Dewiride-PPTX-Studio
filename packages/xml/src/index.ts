@@ -1,42 +1,107 @@
 /**
  * `@pptx-studio/xml` - byte-preserving XML for OOXML.
  *
- * The tokenizer, `XNode` and the serializer land in sub-phases 0.4-0.6. What is
- * here now is the namespace vocabulary they are written against, because it is
- * the one part of this package that is pure data and cannot be got wrong later
- * without breaking everything above it.
- */
-
-/**
- * Namespace URIs that the tokenizer and serializer treat specially.
+ * A `.pptx` part is XML we must be able to hand back exactly as we received it,
+ * except for the one node someone edited. That is a harder guarantee than any
+ * general-purpose XML library offers, and it is why this package exists:
  *
- * A note that shapes the whole package: Markup Compatibility attributes hold
- * *prefixes*, not URIs - `mc:Ignorable="a14 p14"` and `mc:Choice Requires="a14"`
- * name prefixes declared elsewhere in the document. A serializer that is free to
- * rewrite prefixes (which the DOM spec permits, and which `XMLSerializer` does)
- * silently converts ignorable extension markup into a hard error. That is why
- * this package exists instead of a call to `DOMParser`.
+ *   - `DOMParser`/`XMLSerializer` may rewrite namespace prefixes, and
+ *     `mc:Ignorable` and `mc:Choice/@Requires` hold **prefixes, not URIs**, so
+ *     a rename silently turns ignorable extension markup into a hard error.
+ *     `DOMParser` is also not reliably available in a Web Worker, which is
+ *     where our parsing runs.
+ *   - `@xmldom/xmldom` loses namespaces on `createElementNS` beneath a
+ *     prefixed parent.
+ *   - `fast-xml-parser` guarantees nothing about whitespace, self-closing form
+ *     or quote style.
+ *
+ * As of sub-phase 0.4 this is the tokenizer and the node model. The serializer
+ * and its byte-identical round-trip gate are 0.5; schema-ordered insertion, the
+ * Markup Compatibility walker and the invertible edit operations are 0.6.
+ *
+ * Everything here runs in a browser tab and in a Web Worker. There is no Node.
  */
-export const NS = {
-  /** Bound to the `xml:` prefix implicitly; never declared. */
-  xml: 'http://www.w3.org/XML/1998/namespace',
-  /** The namespace of `xmlns` declarations themselves. */
-  xmlns: 'http://www.w3.org/2000/xmlns/',
-  /** Markup Compatibility and Extensibility (`mc:`). */
-  mc: 'http://schemas.openxmlformats.org/markup-compatibility/2006',
-  /** DrawingML main (`a:`). */
-  a: 'http://schemas.openxmlformats.org/drawingml/2006/main',
-  /** PresentationML main (`p:`). */
-  p: 'http://schemas.openxmlformats.org/presentationml/2006/main',
-  /** Relationship references inside part XML (`r:`). */
-  r: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-} as const;
 
-export type NamespacePrefix = keyof typeof NS;
-export type NamespaceUri = (typeof NS)[NamespacePrefix];
+export { NS, XML_SPACE_PRESERVE, type NamespacePrefix, type NamespaceUri } from './namespaces.js';
 
-/**
- * `xml:space="preserve"`. Any `a:t` carrying leading or trailing whitespace
- * needs this or PowerPoint drops the whitespace on load.
- */
-export const XML_SPACE_PRESERVE = 'preserve';
+export {
+  XmlError,
+  XML_ERROR_CODES,
+  isXmlError,
+  positionOf,
+  type XmlErrorCode,
+  type XmlErrorDetail,
+} from './errors.js';
+
+export {
+  isXmlWhitespace,
+  isNameStartChar,
+  isNameChar,
+  isXmlChar,
+  isXmlCodePoint,
+  isUnpairedSurrogate,
+  normalizeLineEndings,
+  isAllWhitespace,
+} from './chars.js';
+
+export { decodeXmlSource, encodeXmlSource, type XmlEncoding, type XmlSource } from './source.js';
+
+export {
+  decodeReference,
+  decodeCharacterData,
+  normalizeAttributeValue,
+  isLiteralRun,
+} from './references.js';
+
+export {
+  XmlTokenizer,
+  tokenize,
+  checkSpanCoverage,
+  splitQName,
+  type XAttribute,
+  DEFAULT_TOKENIZER_LIMITS,
+  type XmlToken,
+  type XmlTokenType,
+  type XmlTokenizerLimits,
+  type XmlDeclarationToken,
+  type XmlProcessingInstructionToken,
+  type XmlCommentToken,
+  type XmlElementToken,
+  type XmlEndTagToken,
+  type XmlTextToken,
+  type XmlCdataToken,
+  type SpanGap,
+} from './tokenizer.js';
+
+export {
+  parseXml,
+  parseXmlString,
+  sourceOf,
+  startTagOf,
+  childElements,
+  firstChild,
+  attribute,
+  attributeValue,
+  descendantElements,
+  textContent,
+  declaredNamespaces,
+  resolvePrefix,
+  namespaceOf,
+  attributeNamespaceOf,
+  namespaceScope,
+  prefixMap,
+  undeclaredPrefixes,
+  xmlSpace,
+  checkTreeCoverage,
+  DEFAULT_PARSE_LIMITS,
+  type XDocument,
+  type XNode,
+  type XElement,
+  type XText,
+  type XCData,
+  type XComment,
+  type XProcessingInstruction,
+  type XDeclaration,
+  type XmlParseLimits,
+  type CoverageGap,
+} from './xnode.js';

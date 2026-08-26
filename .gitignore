@@ -26,3 +26,6 @@ test-results/
 .idea/
 .DS_Store
 Thumbs.db
+
+# agent instructions - local only, never published
+CLAUDE.md

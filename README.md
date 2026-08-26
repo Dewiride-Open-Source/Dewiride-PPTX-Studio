@@ -7,9 +7,12 @@ themes and have them genuinely cascade, then export a file that still opens in r
 everything you did not touch left byte-for-byte intact.
 
 > **Status: pre-alpha, under active construction.** Nothing is published to npm yet. Sub-phases 0.1
-> (repository skeleton) and 0.2 (ZIP reader, decompression budgets, OPC part-name grammar) are
-> complete. The table below tracks what actually works, and it will not be marked green ahead of
-> the code.
+> (repository skeleton), 0.2 (ZIP reader, decompression budgets, OPC part-name grammar), 0.3 (part
+> store, content types, relationships, ZIP32 writer) and 0.4 (XML tokenizer and node model) are
+> complete: a real deck can be read, its relationship graph walked, every XML part parsed into a
+> tree that remembers exactly where each node came from, and the whole thing written back
+> byte-for-byte. The table below tracks what actually works, and it will not be marked green ahead
+> of the code.
 
 ---
 
@@ -43,8 +46,9 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | -------------------------------------------------- | -------------- |
 | Repository, toolchain, architecture guards         | ✅ 0.1         |
 | OPC container: ZIP reader, budgets, part names     | ✅ 0.2         |
-| OPC container: parts, content types, relationships | ⬜ 0.3         |
-| Byte-preserving XML tokenizer and serializer       | ⬜ 0.4–0.6     |
+| OPC container: parts, content types, relationships | ✅ 0.3         |
+| Byte-preserving XML tokenizer and node model       | ✅ 0.4         |
+| XML serializer, schema order, invertible edits     | ⬜ 0.5–0.6     |
 | Byte-perfect round trip across a 50-deck corpus    | ⬜ Phase 1     |
 | Geometry, fills, strokes, effects                  | ⬜ Phase 2     |
 | Text engine, viewer, fidelity scoreboard           | ⬜ Phase 3     |

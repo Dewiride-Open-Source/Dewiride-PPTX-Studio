@@ -1,6 +1,6 @@
 # ADR 0002 — Reading a ZIP we did not write
 
-- **Status:** Accepted
+- **Status:** Accepted, with one decision corrected by [ADR 0003](0003-the-package.md)
 - **Date:** 2026-08-26
 - **Sub-phase:** 0.2
 
@@ -129,6 +129,11 @@ length ceiling (`X1.5`).
 else is fatal. A media part named `my image.png` is out of spec and completely harmless, and
 failing a whole deck over it would be worse than tolerating it. Everything security-relevant or
 structural is fatal.
+
+> **Corrected in 0.3.** `my image.png` is _not_ harmless: PowerPoint refuses a package containing
+> it outright (`0x808D1001`), as it does for `#` and any non-ASCII byte, while accepting `%20`.
+> The rule and its severity are both kept — reading stays lenient — but the writer now refuses a
+> `M1.6` violation. See ADR 0003.
 
 The cost of that choice is that `[Content_Types].xml` — whose `[` and `]` are not `pchar` — would
 pass as a part name on warnings alone. It is refused explicitly in `partNameFromZipEntry`

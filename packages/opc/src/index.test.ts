@@ -6,12 +6,21 @@ import {
   OPC_NS,
   REL_TYPE,
   ROOT_RELS_PART,
+  zipEntryNameFor,
+  type PartName,
 } from './index.js';
 
 describe('@pptx-studio/opc', () => {
-  it('names the two package-level parts exactly', () => {
+  it('names the two package-level streams exactly, in their own namespaces', () => {
+    // These two constants deliberately live in different namespaces, and the
+    // asymmetry is load-bearing rather than sloppy. `[Content_Types].xml` is a
+    // ZIP entry name because it is not a part at all - nothing types it and
+    // nothing relates to it, so it has no part name. `_rels/.rels` *is* a part,
+    // so it is named the way parts are named, with a leading slash. Conflating
+    // the two is how a lookup silently misses.
     expect(CONTENT_TYPES_PART).toBe('[Content_Types].xml');
-    expect(ROOT_RELS_PART).toBe('_rels/.rels');
+    expect(ROOT_RELS_PART).toBe('/_rels/.rels');
+    expect(zipEntryNameFor(ROOT_RELS_PART as PartName)).toBe('_rels/.rels');
   });
 
   it('distinguishes the package relationship namespace from the officeDocument one', () => {

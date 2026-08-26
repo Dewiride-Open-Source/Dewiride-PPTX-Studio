@@ -397,11 +397,23 @@ export function checkPartNameCollisions(names: readonly string[]): PartNameColli
   return found;
 }
 
-/** The extension of a part name, without the dot, case preserved. Empty when there is none. */
+/**
+ * The extension of a part name, without the dot, case preserved. Empty when
+ * there is none.
+ *
+ * A leading dot still yields an extension: `/_rels/.rels` is `rels`, not the
+ * empty string. That is not a detail - it is how the root relationship part
+ * gets a content type at all. Every package we have measured types it through
+ * `<Default Extension="rels"/>` and none carries an `Override` for it, and a
+ * package where some part has no content type is one PowerPoint refuses to
+ * open. The Unix convention that a dotfile has no extension does not apply to
+ * OPC, where the extension is simply whatever follows the final dot of the
+ * final segment.
+ */
 export function partExtension(name: string): string {
   const base = name.slice(name.lastIndexOf('/') + 1);
   const dot = base.lastIndexOf('.');
-  return dot <= 0 ? '' : base.slice(dot + 1);
+  return dot < 0 ? '' : base.slice(dot + 1);
 }
 
 /** Everything up to and including the last slash: `/ppt/slides/`. */

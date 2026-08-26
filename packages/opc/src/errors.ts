@@ -57,6 +57,42 @@ export const OPC_ERROR_CODES = [
   'ERR_INVALID_PART_NAME',
   /** A relationship target resolves outside the package root. */
   'ERR_TARGET_ESCAPES_PACKAGE',
+
+  // --- 0.3: the package on top of the archive ----------------------------
+
+  /** A package-level XML part is not well-formed enough to read. */
+  'ERR_MALFORMED_XML',
+  /**
+   * The XML declares a DOCTYPE.
+   *
+   * Its own code rather than `ERR_MALFORMED_XML` because this is not a
+   * malformed file, it is a well-formed attack: a DTD is where XXE and the
+   * billion-laughs expansion live. We reject the construct rather than
+   * implementing it safely.
+   */
+  'ERR_DOCTYPE_FORBIDDEN',
+  /** `[Content_Types].xml` or `_rels/.rels` is absent. Neither is optional. */
+  'ERR_MISSING_PACKAGE_PART',
+  /** A part has neither an `Override` nor a `Default` for its extension. */
+  'ERR_MISSING_CONTENT_TYPE',
+  /** Two `Default`s for one extension, or two `Override`s for one part, disagree. */
+  'ERR_CONTENT_TYPE_CONFLICT',
+  /** A content type is not a syntactically valid media type. */
+  'ERR_INVALID_CONTENT_TYPE',
+  /** A relationship `Id` is not an `xsd:ID`, which is to say not an XML `NCName`. */
+  'ERR_INVALID_RELATIONSHIP_ID',
+  /** Two relationships in one `.rels` part share an `Id`. */
+  'ERR_DUPLICATE_RELATIONSHIP_ID',
+  /** An internal relationship target names a part the package does not contain. */
+  'ERR_DANGLING_RELATIONSHIP',
+  /** A relationship targets something no relationship may target - another `.rels` part. */
+  'ERR_INVALID_RELATIONSHIP_TARGET',
+  /** A part was asked for by name and is not in the store. */
+  'ERR_PART_NOT_FOUND',
+  /** A part was added under a name the store already holds. */
+  'ERR_PART_EXISTS',
+  /** The package would need ZIP64 to be written, and this writer emits ZIP32 only. */
+  'ERR_ZIP32_OVERFLOW',
 ] as const;
 
 export type OpcErrorCode = (typeof OPC_ERROR_CODES)[number];

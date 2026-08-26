@@ -216,8 +216,16 @@ describe('naming helpers', () => {
     expect(partDirectory('/ppt/slides/slide1.xml')).toBe('/ppt/slides/');
     expect(partExtension('/ppt/media/image1.PNG')).toBe('PNG');
     expect(partExtension('/ppt/fonts/font1.fntdata')).toBe('fntdata');
-    expect(partExtension('/_rels/.rels')).toBe('');
     expect(partExtension('/ppt/noextension')).toBe('');
+  });
+
+  it('treats a leading dot as an extension, because content types depend on it', () => {
+    // `/_rels/.rels` is typed by `<Default Extension="rels"/>` in every package
+    // we have measured, and never by an `Override`. Returning '' here - the
+    // Unix dotfile convention - would leave the root relationship part with no
+    // content type, which is a package PowerPoint refuses to open.
+    expect(partExtension('/_rels/.rels')).toBe('rels');
+    expect(partExtension('/ppt/slides/_rels/slide1.xml.rels')).toBe('rels');
   });
 
   it('derives the relationship part for a part', () => {
