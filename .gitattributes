@@ -1,0 +1,21 @@
+* text=auto eol=lf
+
+# Fixture decks and reference images are binary; never let a checkout mangle
+# them. Byte fidelity is the product.
+*.pptx binary
+*.potx binary
+*.thmx binary
+*.ttf  binary
+*.otf  binary
+*.woff binary
+*.woff2 binary
+*.fntdata binary
+*.emf  binary
+*.wmf  binary
+*.png  binary
+*.jpg  binary
+*.gif  binary
+*.tif  binary
+*.bin  binary
+
+pnpm-lock.yaml -diff linguist-generated=true

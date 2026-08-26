@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Actions are pinned to commit SHAs, not tags. A tag is mutable; a compromised
+# upstream can move v4 and every workflow that references it runs new code.
+env:
+  # Determinism beats freshness in CI: a package published in the last day has
+  # not had time to be caught, and a lockfile-driven install should not be
+  # resolving anything anyway.
+  CI: 'true'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Cheapest first, and the one that fails most usefully: a layering
+      # violation is a design problem, not a typo, and there is no point
+      # spending four minutes on Chromium to find out afterwards.
+      - name: Layering
+        run: pnpm layering
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      - name: Package QA (publint + are-the-types-wrong)
+        run: pnpm pkg:qa
+
+      # The core suite runs in real Chromium, not jsdom. Under jsdom a `node:*`
+      # import resolves and the leak stays invisible until a user opens a tab.
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Test
+        run: pnpm test

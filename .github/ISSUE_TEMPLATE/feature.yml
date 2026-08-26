@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose something new.
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please read [SCOPE.md](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/SCOPE.md)
+        first. Several things are omitted by design, with reasons.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that you currently cannot?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: What it costs
+      description: >
+        The contextual toolbar is capped at seven controls. If this needs UI, what does it replace?
+        If it needs to write markup we do not currently write, what is the export risk?

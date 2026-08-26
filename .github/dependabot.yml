@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # Actions are pinned to SHAs, which means they cannot be updated by hand
+  # without looking them up. Dependabot resolves the SHA and keeps the version
+  # comment in step.
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: 'chore(ci)'
+
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps)'
+    groups:
+      # One PR per toolchain, so a lint bump and a test bump are not two
+      # separate rounds of the same CI run.
+      lint:
+        patterns: ['eslint*', '@eslint/*', 'typescript-eslint', '@typescript-eslint/*', 'prettier*']
+      test:
+        patterns: ['vitest', '@vitest/*', 'playwright', '@playwright/*']
+      build:
+        patterns: ['tsdown', 'turbo', 'typescript', 'publint', '@arethetypeswrong/*']

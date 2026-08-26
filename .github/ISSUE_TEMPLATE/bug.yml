@@ -1,0 +1,47 @@
+name: Bug report
+description: Something is broken that is not a rendering difference.
+labels: ['bug']
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: dropdown
+    id: repair
+    attributes:
+      label: If this involves export - does PowerPoint offer to repair the file?
+      description: >
+        PowerPoint writes no diagnostic log when it rejects a file, so this single yes/no is often
+        the most informative thing in the whole report.
+      options:
+        - 'Not an export issue'
+        - 'No repair prompt'
+        - 'Yes, PowerPoint offers to repair it'
+        - 'Yes, and repairing loses content'
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: 'Chrome 141, Windows 11'

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    // tools/ is executed directly by Node's native type stripper (Node >= 22.18
+    // strips types with no flag and no loader), so relative imports carry
+    // explicit .ts extensions. This is why tsconfig.base sets
+    // `erasableSyntaxOnly` — enums and parameter properties would not strip.
+    "allowImportingTsExtensions": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["**/node_modules/**"]
+}

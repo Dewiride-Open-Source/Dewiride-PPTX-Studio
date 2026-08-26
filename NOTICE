@@ -1,0 +1,27 @@
+PPTX Studio
+Copyright 2026 Dewiride Technologies
+
+This product includes software developed at Dewiride Technologies
+(https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio).
+
+--------------------------------------------------------------------------------
+Third-party material redistributed in this repository
+--------------------------------------------------------------------------------
+
+Nothing yet. Entries are added here at the moment the material lands, not at
+release time. Attributions the plan already commits us to, listed so the
+obligation is visible before the code arrives:
+
+  * Preset shape geometry (sub-phase 2.1) is transcoded at build time from
+    Apache POI's `presetShapeDefinitions.xml`.
+      Apache POI - Copyright The Apache Software Foundation - Apache-2.0
+
+  * Pattern fill tiles (sub-phase 2.7) are generated from Mono libgdiplus.
+      libgdiplus - Copyright Novell, Inc. and contributors - MIT
+
+  * Metric-compatible substitute fonts ship in a separate package,
+    @pptx-studio/fonts-metric-compat, under SIL OFL 1.1 with its own
+    OFL.txt and reserved-font-name handling. They are deliberately kept out
+    of this Apache-2.0 tree so the licence boundary is a package boundary.
+
+See LEGAL.md for the clean-room record and the reimplementation basis.

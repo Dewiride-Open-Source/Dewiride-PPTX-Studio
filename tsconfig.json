@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    // Deliberately empty. Core packages ship to the browser; if `@types/node`
+    // were visible here, `process.env` and `Buffer` would typecheck cleanly and
+    // only fail at runtime in a tab. Node-side code lives in tools/ and cli/,
+    // which have their own tsconfig.
+    "types": [],
+    // Development-time resolution reads SOURCE, not dist: `pnpm typecheck` and
+    // `pnpm test` never require a build. Publishes read dist — each package's
+    // own tsconfig has no paths, so tsdown treats workspace dependencies as
+    // external instead of inlining their types.
+    "paths": {
+      "@pptx-studio/opc": ["./packages/opc/src/index.ts"],
+      "@pptx-studio/opc/*": ["./packages/opc/src/*"],
+      "@pptx-studio/xml": ["./packages/xml/src/index.ts"],
+      "@pptx-studio/xml/*": ["./packages/xml/src/*"]
+    }
+  },
+  "include": ["./packages/*/src/**/*.ts"],
+  "exclude": ["**/dist/**", "**/node_modules/**"]
+}

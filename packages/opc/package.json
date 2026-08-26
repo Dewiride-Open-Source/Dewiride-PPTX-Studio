@@ -1,0 +1,52 @@
+{
+  "name": "@pptx-studio/opc",
+  "version": "0.0.0",
+  "description": "OPC container reader and writer for PPTX: ZIP, parts, content types, relationships",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio.git",
+    "directory": "packages/opc"
+  },
+  "homepage": "https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/tree/main/packages/opc#readme",
+  "bugs": "https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/issues",
+  "keywords": [
+    "pptx",
+    "ooxml",
+    "opc",
+    "office-open-xml",
+    "powerpoint"
+  ],
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "pkg:qa": "publint --strict && attw --pack . --profile esm-only"
+  },
+  "dependencies": {
+    "fflate": "catalog:"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "publint": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

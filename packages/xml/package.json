@@ -1,0 +1,50 @@
+{
+  "name": "@pptx-studio/xml",
+  "version": "0.0.0",
+  "description": "Byte-preserving XML tokenizer and serializer for OOXML",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio.git",
+    "directory": "packages/xml"
+  },
+  "homepage": "https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/tree/main/packages/xml#readme",
+  "bugs": "https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/issues",
+  "keywords": [
+    "xml",
+    "ooxml",
+    "tokenizer",
+    "serializer",
+    "office-open-xml"
+  ],
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "pkg:qa": "publint --strict && attw --pack . --profile esm-only"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "publint": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Scope question
+    url: https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/SCOPE.md
+    about: Before requesting a feature, check what this project deliberately does not do.
+  - name: Security vulnerability
+    url: https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/security/advisories/new
+    about: Report privately. Please do not open a public issue.

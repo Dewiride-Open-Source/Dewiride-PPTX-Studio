@@ -1,0 +1,56 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# --- supply chain -----------------------------------------------------------
+# pnpm 11 defaults, restated explicitly so a future default change is visible
+# in the diff rather than silent. See docs/adr/0001-toolchain.md.
+minimumReleaseAge: 1440
+blockExoticSubdeps: true
+verifyDepsBeforeRun: install
+
+# Postinstall scripts are deny-by-default in pnpm 11. Every entry below is an
+# explicit, reviewed decision. Do not add one without saying why.
+allowBuilds:
+  # Playwright downloads the Chromium build that our core test suite runs in.
+  '@vitest/browser-playwright': true
+  playwright: true
+  esbuild: true
+
+# --- shared versions --------------------------------------------------------
+# Nothing in packages/ or tools/ pins a shared version itself; everything says
+# `catalog:`. The protocol is rewritten to a concrete range on publish/pack.
+catalog:
+  # runtime
+  fflate: ^0.8.3
+
+  # language + build
+  typescript: 6.0.3
+  tsdown: 0.22.14
+  turbo: 2.10.11
+
+  # lint + format
+  eslint: 10.9.1
+  '@eslint/js': ^10.0.1
+  globals: ^17.11.0
+  typescript-eslint: 8.68.0
+  '@typescript-eslint/parser': 8.68.0
+  eslint-config-prettier: 10.1.8
+  prettier: 3.9.6
+
+  # test
+  vitest: 4.1.11
+  '@vitest/browser-playwright': 4.1.11
+  '@vitest/coverage-v8': 4.1.11
+  playwright: 1.62.1
+
+  # package QA + release
+  publint: 0.3.24
+  '@arethetypeswrong/cli': 0.18.5
+  '@changesets/cli': 3.0.1
+
+  # tooling
+  yaml: ^2.9.0
+
+  # types
+  '@types/node': ^26.3.0

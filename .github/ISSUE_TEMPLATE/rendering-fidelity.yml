@@ -1,0 +1,51 @@
+name: Rendering difference
+description: Something renders differently here than it does in PowerPoint.
+labels: ['fidelity']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        These are the most valuable issues this project receives. A screenshot pair plus the deck
+        that produced it is usually enough to fix one.
+  - type: textarea
+    id: what
+    attributes:
+      label: What renders wrongly
+      description: One sentence, then the detail.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Side by side
+      description: PowerPoint on one side, PPTX Studio on the other. Paste images directly.
+    validations:
+      required: true
+  - type: input
+    id: deck
+    attributes:
+      label: Minimal deck
+      description: >
+        A deck with just the offending element, if you can make one. If the original is
+        confidential, please do not attach it - a reproduction is worth more to us anyway.
+  - type: input
+    id: powerpoint-version
+    attributes:
+      label: PowerPoint version used for the comparison
+      placeholder: 'Microsoft 365, 16.0.20326.20100, Windows 11'
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area, if you know it
+      options:
+        - Geometry / shapes
+        - Fills, gradients, patterns
+        - Lines, arrowheads, effects
+        - Text layout / line breaking
+        - Fonts / substitution
+        - Layouts, masters, themes
+        - Tables
+        - SmartArt
+        - Charts
+        - Images / media
+        - Not sure

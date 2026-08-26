@@ -1,0 +1,55 @@
+{
+  "name": "dewiride-pptx-studio",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Open-source web PowerPoint renderer and layout-aware editor",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio.git"
+  },
+  "packageManager": "pnpm@11.6.0",
+  "engines": {
+    "node": ">=24.11.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tools/tsconfig.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "layering": "node tools/layering/check-layering.ts",
+    "pkg:qa": "turbo run pkg:qa",
+    "check": "pnpm layering && pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm pkg:qa && pnpm test",
+    "changeset": "changeset",
+    "version-packages": "changeset version && pnpm install --lockfile-only",
+    "browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "@changesets/cli": "catalog:",
+    "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
+    "@typescript-eslint/parser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "globals": "catalog:",
+    "playwright": "catalog:",
+    "prettier": "catalog:",
+    "publint": "catalog:",
+    "tsdown": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:",
+    "yaml": "catalog:"
+  }
+}
