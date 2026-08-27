@@ -37,6 +37,7 @@ const DEEP_IMPORT_MESSAGE =
 const BROWSER_PACKAGES = [
   'opc',
   'xml',
+  'census',
   'fonts-metric-compat',
   'geometry',
   'paint',
@@ -81,7 +82,11 @@ export default tseslint.config(
           // They are typechecked separately by tsconfig.node.json - which is
           // deliberately not named tsconfig.json, so the service does not find
           // it and then report the same file as belonging to two projects.
-          allowDefaultProject: ['vitest.config.ts', 'packages/*/tsdown.config.ts'],
+          allowDefaultProject: [
+            'vitest.config.ts',
+            'packages/*/tsdown.config.ts',
+            'apps/*/tsdown.config.ts',
+          ],
         },
         tsconfigRootDir: import.meta.dirname,
       },

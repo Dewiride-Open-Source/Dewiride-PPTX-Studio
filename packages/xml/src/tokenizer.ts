@@ -101,10 +101,12 @@ export interface XAttribute {
    */
   value: string;
   /**
-   * Set by sub-phase 0.6 when the value no longer matches the source.
+   * Set by `markAttributeDirty` when the value no longer matches the source.
    *
    * While it is false the attribute re-emits by slicing `[start, end)`, which
-   * keeps its original spacing and quote character.
+   * keeps its original spacing and quote character. Setting it by hand without
+   * marking the owning element is a silent no-op - the element would still be
+   * clean and would re-emit the whole start tag as a slice.
    */
   dirty: boolean;
 }

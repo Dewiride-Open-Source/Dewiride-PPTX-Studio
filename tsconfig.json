@@ -14,6 +14,8 @@
     // own tsconfig has no paths, so tsdown treats workspace dependencies as
     // external instead of inlining their types.
     "paths": {
+      "@pptx-studio/census": ["./packages/census/src/index.ts"],
+      "@pptx-studio/census/*": ["./packages/census/src/*"],
       "@pptx-studio/opc": ["./packages/opc/src/index.ts"],
       "@pptx-studio/opc/*": ["./packages/opc/src/*"],
       "@pptx-studio/xml": ["./packages/xml/src/index.ts"],
@@ -21,5 +23,7 @@
     }
   },
   "include": ["./packages/*/src/**/*.ts"],
-  "exclude": ["**/dist/**", "**/node_modules/**"]
+  // `cli` is the one Node package. It is typechecked by tsconfig.cli.json,
+  // which gives it @types/node and takes the DOM lib away.
+  "exclude": ["**/dist/**", "**/node_modules/**", "./packages/cli/**"]
 }

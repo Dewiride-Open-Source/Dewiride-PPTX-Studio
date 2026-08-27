@@ -15,9 +15,10 @@
  *   - `fast-xml-parser` guarantees nothing about whitespace, self-closing form
  *     or quote style.
  *
- * As of sub-phase 0.4 this is the tokenizer and the node model. The serializer
- * and its byte-identical round-trip gate are 0.5; schema-ordered insertion, the
- * Markup Compatibility walker and the invertible edit operations are 0.6.
+ * As of sub-phase 0.6 this is the tokenizer, the node model, the serializer and
+ * the round-trip gate that holds them together, plus schema-ordered insertion,
+ * the Markup Compatibility walker, `extLst` as an opaque list, and edits that
+ * each carry their exact inverse.
  *
  * Everything here runs in a browser tab and in a Web Worker. There is no Node.
  */
@@ -51,6 +52,8 @@ export {
   decodeCharacterData,
   normalizeAttributeValue,
   isLiteralRun,
+  escapeText,
+  escapeAttributeValue,
 } from './references.js';
 
 export {
@@ -89,9 +92,13 @@ export {
   namespaceOf,
   attributeNamespaceOf,
   namespaceScope,
+  prefixFor,
   prefixMap,
   undeclaredPrefixes,
   xmlSpace,
+  markDirty,
+  markAttributeDirty,
+  checkDirtyInvariant,
   checkTreeCoverage,
   DEFAULT_PARSE_LIMITS,
   type XDocument,
@@ -105,3 +112,58 @@ export {
   type XmlParseLimits,
   type CoverageGap,
 } from './xnode.js';
+
+export { serializeXmlString, serializeXml, serializeNode } from './serialize.js';
+
+export { checkRoundTrip, type RoundTripDifference } from './roundtrip.js';
+
+export {
+  qualifiedKey,
+  elementKey,
+  childRanks,
+  childRank,
+  insertionIndex,
+  outOfOrderChildren,
+  SCHEMA_SOURCES,
+} from './schema-order.js';
+
+export {
+  MC_ALTERNATE_CONTENT,
+  MC_CHOICE,
+  MC_FALLBACK,
+  isAlternateContent,
+  ignorableNamespaces,
+  mustUnderstandNamespaces,
+  processContentNames,
+  selectAlternateContent,
+  effectiveChildren,
+  effectiveAttributes,
+  checkMarkupCompatibility,
+  boundNamespaces,
+  type McProblem,
+} from './mce.js';
+
+export {
+  newAttribute,
+  newElement,
+  newText,
+  applyEdit,
+  applyEdits,
+  insertInOrder,
+  type XmlEdit,
+  type DirtyRestore,
+  type SetAttributeEdit,
+  type AddAttributeEdit,
+  type RemoveAttributeEdit,
+  type InsertChildEdit,
+  type RemoveChildEdit,
+  type SetValueEdit,
+} from './edit.js';
+
+export {
+  extensionList,
+  extensions,
+  findExtension,
+  planAddExtension,
+  planRemoveExtension,
+} from './ext-lst.js';

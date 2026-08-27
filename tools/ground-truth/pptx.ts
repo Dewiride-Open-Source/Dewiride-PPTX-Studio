@@ -1,0 +1,399 @@
+/**
+ * Build a minimal PresentationML package by hand.
+ *
+ * Experiments B and C both need a deck that says exactly what we tell it to
+ * say. Authoring one through PowerPoint's object model is no good for either:
+ * COM cannot express `lumMod` on a fill, and it certainly cannot embed a font
+ * we built ourselves. So we write the XML.
+ *
+ * That makes this the first `.pptx` the project has ever *written*, which is
+ * worth stating plainly: if PowerPoint opens these without a repair prompt,
+ * that is early evidence for the writer in Phase 1.3, and if it does not, we
+ * have found out in sub-phase 0.7 rather than in Phase 1.
+ *
+ * The theme here is ours: the Office 2013 colour values, which are the ones
+ * every real deck's `accent1` is near, but authored fresh rather than copied
+ * out of a Microsoft template. Nothing Microsoft-authored is committed.
+ */
+
+import { writeZip, type ZipEntry } from './zip.ts';
+
+export const EMU_PER_INCH = 914400;
+export const SLIDE_WIDTH = 12192000; // 13.333in - 16:9
+export const SLIDE_HEIGHT = 6858000; // 7.5in
+
+const NS_P = 'http://schemas.openxmlformats.org/presentationml/2006/main';
+const NS_A = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+const NS_CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
+const NS_REL = 'http://schemas.openxmlformats.org/package/2006/relationships';
+
+const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
+const DECLARATION = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
+
+const NS_DECLS = `xmlns:a="${NS_A}" xmlns:r="${NS_R}" xmlns:p="${NS_P}"`;
+
+/** The twelve `a:clrScheme` children, in the only order the schema allows. */
+export const CLR_SCHEME = {
+  dk1: '000000',
+  lt1: 'FFFFFF',
+  dk2: '44546A',
+  lt2: 'E7E6E6',
+  accent1: '4472C4',
+  accent2: 'ED7D31',
+  accent3: 'A5A5A5',
+  accent4: 'FFC000',
+  accent5: '5B9BD5',
+  accent6: '70AD47',
+  hlink: '0563C1',
+  folHlink: '954F72',
+} as const;
+
+function theme(): string {
+  // dk1/lt1 are written as sysClr with @lastClr, exactly as PowerPoint writes
+  // them, because that is the shape a renderer has to cope with: the resolver
+  // prefers @lastClr and only falls back to the system colour name.
+  const scheme = [
+    `<a:dk1><a:sysClr val="windowText" lastClr="${CLR_SCHEME.dk1}"/></a:dk1>`,
+    `<a:lt1><a:sysClr val="window" lastClr="${CLR_SCHEME.lt1}"/></a:lt1>`,
+    `<a:dk2><a:srgbClr val="${CLR_SCHEME.dk2}"/></a:dk2>`,
+    `<a:lt2><a:srgbClr val="${CLR_SCHEME.lt2}"/></a:lt2>`,
+    ...(['accent1', 'accent2', 'accent3', 'accent4', 'accent5', 'accent6'] as const).map(
+      (k) => `<a:${k}><a:srgbClr val="${CLR_SCHEME[k]}"/></a:${k}>`,
+    ),
+    `<a:hlink><a:srgbClr val="${CLR_SCHEME.hlink}"/></a:hlink>`,
+    `<a:folHlink><a:srgbClr val="${CLR_SCHEME.folHlink}"/></a:folHlink>`,
+  ].join('');
+
+  const font = (kind: 'major' | 'minor', latin: string): string =>
+    `<a:${kind}Font><a:latin typeface="${latin}"/><a:ea typeface=""/><a:cs typeface=""/></a:${kind}Font>`;
+
+  // Exactly three entries in each list. PowerPoint is not forgiving about this:
+  // `bgRef/@idx` and `fillRef/@idx` are 1-based indices into these lists and a
+  // short list is an out-of-range reference on the very first slide.
+  const fill = (i: number): string =>
+    i === 0
+      ? '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'
+      : `<a:gradFill rotWithShape="1"><a:gsLst>` +
+        `<a:gs pos="0"><a:schemeClr val="phClr"><a:tint val="${String(60000 - i * 10000)}"/><a:satMod val="120000"/></a:schemeClr></a:gs>` +
+        `<a:gs pos="100000"><a:schemeClr val="phClr"><a:shade val="${String(100000 - i * 20000)}"/></a:schemeClr></a:gs>` +
+        `</a:gsLst><a:lin ang="5400000" scaled="0"/></a:gradFill>`;
+
+  const line = (w: number): string =>
+    `<a:ln w="${String(w)}" cap="flat" cmpd="sng" algn="ctr">` +
+    `<a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:prstDash val="solid"/></a:ln>`;
+
+  return (
+    DECLARATION +
+    `<a:theme xmlns:a="${NS_A}" name="PPTX Studio Ground Truth">` +
+    '<a:themeElements>' +
+    `<a:clrScheme name="Ground Truth">${scheme}</a:clrScheme>` +
+    `<a:fontScheme name="Ground Truth">${font('major', 'Calibri Light')}${font('minor', 'Calibri')}</a:fontScheme>` +
+    '<a:fmtScheme name="Ground Truth">' +
+    `<a:fillStyleLst>${fill(0)}${fill(1)}${fill(2)}</a:fillStyleLst>` +
+    `<a:lnStyleLst>${line(6350)}${line(12700)}${line(19050)}</a:lnStyleLst>` +
+    '<a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle>' +
+    '<a:effectStyle><a:effectLst/></a:effectStyle>' +
+    '<a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst>' +
+    '<a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill>' +
+    '<a:solidFill><a:schemeClr val="phClr"><a:tint val="95000"/></a:schemeClr></a:solidFill>' +
+    '<a:solidFill><a:schemeClr val="phClr"><a:shade val="90000"/></a:schemeClr></a:solidFill>' +
+    '</a:bgFillStyleLst>' +
+    '</a:fmtScheme>' +
+    '</a:themeElements>' +
+    '</a:theme>'
+  );
+}
+
+/** An empty `p:spTree` prologue. `nvGrpSpPr` then `grpSpPr`, always, in that order. */
+function spTreeHead(): string {
+  return (
+    '<p:spTree>' +
+    '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
+    '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/>' +
+    '<a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>'
+  );
+}
+
+function slideMaster(): string {
+  // All twelve clrMap attributes. Eleven is a repair prompt.
+  const clrMap =
+    '<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2"' +
+    ' accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6"' +
+    ' hlink="hlink" folHlink="folHlink"/>';
+  return (
+    DECLARATION +
+    `<p:sldMaster ${NS_DECLS}>` +
+    '<p:cSld><p:bg><p:bgRef idx="1001"><a:schemeClr val="bg1"/></p:bgRef></p:bg>' +
+    spTreeHead() +
+    '</p:spTree></p:cSld>' +
+    clrMap +
+    '<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst>' +
+    '</p:sldMaster>'
+  );
+}
+
+function slideLayout(): string {
+  return (
+    DECLARATION +
+    `<p:sldLayout ${NS_DECLS} type="blank" preserve="1">` +
+    '<p:cSld name="Blank">' +
+    spTreeHead() +
+    '</p:spTree></p:cSld>' +
+    '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>' +
+    '</p:sldLayout>'
+  );
+}
+
+function slide(body: string): string {
+  return (
+    DECLARATION +
+    `<p:sld ${NS_DECLS}>` +
+    '<p:cSld>' +
+    spTreeHead() +
+    body +
+    '</p:spTree></p:cSld>' +
+    '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>' +
+    '</p:sld>'
+  );
+}
+
+function rels(entries: readonly { id: string; type: string; target: string }[]): string {
+  return (
+    DECLARATION +
+    `<Relationships xmlns="${NS_REL}">` +
+    entries
+      .map((e) => `<Relationship Id="${e.id}" Type="${e.type}" Target="${e.target}"/>`)
+      .join('') +
+    '</Relationships>'
+  );
+}
+
+/** One embedded font: the four optional slots, each pointing at a `.fntdata` part. */
+export interface EmbeddedFont {
+  readonly typeface: string;
+  /** 20 hex characters from `OS/2.panose`. */
+  readonly panose: string;
+  readonly pitchFamily: number;
+  /** A **signed** byte. Shift-JIS is `-128`, not `128`. */
+  readonly charset: number;
+  /** `regular` | `bold` | `italic` | `boldItalic` -> the EOT bytes for that slot. */
+  readonly slots: Readonly<
+    Partial<Record<'regular' | 'bold' | 'italic' | 'boldItalic', Uint8Array>>
+  >;
+}
+
+export interface BuildOptions {
+  /** One entry per slide: the children of `p:spTree` after `grpSpPr`. */
+  readonly slides: readonly string[];
+  readonly fonts?: readonly EmbeddedFont[];
+}
+
+export function buildPptx(options: BuildOptions): Uint8Array {
+  const fonts = options.fonts ?? [];
+
+  // ---- presentation.xml.rels: master, then slides, then theme, then fonts ---
+  const presRels: { id: string; type: string; target: string }[] = [];
+  let rid = 0;
+  const nextId = (): string => `rId${String(++rid)}`;
+
+  const masterRid = nextId();
+  presRels.push({
+    id: masterRid,
+    type: `${REL}/slideMaster`,
+    target: 'slideMasters/slideMaster1.xml',
+  });
+
+  const slideRids = options.slides.map((_, i) => {
+    const id = nextId();
+    presRels.push({ id, type: `${REL}/slide`, target: `slides/slide${String(i + 1)}.xml` });
+    return id;
+  });
+
+  const themeRid = nextId();
+  presRels.push({ id: themeRid, type: `${REL}/theme`, target: 'theme/theme1.xml' });
+
+  // ---- font parts -----------------------------------------------------------
+  const fontParts: ZipEntry[] = [];
+  let fontIndex = 0;
+  const embeddedFontXml = fonts
+    .map((font) => {
+      const slots = (['regular', 'bold', 'italic', 'boldItalic'] as const)
+        .map((slot) => {
+          const bytes = font.slots[slot];
+          if (bytes === undefined) return '';
+          fontIndex += 1;
+          const part = `ppt/fonts/font${String(fontIndex)}.fntdata`;
+          fontParts.push({ name: part, bytes });
+          const id = nextId();
+          presRels.push({
+            id,
+            type: `${REL}/font`,
+            target: `fonts/font${String(fontIndex)}.fntdata`,
+          });
+          return `<p:${slot} r:id="${id}"/>`;
+        })
+        .join('');
+      return (
+        '<p:embeddedFont>' +
+        `<p:font typeface="${font.typeface}" panose="${font.panose}"` +
+        ` pitchFamily="${String(font.pitchFamily)}" charset="${String(font.charset)}"/>` +
+        slots +
+        '</p:embeddedFont>'
+      );
+    })
+    .join('');
+
+  // ---- presentation.xml -----------------------------------------------------
+  // CT_Presentation's sequence: sldMasterIdLst, notesMasterIdLst,
+  // handoutMasterIdLst, sldIdLst, sldSz, notesSz, smartTags, embeddedFontLst,
+  // custShowLst, photoAlbum, custDataLst, kinsoku, defaultTextStyle, modifyVerifier,
+  // extLst. `embeddedFontLst` goes after `notesSz`, not at the end.
+  const presentation =
+    DECLARATION +
+    `<p:presentation ${NS_DECLS}` +
+    (fonts.length > 0 ? ' embedTrueTypeFonts="1"' : '') +
+    ' saveSubsetFonts="0">' +
+    `<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="${masterRid}"/></p:sldMasterIdLst>` +
+    '<p:sldIdLst>' +
+    slideRids.map((id, i) => `<p:sldId id="${String(256 + i)}" r:id="${id}"/>`).join('') +
+    '</p:sldIdLst>' +
+    `<p:sldSz cx="${String(SLIDE_WIDTH)}" cy="${String(SLIDE_HEIGHT)}"/>` +
+    '<p:notesSz cx="6858000" cy="9144000"/>' +
+    (embeddedFontXml === '' ? '' : `<p:embeddedFontLst>${embeddedFontXml}</p:embeddedFontLst>`) +
+    '</p:presentation>';
+
+  // ---- content types --------------------------------------------------------
+  const CT = 'application/vnd.openxmlformats-officedocument';
+  const overrides = [
+    { part: '/ppt/presentation.xml', type: `${CT}.presentationml.presentation.main+xml` },
+    { part: '/ppt/slideMasters/slideMaster1.xml', type: `${CT}.presentationml.slideMaster+xml` },
+    { part: '/ppt/slideLayouts/slideLayout1.xml', type: `${CT}.presentationml.slideLayout+xml` },
+    ...options.slides.map((_, i) => ({
+      part: `/ppt/slides/slide${String(i + 1)}.xml`,
+      type: `${CT}.presentationml.slide+xml`,
+    })),
+    { part: '/ppt/theme/theme1.xml', type: `${CT}.theme+xml` },
+  ];
+  const contentTypes =
+    DECLARATION +
+    `<Types xmlns="${NS_CT}">` +
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+    '<Default Extension="xml" ContentType="application/xml"/>' +
+    // Omitting this one is the canonical "PowerPoint found a problem with
+    // content" bug for embedded fonts.
+    (fontParts.length > 0
+      ? '<Default Extension="fntdata" ContentType="application/x-fontdata"/>'
+      : '') +
+    overrides.map((o) => `<Override PartName="${o.part}" ContentType="${o.type}"/>`).join('') +
+    '</Types>';
+
+  const utf8 = (text: string): Uint8Array => new TextEncoder().encode(text);
+
+  // `[Content_Types].xml` first, then `_rels/.rels`, then everything else.
+  const entries: ZipEntry[] = [
+    { name: '[Content_Types].xml', bytes: utf8(contentTypes) },
+    {
+      name: '_rels/.rels',
+      bytes: utf8(
+        rels([{ id: 'rId1', type: `${REL}/officeDocument`, target: 'ppt/presentation.xml' }]),
+      ),
+    },
+    { name: 'ppt/presentation.xml', bytes: utf8(presentation) },
+    { name: 'ppt/_rels/presentation.xml.rels', bytes: utf8(rels(presRels)) },
+    { name: 'ppt/theme/theme1.xml', bytes: utf8(theme()) },
+    { name: 'ppt/slideMasters/slideMaster1.xml', bytes: utf8(slideMaster()) },
+    {
+      name: 'ppt/slideMasters/_rels/slideMaster1.xml.rels',
+      bytes: utf8(
+        rels([
+          { id: 'rId1', type: `${REL}/slideLayout`, target: '../slideLayouts/slideLayout1.xml' },
+          { id: 'rId2', type: `${REL}/theme`, target: '../theme/theme1.xml' },
+        ]),
+      ),
+    },
+    { name: 'ppt/slideLayouts/slideLayout1.xml', bytes: utf8(slideLayout()) },
+    {
+      name: 'ppt/slideLayouts/_rels/slideLayout1.xml.rels',
+      bytes: utf8(
+        rels([
+          { id: 'rId1', type: `${REL}/slideMaster`, target: '../slideMasters/slideMaster1.xml' },
+        ]),
+      ),
+    },
+  ];
+
+  options.slides.forEach((body, i) => {
+    const n = String(i + 1);
+    entries.push({ name: `ppt/slides/slide${n}.xml`, bytes: utf8(slide(body)) });
+    entries.push({
+      name: `ppt/slides/_rels/slide${n}.xml.rels`,
+      bytes: utf8(
+        rels([
+          { id: 'rId1', type: `${REL}/slideLayout`, target: '../slideLayouts/slideLayout1.xml' },
+        ]),
+      ),
+    });
+  });
+
+  entries.push(...fontParts);
+  return writeZip(entries);
+}
+
+/**
+ * Escape text for an XML text node.
+ *
+ * Not optional, and not obvious: PowerPoint's response to a stray `<` in an
+ * `a:t` is to refuse the whole package with "The file or directory is corrupted
+ * and unreadable" - no part name, no line number, no clue that the problem is
+ * one character in one text run.
+ */
+export function escapeText(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** A solid-filled rectangle with no outline, positioned in EMU. */
+export function rect(
+  id: number,
+  name: string,
+  x: number,
+  y: number,
+  cx: number,
+  cy: number,
+  fill: string,
+): string {
+  return (
+    '<p:sp><p:nvSpPr>' +
+    `<p:cNvPr id="${String(id)}" name="${name}"/><p:cNvSpPr/><p:nvPr/>` +
+    '</p:nvSpPr><p:spPr>' +
+    `<a:xfrm><a:off x="${String(x)}" y="${String(y)}"/><a:ext cx="${String(cx)}" cy="${String(cy)}"/></a:xfrm>` +
+    '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>' +
+    `<a:solidFill>${fill}</a:solidFill>` +
+    '<a:ln><a:noFill/></a:ln>' +
+    '</p:spPr></p:sp>'
+  );
+}
+
+/** A text box. `runs` is already-built `a:r` markup. */
+export function textBox(
+  id: number,
+  name: string,
+  x: number,
+  y: number,
+  cx: number,
+  cy: number,
+  runs: string,
+): string {
+  return (
+    '<p:sp><p:nvSpPr>' +
+    `<p:cNvPr id="${String(id)}" name="${name}"/><p:cNvSpPr txBox="1"/><p:nvPr/>` +
+    '</p:nvSpPr><p:spPr>' +
+    `<a:xfrm><a:off x="${String(x)}" y="${String(y)}"/><a:ext cx="${String(cx)}" cy="${String(cy)}"/></a:xfrm>` +
+    '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/>' +
+    '</p:spPr><p:txBody>' +
+    '<a:bodyPr wrap="none" lIns="0" tIns="0" rIns="0" bIns="0"><a:spAutoFit/></a:bodyPr><a:lstStyle/>' +
+    `<a:p>${runs}</a:p>` +
+    '</p:txBody></p:sp>'
+  );
+}

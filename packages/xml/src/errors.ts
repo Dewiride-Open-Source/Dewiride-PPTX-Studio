@@ -81,6 +81,35 @@ export const XML_ERROR_CODES = [
    * count, node count, or the length of a reference body.
    */
   'ERR_LIMIT_EXCEEDED',
+  /**
+   * A Markup Compatibility construct does not hold together.
+   *
+   * An `mc:AlternateContent` with no `mc:Choice`, an `mc:Choice` with no
+   * `Requires`, a `Requires` naming a prefix nothing binds. That last one is
+   * why this code exists rather than a boolean: `Requires` holds prefixes, and
+   * treating an unresolvable one as merely unsupported would silently select a
+   * different branch of the document.
+   */
+  'ERR_INVALID_MCE',
+  /**
+   * The schema does not place this child inside this parent.
+   *
+   * Either the parent's content model is `xsd:any` - an `extLst` entry, or a
+   * `graphicData` payload, both of which the plan forbids us to rebuild - or
+   * the child is not one of the names the parent admits. Refusing is the point:
+   * OOXML complex types are `xsd:sequence`, and PowerPoint answers a misplaced
+   * child with "found a problem" and no further detail.
+   */
+  'ERR_SCHEMA_ORDER',
+  /**
+   * An edit was asked for that cannot be performed as described.
+   *
+   * Removing a node that is not where the caller says it is, adding a second
+   * attribute of the same name, inserting an element into content that carries
+   * significant text. Each of these would produce a tree that serializes to
+   * something no one intended.
+   */
+  'ERR_INVALID_EDIT',
 ] as const;
 
 export type XmlErrorCode = (typeof XML_ERROR_CODES)[number];

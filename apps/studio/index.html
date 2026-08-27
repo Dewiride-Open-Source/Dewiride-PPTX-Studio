@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PPTX Studio — inspect</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --ink: #16181d;
+        --dim: #5d636e;
+        --line: #d9dde4;
+        --bg: #fbfcfd;
+        --panel: #ffffff;
+        --accent: #2f5bd0;
+        --warn: #9a5b00;
+        --bad: #a11b1b;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #e6e9ef;
+          --dim: #99a1af;
+          --line: #2a2f38;
+          --bg: #14161a;
+          --panel: #1b1e24;
+          --accent: #7ea2ff;
+          --warn: #e0a35a;
+          --bad: #ff8080;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 2rem 1.5rem 6rem;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.55 ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
+      }
+      main {
+        max-width: 68rem;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 1.35rem;
+        margin: 0 0 0.25rem;
+      }
+      h1 span {
+        color: var(--dim);
+        font-weight: 400;
+      }
+      p.lead {
+        color: var(--dim);
+        margin: 0 0 1.5rem;
+        max-width: 46rem;
+      }
+      #drop {
+        border: 2px dashed var(--line);
+        border-radius: 12px;
+        padding: 2.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        background: var(--panel);
+        transition: border-color 0.15s ease;
+      }
+      #drop.over,
+      #drop:hover {
+        border-color: var(--accent);
+      }
+      #drop strong {
+        display: block;
+        font-size: 1.05rem;
+      }
+      #drop span {
+        color: var(--dim);
+        font-size: 0.9rem;
+      }
+      #picker {
+        display: none;
+      }
+      #status {
+        margin: 0.9rem 0 0;
+        color: var(--dim);
+        font-variant-numeric: tabular-nums;
+      }
+      #status[data-busy='yes']::after {
+        content: ' …';
+      }
+      h2.file {
+        margin: 2rem 0 0.5rem;
+        font-size: 1.1rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      details.section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        margin: 0.6rem 0;
+        padding: 0.35rem 1rem 0.6rem;
+      }
+      details.section > summary {
+        cursor: pointer;
+        font-weight: 600;
+        padding: 0.5rem 0;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+        gap: 0.75rem;
+        padding: 0.5rem 0 0.75rem;
+      }
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+      }
+      .stat-label {
+        color: var(--dim);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .stat-value {
+        font-size: 1.15rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .stat-hint {
+        color: var(--dim);
+        font-size: 0.78rem;
+      }
+      .scroll {
+        overflow-x: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.85rem;
+        font-variant-numeric: tabular-nums;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.28rem 0.6rem 0.28rem 0;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      th {
+        color: var(--dim);
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      td.num {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      p.note {
+        color: var(--dim);
+        font-size: 0.85rem;
+      }
+      footer {
+        max-width: 68rem;
+        margin: 3rem auto 0;
+        color: var(--dim);
+        font-size: 0.82rem;
+      }
+      a {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>PPTX Studio <span>— inspect</span></h1>
+      <p class="lead">
+        Drop a <code>.pptx</code> and read its internals: every part, every content type, the
+        relationship graph, and a census of the features it uses keyed to the phase of the plan that
+        renders each one. Nothing is uploaded. The file is read in a Web Worker in this tab, by the
+        same code <code>pptx-studio inspect</code> runs.
+      </p>
+
+      <div id="drop" role="button" tabindex="0" aria-describedby="status">
+        <strong>Drop a .pptx here</strong>
+        <span>or click to choose one</span>
+      </div>
+      <input id="picker" type="file" accept=".pptx,.potx,.ppsx" />
+      <p id="status" data-busy="no">starting the parse worker</p>
+
+      <div id="output"></div>
+    </main>
+
+    <footer>
+      Pre-alpha. Sub-phase 0.8 of
+      <a href="https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio">PPTX Studio</a>, which
+      reads a package and describes it. Rendering starts at phase 2.
+    </footer>
+
+    <script type="module" src="./dist/main.js"></script>
+  </body>
+</html>

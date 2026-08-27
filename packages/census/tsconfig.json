@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": [],
+    // Workspace dependencies resolve to **source**, so linting and editors
+    // never wait for a build. This does not change what is published: tsdown
+    // decides externality from `dependencies` rather than from module
+    // resolution, so sibling types stay as imports in the emitted `.d.ts` and
+    // sibling code stays out of the emitted bundle. Checked, not assumed.
+    "paths": {
+      "@pptx-studio/opc": ["../opc/src/index.ts"],
+      "@pptx-studio/xml": ["../xml/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}

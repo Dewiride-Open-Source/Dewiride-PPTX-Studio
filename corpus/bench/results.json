@@ -1,0 +1,204 @@
+{
+  "recordedAt": "2026-08-27",
+  "note": "Timings from one machine on one day. A record, not a fixture: nothing asserts on them, because a slower laptop is not a regression.",
+  "chromium": "151.0.7922.34",
+  "decks": [
+    {
+      "name": "media-200mb.pptx",
+      "bytes": 197631762,
+      "entries": 1616,
+      "parts": 995,
+      "slides": 300,
+      "inflatedBytes": 201277495,
+      "census": {
+        "runs": 5,
+        "bestMs": 346.8400000035763,
+        "medianMs": 504.1599999964237,
+        "openMs": 107.67500001192093,
+        "inflateMs": 77.15500018000603,
+        "scanMs": 346.2950001358986
+      },
+      "stages": {
+        "xmlParts": 682,
+        "xmlBytes": 4316013,
+        "tokens": 271454,
+        "inflateMs": 55.355000019073486,
+        "decodeMs": 5.105000019073486,
+        "tokenizeMs": 94.71500000357628
+      },
+      "dispatchMs": 1.0450000166893005,
+      "environment": {
+        "hasDOMParser": false,
+        "hasXMLHttpRequest": true,
+        "hasOffscreenCanvas": true,
+        "hasTextDecoderStream": true,
+        "hasMeasureMemory": false,
+        "crossOriginIsolated": true,
+        "hardwareConcurrency": 8,
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36"
+      },
+      "memory": {
+        "beforeBytes": null,
+        "afterBytes": null,
+        "available": false,
+        "note": "performance.measureUserAgentSpecificMemory is not defined here"
+      },
+      "problems": 0,
+      "features": {
+        "shape": 5194,
+        "presetGeom": 4012,
+        "placeholder": 1510,
+        "gradientFill": 1204,
+        "patternFill": 1200,
+        "field": 300,
+        "notesSlide": 300,
+        "picture": 300,
+        "animation": 60,
+        "graphicFrame": 49,
+        "alternateContent": 42,
+        "table": 30,
+        "hyperlink": 25,
+        "comment": 20,
+        "chart": 12,
+        "embeddedPackage": 12,
+        "smartArt": 7,
+        "smartArtDrawing": 7,
+        "section": 6,
+        "customShow": 2,
+        "shadow": 2,
+        "embeddedFont": 1
+      }
+    },
+    {
+      "name": "small.pptx",
+      "bytes": 2070206,
+      "entries": 145,
+      "parts": 93,
+      "slides": 20,
+      "inflatedBytes": 2290247,
+      "census": {
+        "runs": 5,
+        "bestMs": 36.66499999165535,
+        "medianMs": 39.78499999642372,
+        "openMs": 7.66499999165535,
+        "inflateMs": 4.8750001192092896,
+        "scanMs": 13.194999784231186
+      },
+      "stages": {
+        "xmlParts": 69,
+        "xmlBytes": 271944,
+        "tokens": 16664,
+        "inflateMs": 5.235000014305115,
+        "decodeMs": 0.35999998450279236,
+        "tokenizeMs": 12.51000002026558
+      },
+      "dispatchMs": 3.9200000166893005,
+      "environment": {
+        "hasDOMParser": false,
+        "hasXMLHttpRequest": true,
+        "hasOffscreenCanvas": true,
+        "hasTextDecoderStream": true,
+        "hasMeasureMemory": false,
+        "crossOriginIsolated": true,
+        "hardwareConcurrency": 8,
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36"
+      },
+      "memory": {
+        "beforeBytes": null,
+        "afterBytes": null,
+        "available": false,
+        "note": "performance.measureUserAgentSpecificMemory is not defined here"
+      },
+      "problems": 0,
+      "features": {
+        "shape": 280,
+        "presetGeom": 198,
+        "placeholder": 110,
+        "gradientFill": 57,
+        "patternFill": 53,
+        "field": 20,
+        "notesSlide": 20,
+        "picture": 20,
+        "graphicFrame": 9,
+        "animation": 6,
+        "alternateContent": 5,
+        "table": 4,
+        "chart": 3,
+        "embeddedPackage": 3,
+        "section": 3,
+        "customShow": 2,
+        "hyperlink": 2,
+        "shadow": 2,
+        "smartArt": 2,
+        "smartArtDrawing": 2,
+        "comment": 1,
+        "embeddedFont": 1
+      }
+    },
+    {
+      "name": "xml-heavy.pptx",
+      "bytes": 4619410,
+      "entries": 1316,
+      "parts": 695,
+      "slides": 300,
+      "inflatedBytes": 91678713,
+      "census": {
+        "runs": 5,
+        "bestMs": 4808.125,
+        "medianMs": 5138.235000014305,
+        "openMs": 21.65999999642372,
+        "inflateMs": 875.8300000429153,
+        "scanMs": 3900.1399996578693
+      },
+      "stages": {
+        "xmlParts": 682,
+        "xmlBytes": 91225875,
+        "tokens": 5939754,
+        "inflateMs": 807.5499999821186,
+        "decodeMs": 135.9200000166893,
+        "tokenizeMs": 2278.044999986887
+      },
+      "dispatchMs": 1.7950000166893005,
+      "environment": {
+        "hasDOMParser": false,
+        "hasXMLHttpRequest": true,
+        "hasOffscreenCanvas": true,
+        "hasTextDecoderStream": true,
+        "hasMeasureMemory": false,
+        "crossOriginIsolated": true,
+        "hardwareConcurrency": 8,
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36"
+      },
+      "memory": {
+        "beforeBytes": null,
+        "afterBytes": null,
+        "available": false,
+        "note": "performance.measureUserAgentSpecificMemory is not defined here"
+      },
+      "problems": 0,
+      "features": {
+        "shape": 121594,
+        "presetGeom": 120112,
+        "gradientFill": 40004,
+        "patternFill": 40000,
+        "placeholder": 1510,
+        "field": 300,
+        "notesSlide": 300,
+        "animation": 60,
+        "graphicFrame": 49,
+        "alternateContent": 42,
+        "table": 30,
+        "hyperlink": 25,
+        "comment": 20,
+        "chart": 12,
+        "embeddedPackage": 12,
+        "smartArt": 7,
+        "smartArtDrawing": 7,
+        "section": 6,
+        "customShow": 2,
+        "shadow": 2,
+        "embeddedFont": 1
+      }
+    }
+  ]
+}

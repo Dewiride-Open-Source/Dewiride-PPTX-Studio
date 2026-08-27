@@ -5,5 +5,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["vitest.config.ts", "packages/*/tsdown.config.ts"]
+  "include": ["vitest.config.ts", "packages/*/tsdown.config.ts", "apps/*/tsdown.config.ts"]
 }

@@ -4,9 +4,13 @@
   "compilerOptions": {
     "noEmit": true,
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    // No `paths` here on purpose: tsdown reads this config, and a paths block
-    // would make it inline sibling packages' types into the published .d.ts
-    // instead of leaving them as external imports.
+    // No `paths` here because this package depends on no other workspace
+    // package: there is nothing to resolve. Where a package does have workspace
+    // dependencies - `census`, `cli` - its config maps them to **source**, so
+    // that linting and editors never wait for a build. Verified not to change
+    // what is published: tsdown decides externality from `dependencies`, not
+    // from module resolution, so sibling types stay as imports in the emitted
+    // `.d.ts` and sibling code stays out of the emitted bundle.
     "types": []
   },
   "include": ["src/**/*.ts"],

@@ -44,6 +44,11 @@ export const PACKAGES: Readonly<Record<string, PackageSpec>> = {
   },
 
   // Layer 1 — pure computation over OOXML primitives. No document model.
+  census: {
+    layer: 1,
+    runtime: 'browser',
+    role: 'what is inside a package: parts, relationship graph, feature census',
+  },
   geometry: {
     layer: 1,
     runtime: 'browser',

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    // No `types`, and no WebWorker lib: DOM and WebWorker declare the same
+    // globals with different shapes, so a project with both stops compiling.
+    // `worker.ts` names the handful of worker globals it uses itself, which is
+    // narrower and fails loudly if it starts using something else.
+    "types": [],
+    "paths": {
+      "@pptx-studio/census": ["../../packages/census/src/index.ts"],
+      "@pptx-studio/opc": ["../../packages/opc/src/index.ts"],
+      "@pptx-studio/xml": ["../../packages/xml/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/dist/**", "**/node_modules/**"]
+}

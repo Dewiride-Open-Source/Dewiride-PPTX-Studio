@@ -107,8 +107,14 @@ export interface XText extends NodeBase {
   readonly type: 'text';
   /** References expanded, line endings normalized. Not the source text. */
   value: string;
-  /** True if the run is `S` characters only - inter-element formatting. */
-  readonly whitespaceOnly: boolean;
+  /**
+   * True if the run is `S` characters only - inter-element formatting.
+   *
+   * Derived from `value`, and therefore not `readonly`: sub-phase 0.6's
+   * `setValue` maintains it. A derived field that an edit can leave stale is a
+   * bug that shows up somewhere far away from the edit.
+   */
+  whitespaceOnly: boolean;
 }
 
 export interface XCData extends NodeBase {
@@ -364,7 +370,7 @@ export function parseXml(bytes: Uint8Array, limits?: XmlParseLimits): XDocument 
  * The source a node came from.
  *
  * While `node.dirty` is false this *is* the node, byte for byte. Once it is
- * true the slice is stale and sub-phase 0.5's serializer rebuilds instead.
+ * true the slice is stale; use `serializeNode`, which rebuilds instead.
  */
 export function sourceOf(document: XDocument, node: XNode): string {
   return document.source.slice(node.start, node.end);
@@ -427,6 +433,102 @@ export function textContent(element: XElement): string {
     }
   }
   return out;
+}
+
+// -------------------------------------------------------------------- editing
+
+/**
+ * Mark a node as edited, and its ancestors with it.
+ *
+ * This is the whole preservation guarantee in four lines. `dirty` means "the
+ * source span no longer describes me", and it has to travel *up* - an element
+ * whose child was rewritten can no longer be re-emitted as one slice either -
+ * but it must never travel *down* or *sideways*. That asymmetry is what lets a
+ * shape move without disturbing the `p:timing` animation tree or the
+ * `mc:AlternateContent` ink block that shares the slide part with it.
+ *
+ * The walk stops at the first ancestor that is already dirty, which is what
+ * keeps a 60-frame drag from being quadratic in tree depth: the second edit
+ * inside a subtree pays only for the distance to the first one.
+ *
+ * `journal`, when given, collects exactly the nodes this call changed - not the
+ * ones that were dirty already. An edit records that list so that its inverse
+ * can put the flags back, which is what lets undo return a part to its original
+ * bytes rather than to a rebuilt copy of them. See `edit.ts`.
+ */
+export function markDirty(node: XNode, journal?: XNode[]): void {
+  if (!node.dirty) {
+    node.dirty = true;
+    journal?.push(node);
+  }
+  for (let parent = node.parent; parent !== undefined && !parent.dirty; parent = parent.parent) {
+    parent.dirty = true;
+    journal?.push(parent);
+  }
+}
+
+/**
+ * Mark one attribute as edited.
+ *
+ * Separate from {@link markDirty} because an attribute is not a node: it has no
+ * `parent`, so it cannot propagate on its own. Setting `attribute.dirty` by hand
+ * and forgetting the element is a silent no-op - the element would still be
+ * clean, and the serializer would re-emit the whole start tag as a slice,
+ * discarding the edit. {@link checkDirtyInvariant} exists to catch that.
+ */
+export function markAttributeDirty(
+  element: XElement,
+  attribute: XAttribute,
+  journal?: { nodes: XNode[]; attributes: XAttribute[] },
+): void {
+  if (!attribute.dirty) {
+    attribute.dirty = true;
+    journal?.attributes.push(attribute);
+  }
+  markDirty(element, journal?.nodes);
+}
+
+/**
+ * Places where `dirty` has been set without propagating, which the serializer
+ * would silently ignore.
+ *
+ * Returns the same shape as {@link checkTreeCoverage} so a caller can check both
+ * and concatenate. Both describe the same class of failure: a tree that looks
+ * fine and serializes to the wrong bytes.
+ */
+export function checkDirtyInvariant(document: XDocument): CoverageGap[] {
+  const gaps: CoverageGap[] = [];
+  const stack: XNode[] = [...document.children];
+  while (stack.length > 0) {
+    const node = stack.pop()!;
+    if (node.dirty && node.parent !== undefined && !node.parent.dirty) {
+      gaps.push({
+        kind: 'malformed',
+        at: node.start,
+        detail:
+          'a dirty node sits under a clean <' +
+          node.parent.qname +
+          '>, which will re-emit as a slice and discard the edit',
+      });
+    }
+    if (node.type !== 'element') continue;
+    for (const attribute of node.attributes) {
+      if (attribute.dirty && !node.dirty) {
+        gaps.push({
+          kind: 'malformed',
+          at: attribute.start,
+          detail:
+            'attribute "' +
+            attribute.qname +
+            '" is dirty but <' +
+            node.qname +
+            '> is not; use markAttributeDirty',
+        });
+      }
+    }
+    for (const child of node.children) stack.push(child);
+  }
+  return gaps;
 }
 
 // ----------------------------------------------------------------- namespaces
@@ -503,12 +605,46 @@ export function namespaceScope(element: XElement): Map<string, string> {
 }
 
 /**
+ * A prefix already in scope here for this namespace, for writing a new name.
+ *
+ * Nearest binding first, and in document order among an element's own
+ * declarations, so the answer is deterministic on a document that binds one URI
+ * to two prefixes. A non-empty prefix wins over the default: `<p:extLst>` is
+ * what PowerPoint writes and what a reader of the file expects, even where an
+ * unprefixed `<extLst>` under a default-namespace declaration would mean the
+ * same thing.
+ *
+ * `undefined` means nothing in scope binds it, and a caller that wants that
+ * namespace has to declare it - which is an edit, and a decision this function
+ * deliberately does not make on anyone's behalf.
+ */
+export function prefixFor(element: XElement, namespace: string): string | undefined {
+  let fallback: string | undefined;
+  for (let node: XElement | undefined = element; node !== undefined; node = node.parent) {
+    if (!node.hasNamespaceDeclarations) continue;
+    for (const attr of node.attributes) {
+      if (attr.value !== namespace) continue;
+      if (attr.prefix === 'xmlns') return attr.local;
+      if (attr.qname === 'xmlns') fallback ??= '';
+    }
+    if (fallback !== undefined) return fallback;
+  }
+  return undefined;
+}
+
+/**
  * Every prefix the document binds, with the set of URIs each is bound to.
  *
  * A prefix mapping to more than one URI is legal and real, which is why this
- * returns a set rather than a string. Sub-phase 0.5's serializer asserts that
- * this map is unchanged across a round trip - the check that catches a prefix
- * rewrite before it silently disables an `mc:AlternateContent` branch.
+ * returns a set rather than a string.
+ *
+ * `checkRoundTrip` compares this across a round trip - the check that catches a
+ * prefix rewrite before it silently disables an `mc:AlternateContent` branch.
+ * It is not the whole of that check, and on its own it would not be enough: the
+ * declaration map cannot see a rewrite that renames a prefix consistently at
+ * both its binding and its uses, which is exactly the rewrite `XMLSerializer`
+ * is permitted to perform. So the qualified name of every element and attribute
+ * is compared too.
  */
 export function prefixMap(document: XDocument): Map<string, Set<string>> {
   const map = new Map<string, Set<string>>();
@@ -667,6 +803,13 @@ function checkTagInterior(source: string, element: XElement, gaps: CoverageGap[]
  * error" by exactly the margin that matters: an off-by-one in a span raises no
  * error at all, parses every part of every deck happily, and then silently
  * drops a character the first time 0.5 re-serializes from spans.
+ *
+ * **Meaningful only while the tree is clean.** Once anything has been edited,
+ * the spans of the dirty nodes no longer describe the source and are not meant
+ * to; a synthesized node's span is `[0, 0)`. Run this on a freshly parsed
+ * document, or on one whose edits have all been undone - where it is a real
+ * check, because an exact undo restores the spans along with everything else.
+ * `checkRoundTrip` is the instrument for a document with edits standing.
  */
 export function checkTreeCoverage(document: XDocument): CoverageGap[] {
   const gaps: CoverageGap[] = [];

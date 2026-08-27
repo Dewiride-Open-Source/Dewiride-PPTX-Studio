@@ -1,10 +1,10 @@
 # @pptx-studio/xml
 
-A byte-preserving XML tokenizer and node model for OOXML.
+A byte-preserving XML tokenizer, node model, serializer and editor for OOXML.
 
-> **Pre-alpha.** Sub-phase 0.4 has landed the tokenizer and the tree. The serializer and its
-> byte-identical round-trip gate are 0.5; schema-ordered insertion, the Markup Compatibility walker
-> and the invertible edit operations are 0.6.
+> **Pre-alpha.** Sub-phase 0.6 has landed schema-ordered insertion, the Markup Compatibility walker,
+> `extLst` as an opaque list, and edits that each carry their exact inverse, on top of 0.4's
+> tokenizer and tree and 0.5's serializer.
 
 Part of [PPTX Studio](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio). Runs in the
 browser and in a Web Worker; there is no Node build and there never will be.
@@ -23,6 +23,21 @@ for (const el of descendantElements(doc.root)) {
 // Every node knows where it came from. While `dirty` is false, this *is* the node.
 const shape = doc.root.children[0];
 doc.source.slice(shape.start, shape.end); // byte-for-byte what was in the file
+```
+
+And back again:
+
+```ts
+import { parseXml, serializeXml, markAttributeDirty } from '@pptx-studio/xml';
+
+const doc = parseXml(bytes);
+serializeXml(doc); // === bytes, for every part of every deck we have tried
+
+const name = doc.root.attributes.find((a) => a.qname === 'name')!;
+name.value = 'Rectangle 4';
+markAttributeDirty(doc.root, name);
+
+serializeXml(doc); // the same bytes, except those eleven characters
 ```
 
 ## Why not `DOMParser`
@@ -106,6 +121,119 @@ would have passed 0.5's byte-identical gate, surfacing for the first time in 0.6
 
 Across the corpus: 2834 parts, 314 814 tokens, 194 148 elements, 170 019 attributes, **zero** gaps,
 overlaps or byte mismatches.
+
+## What a round trip actually guarantees
+
+Two different claims, and only one of them is about bytes.
+
+|                                                                 |                    |
+| --------------------------------------------------------------- | ------------------ |
+| parse → serialize, nothing edited → **byte-identical**          | 2834 / 2834 (100%) |
+| every node forced dirty → serialize → parse → **same document** | 2834 / 2834 (100%) |
+| every node forced dirty → serialize → **byte-identical**        | 2178 / 2834 (77%)  |
+
+The first row is the headline and it is exact. The third is measured rather than promised, and there
+is exactly one cause: CRLF and LF are the same value after §2.11, so a text node rebuilt from its
+value cannot know which it came from, and 656 parts have a CRLF between the declaration and the root.
+**Every** other part of a full rebuild comes back character for character — every entity reference,
+every quote character, every `<x />` with its space, every `<x></x>` left long.
+
+That third row costs nothing in practice, because `dirty` travels up and never down: a text node is
+rebuilt only when someone edits _that node_, so the whitespace between siblings in a part you did not
+touch is never rebuilt at all.
+
+## Writing a value back is not the same rules read backwards
+
+Four characters are lost outright by a serializer that writes values as it finds them:
+
+| a value containing | written literally, reparses as | by     |
+| ------------------ | ------------------------------ | ------ |
+| text `\r`          | `\n`                           | §2.11  |
+| attribute `\r`     | a space                        | §3.3.3 |
+| attribute `\n`     | a space                        | §3.3.3 |
+| attribute `\t`     | a space                        | §3.3.3 |
+
+So each is written as a character reference. `>` is escaped everywhere although almost nothing
+requires it — measured, the corpus contains **zero** literal `>` inside a value and **five**
+`&gt;`, so escaping it always re-spells nothing while the narrow rule re-spelled all five. Only the
+delimiting quote is escaped, because all 170 019 attributes are double-quoted and 26 carry a
+`&quot;`.
+
+## Editing, and the promise that undo is exact
+
+```ts
+import { applyEdits, insertInOrder, newElement, newAttribute } from '@pptx-studio/xml';
+
+const spPr = firstChild(shape, 'p:spPr')!;
+
+// Where does <a:ln> go inside <a:spPr>? Not the caller's problem.
+const undo = applyEdits([
+  insertInOrder(spPr, newElement('a:ln', [newAttribute('w', '9525')])),
+  { kind: 'setAttribute', element: off, qname: 'x', value: '914400' },
+]);
+
+serializeXml(doc); // the deck, with those two changes and nothing else
+
+applyEdits(undo);
+serializeXml(doc); // === the original bytes. Not "an equivalent document" — the bytes.
+```
+
+That last line is the whole of sub-phase 0.6, and it is harder than it looks. `dirty === false` is
+an invariant, not a hint: it asserts that `source.slice(start, end)` **is** this node's
+serialization. An inverse that restores the value but leaves the flag set gives back the same
+_document_ and different _bytes_ — the subtree is rebuilt rather than sliced, so a `<a:off … />`
+loses its space, a `&#62;` comes back as `>`, and a CRLF between two elements comes back as LF, which
+is 656 of our 2834 parts. So every edit records the flags it set and its inverse clears exactly
+those, never one it did not set.
+
+Measured over the corpus: **194 244 edits applied and undone across 2834 parts, every part
+byte-identical afterwards, no dirty flag left behind.**
+
+Two properties worth knowing before you plan a gesture:
+
+- **A batch is all of it or none of it.** If any edit is refused, the ones that already landed are
+  undone before the error is rethrown. Some refusals are only knowable at apply time, and without
+  this a caller would be left with a half-applied document and no way back.
+- **Removal is addressed by node, insertion by index.** An index is a position at the moment the
+  edit is applied, so two insertions planned against one parent can both compute the same one.
+  Removal has a stable address and uses it.
+
+## Where a new child goes
+
+OOXML complex types are `xsd:sequence`, and PowerPoint answers a misplaced child with "found a
+problem" and nothing more. `insertInOrder` is the only sanctioned way to add one; the table behind
+it is generated from the ECMA-376 Transitional schemas by `tools/schema-codegen`.
+
+It is a **rank**, not a list, and that distinction is load-bearing: `p:spTree` admits `sp`, `grpSp`,
+`graphicFrame`, `cxnSp`, `pic` and `contentPart` under one repeating `xsd:choice`, and their freedom
+to interleave is the z-order of the slide. A new shape lands on top of it; nothing already there
+moves, ever. An `mc:AlternateContent` or a `p14:` element among the children is stepped over rather
+than ranked, so it stays exactly where its producer put it.
+
+It refuses rather than guesses. `a:ext` inside an `extLst`, and `a:graphicData` where a chart lives,
+are `xsd:any` in the schema and get no table at all. Neither does anything in the chart or diagram
+namespaces — deliberately, because those parts are copied byte-for-byte and never rewritten.
+
+Checked against 194 148 real elements written by PowerPoint: **zero** out of order.
+
+## Markup Compatibility, read but never rewritten
+
+```ts
+const branch = selectAlternateContent(alternate, new Set([NS.p, NS.a]));
+for (const child of effectiveChildren(shape, supported)) { … }
+```
+
+`mc:Choice/@Requires` holds **prefixes**, and it is written unprefixed — `<mc:Choice Requires="a14">`
+— which by _Namespaces in XML_ §6.2 puts it in no namespace at all. Look for `mc:Requires` and you
+find nothing in any real file, and a walker that then treats the Choice as requiring nothing selects
+the first branch of every switch in the document.
+
+A prefix that resolves to nothing is a hard error here rather than a namespace we happen not to
+support, because treating it as unsupported would silently select a different branch. An element in
+a namespace nobody declared ignorable is **kept**, not dropped: the specification says the producer
+should have annotated it, and losing content a producer forgot to annotate is the worse failure.
+
+Nothing in this module mutates anything.
 
 ## Hostile input
 

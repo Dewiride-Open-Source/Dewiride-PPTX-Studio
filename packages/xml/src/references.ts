@@ -7,7 +7,7 @@
  * refused with `0x80070570`.
  */
 
-import { isXmlCodePoint } from './chars.js';
+import { isUnpairedSurrogate, isXmlChar, isXmlCodePoint } from './chars.js';
 import { XmlError } from './errors.js';
 
 /** XML 1.0 §4.6. The complete list, because there is no DTD to extend it. */
@@ -223,4 +223,135 @@ export function isLiteralRun(
     if (attribute && (code === 0x09 || code === 0x0a)) return false;
   }
   return true;
+}
+
+// ---------------------------------------------------------------- the inverse
+
+/**
+ * Everything above runs source -> value. A serializer needs value -> source,
+ * and it is not the same set of rules read backwards.
+ *
+ * The requirement is a *right inverse*: whatever we emit must parse back to the
+ * value we were given. Which characters that forces us to escape follows
+ * directly from the two transformations XML mandates, and four of them are
+ * silently lost by the obvious implementation that writes the value out as-is:
+ *
+ * | in a value | written literally, reparses as | because      |
+ * | ---------- | ----------------------------- | ------------ |
+ * | text `\r`  | `\n`                          | §2.11        |
+ * | attr `\r`  | space                         | §3.3.3       |
+ * | attr `\n`  | space                         | §3.3.3       |
+ * | attr `\t`  | space                         | §3.3.3       |
+ *
+ * So those become character references. This is the same asymmetry that makes
+ * `attr('a&#9;b')` differ from `attr('a\tb')` on the way in - it is just that on
+ * the way out, getting it wrong loses data rather than merging two values.
+ *
+ * `>` is the one character where the rule is a judgement call rather than a
+ * requirement, and the corpus settled it against my first guess. Nothing forces
+ * us to escape it except the sequence `]]>`, which XML 1.0 §2.4 forbids in
+ * content - so the narrow rule is to escape it only there, and write a bare `>`
+ * everywhere else. That is what this did first, on the reasoning that a rebuilt
+ * node should be spelled the way its producer spelled it.
+ *
+ * Measured across all 2834 parts, over 22 461 text nodes and 170 019 attribute
+ * values:
+ *
+ * | literal `>` in a value | **0** |
+ * | `&gt;` in a value      | **5** |
+ *
+ * The producers never write a bare `>` inside content at all. So the narrow
+ * rule re-spells five references and gains nothing, and escaping `>`
+ * unconditionally - the .NET and libxml2 convention, and evidently Office's -
+ * re-spells nothing. It also removes the `]]>` special case outright rather
+ * than handling it: if `>` is never written literally, the sequence cannot
+ * occur.
+ */
+
+/** Neither an escape nor a character reference can represent these. */
+function assertWritable(value: string, i: number, at: number): void {
+  if (isUnpairedSurrogate(value, i)) {
+    throw new XmlError(
+      'ERR_MALFORMED_XML',
+      'this value holds an unpaired surrogate at index ' +
+        i +
+        '; it is not a character and cannot be encoded back to UTF-8',
+      { offset: at + i },
+    );
+  }
+  const code = value.charCodeAt(i);
+  if (!isXmlChar(code)) {
+    throw new XmlError(
+      'ERR_INVALID_CHARACTER',
+      'this value holds U+' +
+        code.toString(16).toUpperCase().padStart(4, '0') +
+        ' at index ' +
+        i +
+        ', which XML does not permit anywhere - not even escaped',
+      { offset: at + i },
+    );
+  }
+}
+
+/**
+ * Escape a value for use as character data.
+ *
+ * `at` is the offset of the value within the document, and is used only to make
+ * the offset in a thrown error point somewhere useful.
+ */
+export function escapeText(value: string, at = 0): string {
+  let out = '';
+  let plain = 0;
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i);
+    let replacement: string;
+    if (code === 0x26) replacement = '&amp;';
+    else if (code === 0x3c) replacement = '&lt;';
+    else if (code === 0x0d) replacement = '&#xD;';
+    // Not required except inside "]]>", which XML 1.0 §2.4 forbids in content.
+    // Escaping it always is what the corpus asks for, and it makes that
+    // sequence unwritable rather than merely handled.
+    else if (code === 0x3e) replacement = '&gt;';
+    else {
+      assertWritable(value, i, at);
+      continue;
+    }
+    out += value.slice(plain, i) + replacement;
+    plain = i + 1;
+  }
+  return plain === 0 ? value : out + value.slice(plain);
+}
+
+/**
+ * Escape a value for use inside `quote` delimiters.
+ *
+ * **Only the delimiter in use** is escaped: an apostrophe inside a
+ * double-quoted attribute stays an apostrophe. That one is not a judgement
+ * call - all 170 019 attributes in the corpus are double-quoted and 26 of them
+ * carry a `&quot;`, so escaping the other quote as well would re-spell real
+ * values for no reason.
+ */
+export function escapeAttributeValue(value: string, quote: '"' | "'", at = 0): string {
+  const delimiter = quote.charCodeAt(0);
+  let out = '';
+  let plain = 0;
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i);
+    let replacement: string;
+    if (code === 0x26) replacement = '&amp;';
+    else if (code === 0x3c) replacement = '&lt;';
+    else if (code === 0x3e) replacement = '&gt;';
+    else if (code === delimiter) replacement = quote === '"' ? '&quot;' : '&apos;';
+    // §3.3.3 turns each of these into a space. A reference to one survives.
+    else if (code === 0x09) replacement = '&#x9;';
+    else if (code === 0x0a) replacement = '&#xA;';
+    else if (code === 0x0d) replacement = '&#xD;';
+    else {
+      assertWritable(value, i, at);
+      continue;
+    }
+    out += value.slice(plain, i) + replacement;
+    plain = i + 1;
+  }
+  return plain === 0 ? value : out + value.slice(plain);
 }

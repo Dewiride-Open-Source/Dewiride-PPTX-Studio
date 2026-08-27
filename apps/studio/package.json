@@ -1,0 +1,21 @@
+{
+  "name": "@pptx-studio/studio",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Drop a .pptx on a page and read its internals. The Worker boundary lives here.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsdown",
+    "serve": "node ../../tools/bench/serve.ts"
+  },
+  "dependencies": {
+    "@pptx-studio/census": "workspace:^",
+    "@pptx-studio/opc": "workspace:^",
+    "@pptx-studio/xml": "workspace:^"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

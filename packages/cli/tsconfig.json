@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // The one package in the repository allowed Node types, and the only one
+    // with no DOM lib: a CLI that could reach for `document` would be a CLI
+    // whose code could drift into the core.
+    "lib": ["ES2023"],
+    "types": ["node"],
+    // Workspace dependencies resolve to **source**, so linting and editors
+    // never wait for a build. This does not change what is published: tsdown
+    // decides externality from `dependencies` rather than from module
+    // resolution, so sibling types stay as imports in the emitted `.d.ts` and
+    // sibling code stays out of the emitted bundle. Checked, not assumed.
+    "paths": {
+      "@pptx-studio/census": ["../census/src/index.ts"],
+      "@pptx-studio/opc": ["../opc/src/index.ts"]
+    }
+  },
+  // Tests are **not** excluded here, unlike every other package. Those are
+  // covered by the root tsconfig.json; `cli` is deliberately outside it (it
+  // needs Node types and no DOM), so this is the only project that sees them,
+  // and a file in no project is a file ESLint cannot type-check.
+  "include": ["src/**/*.ts"]
+}

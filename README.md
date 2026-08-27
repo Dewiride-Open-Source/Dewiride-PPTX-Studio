@@ -6,13 +6,16 @@ Open a `.pptx`, see it rendered faithfully, edit every element on the slide, swi
 themes and have them genuinely cascade, then export a file that still opens in real PowerPoint with
 everything you did not touch left byte-for-byte intact.
 
-> **Status: pre-alpha, under active construction.** Nothing is published to npm yet. Sub-phases 0.1
-> (repository skeleton), 0.2 (ZIP reader, decompression budgets, OPC part-name grammar), 0.3 (part
-> store, content types, relationships, ZIP32 writer) and 0.4 (XML tokenizer and node model) are
-> complete: a real deck can be read, its relationship graph walked, every XML part parsed into a
-> tree that remembers exactly where each node came from, and the whole thing written back
-> byte-for-byte. The table below tracks what actually works, and it will not be marked green ahead
-> of the code.
+> **Status: pre-alpha, under active construction.** Nothing is published to npm yet. Sub-phases
+> 0.1 (repository skeleton), 0.2 (ZIP reader, decompression budgets, OPC part-name grammar), 0.3
+> (part store, content types, relationships, ZIP32 writer), 0.4 (XML tokenizer and node model), 0.5
+> (serializer and the byte-identical round-trip gate), 0.6 (schema order, Markup Compatibility,
+> invertible edits), 0.7 (ground-truth experiments) and 0.8 (`inspect`, the Worker boundary, the
+> benchmark) are complete, which closes **Gate 0**: drop a `.pptx` on a page and get a live
+> explorer of its internals — every part, content type, relationship edge and a feature census —
+> computed in a Web Worker, entirely in the tab. A 188 MiB, 300-slide deck reads in about a third
+> of a second. The table below tracks what actually works, and it will not be marked green
+> ahead of the code.
 
 ---
 
@@ -42,32 +45,47 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 
 ## What works today
 
-| Area                                               | Status         |
-| -------------------------------------------------- | -------------- |
-| Repository, toolchain, architecture guards         | ✅ 0.1         |
-| OPC container: ZIP reader, budgets, part names     | ✅ 0.2         |
-| OPC container: parts, content types, relationships | ✅ 0.3         |
-| Byte-preserving XML tokenizer and node model       | ✅ 0.4         |
-| XML serializer, schema order, invertible edits     | ⬜ 0.5–0.6     |
-| Byte-perfect round trip across a 50-deck corpus    | ⬜ Phase 1     |
-| Geometry, fills, strokes, effects                  | ⬜ Phase 2     |
-| Text engine, viewer, fidelity scoreboard           | ⬜ Phase 3     |
-| Tables and SmartArt                                | ⬜ Phase 4     |
-| Select, move, resize, rotate                       | ⬜ Phase 5     |
-| Text editing                                       | ⬜ Phase 6     |
-| Layout switching, theme verbs, backgrounds         | ⬜ Phase 7     |
-| Font embedding, custom font upload and export      | ⬜ Phase 8     |
-| Charts                                             | ⬜ Phases 9–10 |
-| Accessibility, virtualization, 1.0                 | ⬜ Phase 12    |
+| Area                                                 | Status         |
+| ---------------------------------------------------- | -------------- |
+| Repository, toolchain, architecture guards           | ✅ 0.1         |
+| OPC container: ZIP reader, budgets, part names       | ✅ 0.2         |
+| OPC container: parts, content types, relationships   | ✅ 0.3         |
+| Byte-preserving XML tokenizer and node model         | ✅ 0.4         |
+| XML serializer and the byte-identical round trip     | ✅ 0.5         |
+| Schema order, Markup Compatibility, invertible edits | ✅ 0.6         |
+| Ground truth: embedded fonts, colour transforms      | ✅ 0.7         |
+| Feature census, `cli inspect`, the Worker boundary   | ✅ 0.8         |
+| Byte-perfect round trip across a 50-deck corpus      | ⬜ Phase 1     |
+| Geometry, fills, strokes, effects                    | ⬜ Phase 2     |
+| Text engine, viewer, fidelity scoreboard             | ⬜ Phase 3     |
+| Tables and SmartArt                                  | ⬜ Phase 4     |
+| Select, move, resize, rotate                         | ⬜ Phase 5     |
+| Text editing                                         | ⬜ Phase 6     |
+| Layout switching, theme verbs, backgrounds           | ⬜ Phase 7     |
+| Font embedding, custom font upload and export        | ⬜ Phase 8     |
+| Charts                                               | ⬜ Phases 9–10 |
+| Accessibility, virtualization, 1.0                   | ⬜ Phase 12    |
 
 ## Repository layout
 
-```undefined
+```
+packages/
+  opc/     OPC container: zip, parts, content types, relationships
   xml/     byte-preserving XML tokenizer, XNode, serializer
+  census/  what is inside a package: parts, relationship graph, feature census
+  cli/     the Node entry point — `pptx-studio inspect`
+apps/
+  studio/  drop a .pptx on a page; the parse Worker boundary lives here
 tools/
-  layering/     the dependency-direction guard (see below)
-  eslint-rules/ local ESLint rules with no upstream equivalent
-docs/adr/       architecture decision records
+  layering/      the dependency-direction guard (see below)
+  eslint-rules/  local ESLint rules with no upstream equivalent
+  schema-codegen/ the ECMA-376 element-order table generator
+  ground-truth/  experiments that ask real PowerPoint what it actually does
+  bench/         synthetic decks, and the browser benchmark that reads them
+corpus/
+  ground-truth/  what PowerPoint answered, as committed fixtures
+  bench/         benchmark deck recipes, their hashes, and recorded timings
+docs/adr/        architecture decision records
 ```
 
 Further packages arrive with the phases that need them. Every one of them is already declared in
@@ -103,6 +121,16 @@ pnpm check           # layering, format, lint, typecheck, build, test
 ```
 
 Individual steps: `pnpm layering`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test`.
+
+To look inside a deck:
+
+```sh
+node packages/cli/dist/cli.js inspect deck.pptx        # after pnpm build
+node tools/bench/serve.ts --decks <dir>                # then drop one on the page
+```
+
+`tools/bench/` also generates the decks the benchmark reads — up to 300 slides and 200 MB, from a
+recipe, deterministically. See [`tools/bench/README.md`](./tools/bench/README.md).
 
 `pnpm test` and `pnpm typecheck` read package **source**, not `dist`, so neither needs a build
 first. Publishing reads `dist`.

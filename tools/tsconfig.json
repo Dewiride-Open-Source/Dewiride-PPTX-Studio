@@ -8,7 +8,21 @@
     // strips types with no flag and no loader), so relative imports carry
     // explicit .ts extensions. This is why tsconfig.base sets
     // `erasableSyntaxOnly` — enums and parameter properties would not strip.
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    // Resolves to **source**, exactly as vitest.config.ts does, so `pnpm
+    // typecheck` never waits for a build.
+    //
+    // The caveat is worth stating: these are for typechecking and for tests
+    // run through vitest. A tool that Node runs directly cannot import a
+    // workspace package by name, because nothing links one into `tools/` — and
+    // it should not want to. `tools/bench/bench.test.ts` is the one file here
+    // that uses them, to check the deck generator and the census against each
+    // other.
+    "paths": {
+      "@pptx-studio/census": ["../packages/census/src/index.ts"],
+      "@pptx-studio/opc": ["../packages/opc/src/index.ts"],
+      "@pptx-studio/xml": ["../packages/xml/src/index.ts"]
+    }
   },
   "include": ["**/*.ts"],
   "exclude": ["**/node_modules/**"]

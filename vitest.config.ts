@@ -38,12 +38,26 @@ export default defineConfig({
         test: {
           name: 'core',
           include: ['packages/*/src/**/*.test.ts'],
+          // `cli` is the one package that is Node by design. Under Chromium its
+          // first `node:fs` import throws, which is the browser project working
+          // as intended rather than a reason to loosen it.
+          exclude: ['packages/cli/**'],
           browser: {
             provider: playwright(),
             enabled: true,
             headless: true,
             instances: [{ browser: 'chromium' }],
           },
+        },
+      },
+      {
+        // The CLI is layer 6: Node, filesystem, streams. It is the only
+        // package excluded from the browser project above.
+        extends: true,
+        test: {
+          name: 'cli',
+          environment: 'node',
+          include: ['packages/cli/src/**/*.test.ts'],
         },
       },
       {
