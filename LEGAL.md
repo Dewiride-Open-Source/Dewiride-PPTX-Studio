@@ -75,8 +75,8 @@ It is not automatically disqualifying, and it is much cheaper to discuss before 
 ## Corpus licensing
 
 Fixture decks carry third-party copyright and, frequently, licensed embedded fonts. Every entry in
-`corpus/manifest.json` must carry a `license` field, and CI fails without one (sub-phase 1.1).
-Accepted sources are limited to:
+every `corpus/**/manifest.json` must carry a `license` field, and CI fails without one. Accepted
+sources are limited to:
 
 - decks authored by this project,
 - CC0 / CC-BY / public-domain material with the attribution recorded,
@@ -85,6 +85,31 @@ Accepted sources are limited to:
 
 Anything else is committed only as a redacted derivative together with the SHA-256 of the original,
 so a report can be reproduced without redistributing the source deck.
+
+### How that is enforced
+
+`pnpm corpus` (`tools/corpus/`) runs second in `pnpm check`, after layering and **before**
+formatting — a run that stops on whitespace is a run that never reports that a fixture has no
+licence. It reads every `corpus/**/manifest.json` and asserts, among other rules:
+
+- `C001` a `license` from a closed set. `NONE` and `NOASSERTION` are rejected **by name**: an entry
+  whose licence is unknown is an entry that cannot be redistributed, and accepting SPDX's spellings
+  for "nobody established this" would make the rule a formality.
+- `C003` the licence is one the **source** may claim. This is the rule that does the legal work.
+  `C001` is satisfied by typing six characters; `C003` is what says a CC-BY deck somebody else wrote
+  is not ours to relicense as Apache-2.0.
+- `C004` a complete attribution block for anything third-party, per CC BY 4.0 §3(a)(1).
+- `C008` **every file under `corpus/` is claimed by exactly one manifest.** This is the only rule
+  that fires in the situation that actually occurs — a deck dropped into the tree without anyone
+  touching a manifest. It enumerates with `readdirSync` rather than `git ls-files` specifically so
+  that it sees untracked files, and so a local `pnpm check` catches the deck before it is committed.
+- `C010` the committed bytes hash to what the manifest says. Without it a `license` field describes
+  whatever happens to be at that path on the day of the audit.
+- `C012` size caps, so that a fixture too large to review is a recipe and a hash rather than bytes.
+- `C015` a redacted derivative names its original's SHA-256, and that hash is not its own.
+
+The full rule table is `tools/corpus/schema.ts`. If that file and this section ever disagree, this
+section is the one that is wrong, because that file is the one a contributor runs into.
 
 ### Sub-phase 0.7's fixtures, and what was deliberately left out
 

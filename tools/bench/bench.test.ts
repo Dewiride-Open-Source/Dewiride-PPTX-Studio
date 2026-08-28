@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inflateSync } from 'node:zlib';
-import { censusPackage } from '@pptx-studio/census';
+import { censusPackage, FEATURE_RULES, PART_FEATURE_RULES } from '@pptx-studio/census';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { RECIPES, writeDeck, type DeckRecipe, type DeckSummary } from './deck.ts';
 import { mulberry32, noisePng, sizeForBytes } from './png.ts';
@@ -190,9 +190,34 @@ describe('the generator and the census agree about what is in the deck', () => {
     const census = censusPackage(new Uint8Array(readFileSync(path)));
 
     const found = new Map(census.features.map((feature) => [feature.key, feature.count]));
-    for (const [key, expected] of Object.entries(summary.expected)) {
+    for (const [key, expected] of Object.entries(summary.expected.exact)) {
       expect(found.get(key) ?? 0, key).toBe(expected);
     }
+    for (const key of summary.expected.present) {
+      expect(found.get(key) ?? 0, key).toBeGreaterThan(0);
+    }
+
+    // The other half, which this test's name has always claimed and never did.
+    // Iterating the generator's declaration alone means a feature it emits but
+    // never mentions is checked by nobody - which was true of ten keys,
+    // `shape`, `placeholder` and `presetGeom` among them.
+    const declared = new Set([...Object.keys(summary.expected.exact), ...summary.expected.present]);
+    for (const feature of census.features) {
+      expect(declared.has(feature.key), 'census found undeclared ' + feature.key).toBe(true);
+    }
+  });
+
+  it('has an opinion about every feature the census can report', () => {
+    const { summary } = build(SMALL, 'complete.pptx');
+    const declared = new Set([...Object.keys(summary.expected.exact), ...summary.expected.present]);
+
+    // A feature rule added to the census is a feature the corpus has to decide
+    // about. Failing here is the reminder to decide, and a zero is a perfectly
+    // good decision - it just has to be written down rather than omitted.
+    const missing = [...FEATURE_RULES, ...PART_FEATURE_RULES]
+      .map((rule) => rule.key)
+      .filter((key) => !declared.has(key));
+    expect(missing, 'census keys the generator never mentions').toEqual([]);
   });
 
   it('agrees about the presentation itself', () => {
@@ -233,14 +258,107 @@ describe('the generator and the census agree about what is in the deck', () => {
     expect(dsp?.count, 'the SmartArt drawing fallback').toBeGreaterThan(0);
   });
 
+  /**
+   * The shapes sub-phase 1.1's corpus needs, which the three benchmark recipes
+   * never take. Every assertion here failed before 1.1: the benchmark decks are
+   * all large, all densely populated and all built from the same `BASE`, so the
+   * degenerate cases went unexercised.
+   */
+  describe('a recipe at its limits', () => {
+    const TINY: DeckRecipe = {
+      ...SMALL,
+      id: 'tiny',
+      title: 'A recipe at its limits',
+      slides: 1,
+      sections: 6,
+      customShows: 4,
+      shapesPerSlide: 0,
+      imageBytes: 0,
+      // The array form: exactly slide 1, which no interval can say.
+      hyperlinks: [1],
+      comments: [1],
+      tables: [1],
+      charts: [],
+      diagrams: [],
+      alternateContent: [],
+      animations: [],
+    };
+
+    it('declares the sections it wrote, not the ones it was asked for', () => {
+      // `writeDeck` clamps both to the slide count. `expectedFeatures` used to
+      // read them straight off the recipe, so this deck declared six sections
+      // and four custom shows, and wrote one of each.
+      const { path, summary } = build(TINY, 'tiny-clamped.pptx');
+      const census = censusPackage(new Uint8Array(readFileSync(path)));
+      const found = new Map(census.features.map((feature) => [feature.key, feature.count]));
+
+      expect(summary.expected.exact['section']).toBe(1);
+      expect(summary.expected.exact['customShow']).toBe(1);
+      expect(found.get('section')).toBe(1);
+      expect(found.get('customShow')).toBe(1);
+    });
+
+    it('attaches the hyperlink it allocated a relationship for', () => {
+      // With no free shapes there was nothing to hang `a:hlinkClick` on, so the
+      // relationship was written and referenced by nothing. An External
+      // relationship has no target part, so `dangling` cannot see it either.
+      const { path, summary } = build(TINY, 'tiny-link.pptx');
+      const census = censusPackage(new Uint8Array(readFileSync(path)));
+      const found = new Map(census.features.map((feature) => [feature.key, feature.count]));
+
+      expect(summary.expected.exact['hyperlink']).toBe(1);
+      expect(found.get('hyperlink')).toBe(1);
+    });
+
+    it('puts a comment on a one-slide deck', () => {
+      // The cadence was hard-coded at every fifteenth slide, so the smallest
+      // deck that could carry a comment was fifteen slides long.
+      const { path, summary } = build(TINY, 'tiny-comment.pptx');
+      const census = censusPackage(new Uint8Array(readFileSync(path)));
+      const found = new Map(census.features.map((feature) => [feature.key, feature.count]));
+
+      expect(summary.expected.exact['comment']).toBe(1);
+      expect(found.get('comment')).toBe(1);
+    });
+
+    it('still agrees with the census in both directions', () => {
+      const { path, summary } = build(TINY, 'tiny-census.pptx');
+      const census = censusPackage(new Uint8Array(readFileSync(path)));
+      const found = new Map(census.features.map((feature) => [feature.key, feature.count]));
+
+      for (const [key, expected] of Object.entries(summary.expected.exact)) {
+        expect(found.get(key) ?? 0, key).toBe(expected);
+      }
+      for (const key of summary.expected.present) {
+        expect(found.get(key) ?? 0, key).toBeGreaterThan(0);
+      }
+      const declared = new Set([
+        ...Object.keys(summary.expected.exact),
+        ...summary.expected.present,
+      ]);
+      for (const feature of census.features) {
+        expect(declared.has(feature.key), 'census found undeclared ' + feature.key).toBe(true);
+      }
+    });
+
+    it('is a package with nothing wrong with it', () => {
+      const { path } = build(TINY, 'tiny-clean.pptx');
+      const census = censusPackage(new Uint8Array(readFileSync(path)));
+
+      expect(census.problems).toEqual([]);
+      expect(census.relationships.dangling).toEqual([]);
+      expect(census.relationships.unreachableParts).toEqual([]);
+    });
+  });
+
   it('scales with the recipe rather than with a fixture', () => {
-    const bigger: DeckRecipe = { ...SMALL, slides: 6, tableEvery: 2, chartEvery: 3 };
+    const bigger: DeckRecipe = { ...SMALL, slides: 6, tables: 2, charts: 3 };
     const { path, summary } = build(bigger, 'scaled.pptx');
     const census = censusPackage(new Uint8Array(readFileSync(path)));
     const found = new Map(census.features.map((feature) => [feature.key, feature.count]));
 
-    expect(summary.expected['table']).toBe(3);
-    expect(summary.expected['chart']).toBe(2);
+    expect(summary.expected.exact['table']).toBe(3);
+    expect(summary.expected.exact['chart']).toBe(2);
     expect(found.get('table')).toBe(3);
     expect(found.get('chart')).toBe(2);
     expect(census.presentation?.slides).toBe(6);

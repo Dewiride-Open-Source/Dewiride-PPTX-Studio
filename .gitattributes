@@ -3,10 +3,15 @@
 # Fixture decks and reference images are binary; never let a checkout mangle
 # them. Byte fidelity is the product.
 *.pptx binary
+*.pptm binary
+*.ppsx binary
 *.potx binary
 *.thmx binary
+*.xlsx binary
+*.docx binary
 *.ttf  binary
 *.otf  binary
+*.eot  binary
 *.woff binary
 *.woff2 binary
 *.fntdata binary
@@ -14,8 +19,12 @@
 *.wmf  binary
 *.png  binary
 *.jpg  binary
+*.jpeg binary
 *.gif  binary
 *.tif  binary
+*.glb  binary
+*.mp4  binary
+*.wav  binary
 *.bin  binary
 
 pnpm-lock.yaml -diff linguist-generated=true

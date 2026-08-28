@@ -22,6 +22,62 @@ const EOCD_SIG = 0x06054b50;
 export interface ZipEntry {
   readonly name: string;
   readonly bytes: Uint8Array;
+  /**
+   * Store this entry rather than letting the writer choose.
+   *
+   * Set by the corpus generator, and for a reason that outlives the entry: a
+   * deflated archive's bytes depend on which zlib built it, so a fixture whose
+   * SHA-256 is pinned would need re-pinning after a routine Node upgrade with
+   * no source change. Stored bytes are a pure function of the XML above them.
+   * `readZip` has always handled both methods, so nothing else changes.
+   */
+  readonly store?: boolean;
+  /**
+   * The general-purpose bit flag, written to both headers. Defaults to 0.
+   *
+   * PowerPoint 16.0.20326 writes `0x0006` on every entry - bits 1 and 2, which
+   * for method 8 are the deflate level hint and mean nothing to a decompressor.
+   * Bit 11 is the one with consequences: it declares the entry name to be
+   * UTF-8 rather than CP437. `a35-zip-shapes` is the only deck that sets
+   * either, and `corpus/ground-truth/powerpoint-conventions.json` is where the
+   * measurement lives.
+   *
+   * Bit 3 is not supported: it moves the sizes into a trailing data descriptor,
+   * which this writer does not emit, so setting it would produce an archive
+   * that lies about itself.
+   */
+  readonly flags?: number;
+  /**
+   * Extra-field bytes for the **local** header only, verbatim.
+   *
+   * The one this repository cares about is Microsoft's `0xA220` growth hint:
+   * a header id, a length, the signature `0xA028`, a padding value and that
+   * many zero bytes, so an editor can rewrite a part slightly larger in place
+   * without moving every entry after it. PowerPoint writes 520 bytes of it on
+   * the first entry of a package. Readers ignore what they do not recognise,
+   * which is exactly why an unrecognised extra field is worth having in the
+   * corpus: it is bytes between the local header and the payload that a naive
+   * reader will walk straight through.
+   */
+  readonly extra?: Uint8Array;
+}
+
+/**
+ * Microsoft's `0xA220` "growth hint" extra field, at a total length in bytes.
+ *
+ * Layout: header id `0xA220`, data length, signature `0xA028`, the padding
+ * value, then that many zero bytes. `total` counts the four header bytes, so
+ * PowerPoint's 520 is 4 + 2 + 2 + 512.
+ */
+export function growthHint(total = 520): Uint8Array {
+  if (total < 8) throw new Error('a growth hint needs at least 8 bytes');
+  const field = new Uint8Array(total);
+  const view = new DataView(field.buffer);
+  view.setUint16(0, 0xa220, true);
+  view.setUint16(2, total - 4, true);
+  view.setUint16(4, 0xa028, true);
+  view.setUint16(6, total - 8, true);
+  return field;
 }
 
 /** Every entry of an archive, in central-directory order. */
@@ -45,6 +101,7 @@ export function readZip(archive: Uint8Array): ZipEntry[] {
     if (view.getUint32(offset, true) !== CENTRAL_SIG) {
       throw new Error(`central directory entry ${String(i)} has a bad signature`);
     }
+    const flags = view.getUint16(offset + 8, true);
     const method = view.getUint16(offset + 10, true);
     const compressedSize = view.getUint32(offset + 20, true);
     const nameLength = view.getUint16(offset + 28, true);
@@ -64,6 +121,16 @@ export function readZip(archive: Uint8Array): ZipEntry[] {
     entries.push({
       name,
       bytes: method === 0 ? raw : new Uint8Array(inflateRawSync(raw)),
+      store: method === 0,
+      flags,
+      ...(localExtraLength === 0
+        ? {}
+        : {
+            extra: archive.slice(
+              localOffset + 30 + localNameLength,
+              localOffset + 30 + localNameLength + localExtraLength,
+            ),
+          }),
     });
     offset += 46 + nameLength + extraLength + commentLength;
   }
@@ -83,6 +150,8 @@ export function entry(entries: readonly ZipEntry[], name: string): Uint8Array | 
 // bytes. 1980-01-01 00:00:00 is the earliest the format can express.
 const DOS_TIME = 0;
 const DOS_DATE = 0x0021;
+
+const EMPTY = new Uint8Array(0);
 
 let crcTable: Uint32Array | undefined;
 
@@ -113,18 +182,23 @@ export function writeZip(entries: readonly ZipEntry[]): Uint8Array {
   for (const e of entries) {
     const name = new TextEncoder().encode(e.name);
     const crc = crc32(e.bytes);
-    // Store when deflate would not help; every OPC reader handles both, and a
-    // stored entry is easier to look at in a hex editor when something is wrong.
-    const deflated = new Uint8Array(deflateRawSync(e.bytes, { level: 9 }));
-    const useDeflate = deflated.length < e.bytes.length;
-    const payload = useDeflate ? deflated : e.bytes;
+    // Store when the caller says so, or when deflate would not help; every OPC
+    // reader handles both, and a stored entry is easier to look at in a hex
+    // editor when something is wrong.
+    const deflated =
+      e.store === true ? undefined : new Uint8Array(deflateRawSync(e.bytes, { level: 9 }));
+    const useDeflate = deflated !== undefined && deflated.length < e.bytes.length;
+    const payload = useDeflate && deflated !== undefined ? deflated : e.bytes;
     const method = useDeflate ? 8 : 0;
 
-    const local = new Uint8Array(30 + name.length + payload.length);
+    const flags = e.flags ?? 0;
+    const extra = e.extra ?? EMPTY;
+
+    const local = new Uint8Array(30 + name.length + extra.length + payload.length);
     const lv = new DataView(local.buffer);
     lv.setUint32(0, LOCAL_SIG, true);
     lv.setUint16(4, 20, true); // version needed: 2.0
-    lv.setUint16(6, 0, true); // flags
+    lv.setUint16(6, flags, true);
     lv.setUint16(8, method, true);
     lv.setUint16(10, DOS_TIME, true);
     lv.setUint16(12, DOS_DATE, true);
@@ -132,9 +206,10 @@ export function writeZip(entries: readonly ZipEntry[]): Uint8Array {
     lv.setUint32(18, payload.length, true);
     lv.setUint32(22, e.bytes.length, true);
     lv.setUint16(26, name.length, true);
-    lv.setUint16(28, 0, true);
+    lv.setUint16(28, extra.length, true);
     local.set(name, 30);
-    local.set(payload, 30 + name.length);
+    local.set(extra, 30 + name.length);
+    local.set(payload, 30 + name.length + extra.length);
     locals.push(local);
 
     const central = new Uint8Array(46 + name.length);
@@ -142,7 +217,7 @@ export function writeZip(entries: readonly ZipEntry[]): Uint8Array {
     cv.setUint32(0, CENTRAL_SIG, true);
     cv.setUint16(4, 20, true); // version made by
     cv.setUint16(6, 20, true); // version needed
-    cv.setUint16(8, 0, true);
+    cv.setUint16(8, flags, true);
     cv.setUint16(10, method, true);
     cv.setUint16(12, DOS_TIME, true);
     cv.setUint16(14, DOS_DATE, true);

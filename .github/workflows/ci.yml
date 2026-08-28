@@ -49,6 +49,13 @@ jobs:
       - name: Layering
         run: pnpm layering
 
+      # Second, and before Format, on purpose. It needs no build and no
+      # Chromium, and ordering a legal gate behind a whitespace gate means a
+      # run that stops on formatting never reports that a fixture has no
+      # licence.
+      - name: Corpus provenance
+        run: pnpm corpus
+
       - name: Format
         run: pnpm format:check
 

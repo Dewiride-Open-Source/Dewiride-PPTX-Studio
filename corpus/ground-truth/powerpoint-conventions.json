@@ -1,0 +1,78 @@
+{
+  "measuredOn": {
+    "application": "Microsoft PowerPoint",
+    "version": "16.0",
+    "build": "20326.20100",
+    "platform": "Windows 11 Enterprise 10.0.26200"
+  },
+  "lexical": {
+    "xmlParts": 38,
+    "partsWithBom": 0,
+    "declarations": ["<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"],
+    "bytesAfterDeclaration": ["\"\\r\\n\""],
+    "selfClosingTight": 1305,
+    "selfClosingSpaced": 0,
+    "singleQuotedAttributes": 0,
+    "partsBrokenAcrossLines": 0,
+    "crlfTotal": 38,
+    "$entitiesComment": "The first three are what the two E8 decks contained. The fourth is a follow-up measurement taken on 2026-08-27 against the same build: a deck authored through PowerPoint COM with a shape renamed 'a \"quoted\" name' was saved, and PowerPoint wrote name=\"a &quot;quoted&quot; name\" - two occurrences of &quot; and no other entity anywhere in the package. E8's decks simply had no attribute with a quote in it, so their silence about &quot; was never evidence. The counts above still describe the E8 decks only.",
+    "entitiesUsed": ["&amp;", "&gt;", "&lt;", "&quot;"]
+  },
+  "archive": {
+    "entries": 39,
+    "firstEntry": "[Content_Types].xml",
+    "entryOrder": [
+      "[Content_Types].xml",
+      "_rels/.rels",
+      "ppt/slides/_rels/slide1.xml.rels",
+      "ppt/slides/slide1.xml",
+      "ppt/presentation.xml",
+      "ppt/_rels/presentation.xml.rels",
+      "ppt/slideMasters/slideMaster1.xml",
+      "ppt/slideLayouts/_rels/slideLayout9.xml.rels",
+      "ppt/slideLayouts/_rels/slideLayout10.xml.rels",
+      "ppt/slideLayouts/_rels/slideLayout11.xml.rels"
+    ],
+    "generalPurposeFlag": "0x0006",
+    "utf8FlagSet": false,
+    "compressionMethod": 8,
+    "dosTime": "0x0000",
+    "dosDate": "0x0021",
+    "firstExtraFieldLength": 520,
+    "firstExtraFieldId": "0xa220",
+    "hasDirectoryEntries": false
+  },
+  "text": {
+    "$comment": "The second run was authored with two leading and two trailing spaces. PowerPoint preserves them and writes NO xml:space attribute, unlike WordprocessingML, where a w:t with edge whitespace carries one.",
+    "runs": [
+      {
+        "attributes": "",
+        "text": "Ampersand &amp; less &lt; greater &gt; quote \" apostrophe ' end"
+      },
+      {
+        "attributes": "",
+        "text": "  leading and trailing spaces  "
+      }
+    ],
+    "writesXmlSpacePreserve": false
+  },
+  "ole": {
+    "$comment": "Experiment E6. Build 2205 stopped writing the VML fallback for OLE. This build still writes the mc:AlternateContent wrapper, and its mc:Choice still requires the VML prefix, but there is no vmlDrawing part and no @spid for it to point at.",
+    "writesAlternateContent": true,
+    "choiceRequires": "v",
+    "choiceDeclaresNamespaceOnItself": true,
+    "writesVmlDrawingPart": false,
+    "writesSpid": false,
+    "oleObjAttributes": ["name", "r:id", "imgW", "imgH", "progId"],
+    "embeddingPart": "ppt/embeddings/Microsoft_Excel_Worksheet.xlsx",
+    "embeddingRelationshipType": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package",
+    "previewPart": "ppt/media/image1.emf",
+    "previewInFallbackOnly": true,
+    "writesPackageThumbnail": true
+  },
+  "sourceDecks": {
+    "$comment": "Not committed. Hashes so a re-run can be checked against this measurement.",
+    "plain.pptx": "91e78ef7b352cc48b41603a22e07bd55b3c0aa18d4357e7319d400a8c405c6f3",
+    "ole.pptx": "db754bb9a1f84d0e97a2fd9ce46af342d93c5ee519b048539c93194c9e76d562"
+  }
+}

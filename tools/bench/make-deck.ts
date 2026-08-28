@@ -84,7 +84,7 @@ const hash = createHash('sha256')
   .digest('hex');
 const size = statSync(resolve(out)).size;
 
-console.log('recipe        ' + effective.name);
+console.log('recipe        ' + effective.id);
 console.log('slides        ' + String(effective.slides));
 console.log('entries       ' + String(summary.entries));
 console.log('bytes         ' + String(size) + '  (' + (size / 1024 / 1024).toFixed(1) + ' MiB)');
@@ -108,6 +108,9 @@ console.log('sha256        ' + hash);
 console.log('built in      ' + (elapsed / 1000).toFixed(1) + ' s');
 console.log('');
 console.log('features the generator put in:');
-for (const [key, count] of Object.entries(summary.expected)) {
+for (const [key, count] of Object.entries(summary.expected.exact)) {
   if (count > 0) console.log('  ' + key.padEnd(20) + String(count));
+}
+for (const key of summary.expected.present) {
+  console.log('  ' + key.padEnd(20) + 'present');
 }

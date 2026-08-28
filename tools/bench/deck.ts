@@ -76,8 +76,33 @@ export function escapeXml(text: string): string {
 
 // ------------------------------------------------------------------- recipes
 
+/**
+ * When a feature appears.
+ *
+ * A number is "every Nth slide", which is the right idiom for a benchmark deck
+ * spreading a feature evenly through three hundred of them. An array is the
+ * exact 1-based slide numbers.
+ *
+ * The array form exists because the interval form cannot express the shape
+ * every feature probe in the corpus has: *one* chart, on slide 1. `charts: 1`
+ * means a chart on every slide, and there is no number that means "only the
+ * first". Padding a deck out to twenty-five slides so that `charts: 25` finds
+ * one is a fixture that tests the padding.
+ */
+export type Cadence = number | readonly number[];
+
+/** Does the feature land on this 0-based slide index? */
+function occurs(index: number, cadence: Cadence): boolean {
+  return typeof cadence === 'number'
+    ? cadence > 0 && (index + 1) % cadence === 0
+    : cadence.includes(index + 1);
+}
+
 export interface DeckRecipe {
-  readonly name: string;
+  /** Manifest identity and the key in `RECIPES`. Never appears in the file. */
+  readonly id: string;
+  /** `dc:title`. Separate from `id` because this one is read by people. */
+  readonly title: string;
   readonly slides: number;
   /** Approximate bytes per generated image. 0 for a deck with no media at all. */
   readonly imageBytes: number;
@@ -86,33 +111,43 @@ export interface DeckRecipe {
   /** Bullets in each slide's body placeholder. */
   readonly bulletsPerSlide: number;
   readonly notes: boolean;
-  /** Every Nth slide gets one. 0 means never. */
-  readonly tableEvery: number;
-  readonly chartEvery: number;
-  readonly diagramEvery: number;
-  readonly alternateContentEvery: number;
-  readonly animationEvery: number;
-  readonly hyperlinkEvery: number;
+
+  readonly tables: Cadence;
+  readonly charts: Cadence;
+  readonly diagrams: Cadence;
+  readonly alternateContent: Cadence;
+  readonly animations: Cadence;
+  readonly hyperlinks: Cadence;
+  readonly comments: Cadence;
+
+  /** Clamped to the slide count: a section needs a slide to be a section of. */
   readonly sections: number;
   readonly customShows: number;
   /** Embed the CC0 probe font committed by sub-phase 0.7. */
   readonly embedFont: boolean;
-  readonly comments: boolean;
+
+  /** EMU. 12192000 x 6858000 is 16:9; 9144000 x 6858000 is 4:3. */
+  readonly slideWidth: number;
+  readonly slideHeight: number;
 }
 
-const BASE: Omit<DeckRecipe, 'name' | 'slides' | 'imageBytes' | 'shapesPerSlide'> = {
+type RecipeDefaults = Omit<DeckRecipe, 'id' | 'title' | 'slides' | 'imageBytes' | 'shapesPerSlide'>;
+
+const BASE: RecipeDefaults = {
   bulletsPerSlide: 5,
   notes: true,
-  tableEvery: 10,
-  chartEvery: 25,
-  diagramEvery: 40,
-  alternateContentEvery: 7,
-  animationEvery: 5,
-  hyperlinkEvery: 12,
+  tables: 10,
+  charts: 25,
+  diagrams: 40,
+  alternateContent: 7,
+  animations: 5,
+  hyperlinks: 12,
+  comments: 15,
   sections: 6,
   customShows: 2,
   embedFont: true,
-  comments: true,
+  slideWidth: SLIDE_WIDTH,
+  slideHeight: SLIDE_HEIGHT,
 };
 
 export const RECIPES: Readonly<Record<string, DeckRecipe>> = {
@@ -125,7 +160,8 @@ export const RECIPES: Readonly<Record<string, DeckRecipe>> = {
    */
   'media-200mb': {
     ...BASE,
-    name: 'media-200mb',
+    id: 'media-200mb',
+    title: 'PPTX Studio benchmark deck: media-200mb',
     slides: 300,
     imageBytes: 640 * 1024,
     shapesPerSlide: 12,
@@ -141,7 +177,8 @@ export const RECIPES: Readonly<Record<string, DeckRecipe>> = {
    */
   'xml-heavy': {
     ...BASE,
-    name: 'xml-heavy',
+    id: 'xml-heavy',
+    title: 'PPTX Studio benchmark deck: xml-heavy',
     slides: 300,
     imageBytes: 0,
     shapesPerSlide: 400,
@@ -158,17 +195,18 @@ export const RECIPES: Readonly<Record<string, DeckRecipe>> = {
    */
   small: {
     ...BASE,
-    name: 'small',
+    id: 'small',
+    title: 'PPTX Studio benchmark deck: small',
     slides: 20,
     imageBytes: 96 * 1024,
     shapesPerSlide: 8,
     sections: 3,
-    tableEvery: 5,
-    chartEvery: 6,
-    diagramEvery: 8,
-    alternateContentEvery: 4,
-    animationEvery: 3,
-    hyperlinkEvery: 7,
+    tables: 5,
+    charts: 6,
+    diagrams: 8,
+    alternateContent: 4,
+    animations: 3,
+    hyperlinks: 7,
   },
 };
 
@@ -521,7 +559,8 @@ function diagramFrameXml(id: number, ids: readonly [string, string, string, stri
   );
 }
 
-function pictureXml(id: number, relId: string, x: number, y: number): string {
+function pictureXml(id: number, relId: string, x: number, y: number, counters: Counters): string {
+  counters.presetGeoms += 1;
   return (
     '<p:pic><p:nvPicPr>' +
     `<p:cNvPr id="${String(id)}" name="Picture ${String(id)}" descr="Synthetic noise, not a photograph"/>` +
@@ -558,10 +597,20 @@ function freeShapeXml(
   index: number,
   random: () => number,
   hyperlink: string | null,
+  counters: Counters,
+  slideWidth: number,
+  slideHeight: number,
 ): string {
+  counters.presetGeoms += 1;
+  if (index % 3 === 2) counters.patternFills += 1;
   const preset = PRESETS[index % PRESETS.length] ?? 'rect';
-  const x = 200000 + ((index * 937) % 9500000);
-  const y = 400000 + ((index * 613) % 5500000);
+  // The scatter spans the slide less a margin and the shape’s own extent.
+  // At 16:9 these are the 9500000 x 5500000 the benchmark decks were built
+  // with, so the pinned hashes are unaffected.
+  const spanX = Math.max(1, slideWidth - 2692000);
+  const spanY = Math.max(1, slideHeight - 1358000);
+  const x = 200000 + ((index * 937) % spanX);
+  const y = 400000 + ((index * 613) % spanY);
   const accent = 'accent' + String((index % 6) + 1);
 
   // Three fill kinds in rotation, so the census sees more than solid colour and
@@ -598,6 +647,28 @@ function freeShapeXml(
 }
 
 /**
+ * A text shape whose run carries a hyperlink.
+ *
+ * The host for a link on a slide that has no free shapes. `a:hlinkClick` hangs
+ * off `a:rPr` here rather than off `p:cNvPr` as it does on a free shape, which
+ * is the other of the two places DrawingML puts it and worth having in a deck
+ * for that reason alone.
+ */
+function linkShapeXml(id: number, relId: string, counters: Counters): string {
+  counters.presetGeoms += 1;
+  return (
+    '<p:sp><p:nvSpPr>' +
+    `<p:cNvPr id="${String(id)}" name="Link ${String(id)}"/>` +
+    '<p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>' +
+    '<p:spPr><a:xfrm><a:off x="838200" y="5600000"/><a:ext cx="4000000" cy="365125"/></a:xfrm>' +
+    '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>' +
+    '<p:txBody><a:bodyPr wrap="square"/><a:lstStyle/><a:p><a:r>' +
+    `<a:rPr lang="en-GB" dirty="0"><a:hlinkClick xmlns:r="${NS_R}" r:id="${relId}"/></a:rPr>` +
+    '<a:t>PPTX Studio on GitHub</a:t></a:r></a:p></p:txBody></p:sp>'
+  );
+}
+
+/**
  * An `mc:AlternateContent` around a shape.
  *
  * `Requires` names a *prefix*, declared on the `mc:AlternateContent` itself.
@@ -605,7 +676,8 @@ function freeShapeXml(
  * prefix - would turn ignorable extension markup into a hard error, which is
  * the whole reason this project does not use `DOMParser`.
  */
-function alternateContentXml(id: number): string {
+function alternateContentXml(id: number, counters: Counters): string {
+  counters.presetGeoms += 2;
   return (
     `<mc:AlternateContent xmlns:mc="${NS_MC}" xmlns:a14="${NS_A14}">` +
     '<mc:Choice Requires="a14">' +
@@ -684,8 +756,11 @@ function chartXml(seed: number): string {
 
 function diagramParts(
   seed: number,
+  counters: Counters,
 ): Record<'data' | 'layout' | 'quickStyle' | 'colors' | 'drawing', string> {
   const nodes = ['Discover', 'Design', 'Build', 'Verify'];
+  // One `a:prstGeom` per `dsp:sp` in the drawing fallback.
+  counters.presetGeoms += nodes.length;
   const points = nodes
     .map(
       (label, index) =>
@@ -818,10 +893,19 @@ export interface DeckSummary {
   readonly imagePixels: number;
   /** Shapes across every slide, as the generator allocated ids for them. */
   readonly slideShapes: number;
-  readonly expected: Readonly<Record<string, number>>;
+  readonly expected: DeckExpectation;
 }
 
-interface Counters {
+/**
+ * What the generator put in, tallied where it was written.
+ *
+ * Every field is incremented at the point the markup is emitted, never derived
+ * afterwards from the recipe. That distinction is not stylistic: `section` and
+ * `customShow` used to be read back off the recipe while `writeDeck` clamped
+ * both to the slide count, so a recipe asking for six sections in a one-slide
+ * deck declared six and wrote one.
+ */
+export interface Counters {
   /** Shapes on slides only. The census counts masters, layouts and notes too. */
   slideShapes: number;
   tables: number;
@@ -831,6 +915,70 @@ interface Counters {
   animations: number;
   hyperlinks: number;
   pictures: number;
+  fields: number;
+  graphicFrames: number;
+  embeddedPackages: number;
+  comments: number;
+  notesSlides: number;
+  /**
+   * `a:prstGeom` and `a:pattFill` come from several emitters and are switched
+   * off by several different recipe fields, so whether a deck has any is not
+   * something a predicate over the recipe gets right for long. Counting where
+   * the markup is written does.
+   */
+  presetGeoms: number;
+  patternFills: number;
+  sections: number;
+  customShows: number;
+  embeddedFonts: number;
+}
+
+export function createCounters(): Counters {
+  return {
+    slideShapes: 0,
+    tables: 0,
+    charts: 0,
+    diagrams: 0,
+    alternates: 0,
+    animations: 0,
+    hyperlinks: 0,
+    pictures: 0,
+    fields: 0,
+    graphicFrames: 0,
+    embeddedPackages: 0,
+    comments: 0,
+    notesSlides: 0,
+    presetGeoms: 0,
+    patternFills: 0,
+    sections: 0,
+    customShows: 0,
+    embeddedFonts: 0,
+  };
+}
+
+/**
+ * The generator's statement of what is in the deck it just wrote.
+ *
+ * Two halves, because two different things are knowable. `exact` is for the
+ * features a recipe decides the number of - it asked for four tables, it got
+ * four tables. `present` is for the ones that come with the scaffolding: the
+ * theme's `effectStyleLst` carries an `a:outerShdw` whether anyone wanted one,
+ * and the count of `a:prstGeom` across a package depends on how many shapes a
+ * SmartArt fallback happens to draw. Pinning a number to those would be
+ * inventing precision; asserting nothing about them would leave a hole exactly
+ * where a miscount could hide.
+ *
+ * Between them the two halves must name **every** key the census can report,
+ * including the ones this generator cannot produce, which are declared `0`.
+ * `bench.test.ts` asserts that completeness against the census's own table, so
+ * a feature rule added there fails this contract until the generator has an
+ * opinion about it.
+ */
+export interface DeckExpectation {
+  /** Keys whose count the recipe determines exactly. */
+  readonly exact: Readonly<Record<string, number>>;
+  /** Keys guaranteed to appear at least once, without pinning a count. */
+  readonly present: readonly string[];
 }
 
 /**
@@ -839,25 +987,78 @@ interface Counters {
  * Written down separately from the deck so the census has something to be wrong
  * against. Two independent statements of what is in a file catch a miscount in
  * either one; a census checked only against itself catches nothing.
+ *
+ * It takes the counters and deliberately not the recipe. Every number here has
+ * to come from where the markup was written; reading one back off the recipe is
+ * what made a one-slide deck declare six sections and write one.
  */
-export function expectedFeatures(recipe: DeckRecipe, counters: Counters): Record<string, number> {
+export function expectedFeatures(counters: Counters): DeckExpectation {
+  const present: string[] = [];
+
+  // Unconditional scaffolding. Every deck has a master, every master has two
+  // placeholders, and `themeXml` writes an `a:gradFill` into `fillStyleLst` and
+  // an `a:outerShdw` into `effectStyleLst` whether or not anything uses them.
+  // These four cannot be switched off by any recipe, so they need no counter.
+  present.push('shape', 'placeholder', 'gradientFill', 'shadow');
+
+  // These two can be switched off, and by more than one field each, so they are
+  // counted where they are written rather than predicted from the recipe.
+  if (counters.presetGeoms > 0) present.push('presetGeom');
+  if (counters.patternFills > 0) present.push('patternFill');
+
   return {
-    table: counters.tables,
-    chart: counters.charts,
-    smartArt: counters.diagrams,
-    smartArtDrawing: counters.diagrams,
-    alternateContent: counters.alternates,
-    animation: counters.animations,
-    hyperlink: counters.hyperlinks,
-    picture: counters.pictures,
-    notesSlide: recipe.notes ? recipe.slides : 0,
-    section: recipe.sections,
-    customShow: recipe.customShows,
-    embeddedFont: recipe.embedFont ? 1 : 0,
+    exact: {
+      // --- what the recipe counts ------------------------------------------
+      table: counters.tables,
+      chart: counters.charts,
+      smartArt: counters.diagrams,
+      smartArtDrawing: counters.diagrams,
+      alternateContent: counters.alternates,
+      animation: counters.animations,
+      hyperlink: counters.hyperlinks,
+      picture: counters.pictures,
+      field: counters.fields,
+      graphicFrame: counters.graphicFrames,
+      embeddedPackage: counters.embeddedPackages,
+      comment: counters.comments,
+      notesSlide: counters.notesSlides,
+      section: counters.sections,
+      customShow: counters.customShows,
+      embeddedFont: counters.embeddedFonts,
+
+      // --- what this generator does not write yet ---------------------------
+      // Declared rather than omitted: a zero is a statement that the feature
+      // was considered and left out, and it is what makes the census check
+      // bidirectional. Sub-phase 1.1's corpus decks fill these in.
+      group: 0,
+      connector: 0,
+      customGeom: 0,
+      blipFill: 0,
+      groupFill: 0,
+      innerShadow: 0,
+      glow: 0,
+      softEdge: 0,
+      reflection: 0,
+      scene3d: 0,
+      chartEx: 0,
+      oleObject: 0,
+      video: 0,
+      audio: 0,
+      media: 0,
+      svgBlip: 0,
+      model3d: 0,
+      ink: 0,
+      contentPart: 0,
+      vml: 0,
+      math: 0,
+      decorative: 0,
+      transition: 0,
+      macros: 0,
+      thumbnail: 0,
+    },
+    present,
   };
 }
-
-const every = (index: number, n: number): boolean => n > 0 && (index + 1) % n === 0;
 
 /** Write a whole deck into an open archive. Streams: nothing is held but one part. */
 export function writeDeck(
@@ -867,25 +1068,16 @@ export function writeDeck(
 ): DeckSummary {
   const layoutCount = LAYOUTS.length;
   const imageSize = recipe.imageBytes > 0 ? sizeForBytes(recipe.imageBytes) : 0;
-  const counters: Counters = {
-    slideShapes: 0,
-    tables: 0,
-    charts: 0,
-    diagrams: 0,
-    alternates: 0,
-    animations: 0,
-    hyperlinks: 0,
-    pictures: 0,
-  };
+  const counters = createCounters();
 
   // Which slides get what has to be known before `[Content_Types].xml` is
   // written, because that part is first in the archive and names every override
   // in it. Deciding twice - once here and once while writing - is how a content
   // type and a part drift apart.
   const slideIndices = Array.from({ length: recipe.slides }, (_, i) => i);
-  const chartSlides = slideIndices.filter((i) => every(i, recipe.chartEvery));
-  const diagramSlides = slideIndices.filter((i) => every(i, recipe.diagramEvery));
-  const commentSlides = recipe.comments ? slideIndices.filter((i) => every(i, 15)) : [];
+  const chartSlides = slideIndices.filter((i) => occurs(i, recipe.charts));
+  const diagramSlides = slideIndices.filter((i) => occurs(i, recipe.diagrams));
+  const commentSlides = slideIndices.filter((i) => occurs(i, recipe.comments));
 
   const overrides: string[] = [];
   const override = (partName: string, contentType: string): void => {
@@ -1003,9 +1195,11 @@ export function writeDeck(
   if (fontBytes !== null) {
     fontRid = nextRid();
     presRels.push({ id: fontRid, type: REL + 'font', target: 'fonts/font1.fntdata' });
+    counters.embeddedFonts = 1;
   }
 
   const sectionCount = Math.min(recipe.sections, recipe.slides);
+  counters.sections = sectionCount;
   const perSection = sectionCount > 0 ? Math.ceil(recipe.slides / sectionCount) : 0;
   const sectionsXml =
     sectionCount === 0
@@ -1025,6 +1219,7 @@ export function writeDeck(
         '</p14:sectionLst></p:ext></p:extLst>';
 
   const customShowCount = Math.min(recipe.customShows, recipe.slides);
+  counters.customShows = customShowCount;
   const customShowsXml =
     customShowCount === 0
       ? ''
@@ -1070,7 +1265,11 @@ export function writeDeck(
       '<p:sldIdLst>' +
       slideRids.map((id, i) => `<p:sldId id="${String(256 + i)}" r:id="${id}"/>`).join('') +
       '</p:sldIdLst>' +
-      `<p:sldSz cx="${String(SLIDE_WIDTH)}" cy="${String(SLIDE_HEIGHT)}" type="screen16x9"/>` +
+      `<p:sldSz cx="${String(recipe.slideWidth)}" cy="${String(recipe.slideHeight)}"` +
+      (recipe.slideWidth === 12192000 && recipe.slideHeight === 6858000
+        ? ' type="screen16x9"'
+        : '') +
+      '/>' +
       `<p:notesSz cx="${String(NOTES_WIDTH)}" cy="${String(NOTES_HEIGHT)}"/>` +
       embeddedFontLst +
       customShowsXml +
@@ -1204,12 +1403,12 @@ export function writeDeck(
         type: REL + 'image',
         target: `../media/image${String(number)}.png`,
       });
-      body += pictureXml(nextId++, imageRid, 6172200, 1825625);
+      body += pictureXml(nextId++, imageRid, 6172200, 1825625, counters);
       counters.pictures += 1;
     }
 
     let hyperlinkRid: string | null = null;
-    if (every(index, recipe.hyperlinkEvery)) {
+    if (occurs(index, recipe.hyperlinks)) {
       hyperlinkRid = nextSlideRid();
       rels.push({
         id: hyperlinkRid,
@@ -1219,6 +1418,13 @@ export function writeDeck(
       });
       counters.hyperlinks += 1;
     }
+
+    // The only thing that carries the link is the first free shape, so a recipe
+    // with no free shapes used to write the relationship and then attach it to
+    // nothing: an orphan rel, and a census reporting no hyperlink against a
+    // recipe that asked for one. `danglingRelationships()` cannot catch it
+    // either, because an External relationship has no part to be missing.
+    // Rather than drop the feature, give it somewhere to live.
 
     body += placeholder(
       nextId++,
@@ -1235,21 +1441,34 @@ export function writeDeck(
         `<a:t>${String(number)}</a:t></a:fld>` +
         '<a:endParaRPr lang="en-GB"/></a:p>',
     );
+    counters.fields += 1;
 
     const firstFreeShapeId = nextId;
     for (let s = 0; s < recipe.shapesPerSlide; s++) {
-      body += freeShapeXml(nextId++, index * 17 + s, random, s === 0 ? hyperlinkRid : null);
+      body += freeShapeXml(
+        nextId++,
+        index * 17 + s,
+        random,
+        s === 0 ? hyperlinkRid : null,
+        counters,
+        recipe.slideWidth,
+        recipe.slideHeight,
+      );
+    }
+    if (hyperlinkRid !== null && recipe.shapesPerSlide === 0) {
+      body += linkShapeXml(nextId++, hyperlinkRid, counters);
     }
 
-    if (every(index, recipe.alternateContentEvery)) {
-      body += alternateContentXml(nextId++);
+    if (occurs(index, recipe.alternateContent)) {
+      body += alternateContentXml(nextId++, counters);
       counters.alternates += 1;
     }
-    if (every(index, recipe.tableEvery)) {
+    if (occurs(index, recipe.tables)) {
       body += tableXml(nextId++, 4, 4, random);
       counters.tables += 1;
+      counters.graphicFrames += 1;
     }
-    if (every(index, recipe.chartEvery)) {
+    if (occurs(index, recipe.charts)) {
       chartNumber += 1;
       const chartRid = nextSlideRid();
       rels.push({
@@ -1259,6 +1478,7 @@ export function writeDeck(
       });
       body += chartFrameXml(nextId++, chartRid);
       counters.charts += 1;
+      counters.graphicFrames += 1;
 
       zip.add(`ppt/charts/chart${String(chartNumber)}.xml`, chartXml(0xc4a7 + chartNumber));
       zip.add(
@@ -1280,8 +1500,9 @@ export function writeDeck(
         writeInnerZip(workbookParts()),
         { store: true },
       );
+      counters.embeddedPackages += 1;
     }
-    if (every(index, recipe.diagramEvery)) {
+    if (occurs(index, recipe.diagrams)) {
       diagramNumber += 1;
       const k = String(diagramNumber);
       const ids: [string, string, string, string] = [
@@ -1304,8 +1525,9 @@ export function writeDeck(
       });
       body += diagramFrameXml(nextId++, ids);
       counters.diagrams += 1;
+      counters.graphicFrames += 1;
 
-      const parts = diagramParts(0xd1a6 + diagramNumber * 101);
+      const parts = diagramParts(0xd1a6 + diagramNumber * 101, counters);
       // `dsp:dataModelExt/@relId` resolves against the **slide's** relationships,
       // not the data part's, even though the element lives inside data1.xml.
       zip.add(
@@ -1322,7 +1544,7 @@ export function writeDeck(
       zip.add(`ppt/diagrams/colors${k}.xml`, parts.colors);
       zip.add(`ppt/diagrams/drawing${k}.xml`, parts.drawing);
     }
-    if (recipe.comments && every(index, 15)) {
+    if (occurs(index, recipe.comments)) {
       commentNumber += 1;
       const commentRid = nextSlideRid();
       rels.push({
@@ -1338,6 +1560,7 @@ export function writeDeck(
           `<p:text>${escapeXml('Synthetic comment on slide ' + String(number))}</p:text></p:cm>` +
           '</p:cmLst>',
       );
+      counters.comments += 1;
     }
 
     if (recipe.notes) {
@@ -1355,7 +1578,7 @@ export function writeDeck(
     // happens to come last.
     counters.slideShapes += nextId - 2;
 
-    const timing = every(index, recipe.animationEvery) ? timingXml(firstFreeShapeId) : '';
+    const timing = occurs(index, recipe.animations) ? timingXml(firstFreeShapeId) : '';
     if (timing !== '') counters.animations += 1;
 
     zip.add(
@@ -1409,6 +1632,7 @@ export function writeDeck(
           { id: 'rId2', type: REL + 'slide', target: `../slides/slide${String(number)}.xml` },
         ]),
       );
+      counters.notesSlides += 1;
     }
   }
 
@@ -1419,7 +1643,7 @@ export function writeDeck(
       '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"' +
       ' xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/"' +
       ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
-      `<dc:title>PPTX Studio benchmark deck: ${escapeXml(recipe.name)}</dc:title>` +
+      `<dc:title>${escapeXml(recipe.title)}</dc:title>` +
       '<dc:creator>tools/bench/make-deck.ts</dc:creator>' +
       '<cp:lastModifiedBy>tools/bench/make-deck.ts</cp:lastModifiedBy>' +
       '<dcterms:created xsi:type="dcterms:W3CDTF">2026-08-27T00:00:00Z</dcterms:created>' +
@@ -1446,6 +1670,6 @@ export function writeDeck(
     entries: result.entries,
     imagePixels: imageSize,
     slideShapes: counters.slideShapes,
-    expected: expectedFeatures(recipe, counters),
+    expected: expectedFeatures(counters),
   };
 }
