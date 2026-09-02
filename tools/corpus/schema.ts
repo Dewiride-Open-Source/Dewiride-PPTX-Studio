@@ -154,7 +154,7 @@ export interface Producer {
  * independent evidence about XML lexical form.
  *
  * Declared per collection rather than per entry because within a collection it
- * is true by construction, and fifty-one repetitions of the same pair is fifty
+ * is true by construction, and fifty-two repetitions of the same pair is fifty-one
  * chances for one of them to be wrong.
  *
  * The values are free-form on purpose: `tools/corpus/gen` names a directory,

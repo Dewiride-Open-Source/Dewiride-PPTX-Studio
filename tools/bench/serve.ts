@@ -37,6 +37,7 @@ const TYPES: Readonly<Record<string, string>> = {
   '.json': 'application/json; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.pptm': 'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
   '.png': 'image/png',
 };
 

@@ -12,6 +12,8 @@
   "dependencies": {
     "@pptx-studio/census": "workspace:^",
     "@pptx-studio/opc": "workspace:^",
+    "@pptx-studio/validate": "workspace:^",
+    "@pptx-studio/writer": "workspace:^",
     "@pptx-studio/xml": "workspace:^"
   },
   "devDependencies": {

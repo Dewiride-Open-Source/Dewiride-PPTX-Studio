@@ -243,7 +243,7 @@ describe('bisecting a deck against our own export of it', () => {
   it('finds nothing to bisect, on every deck in the corpus', () => {
     // The one-argument form of the command, which is the workflow it exists
     // for: read a deck, write it back, and ask what we changed. The answer, on
-    // all fifty-one, is nothing - which is sub-phases 1.3 and 1.4 restated at
+    // all fifty-two, is nothing - which is sub-phases 1.3 and 1.4 restated at
     // the granularity this sub-phase works in, and the baseline that makes a
     // real bisection meaningful when one is ever needed.
     const failed: string[] = [];

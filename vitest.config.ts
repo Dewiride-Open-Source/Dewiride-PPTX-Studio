@@ -61,6 +61,28 @@ export default defineConfig({
         },
       },
       {
+        // apps/ is the Worker boundary and the download path - the half of the
+        // export that no package can reach, because nothing in packages/ is
+        // allowed to know a File or a Blob exists. Chromium, like core, and for
+        // a stronger reason: this is the environment the code is for.
+        //
+        // These tests fetch decks out of corpus/ over Vite's own dev server,
+        // which is the one thing a package test cannot do - browser mode has no
+        // filesystem, so the writer's suite works on synthetic packages and the
+        // committed corpus is only reachable from here.
+        extends: true,
+        test: {
+          name: 'apps',
+          include: ['apps/*/src/**/*.test.ts'],
+          browser: {
+            provider: playwright(),
+            enabled: true,
+            headless: true,
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+      {
         // tools/ is Node-side by definition: it reads the filesystem and the
         // workspace manifests.
         extends: true,

@@ -1,4 +1,5 @@
 import type { PackageCensus } from '@pptx-studio/census';
+import type { EditKind, ExportOutcome } from './export.js';
 
 /**
  * The Worker boundary, written down.
@@ -38,7 +39,24 @@ export interface ParseRequest {
   readonly stages: boolean;
 }
 
-export type WorkerRequest = ParseRequest;
+/**
+ * Read a package and write it back out. `bytes` is transferred and detached.
+ *
+ * A separate request rather than a flag on `ParseRequest`, because the two are
+ * separate acts: a page can inspect a deck ten times and never export it, and
+ * exporting needs the bytes a second time - the first set was detached by the
+ * transfer that carried it here. The page re-reads the `File` rather than the
+ * worker holding 200 MB alive on the chance somebody presses Save.
+ */
+export interface ExportRequest {
+  readonly type: 'export';
+  readonly id: number;
+  readonly name: string;
+  readonly bytes: ArrayBuffer;
+  readonly edit: EditKind;
+}
+
+export type WorkerRequest = ParseRequest | ExportRequest;
 
 /**
  * What the worker can actually see.
@@ -172,5 +190,21 @@ export interface ReadyMessage {
   readonly environment: WorkerEnvironment;
 }
 
+/**
+ * The exported package, and everything that was checked on the way out.
+ *
+ * `bytes` goes back the same way it came: transferred, not cloned. A structured
+ * clone here would allocate a second copy of the whole archive on the main
+ * thread at the exact moment the page is about to hand it to a `Blob`, which
+ * allocates a third.
+ */
+export interface ExportedMessage {
+  readonly type: 'exported';
+  readonly id: number;
+  readonly name: string;
+  readonly bytes: ArrayBuffer;
+  readonly outcome: ExportOutcome;
+}
+
 export type WorkerResponse =
-  AcceptedMessage | ProgressMessage | DoneMessage | FailedMessage | ReadyMessage;
+  AcceptedMessage | ProgressMessage | DoneMessage | ExportedMessage | FailedMessage | ReadyMessage;

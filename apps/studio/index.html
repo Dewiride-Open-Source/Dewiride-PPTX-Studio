@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PPTX Studio — inspect</title>
+    <title>PPTX Studio — open, inspect, hand it back</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -164,6 +164,29 @@
         color: var(--dim);
         font-size: 0.85rem;
       }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        padding: 0.35rem 0 0.9rem;
+      }
+      button {
+        font: inherit;
+        color: var(--ink);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0.45rem 0.95rem;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--accent);
+      }
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
       footer {
         max-width: 68rem;
         margin: 3rem auto 0;
@@ -177,12 +200,13 @@
   </head>
   <body>
     <main>
-      <h1>PPTX Studio <span>— inspect</span></h1>
+      <h1>PPTX Studio <span>— open, inspect, hand it back</span></h1>
       <p class="lead">
         Drop a <code>.pptx</code> and read its internals: every part, every content type, the
         relationship graph, and a census of the features it uses keyed to the phase of the plan that
-        renders each one. Nothing is uploaded. The file is read in a Web Worker in this tab, by the
-        same code <code>pptx-studio inspect</code> runs.
+        renders each one — then save it back out and open the result in real PowerPoint. Nothing is
+        uploaded. The file is read, checked and written in a Web Worker in this tab, by the same
+        code <code>pptx-studio inspect</code> and <code>pptx-studio roundtrip</code> run.
       </p>
 
       <div id="drop" role="button" tabindex="0" aria-describedby="status">
@@ -196,9 +220,11 @@
     </main>
 
     <footer>
-      Pre-alpha. Sub-phase 0.8 of
-      <a href="https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio">PPTX Studio</a>, which
-      reads a package and describes it. Rendering starts at phase 2.
+      Pre-alpha. Gate 1 of
+      <a href="https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio">PPTX Studio</a>: a
+      package is read, described, and handed back with its charts, SmartArt, animations, OLE objects
+      and macros intact — because parts nobody edited are copied out of the source archive still
+      compressed rather than regenerated. Rendering starts at phase 2.
     </footer>
 
     <script type="module" src="./dist/main.js"></script>

@@ -16,6 +16,8 @@
     "paths": {
       "@pptx-studio/census": ["./packages/census/src/index.ts"],
       "@pptx-studio/census/*": ["./packages/census/src/*"],
+      "@pptx-studio/geometry": ["./packages/geometry/src/index.ts"],
+      "@pptx-studio/geometry/*": ["./packages/geometry/src/*"],
       "@pptx-studio/opc": ["./packages/opc/src/index.ts"],
       "@pptx-studio/opc/*": ["./packages/opc/src/*"],
       "@pptx-studio/validate": ["./packages/validate/src/index.ts"],

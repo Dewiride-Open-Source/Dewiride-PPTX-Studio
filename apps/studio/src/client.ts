@@ -1,3 +1,4 @@
+import type { EditKind, ExportOutcome } from './export.js';
 import type { DoneMessage, WorkerEnvironment, WorkerResponse } from './protocol.js';
 
 /**
@@ -35,6 +36,14 @@ export interface CensusResult extends DoneMessage {
   readonly wallMs: number;
 }
 
+/** An export, as the page sees it. The bytes are the file the user gets. */
+export interface ExportResult {
+  readonly name: string;
+  readonly bytes: Uint8Array;
+  readonly outcome: ExportOutcome;
+  readonly wallMs: number;
+}
+
 export interface RunOptions {
   readonly repeat?: number;
   /** Also time inflate, decode and tokenize separately. */
@@ -42,7 +51,7 @@ export interface RunOptions {
   readonly onProgress?: (done: number, total: number, part: string) => void;
 }
 
-export class CensusWorker {
+export class StudioWorker {
   readonly #worker: Worker;
   #nextId = 1;
   readonly ready: Promise<WorkerEnvironment>;
@@ -110,6 +119,44 @@ export class CensusWorker {
         },
         [buffer],
       );
+    });
+  }
+
+  /**
+   * Export `buffer`, which is **transferred** and detached, and get bytes back.
+   *
+   * The returned `Uint8Array` is a fresh transfer, so nothing is copied in
+   * either direction: the deck goes in as a pointer move and the archive comes
+   * back as one. A 200 MB deck therefore costs one allocation in the worker for
+   * the output and nothing at all on this thread.
+   */
+  export(name: string, buffer: ArrayBuffer, edit: EditKind = 'none'): Promise<ExportResult> {
+    const id = this.#nextId++;
+    const startedAt = performance.now();
+
+    return new Promise<ExportResult>((resolve, reject) => {
+      const onMessage = (event: MessageEvent<WorkerResponse>): void => {
+        const message = event.data;
+        if ('id' in message && message.id !== id) return;
+
+        if (message.type === 'failed') {
+          this.#worker.removeEventListener('message', onMessage);
+          reject(new Error(message.code + ': ' + message.message));
+          return;
+        }
+        if (message.type === 'exported') {
+          this.#worker.removeEventListener('message', onMessage);
+          resolve({
+            name: message.name,
+            bytes: new Uint8Array(message.bytes),
+            outcome: message.outcome,
+            wallMs: performance.now() - startedAt,
+          });
+        }
+      };
+
+      this.#worker.addEventListener('message', onMessage);
+      this.#worker.postMessage({ type: 'export', id, name, bytes: buffer, edit }, [buffer]);
     });
   }
 

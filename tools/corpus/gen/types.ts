@@ -49,6 +49,13 @@ export interface ProbeDeck {
    * committed extension, and the manifest's `format` field.
    */
   readonly extension?: string;
+  /**
+   * The sub-phase that added the deck, for the manifest's `addedIn`. Defaults
+   * to `1.1`, which is when Tier A was built and when every deck but one
+   * arrived. `a43-kitchen-sink` is the exception: it exists for Gate 1, and a
+   * manifest that dated it to 1.1 would misplace it in the record.
+   */
+  readonly addedIn?: string;
   readonly build: () => ProbePackage;
 }
 

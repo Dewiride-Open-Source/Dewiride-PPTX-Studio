@@ -61,8 +61,16 @@ const spTgt = (spid: number): string => `<p:tgtEl><p:spTgt spid="${String(spid)}
 const attrName = (name: string): string =>
   `<p:attrNameLst><p:attrName>${name}</p:attrName></p:attrNameLst>`;
 
-/** `p:cBhvr`. Sequence: `cTn, tgtEl, attrNameLst` - the target is not first. */
-function cBhvr(spec: {
+/**
+ * `p:cBhvr`. Sequence: `cTn, tgtEl, attrNameLst` - the target is not first.
+ *
+ * This and the three builders below it are exported for `a43-kitchen-sink`,
+ * which needs a timing tree over a chart, a diagram and an OLE frame. Reusing
+ * these rather than writing a second entrance keeps one spelling of the nest in
+ * the corpus: markup that has been read, censused and opened in PowerPoint
+ * once is worth more than markup that has been written twice.
+ */
+export function cBhvr(spec: {
   readonly id: number;
   readonly cTnAttributes?: string;
   readonly stCondLst?: string;
@@ -85,7 +93,7 @@ function cBhvr(spec: {
  * The four wrapper levels every PowerPoint timing tree opens with, ending in
  * the click-effect `p:par` whose `childTnLst` holds `effects`.
  */
-function mainSequence(effects: string, firstId = 3): string {
+export function mainSequence(effects: string, firstId = 3): string {
   const id = (offset: number): string => String(firstId + offset);
   return (
     '<p:timing><p:tnLst>' +
@@ -111,7 +119,7 @@ function mainSequence(effects: string, firstId = 3): string {
 }
 
 /** One click-effect group: a `p:par` whose `cTn` carries the preset triple. */
-function clickEffect(spec: {
+export function clickEffect(spec: {
   readonly id: number;
   readonly presetID: number;
   readonly presetClass: string;
@@ -129,7 +137,7 @@ function clickEffect(spec: {
 }
 
 /** `p:set` making a shape visible - the first behaviour of every entrance. */
-function makeVisible(id: number, spid: number): string {
+export function makeVisible(id: number, spid: number): string {
   return (
     '<p:set>' +
     cBhvr({

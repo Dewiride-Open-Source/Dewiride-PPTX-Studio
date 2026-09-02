@@ -40,6 +40,7 @@ import { a39LargeIds } from './a39-large-ids.ts';
 import { a40Unicode } from './a40-unicode.ts';
 import { a41A4 } from './a41-a4.ts';
 import { a42CustomSize } from './a42-custom-size.ts';
+import { a43KitchenSink } from './a43-kitchen-sink.ts';
 
 /**
  * The Tier A roster, in id order.
@@ -94,4 +95,5 @@ export const PROBE_DECKS: readonly ProbeDeck[] = [
   a40Unicode,
   a41A4,
   a42CustomSize,
+  a43KitchenSink,
 ];

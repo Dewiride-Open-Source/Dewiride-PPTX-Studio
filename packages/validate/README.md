@@ -88,7 +88,7 @@ Two suites that check opposite things, and neither substitutes for the other.
 **It fires.** `validate.test.ts` breaks a minimal deck twenty-nine ways, one per
 rule, and asserts each rule reports the right part and the right XPath.
 
-**It is quiet.** `tools/corpus/validate.test.ts` runs all fifty-one committed
+**It is quiet.** `tools/corpus/validate.test.ts` runs all fifty-two committed
 corpus decks through it and asserts no fatal finding. Every deck in that corpus
 opens in PowerPoint, so a rule that fires on one is a bug and there is no third
 possibility. Three rules were narrowed by exactly that run: `V012` was reporting

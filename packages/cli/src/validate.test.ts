@@ -43,7 +43,7 @@ function decks(collection: string): string[] {
 
 describe('pptx-studio validate', () => {
   // A minute, rather than vitest's default five seconds. Twenty-nine rules over
-  // fifty-one decks is real work, and it started timing out when 1.4 added its
+  // fifty-two decks is real work, and it started timing out when 1.4 added its
   // own corpus sweeps beside it - not because this got slower, but because a
   // timeout tuned to a quiet machine is a test that fails on a busy one.
   it('exits 0 on every deck the corpus says PowerPoint opens', () => {

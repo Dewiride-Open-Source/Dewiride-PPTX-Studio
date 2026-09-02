@@ -9,7 +9,7 @@
     "xml": "tools/corpus/gen",
     "container": "tools/ground-truth/zip.ts"
   },
-  "targetCount": 41,
+  "targetCount": 42,
   "uncovered": [
     {
       "key": "model3d",
@@ -1151,6 +1151,43 @@
         "args": ["--out", "corpus/decks", "--id", "a42-custom-size"]
       },
       "addedIn": "1.1"
+    },
+    {
+      "id": "a43-kitchen-sink",
+      "kind": "deck",
+      "storage": "committed",
+      "path": "a43-kitchen-sink.pptm",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "producer": "tools/corpus/gen",
+      "sha256": "aa16b918ada5f4400ddedf12b96a1bc0f5627c95d4f9ed2fe371eef003c1088c",
+      "bytes": 107724,
+      "slides": 10,
+      "zipEntries": 56,
+      "format": "pptm",
+      "features": {
+        "shape": 22,
+        "placeholder": 13,
+        "presetGeom": 15,
+        "gradientFill": 2,
+        "graphicFrame": 10,
+        "chart": 4,
+        "smartArt": 3,
+        "smartArtDrawing": 2,
+        "oleObject": 4,
+        "embeddedPackage": 1,
+        "picture": 3,
+        "vml": 1,
+        "alternateContent": 1,
+        "animation": 3,
+        "macros": 1
+      },
+      "description": "Charts, SmartArt, animations, OLE and macros in one package, and the only Tier A deck that is deliberately not about one thing. Every other probe isolates a feature so a failure names it; this one exists because Gate 1 asks a different question - not whether five features survive a round trip, but whether they survive it together. That has failure modes none of the five source decks can reach: four Default content types from three feature families sharing one [Content_Types].xml, a macroEnabled main part alongside four chart parts, and p:timing trees whose p:spTgt/@spid names a p:graphicFrame rather than a p:sp - the case where renumbering shape ids on export silently unhooks an animation. Built by merging a21-charts, a23-smartart, a26-ole and a32-macros rather than by re-authoring them, so it cannot drift from the decks it is made of.",
+      "recipe": {
+        "tool": "tools/corpus/gen/build-probes.ts",
+        "args": ["--out", "corpus/decks", "--id", "a43-kitchen-sink"]
+      },
+      "addedIn": "gate-1"
     }
   ]
 }

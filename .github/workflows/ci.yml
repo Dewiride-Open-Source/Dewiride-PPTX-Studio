@@ -27,9 +27,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      # `persist-credentials: false` because nothing here pushes. By default
+      # `checkout` leaves the token in `.git/config`, where every later step -
+      # and everything those steps install - can read it.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
@@ -78,3 +82,46 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+  # Phase 1's whole claim, on its own, in about a minute.
+  #
+  # `check` already runs this - `pnpm roundtrip` is one of its steps, and
+  # `tools/corpus/roundtrip.test.ts` asserts it again from source. So this job
+  # gates nothing that was not gated already, and it is still worth its minute:
+  # it is the number the README carries, and putting it behind a Chromium
+  # install means the one result anybody wants from a pull request arrives last.
+  # Same reasoning that already puts `layering` and `corpus` first inside
+  # `check`, applied one level up.
+  #
+  # No Chromium and no full build: four packages, `node`, fifty-one decks.
+  roundtrip:
+    name: round trip
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Only what the round trip needs: opc, xml, validate, writer. Nothing
+      # links workspace packages into `tools/`, so the script loads the writer
+      # from `dist` and there has to be a `dist`.
+      - name: Build the writer
+        run: pnpm turbo run build --filter=@pptx-studio/writer...
+
+      # Writes the per-collection table to the job summary, and fails if the
+      # committed badge does not say what this run just measured.
+      - name: Round trip the corpus
+        run: pnpm roundtrip

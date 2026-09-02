@@ -15,7 +15,7 @@ closed: forty-six of forty-seven keys covered, one declared.
 
 | Tier  | Producer                              | Planned | Built  |
 | ----- | ------------------------------------- | ------- | ------ |
-| **A** | `tools/corpus/gen`                    | 41      | **41** |
+| **A** | `tools/corpus/gen`                    | 42      | **42** |
 | **B** | Microsoft PowerPoint 365 (16.0.20326) | 9       | **9**  |
 | **C** | `packages/opc`'s own writer           | 1       | **1**  |
 
@@ -40,6 +40,17 @@ The result is a corpus that is well evidenced at one layer and thin at the other
 | ------------------------ | ----------- | ----- | -------------- |
 | the ZIP container        | **3**       | 24    | **17**         |
 | the XML inside the parts | **2**       | 36    | **12**         |
+
+Forty-two, and forty-one of them keep the tier's rule that a probe is about one thing.
+`a43-kitchen-sink` is the exception, added at Gate 1 and added deliberately: the gate does not ask
+whether five features survive a round trip — five decks here answer that — but whether they survive
+it **together**, which has failure modes none of the five can reach. Four `Default` content types
+from three feature families sharing one `[Content_Types].xml`; a macro-enabled main part beside four
+chart parts; and a `p:timing` tree whose `p:spTgt/@spid` names a `p:graphicFrame` rather than a
+`p:sp`, which is where renumbering shape ids on export silently unhooks an animation. It is built by
+merging `a21`, `a23`, `a26` and `a32` rather than by re-authoring them, so it cannot drift from the
+decks it is made of — and it is the second deck in the corpus with a `vbaProject.bin`, which took
+`macros` off `C-COV`'s single-probe list.
 
 Forty-one was forty-two until `a28` was cut, and forty until `a18-slide-sizes` was built and the
 obvious became unavoidable: `p:sldSz` is one element on `p:presentation`, so a package has exactly
@@ -286,19 +297,20 @@ it is why sub-phase 1.4 compares canonical XML and a relationship graph rather t
 
 ### The awkward ones — built
 
-| id                | probes                                                                                          |
-| ----------------- | ----------------------------------------------------------------------------------------------- |
-| `a32-macros`      | a `.pptm` with a real VBA project whose only body is `Sub Noop()`                               |
-| `a33-thumbnail`   | `docProps/thumbnail.jpeg`, which PowerPoint writes and no _part_ references                     |
-| `a34-extlst`      | `a:extLst`/`p:extLst` with unknown URIs, kept as an ordered opaque list                         |
-| `a35-zip-shapes`  | mixed compression methods, the general-purpose flag bits, and the 520-byte `0xa220` growth hint |
-| `a36-spaced-tags` | self-closing tags written `<x />`, and six more forms no producer here emits                    |
-| `a37-mce`         | `mc:AlternateContent` nested, `mc:Ignorable`, `mc:ProcessContent`, `mc:MustUnderstand`          |
-| `a38-degenerate`  | zero extents, `chExt` of 0, an empty group, a zero path space, an empty `p:spTree`              |
-| `a39-large-ids`   | the four id spaces at their edges, and the one PowerPoint does not implement                    |
-| `a40-unicode`     | part names and text at the edges of what OPC and XML 1.0 permit                                 |
-| `a41-a4`          | `p:sldSz type="A4"` — a second package, because one package holds one slide size                |
-| `a42-custom-size` | a `p:sldSz` with no `@type`, at an extent no enumeration names                                  |
+| id                 | probes                                                                                               |
+| ------------------ | ---------------------------------------------------------------------------------------------------- |
+| `a32-macros`       | a `.pptm` with a real VBA project whose only body is `Sub Noop()`                                    |
+| `a33-thumbnail`    | `docProps/thumbnail.jpeg`, which PowerPoint writes and no _part_ references                          |
+| `a34-extlst`       | `a:extLst`/`p:extLst` with unknown URIs, kept as an ordered opaque list                              |
+| `a35-zip-shapes`   | mixed compression methods, the general-purpose flag bits, and the 520-byte `0xa220` growth hint      |
+| `a36-spaced-tags`  | self-closing tags written `<x />`, and six more forms no producer here emits                         |
+| `a37-mce`          | `mc:AlternateContent` nested, `mc:Ignorable`, `mc:ProcessContent`, `mc:MustUnderstand`               |
+| `a38-degenerate`   | zero extents, `chExt` of 0, an empty group, a zero path space, an empty `p:spTree`                   |
+| `a39-large-ids`    | the four id spaces at their edges, and the one PowerPoint does not implement                         |
+| `a40-unicode`      | part names and text at the edges of what OPC and XML 1.0 permit                                      |
+| `a41-a4`           | `p:sldSz type="A4"` — a second package, because one package holds one slide size                     |
+| `a42-custom-size`  | a `p:sldSz` with no `@type`, at an extent no enumeration names                                       |
+| `a43-kitchen-sink` | charts, SmartArt, animations, OLE and macros **together** — the one deck that is not about one thing |
 
 `a35-zip-shapes` is the **only** corpus deck that deflates. Everything else is stored, so its bytes
 are a pure function of our own XML and `C-REGEN` does not depend on which zlib built it. Making the

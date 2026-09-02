@@ -1,5 +1,6 @@
 import { humanBytes, type PackageCensus } from '@pptx-studio/census';
-import { CensusWorker, type CensusResult } from './client.js';
+import { StudioWorker, type CensusResult, type ExportResult } from './client.js';
+import type { EditKind } from './export.js';
 import type { WorkerEnvironment } from './protocol.js';
 
 /**
@@ -18,7 +19,7 @@ import type { WorkerEnvironment } from './protocol.js';
  * deck come from this code path and not from a special one built to be fast.
  */
 
-const worker = new CensusWorker();
+const worker = new StudioWorker();
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -316,6 +317,221 @@ function renderProblems(census: PackageCensus): HTMLElement | null {
   );
 }
 
+// ------------------------------------------------------------------- Gate 1
+
+/**
+ * Where the bytes come from a second time.
+ *
+ * The deck is **transferred** into the worker, which detaches it, so the page
+ * no longer has the archive it just inspected - by design, since holding a
+ * second copy of a 200 MB file on the main thread is the exact cost the
+ * transfer exists to avoid. A `File` can simply be read again, and a URL can be
+ * fetched again, so what is kept here is the way back to the bytes rather than
+ * the bytes.
+ */
+interface Source {
+  readonly name: string;
+  readonly read: () => Promise<ArrayBuffer>;
+}
+
+let source: Source | null = null;
+
+/** The content types PowerPoint will accept under each extension. */
+const MIME: Readonly<Record<string, string>> = {
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  pptm: 'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
+  ppsx: 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+  potx: 'application/vnd.openxmlformats-officedocument.presentationml.template',
+};
+
+/** `deck.pptm` -> `deck.pptx-studio.pptm`. The extension has to survive. */
+function exportName(name: string): string {
+  const dot = name.lastIndexOf('.');
+  return dot === -1 ? name + '.pptx-studio' : name.slice(0, dot) + '.pptx-studio' + name.slice(dot);
+}
+
+function extensionOf(name: string): string {
+  return name.slice(name.lastIndexOf('.') + 1).toLowerCase();
+}
+
+/**
+ * Hand the file to the browser.
+ *
+ * An object URL and a synthetic click, which is the only download mechanism
+ * that works without a server: a `data:` URL would base64 the whole archive -
+ * a third more bytes, built on the main thread - and the File System Access
+ * API is not in Firefox or Safari. The URL is revoked on the next task rather
+ * than immediately, because revoking it before the browser has started reading
+ * cancels the download in Chromium.
+ */
+function download(bytes: Uint8Array, name: string): void {
+  const type = MIME[extensionOf(name)] ?? 'application/octet-stream';
+  const url = URL.createObjectURL(new Blob([bytes as unknown as BlobPart], { type }));
+  const anchor = el('a');
+  anchor.href = url;
+  anchor.download = name;
+  anchor.style.display = 'none';
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 0);
+}
+
+/**
+ * What the export checked, said plainly.
+ *
+ * The two numbers worth reading are `rewritten` and `streamed`: they are the
+ * architecture's central claim in a form that can be wrong. A no-op export that
+ * rewrote anything at all would mean a part was serialised that nobody edited,
+ * and the whole preservation argument rests on that never happening.
+ */
+function renderExportOutcome(result: ExportResult): HTMLElement {
+  const outcome = result.outcome;
+  const body = el('div');
+  const stats = el('div', 'stats');
+  stats.append(
+    stat('written', humanBytes(outcome.bytesOut), 'read ' + humanBytes(outcome.bytesIn)),
+    stat(
+      'parts rewritten',
+      String(outcome.rewritten.length),
+      outcome.rewritten.length === 0 ? 'nothing was edited' : outcome.rewritten.join(', '),
+    ),
+    stat('parts streamed', String(outcome.streamed), 'copied still compressed'),
+    stat(
+      'preservation',
+      outcome.preservation.skipped === null
+        ? String(outcome.preservation.checked) + ' entries identical'
+        : 'skipped',
+      outcome.preservation.skipped ?? 'compared against the archive we read',
+    ),
+    stat(
+      'firewall',
+      outcome.report === null
+        ? 'off'
+        : String(outcome.report.checked.length) +
+            ' rules, ' +
+            String(outcome.report.findings.length) +
+            ' findings',
+      outcome.report?.ok === true ? 'nothing blocking' : 'blocked',
+    ),
+    stat('export', ms(outcome.ms), 'in the worker'),
+  );
+  body.append(stats);
+
+  const differences = outcome.comparison.differences;
+  body.append(
+    el(
+      'p',
+      'note',
+      differences.length === 0
+        ? 'Compared as documents rather than as bytes: ' +
+            String(outcome.comparison.parts) +
+            ' parts, all identical (' +
+            String(outcome.comparison.xml) +
+            ' as canonical XML, ' +
+            String(outcome.comparison.relationships) +
+            ' as relationship graphs, ' +
+            String(outcome.comparison.binary) +
+            ' by SHA-256).'
+        : String(differences.length) +
+            ' of ' +
+            String(outcome.comparison.parts) +
+            ' parts differ, which is what an edit looks like from the outside:',
+    ),
+  );
+  if (differences.length > 0) {
+    body.append(
+      table(
+        ['part', 'kind', 'what'],
+        differences.map((difference) => [difference.part, difference.kind, difference.detail]),
+      ),
+    );
+  }
+
+  if (outcome.report !== null && outcome.report.findings.length > 0) {
+    body.append(
+      table(
+        ['rule', 'severity', 'part', 'message'],
+        outcome.report.findings.map((finding) => [
+          finding.rule,
+          finding.severity,
+          finding.where.part,
+          finding.message,
+        ]),
+      ),
+    );
+  }
+
+  return body;
+}
+
+async function save(edit: EditKind): Promise<ExportResult> {
+  if (source === null) throw new Error('nothing has been opened yet');
+  const target = requireElement('export-result');
+  target.replaceChildren(el('p', 'note', 'exporting …'));
+  setStatus('exporting ' + source.name + ' …', true);
+
+  try {
+    const result = await worker.export(source.name, await source.read(), edit);
+    target.replaceChildren(renderExportOutcome(result));
+    download(result.bytes, exportName(result.name));
+    setStatus(
+      exportName(result.name) +
+        ' — ' +
+        String(result.outcome.rewritten.length) +
+        ' part(s) rewritten, ' +
+        String(result.outcome.streamed) +
+        ' streamed',
+    );
+    return result;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    target.replaceChildren(el('p', 'note', 'the export was refused: ' + message));
+    setStatus(message);
+    throw error;
+  }
+}
+
+/**
+ * The Gate 1 panel: two buttons and everything the export checked.
+ *
+ * Built here rather than in `index.html` because it only makes sense once a
+ * deck is open, and a Save button that is present and inert before then is a
+ * worse answer than one that is not present.
+ */
+function renderExport(): HTMLElement {
+  const body = el('div');
+  body.append(
+    el(
+      'p',
+      'note',
+      'Everything is read and written in the Worker in this tab. Nothing is uploaded. ' +
+        'The bytes you get are only handed over once the preservation check and the ' +
+        'twenty-nine repair-firewall rules have both passed.',
+    ),
+  );
+
+  const actions = el('div', 'actions');
+  const plain = el('button', 'primary', 'Save a copy');
+  plain.type = 'button';
+  plain.addEventListener('click', () => void save('none'));
+  const stamped = el('button', undefined, 'Save with a stamp');
+  stamped.type = 'button';
+  stamped.title =
+    'Sets cp:lastModifiedBy in docProps/core.xml, and nothing else. One part is ' +
+    'serialised afresh; every other part is copied out of the source archive.';
+  stamped.addEventListener('click', () => void save('stamp'));
+  actions.append(plain, stamped);
+  body.append(actions);
+
+  const result = el('div');
+  result.id = 'export-result';
+  body.append(result);
+  return section('Hand it back', body);
+}
+
 function render(result: CensusResult): void {
   const output = requireElement('output');
   output.replaceChildren();
@@ -327,6 +543,7 @@ function render(result: CensusResult): void {
   const problems = renderProblems(result.census);
   if (problems !== null) output.append(problems);
   output.append(
+    renderExport(),
     renderTimings(result),
     renderSummary(result.census),
     renderFeatures(result.census),
@@ -368,6 +585,7 @@ async function inspect(
 }
 
 async function inspectFile(file: File, repeat = 1): Promise<CensusResult> {
+  source = { name: file.name, read: () => file.arrayBuffer() };
   return inspect(file.name, await file.arrayBuffer(), repeat);
 }
 
@@ -375,6 +593,14 @@ async function inspectUrl(url: string, repeat = 1): Promise<CensusResult> {
   const response = await fetch(url);
   if (!response.ok) throw new Error('could not fetch ' + url + ': ' + String(response.status));
   const name = url.slice(url.lastIndexOf('/') + 1);
+  source = {
+    name,
+    read: async () => {
+      const again = await fetch(url);
+      if (!again.ok) throw new Error('could not fetch ' + url + ': ' + String(again.status));
+      return again.arrayBuffer();
+    },
+  };
   return inspect(name, await response.arrayBuffer(), repeat, true);
 }
 
@@ -416,11 +642,17 @@ function wire(): void {
 interface StudioAutomation {
   readonly censusFromUrl: (url: string, repeat?: number) => Promise<CensusResult>;
   readonly environment: () => Promise<WorkerEnvironment>;
+  /** Inspect a deck, then export it - the same path the two buttons take. */
+  readonly exportFromUrl: (url: string, edit?: EditKind) => Promise<ExportResult>;
 }
 
 (globalThis as unknown as { pptxStudio: StudioAutomation }).pptxStudio = {
   censusFromUrl: (url, repeat = 1) => inspectUrl(url, repeat),
   environment: () => worker.ready,
+  exportFromUrl: async (url, edit = 'none') => {
+    await inspectUrl(url);
+    return save(edit);
+  },
 };
 
 wire();

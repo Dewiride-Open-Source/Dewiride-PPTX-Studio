@@ -87,6 +87,14 @@ export default tseslint.config(
             'packages/*/tsdown.config.ts',
             'apps/*/tsdown.config.ts',
           ],
+          // typescript-eslint caps the default project at eight files and says
+          // so in the name of this option, because a wide default project is a
+          // real performance problem. The glob above is not wide: it is one
+          // twelve-line build config per package plus vitest's, and the eighth
+          // package - `geometry`, in 2.1 - is what tripped it. The plan reaches
+          // about twenty packages, so this is set with headroom rather than
+          // being nudged up once per sub-phase.
+          maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 32,
         },
         tsconfigRootDir: import.meta.dirname,
       },

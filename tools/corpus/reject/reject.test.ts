@@ -101,7 +101,7 @@ describe('C-REJECT', () => {
 
   it('covers the four rules no good deck can exercise', () => {
     // The gap `tools/corpus/validate.test.ts` writes down: `V022`, `V024`,
-    // `V025` and `V026` have no instance anywhere in the fifty-one decks,
+    // `V025` and `V026` have no instance anywhere in the fifty-two decks,
     // because every one of them is a file PowerPoint refuses.
     const covered = new Set(REJECT_FIXTURES.map((fixture) => fixture.rule));
     for (const id of ['V022', 'V024', 'V025', 'V026']) expect(covered).toContain(id);

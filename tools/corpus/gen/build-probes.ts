@@ -152,7 +152,7 @@ if (options.manifest) {
     // Forty-one, not the roster's original forty-two. `a28-model3d` is cut and
     // `model3d` is declared below, which is the outcome ROSTER.md wrote down for
     // the case where E4 is not run.
-    targetCount: 41,
+    targetCount: 42,
     // C019, and the last of the four named rules. The array lives here because
     // Tier A is the tier that would have covered the key: the slot that is
     // missing is `a28-model3d`, and whoever builds it deletes this entry in the
@@ -200,10 +200,14 @@ if (options.manifest) {
           tool: 'tools/corpus/gen/build-probes.ts',
           args: ['--out', 'corpus/decks', '--id', item.deck.id],
         },
-        addedIn: '1.1',
+        addedIn: item.deck.addedIn ?? '1.1',
       })),
   };
   const path = join(outDir, 'manifest.json');
   writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n');
-  console.log('\nwrote ' + path);
+  // `JSON.stringify(..., null, 2)` puts every array element on its own line and
+  // Prettier collapses the short ones, so what is written here is not what is
+  // committed until Prettier has seen it. Said out loud because the failure is
+  // otherwise `pnpm format:check` complaining about a file nobody edited.
+  console.log('\nwrote ' + path + '\n  now run: npx prettier --write ' + path);
 }

@@ -1,7 +1,9 @@
 import { censusPackage } from '@pptx-studio/census';
 import { isRelationshipPartName, PartStore } from '@pptx-studio/opc';
 import { XmlTokenizer } from '@pptx-studio/xml';
+import { exportDeck } from './export.js';
 import type {
+  ExportRequest,
   MemoryReading,
   StageTiming,
   RunTiming,
@@ -31,7 +33,7 @@ import type {
  * becoming `any`.
  */
 interface WorkerScope {
-  postMessage(message: WorkerResponse): void;
+  postMessage(message: WorkerResponse, transfer?: readonly Transferable[]): void;
   addEventListener(type: 'message', listener: (event: { data: WorkerRequest }) => void): void;
   readonly crossOriginIsolated: boolean;
   readonly navigator: { readonly hardwareConcurrency: number; readonly userAgent: string };
@@ -92,10 +94,52 @@ const environment = probeEnvironment();
 
 scope.addEventListener('message', (event) => {
   const request = event.data;
-  if (request.type !== 'parse') return;
-
-  void run(request);
+  if (request.type === 'parse') void run(request);
+  else if (request.type === 'export') exportPackageFor(request);
 });
+
+/**
+ * Read a package and hand the bytes back.
+ *
+ * Synchronous from end to end, and that is the whole argument for the worker:
+ * `exportDeck` inflates, parses, serialises, writes an archive and then reads
+ * that archive back twice to check it, with no yield point anywhere in the
+ * chain. On the main thread that is a frozen tab for however long it takes -
+ * not a slow one, a frozen one - which is exactly the shape of the work the
+ * census does, and exactly why the boundary was drawn here in 0.8 rather than
+ * being retrofitted now.
+ *
+ * A throw is not a crash. `exportPackage` refuses to return bytes that the
+ * firewall or the preservation check would not stand behind, and that refusal
+ * arriving as a `failed` message with the rule's code in it is the feature -
+ * PowerPoint's own diagnostic for the same file is a dialog with no detail.
+ */
+function exportPackageFor(request: ExportRequest): void {
+  scope.postMessage({ type: 'accepted', id: request.id });
+  try {
+    const product = exportDeck(new Uint8Array(request.bytes), request.edit);
+    // `slice()` because the emitted array may be a view onto a larger buffer,
+    // and transferring the buffer would hand over whatever else is in it.
+    const buffer = product.bytes.slice().buffer;
+    scope.postMessage(
+      {
+        type: 'exported',
+        id: request.id,
+        name: request.name,
+        bytes: buffer,
+        outcome: product.outcome,
+      },
+      [buffer],
+    );
+  } catch (error) {
+    scope.postMessage({
+      type: 'failed',
+      id: request.id,
+      code: errorCode(error),
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
 
 async function run(request: {
   id: number;

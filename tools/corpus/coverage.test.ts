@@ -98,11 +98,15 @@ describe('what C-COV says', () => {
     expect(gap.why).toContain('no public specification');
   });
 
-  it('rests fourteen of the forty-six on a single deck each', () => {
+  it('rests thirteen of the forty-six on a single deck each', () => {
     // Not a violation and not a target: a probe corpus is built one feature at
     // a time, so most features have exactly one probe. It is here because
     // "46 of 47" reads like breadth and this is the shape underneath it - and
     // because it is the list to check first when a deck is about to be deleted.
+    //
+    // Fourteen until Gate 1. `a43-kitchen-sink` is the corpus's second deck
+    // with a `vbaProject.bin` in it, so `macros` came off this list - which is
+    // most of what a second probe for a feature is worth.
     const alone = [...COVERED]
       .filter(([, decks]) => decks.length === 1)
       .map(([key, decks]) => key + ' <- ' + decks[0]!)
@@ -117,7 +121,6 @@ describe('what C-COV says', () => {
       'groupFill <- a03-fills',
       'ink <- a27-ink',
       'innerShadow <- a04-effects',
-      'macros <- a32-macros',
       'math <- a29-math',
       'media <- a24-media',
       'scene3d <- a04-effects',

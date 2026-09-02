@@ -26,7 +26,7 @@ import { describe, expect, it } from 'vitest';
  *
  * So this file exercises the comparator from three directions:
  *
- * 1. It agrees, on all fifty-one decks.
+ * 1. It agrees, on all fifty-two decks.
  * 2. It keeps agreeing when the archive is deliberately rebuilt differently -
  *    a normalised entry order and a different deflate level - which is where a
  *    byte-equality gate would be red.
@@ -72,8 +72,8 @@ const encode = (text: string): Uint8Array => new TextEncoder().encode(text);
 describe('a round trip of every committed deck', () => {
   const results = DECKS.map((deck) => ({ deck, result: roundTripPackage(deck.bytes) }));
 
-  it('reads and writes all fifty-one with nothing to report', () => {
-    expect(results).toHaveLength(51);
+  it('reads and writes all fifty-two with nothing to report', () => {
+    expect(results).toHaveLength(52);
     const failures = results
       .filter(({ result }) => !result.ok)
       .map(({ deck, result }) => deck.id + ': ' + JSON.stringify(result.comparison.differences));
@@ -97,12 +97,17 @@ describe('a round trip of every committed deck', () => {
 
     expect(totals.xml + totals.binary + totals.relationships).toBe(parts);
     expect(totals.same).toBe(parts);
-    expect(parts).toBe(1419);
+    expect(parts).toBe(1474);
 
-    // 536 relationship parts, 43 compared as bytes, and the remaining 840 as
-    // canonical XML. The 43 is wider than the 24 parts under `/ppt/media/` that
-    // the media sweep can touch: it also counts five `.fntdata`, four embedded
-    // workbooks, eleven `docProps/thumbnail.jpeg` and one `vbaProject.bin`.
+    // 553 relationship parts, 46 compared as bytes, and the remaining 875 as
+    // canonical XML. The 46 is wider than the 23 parts under `/ppt/media/` that
+    // the media sweep can touch: it also counts five `.fntdata`, five embedded
+    // workbooks, eleven `docProps/thumbnail.jpeg` and two `vbaProject.bin`.
+    //
+    // Counted, not recited. The previous spelling of this comment claimed
+    // twenty-four media parts against a total of forty-three, which does not
+    // add up - and nothing in the suite would ever have said so, because the
+    // breakdown was prose beside three numbers rather than a fourth number.
     //
     // What is *not* in it any more is the three `vmlDrawing` parts. VML is XML
     // whose content type does not say so - no `+xml` anywhere in it - and the
@@ -111,9 +116,9 @@ describe('a round trip of every committed deck', () => {
     // its input, which matched nothing; before the fix these three compared as
     // opaque bytes, which is right about the answer and wrong about everything
     // else, including where a difference would be reported.
-    expect(totals.relationships).toBe(536);
-    expect(totals.binary).toBe(43);
-    expect(totals.xml).toBe(840);
+    expect(totals.relationships).toBe(553);
+    expect(totals.binary).toBe(46);
+    expect(totals.xml).toBe(875);
   });
 
   it('renames no relationship id, because this writer never renumbers', () => {
@@ -326,7 +331,7 @@ describe('the premise the relabelling rests on', () => {
    * names, and this is the assertion that says why. The plan names eight:
    * `r:id`, `r:embed`, `r:link`, `r:pict`, `r:dm`, `r:lo`, `r:qs`, `r:cs`. The
    * corpus has eight too - and they are not the same eight. `r:blip` is here, on
-   * forty-six attributes, and `r:pict` is not.
+   * forty-eight attributes, and `r:pict` is not.
    *
    * A list of names would therefore already have been one entry short, on a
    * corpus we built ourselves, before meeting a single deck from outside. That
@@ -364,6 +369,6 @@ describe('the premise the relabelling rests on', () => {
       'lo',
       'qs',
     ]);
-    expect(names.get('blip')).toBe(46);
+    expect(names.get('blip')).toBe(48);
   });
 });

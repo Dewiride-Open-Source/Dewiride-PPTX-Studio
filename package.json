@@ -26,8 +26,10 @@
     "test:ui": "vitest --ui",
     "layering": "node tools/layering/check-layering.ts",
     "corpus": "node tools/corpus/check-corpus.ts",
+    "roundtrip": "node tools/corpus/check-roundtrip.ts",
+    "gate1": "node tools/gate1/run-gate1.ts",
     "pkg:qa": "turbo run pkg:qa",
-    "check": "pnpm layering && pnpm corpus && pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm pkg:qa && pnpm test",
+    "check": "pnpm layering && pnpm corpus && pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm roundtrip && pnpm pkg:qa && pnpm test",
     "changeset": "changeset",
     "version-packages": "changeset version && pnpm install --lockfile-only",
     "browsers": "playwright install chromium"

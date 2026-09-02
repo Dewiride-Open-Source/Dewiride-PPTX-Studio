@@ -53,7 +53,7 @@ import { orphanedParts, reachableParts, type Reachability } from './reachability
  * moved from reachable to unreachable. With no baseline there is no "we", and
  * it collects nothing.
  *
- * Measured, for scale: across the fifty-one committed decks there are 1419
+ * Measured, for scale: across the fifty-two committed decks there are 1474
  * parts, 24 of them under `/ppt/media/`, and every part of every deck is
  * reachable from the package root. On this corpus the two policies are the same
  * policy. The difference is a promise about the decks we have not seen.
