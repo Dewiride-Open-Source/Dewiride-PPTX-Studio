@@ -1,7 +1,10 @@
 # @pptx-studio/cli
 
-**Command line tools for PPTX packages.** As of sub-phase 0.8 that is one verb:
-`inspect`, which reads a deck and tells you what is in it.
+**Command line tools for PPTX packages.** As of sub-phase 1.5 that is four
+verbs: `inspect`, which reads a deck and tells you what is in it; `validate`,
+which checks it against the twenty-nine rules a `.pptx` must not break;
+`roundtrip`, which reads a deck, writes it back, and proves nothing moved; and
+`bisect`, which narrows a broken deck down to the change that breaks it.
 
 Apache-2.0 · part of
 [PPTX Studio](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio).
@@ -10,6 +13,15 @@ Apache-2.0 · part of
 npx @pptx-studio/cli inspect deck.pptx
 npx @pptx-studio/cli inspect deck.pptx --parts --namespaces
 npx @pptx-studio/cli inspect deck.pptx --json --out census.json
+
+npx @pptx-studio/cli validate deck.pptx
+npx @pptx-studio/cli validate deck.pptx --explain
+
+npx @pptx-studio/cli roundtrip deck.pptx
+npx @pptx-studio/cli roundtrip deck.pptx --write out.pptx
+
+npx @pptx-studio/cli bisect deck.pptx
+npx @pptx-studio/cli bisect original.pptx broken.pptx --oracle powerpoint
 ```
 
 ```
@@ -42,7 +54,125 @@ otherwise. Warnings and notes never fail the command, so `inspect` answers
 "did this deck load, and is anything in it structurally broken" as a yes/no
 question a script can branch on.
 
-## Options
+## `validate`
+
+```
+  /ppt/slides/slide1.xml
+    V022  fatal
+      /p:sld/p:cSld/p:spTree/p:sp/p:nvSpPr/p:nvPr/p:ph/@type
+      type="hdr" is a whole-package refusal here, alone and with no other change. …
+
+  V027 did not run: it compares against the package as it was opened, and none was supplied. …
+
+validate: 26 rule(s), 1 finding(s), 1 blocking
+```
+
+Exit status is **1** when anything fatal was found and **0** otherwise; a
+warning never fails the command.
+
+Three of the twenty-nine rules compare a package against the package **as it was
+opened**, and a file on the command line has no such history. They are skipped,
+and the report names them rather than counting them as passes. That makes
+`validate` a diagnostic; the export gate is `assertValid`, which the writer calls
+with both packages in hand.
+
+| flag        | what it does                                   |
+| ----------- | ---------------------------------------------- |
+| `--json`    | the report as JSON                             |
+| `--explain` | append the rationale for every rule that fired |
+| `--quiet`   | fatal findings only                            |
+| `--out`     | write to a file instead of stdout              |
+
+## `roundtrip`
+
+```
+roundtrip deck.pptx
+
+  read      47048 bytes, 29 entries
+  written   47048 bytes, 29 entries
+  export    0 part(s) re-serialized, 28 streamed
+  compared  28/28 parts identical (19 xml, 9 rels, 0 binary)
+
+  no differences
+```
+
+Exit status is **1** when the two packages differ — and also when the export was
+refused, or the file would not open at all, because CI wants one bit. The three
+are distinguished on stderr, since each needs completely different work next.
+
+**It is not a byte comparison, and it must not become one.** Entry order,
+deflate level, timestamps and attribute order all differ legitimately between two
+archives holding the same document. Nine of the corpus's PowerPoint-authored
+decks come out exactly 1832 bytes smaller than they went in — every stored byte
+of every entry identical — because Office writes a `0xA220` growth-hint extra
+field on five of their entries and we do not. A byte-equality gate would have
+been red on ten of fifty-one decks before a line of the renderer existed, over
+padding.
+
+What is compared instead: the canonical XML of every XML part, the relationship
+graph with ids treated as opaque labels, and the SHA-256 of everything else. So a
+deck PowerPoint has re-saved — which renumbers every `rId` — still compares
+equal, while one where two `r:embed` values swapped what they point at does not.
+
+| flag             | what it does                                   |
+| ---------------- | ---------------------------------------------- |
+| `--json`         | the comparison as JSON, with a digest per part |
+| `--quiet`        | the differences only, without the tally        |
+| `--write <file>` | also save the package that was written         |
+| `--out <file>`   | write the report to a file instead of stdout   |
+
+`--write` is there for the check nothing in this repository can make: open the
+result in real PowerPoint. `bisect --oracle powerpoint` scripts it.
+
+## `bisect`
+
+```
+bisect deck.pptx                       # against our own export of it
+bisect original.pptx broken.pptx       # against a package from somewhere else
+```
+
+The debugger for this project. PowerPoint's whole diagnostic channel is one
+sentence naming no part, no element and no reason, so the only way to find out
+what it objects to is to ask again with less of the change present, and keep
+asking. This is delta debugging — Zeller's `ddmin` over the set of changes
+between the two packages, applied level by level down the tree.
+
+```
+  delta     135 change(s) in 7 entry(s)
+  oracle    powerpoint, 5 run(s)
+
+  1 change(s) in 1 entry(s), from a delta of 135, in 5 oracle run(s)
+
+  removed  /[Content_Types].xml /Types/Default[3]
+    -  <Default Extension="fntdata" ContentType="application/x-fontdata"/>
+    +  (nothing)
+```
+
+| flag              | what it does                                       |
+| ----------------- | -------------------------------------------------- |
+| `--oracle <name>` | `validate` (default), `powerpoint`, or `command`   |
+| `--command <cmd>` | for `--oracle command`; `{}` becomes the candidate |
+| `--max-runs <n>`  | ceiling on oracle runs (default 2000)              |
+| `--timeout <ms>`  | per run, for the oracles that spawn something      |
+| `--progress`      | a line per oracle run; a bisection is not quick    |
+| `--write <file>`  | save the smallest package that still fails         |
+| `--json`          | the result as JSON                                 |
+| `--out <file>`    | write the report to a file instead of stdout       |
+
+**`--oracle powerpoint` opens each candidate with `OpenAndRepair` switched off,
+and that is not a detail.** `Presentations.Open` has no repair parameter and
+`Open2007` documents the default as on, while `DisplayAlerts` is documented to
+answer a message box with its default — which for "PowerPoint found a problem
+with content" is Repair. So the obvious script reports success on precisely the
+files this project exists to avoid producing. Measured on one deck: with repair
+off it fails with `0x80CB8002`; with repair on it opens, all three slides
+intact.
+
+The harness opens read-only with no window, writes nothing back, and disables
+macros — `AutomationSecurity` defaults to _enabling_ them. If PowerPoint is
+already running it attaches to that instance and never quits it.
+
+## `inspect` options
 
 | flag           | what it does                                                    |
 | -------------- | --------------------------------------------------------------- |
@@ -54,8 +184,9 @@ question a script can branch on.
 
 ## Everything it knows lives somewhere else
 
-`@pptx-studio/census` does the reading, and that package has no Node in it at
-all — it runs in a browser tab and in a Web Worker. This package supplies the
+`@pptx-studio/census` does the reading, `@pptx-studio/validate` does the judging
+and `@pptx-studio/writer` does the writing and the comparing, and not one of the
+three has any Node in it at all — it runs in a browser tab and in a Web Worker. This package supplies the
 two things a browser cannot: a path off the filesystem and a stream to write to.
 
 That split is the point. The drop-a-deck explorer in `apps/studio` computes
@@ -64,14 +195,11 @@ cannot drift apart.
 
 ## Not built yet
 
-The plan gives this package six more verbs. Asking for one says which sub-phase
+The plan gives this package three more verbs. Asking for one says which sub-phase
 brings it rather than "unknown command":
 
-| verb        | what it will do                                              | sub-phase |
-| ----------- | ------------------------------------------------------------ | --------- |
-| `validate`  | run the must-not-break rules over a package                  | 1.2       |
-| `roundtrip` | read a deck and write it back, then prove nothing moved      | 1.4       |
-| `bisect`    | find the smallest change that makes PowerPoint repair a deck | 1.5       |
-| `fidelity`  | score a render against a reference                           | 3.9       |
-| `render`    | render slides to SVG or PNG without a browser                | 3.10      |
-| `resolve`   | show where a resolved property came from                     | 7.x       |
+| verb       | what it will do                               | sub-phase |
+| ---------- | --------------------------------------------- | --------- |
+| `fidelity` | score a render against a reference            | 3.9       |
+| `render`   | render slides to SVG or PNG without a browser | 3.10      |
+| `resolve`  | show where a resolved property came from      | 7.x       |

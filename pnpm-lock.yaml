@@ -178,6 +178,15 @@ importers:
       '@pptx-studio/opc':
         specifier: workspace:^
         version: link:../opc
+      '@pptx-studio/validate':
+        specifier: workspace:^
+        version: link:../validate
+      '@pptx-studio/writer':
+        specifier: workspace:^
+        version: link:../writer
+      '@pptx-studio/xml':
+        specifier: workspace:^
+        version: link:../xml
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: 'catalog:'
@@ -197,6 +206,53 @@ importers:
       fflate:
         specifier: 'catalog:'
         version: 0.8.3
+    devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: 'catalog:'
+        version: 0.18.5
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.24
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.14(@arethetypeswrong/core@0.18.5)(publint@0.3.24)(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/validate:
+    dependencies:
+      '@pptx-studio/opc':
+        specifier: workspace:^
+        version: link:../opc
+      '@pptx-studio/xml':
+        specifier: workspace:^
+        version: link:../xml
+    devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: 'catalog:'
+        version: 0.18.5
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.24
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.14(@arethetypeswrong/core@0.18.5)(publint@0.3.24)(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/writer:
+    dependencies:
+      '@pptx-studio/opc':
+        specifier: workspace:^
+        version: link:../opc
+      '@pptx-studio/validate':
+        specifier: workspace:^
+        version: link:../validate
+      '@pptx-studio/xml':
+        specifier: workspace:^
+        version: link:../xml
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: 'catalog:'

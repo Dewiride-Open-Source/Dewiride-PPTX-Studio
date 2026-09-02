@@ -160,7 +160,11 @@ describe('the command line itself', () => {
   it('prints usage and exits 2 when given nothing', () => {
     const io = streams();
     expect(main([], io.streams)).toBe(2);
-    expect(io.out()).toContain('Usage: pptx-studio inspect');
+    // Two verbs since sub-phase 1.2, so the usage line names neither and the
+    // command list names both.
+    expect(io.out()).toContain('Usage: pptx-studio <command> <deck.pptx>');
+    expect(io.out()).toContain('  inspect  ');
+    expect(io.out()).toContain('  validate ');
   });
 
   it('exits 0 for --help, because asking for help is not an error', () => {
@@ -170,9 +174,12 @@ describe('the command line itself', () => {
   });
 
   it('names the sub-phase that brings a verb it does not have yet', () => {
+    // This said `bisect` until 1.5 built it, which is the way this test is
+    // supposed to fail: a verb that arrives has to be taken off the list, and
+    // the list is what the failure points at.
     const io = streams();
-    expect(main(['bisect', 'deck.pptx'], io.streams)).toBe(2);
-    expect(io.err()).toContain('sub-phase 1.5');
+    expect(main(['render', 'deck.pptx'], io.streams)).toBe(2);
+    expect(io.err()).toContain('sub-phase 3.10');
     expect(io.err()).not.toContain('unknown command');
   });
 

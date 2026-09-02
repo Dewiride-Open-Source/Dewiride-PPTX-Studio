@@ -447,3 +447,80 @@ describe('what write refuses to emit', () => {
     expect(PartStore.open(store.write()).has('/ppt/unused.xml')).toBe(true);
   });
 });
+
+describe('what the store says it is about to rewrite', () => {
+  it('names nothing when nothing was edited', () => {
+    expect(PartStore.open(deck()).rewrittenParts()).toEqual([]);
+  });
+
+  it('names a replaced part and an added one', () => {
+    const store = PartStore.open(deck());
+    store.replacePart('/ppt/slides/slide1.xml', encoder.encode('<p:sld edited="1"/>'));
+    store.addPart('/ppt/extra.xml', CONTENT_TYPE.xml, encoder.encode('<x/>'));
+
+    expect(store.rewrittenParts()).toEqual(['/ppt/slides/slide1.xml', '/ppt/extra.xml']);
+  });
+
+  it('names a relationship collection edited in place', () => {
+    // `PartInfo.fromArchive` cannot see this one - the parsed collection is the
+    // edit and `replacePart` was never called - and `write` re-emits it anyway.
+    const store = PartStore.open(deck());
+    store.relationships('/ppt/slides/slide1.xml').remove('rId2');
+
+    expect(store.info('/ppt/slides/_rels/slide1.xml.rels')?.fromArchive).toBe(true);
+    expect(store.rewrittenParts()).toEqual(['/ppt/slides/_rels/slide1.xml.rels']);
+  });
+});
+
+describe('materializing relationships', () => {
+  it('makes an in-place edit visible to everything that reads bytes', () => {
+    // The bug this method exists for: until it runs, `read` returns the `.rels`
+    // as it arrived, so anything checking the markup - the validator does,
+    // deliberately, because its own parser refuses the malformed ids three of
+    // the rules report - is looking at a package that is not the one about to
+    // be written.
+    const store = PartStore.open(deck());
+    store.relationships('/ppt/slides/slide1.xml').remove('rId2');
+    expect(decoder.decode(store.read('/ppt/slides/_rels/slide1.xml.rels'))).toContain('rId2');
+
+    store.materializeRelationships();
+    expect(decoder.decode(store.read('/ppt/slides/_rels/slide1.xml.rels'))).not.toContain('rId2');
+    expect(store.info('/ppt/slides/_rels/slide1.xml.rels')?.fromArchive).toBe(false);
+  });
+
+  it('gives a collection that grew from nothing a part of its own', () => {
+    // Before this, such a `.rels` was not in `partNames` at all, so nothing
+    // downstream could see it - a relationship part created this session was
+    // the one part of an export that went unchecked.
+    const store = PartStore.open(deck());
+    expect(store.has('/ppt/slideLayouts/_rels/slideLayout1.xml.rels')).toBe(false);
+    store
+      .relationships('/ppt/slideLayouts/slideLayout1.xml')
+      .addTo(REL_TYPE.image, '/ppt/media/image1.png');
+
+    store.materializeRelationships();
+    expect(store.partNames).toContain('/ppt/slideLayouts/_rels/slideLayout1.xml.rels');
+    expect(store.contentTypes.for('/ppt/slideLayouts/_rels/slideLayout1.xml.rels')).toBe(
+      CONTENT_TYPE.relationships,
+    );
+  });
+
+  it('drops a collection emptied of everything rather than writing an empty one', () => {
+    const store = PartStore.open(deck());
+    const rels = store.relationships('/ppt/slides/slide1.xml');
+    for (const rel of [...rels.all]) rels.remove(rel.id);
+
+    store.materializeRelationships();
+    expect(store.has('/ppt/slides/_rels/slide1.xml.rels')).toBe(false);
+  });
+
+  it('is idempotent, and leaves write with nothing left to do', () => {
+    const store = PartStore.open(deck());
+    store.relationships('/ppt/slides/slide1.xml').remove('rId2');
+
+    store.materializeRelationships();
+    const once = store.write();
+    store.materializeRelationships();
+    expect(store.write()).toEqual(once);
+  });
+});

@@ -34,6 +34,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CENSUS_FEATURE_KEYS } from './census-keys.gen.ts';
 import { checkCorpus, humanBytes, type CorpusFile, type ManifestFile } from './check.ts';
 import type { Violation } from './schema.ts';
 
@@ -177,6 +178,7 @@ const violations = checkCorpus({
   files,
   binaryExtensions: readBinaryExtensions(),
   toolPaths: readToolPaths(),
+  censusKeys: CENSUS_FEATURE_KEYS,
 });
 
 const entryCount = manifests.reduce((total, manifest) => {

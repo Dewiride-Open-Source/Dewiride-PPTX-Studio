@@ -307,7 +307,13 @@ const tcStyle = (fill: string, borderColour: string): string =>
     )
     .join('') +
   '</a:tcBdr>' +
+  // The wrapper matters and is easy to miss: `a:tblPr` takes a fill element
+  // directly, while `a:tcStyle` and `a:tblBg` take a choice of `a:fill` or
+  // `a:fillRef` - so the fill goes one level deeper here than it does two
+  // elements away. Sub-phase 1.2's `V012` found this deck writing it flat.
+  '<a:fill>' +
   fill +
+  '</a:fill>' +
   '</a:tcStyle>';
 
 /**
@@ -319,9 +325,9 @@ const INLINE_STYLE =
   '<a:tableStyle styleId="{1B1D64F0-0000-4000-8000-0000000A200A}"' +
   ' styleName="PPTX Studio Corpus Probe">' +
   // tblBg first, and it is the table's own background, not a cell fill.
-  '<a:tblBg>' +
+  '<a:tblBg><a:fill>' +
   solidFill(scheme('bg1')) +
-  '</a:tblBg>' +
+  '</a:fill></a:tblBg>' +
   '<a:wholeTbl>' +
   '<a:tcTxStyle b="def" i="def">' +
   '<a:fontRef idx="minor"><a:scrgbClr r="0" g="0" b="0"/></a:fontRef>' +

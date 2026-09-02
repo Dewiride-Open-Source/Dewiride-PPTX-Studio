@@ -4,7 +4,8 @@ A byte-preserving XML tokenizer, node model, serializer and editor for OOXML.
 
 > **Pre-alpha.** Sub-phase 0.6 has landed schema-ordered insertion, the Markup Compatibility walker,
 > `extLst` as an opaque list, and edits that each carry their exact inverse, on top of 0.4's
-> tokenizer and tree and 0.5's serializer.
+> tokenizer and tree and 0.5's serializer. Sub-phase 1.4 adds `canonicalXml`, the normal form two
+> parts are compared in when the question is whether they say the same thing.
 
 Part of [PPTX Studio](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio). Runs in the
 browser and in a Web Worker; there is no Node build and there never will be.
@@ -141,6 +142,33 @@ every quote character, every `<x />` with its space, every `<x></x>` left long.
 That third row costs nothing in practice, because `dirty` travels up and never down: a text node is
 rebuilt only when someone edits _that node_, so the whitespace between siblings in a part you did not
 touch is never rebuilt at all.
+
+## The canonical form, for when the two parts came from different writers
+
+`canonicalXml(doc)` returns one string per document, and two documents that mean
+the same thing return the same string. It is what `@pptx-studio/writer` compares
+parts in, and it exists because "the same bytes" is the wrong question for a part
+somebody else wrote.
+
+```ts
+canonicalXml(parseXmlString('<a:off x="1" y="2"/>')) ===
+  canonicalXml(parseXmlString(`<a:off y='2' x="1" />`)); // true
+```
+
+Absorbed: attribute order, quote style, `<a/>` against `<a></a>`, a character
+reference against the character it names, CDATA against the text it holds, the
+`encoding` pseudo-attribute, a byte order mark.
+
+**Not** absorbed, and this is the half that matters: whitespace anywhere, a
+namespace prefix, a namespace declaration nothing appears to use, a comment, the
+presence of the XML declaration.
+
+The name is borrowed from W3C Canonical XML and two of C14N's rules are wrong
+here. It prunes unused namespace declarations — but PowerPoint writes
+`xmlns:a14="…"` alongside `mc:Ignorable="a14"` with no `a14:` element in the
+part, so pruning it leaves a document naming an undeclared prefix. And it is
+free to rename prefixes, which is the exact rewrite this whole package exists to
+prevent.
 
 ## Writing a value back is not the same rules read backwards
 

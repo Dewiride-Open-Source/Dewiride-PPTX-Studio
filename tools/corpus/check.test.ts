@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkCorpus, humanBytes, type CheckInput } from './check.ts';
+import { checkCorpus, humanBytes, type CheckInput, type ManifestFile } from './check.ts';
 import { CAPS, type CorpusEntry, type RuleId } from './schema.ts';
 
 /**
@@ -43,7 +43,22 @@ function entry(overrides: Record<string, unknown> = {}): CorpusEntry {
   };
 }
 
-function input(entries: readonly CorpusEntry[], overrides: Partial<CheckInput> = {}): CheckInput {
+/**
+ * A corpus, with the file table derived from the entries.
+ *
+ * `censusKeys` is `['shape']` and the default entry reports three of them, so
+ * the baseline corpus is fully covered and needs no `uncovered` array at all.
+ * That is deliberate: `C019`'s clean state is a corpus with no declared gaps,
+ * and a baseline that carried one would put an apology in every other test.
+ *
+ * `envelope` merges into the manifest object itself, for the handful of rules
+ * that are about the envelope rather than an entry.
+ */
+function input(
+  entries: readonly CorpusEntry[],
+  overrides: Partial<CheckInput> = {},
+  envelope: Record<string, unknown> = {},
+): CheckInput {
   const files = entries
     .filter((item) => item.storage === 'committed' && typeof item.path === 'string')
     .map((item) => ({
@@ -61,16 +76,44 @@ function input(entries: readonly CorpusEntry[], overrides: Partial<CheckInput> =
           collection: 'decks',
           generatedIn: '1.1',
           adr: 'docs/adr/0009-the-corpus.md',
+          serializers: { xml: 'tools/corpus/gen', container: 'tools/ground-truth/zip.ts' },
           entries,
+          ...envelope,
         },
       },
     ],
     files,
     binaryExtensions: new Set(['pptx', 'pptm', 'png']),
     toolPaths: new Set(['tools/bench/make-deck.ts']),
+    censusKeys: ['shape'],
     ...overrides,
   };
 }
+
+/** A well-formed declared gap, with anything overridden. */
+function gap(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    key: 'model3d',
+    why: 'The extension GUID that carries it is in no public specification.',
+    closes: 'Experiment E4, and the a28-model3d slot it would unblock.',
+    ...overrides,
+  };
+}
+
+/** The two-key corpus C019 needs: one covered, one that has to be accounted for. */
+const TWO_KEYS: Partial<CheckInput> = { censusKeys: ['model3d', 'shape'] };
+
+/**
+ * An empty census table, for the tests whose corpus makes no coverage claim.
+ *
+ * `C019` asks that every census key be exercised by some deck, so a corpus of
+ * one fixture - or one deck that is `pinned`, whose bytes are in nobody's
+ * clone - fails it for every key in the table. That is the rule working, and it
+ * has its own tests below; here it would just be a second violation in a test
+ * about something else, which is what the one-broken-thing discipline exists to
+ * avoid.
+ */
+const NOT_ABOUT_COVERAGE: Partial<CheckInput> = { censusKeys: [] };
 
 function rules(result: readonly { rule: RuleId }[]): RuleId[] {
   return [...new Set(result.map((violation) => violation.rule))].sort();
@@ -100,7 +143,11 @@ describe('a corpus that follows the rules', () => {
       path: undefined,
       features: { shape: 12 },
     });
-    expect(checkCorpus(input([pinned]))).toEqual([]);
+    // The gap has to be declared, and that is C019 rather than an accident of
+    // this fixture: a pinned deck is a hash of bytes no clone has, so a corpus
+    // whose only deck is pinned covers nothing at all.
+    const declared = { uncovered: [gap({ key: 'shape' })] };
+    expect(checkCorpus(input([pinned], {}, declared))).toEqual([]);
   });
 });
 
@@ -234,6 +281,7 @@ describe('C005-unknown-key', () => {
             collection: 'decks',
             generatedIn: '1.1',
             adr: 'docs/adr/0009-the-corpus.md',
+            serializers: { xml: 'tools/corpus/gen', container: 'tools/ground-truth/zip.ts' },
             entries: [entry()],
             licence: 'CC0-1.0',
           },
@@ -259,6 +307,7 @@ describe('C005-unknown-key', () => {
             collection: 'bench',
             generatedIn: '1.1',
             adr: 'docs/adr/0009-the-corpus.md',
+            serializers: { xml: 'tools/corpus/gen', container: 'tools/ground-truth/zip.ts' },
             entries: [entry()],
           },
         },
@@ -424,19 +473,25 @@ describe('C012-size-cap', () => {
 
 describe('C013-feature-key', () => {
   it('rejects a key that is not in the census table', () => {
-    const result = checkCorpus(input([entry({ features: { smartart: 2 } })]));
+    const result = checkCorpus(input([entry({ features: { smartart: 2 } })], NOT_ABOUT_COVERAGE));
     expect(rules(result)).toEqual(['C013-feature-key']);
     expect(result[0]?.message).toContain('not a census feature key');
   });
 
   it('accepts a count of zero, which is a statement and not an omission', () => {
-    expect(checkCorpus(input([entry({ features: { shape: 3, model3d: 0 } })]))).toEqual([]);
+    // A zero says the census looked and found none, which is a fact worth
+    // recording and is not coverage. `C019` reads it the same way, so the key
+    // still has to be declared - that agreement is the point of the test.
+    const result = checkCorpus(
+      input([entry({ features: { shape: 3, model3d: 0 } })], TWO_KEYS, { uncovered: [gap()] }),
+    );
+    expect(result).toEqual([]);
   });
 
   it('requires a features map on a deck', () => {
-    expect(rules(checkCorpus(input([entry({ features: undefined })])))).toEqual([
-      'C013-feature-key',
-    ]);
+    expect(rules(checkCorpus(input([entry({ features: undefined })], NOT_ABOUT_COVERAGE)))).toEqual(
+      ['C013-feature-key'],
+    );
   });
 
   it('lets a non-package fixture carry tags instead', () => {
@@ -447,7 +502,7 @@ describe('C013-feature-key', () => {
       features: undefined,
       tags: ['tint', 'shade'],
     });
-    expect(checkCorpus(input([fixture]))).toEqual([]);
+    expect(checkCorpus(input([fixture], NOT_ABOUT_COVERAGE))).toEqual([]);
   });
 
   it('refuses both at once', () => {
@@ -512,15 +567,18 @@ describe('C015-derivation', () => {
 describe('C016-gitattributes', () => {
   it('fires on a committed binary with no `binary` attribute', () => {
     const result = checkCorpus({
-      ...input([
-        entry({
-          id: 'probe-font',
-          kind: 'asset',
-          path: 'fonts/probe.eot',
-          features: undefined,
-          tags: ['eot'],
-        }),
-      ]),
+      ...input(
+        [
+          entry({
+            id: 'probe-font',
+            kind: 'asset',
+            path: 'fonts/probe.eot',
+            features: undefined,
+            tags: ['eot'],
+          }),
+        ],
+        NOT_ABOUT_COVERAGE,
+      ),
       files: [{ path: 'corpus/decks/fonts/probe.eot', bytes: 1024, sha256: SHA_A }],
     });
     expect(rules(result)).toEqual(['C016-gitattributes']);
@@ -535,7 +593,7 @@ describe('C016-gitattributes', () => {
       features: undefined,
       tags: ['tint'],
     });
-    expect(checkCorpus(input([fixture]))).toEqual([]);
+    expect(checkCorpus(input([fixture], NOT_ABOUT_COVERAGE))).toEqual([]);
   });
 });
 
@@ -545,6 +603,202 @@ describe('C017-sorted', () => {
       input([entry({ id: 'z01-last' }), entry({ id: 'a01-first', path: 'decks/other.pptx' })]),
     );
     expect(rules(result)).toContain('C017-sorted');
+  });
+});
+
+describe('C018-serializers', () => {
+  /** The default envelope with `serializers` replaced, or removed entirely. */
+  function withSerializers(serializers: unknown): CheckInput {
+    const base = input([entry()]);
+    const json = { ...(base.manifests[0]!.json as Record<string, unknown>) };
+    if (serializers === undefined) delete json['serializers'];
+    else json['serializers'] = serializers;
+    return { ...base, manifests: [{ ...base.manifests[0]!, json }] };
+  }
+
+  it('fires when a collection with committed decks declares none', () => {
+    expect(rules(checkCorpus(withSerializers(undefined)))).toEqual(['C018-serializers']);
+  });
+
+  it('fires when either layer is missing or empty', () => {
+    for (const bad of [
+      { xml: 'tools/corpus/gen' },
+      { container: 'tools/ground-truth/zip.ts' },
+      { xml: '', container: 'tools/ground-truth/zip.ts' },
+      { xml: 'tools/corpus/gen', container: '   ' },
+      { xml: 42, container: 'tools/ground-truth/zip.ts' },
+      'tools/corpus/gen',
+    ]) {
+      expect(rules(checkCorpus(withSerializers(bad))), JSON.stringify(bad)).toEqual([
+        'C018-serializers',
+      ]);
+    }
+  });
+
+  it('does not ask it of a collection whose decks are generated', () => {
+    // `corpus/bench` names a generator and commits no deck bytes, so there is
+    // nothing for `C-LEX` to attribute and requiring the field there would be
+    // a value nothing consumes.
+    const generated = entry({
+      id: 'big-deck',
+      storage: 'generated',
+      path: undefined,
+      outputName: 'big-deck.pptx',
+      recipe: { tool: 'tools/bench/make-deck.ts', args: ['big-deck', '<out>'] },
+    });
+    const base = input([generated]);
+    const json = { ...(base.manifests[0]!.json as Record<string, unknown>) };
+    delete json['serializers'];
+    expect(checkCorpus({ ...base, manifests: [{ ...base.manifests[0]!, json }] })).toEqual([]);
+  });
+
+  it('lets two collections name the same serializer, which is the point', () => {
+    // `corpus/authored` and `corpus/written` both declare PowerPoint as their
+    // XML serializer because Tier C's parts *are* Tier B's parts. `C-LEX`
+    // counts the collision as one producer; nothing here may forbid it.
+    const base = input([entry()]);
+    const second = {
+      path: 'corpus/written/manifest.json',
+      dir: 'corpus/written',
+      json: {
+        manifestVersion: 1,
+        collection: 'written',
+        generatedIn: '1.1',
+        adr: 'docs/adr/0009-the-corpus.md',
+        serializers: { xml: 'tools/corpus/gen', container: 'packages/opc' },
+        entries: [entry({ id: 'c01-copy', path: undefined, storage: 'pinned' })],
+      },
+    };
+    expect(checkCorpus({ ...base, manifests: [...base.manifests, second] })).toEqual([]);
+  });
+});
+
+describe('C019-coverage', () => {
+  /** The default corpus, with a census key nothing in it exercises. */
+  const short = (envelope: Record<string, unknown> = {}): CheckInput =>
+    input([entry()], TWO_KEYS, envelope);
+
+  it('fires when a census key is covered by nothing and declared nowhere', () => {
+    const result = checkCorpus(short());
+    expect(rules(result)).toEqual(['C019-coverage']);
+    expect(result[0]?.where).toBe('corpus/');
+    expect(result[0]?.message).toContain('no deck exercises `model3d`');
+  });
+
+  it('accepts the gap once somebody has signed for it', () => {
+    expect(checkCorpus(short({ uncovered: [gap()] }))).toEqual([]);
+  });
+
+  it('fires when a declared gap has been filled, so the array cannot rot', () => {
+    // The direction that matters six months from now. Without it, the entry
+    // outlives the hole and the file goes on apologising for something that
+    // was fixed - which is worse than silence, because it reads as current.
+    const covers = entry({ features: { shape: 1, model3d: 2 } });
+    const result = checkCorpus(input([covers], TWO_KEYS, { uncovered: [gap()] }));
+    expect(rules(result)).toEqual(['C019-coverage']);
+    expect(result[0]?.message).toContain('a01-example exercises it');
+  });
+
+  it('will not take a key on its own', () => {
+    for (const field of ['why', 'closes']) {
+      const result = checkCorpus(short({ uncovered: [gap({ [field]: undefined })] }));
+      expect(rules(result), field).toEqual(['C019-coverage']);
+      expect(result[0]?.message, field).toContain('`' + field + '` is required');
+    }
+  });
+
+  it('will not take a blank one either', () => {
+    const result = checkCorpus(short({ uncovered: [gap({ why: '   ' })] }));
+    expect(rules(result)).toEqual(['C019-coverage']);
+  });
+
+  it('rejects a gap in something that is not a census key', () => {
+    // A typo here is the worst failure the rule has: it looks like a signed
+    // statement, and the key it was meant to cover is still undeclared.
+    const result = checkCorpus(short({ uncovered: [gap({ key: 'model3D' })] }));
+    expect(rules(result)).toEqual(['C019-coverage']);
+    expect(result.map((violation) => violation.message).join('\n')).toContain(
+      'declares a gap in nothing',
+    );
+    expect(result.map((violation) => violation.message).join('\n')).toContain(
+      'no deck exercises `model3d`',
+    );
+  });
+
+  it("rejects an unrecognised field, for C005's reason", () => {
+    const result = checkCorpus(short({ uncovered: [gap({ reason: 'blocked' })] }));
+    expect(rules(result)).toEqual(['C019-coverage']);
+    expect(result[0]?.message).toContain('unrecognised key `reason`');
+  });
+
+  it('rejects the same gap declared twice', () => {
+    const result = checkCorpus(short({ uncovered: [gap(), gap()] }));
+    expect(rules(result)).toEqual(['C019-coverage']);
+    expect(result[0]?.message).toContain('One gap, one statement');
+  });
+
+  it("wants the array sorted, for C017's reason", () => {
+    const result = checkCorpus(
+      input(
+        [entry({ features: {} })],
+        { censusKeys: ['chart', 'model3d', 'shape'] },
+        {
+          uncovered: [gap(), gap({ key: 'chart' }), gap({ key: 'shape' })],
+        },
+      ),
+    );
+    expect(result.map((violation) => violation.message)).toContain(
+      'not sorted by key, for the same reason `C017` sorts entries',
+    );
+  });
+
+  it('does not count a pinned deck as coverage', () => {
+    // Its bytes are on one machine and in no clone, so a coverage claim
+    // resting on it rests on a file nobody else has.
+    const pinned = entry({ storage: 'pinned', path: undefined, features: { shape: 1 } });
+    const result = checkCorpus(input([pinned], { censusKeys: ['shape'] }));
+    expect(rules(result)).toEqual(['C019-coverage']);
+  });
+
+  it('counts a generated deck, whose bytes anyone can reproduce', () => {
+    const generated = entry({
+      id: 'big-deck',
+      storage: 'generated',
+      path: undefined,
+      outputName: 'big-deck.pptx',
+      recipe: { tool: 'tools/bench/make-deck.ts', args: [] },
+      features: { shape: 1 },
+    });
+    expect(checkCorpus(input([generated], { censusKeys: ['shape'] }))).toEqual([]);
+  });
+
+  it('lets one collection cover what another says nothing about', () => {
+    // The gap is corpus-wide, so it is settled only after every manifest has
+    // been read. A per-manifest rule would fire on whichever collection
+    // happens not to hold the deck, which is every collection but one.
+    const base = input([entry()], TWO_KEYS);
+    const second: ManifestFile = {
+      path: 'corpus/written/manifest.json',
+      dir: 'corpus/written',
+      json: {
+        manifestVersion: 1,
+        collection: 'written',
+        generatedIn: '1.1',
+        adr: 'docs/adr/0009-the-corpus.md',
+        serializers: { xml: 'tools/corpus/gen', container: 'packages/opc' },
+        entries: [entry({ id: 'c01-copy', path: 'c01-copy.pptx', features: { model3d: 1 } })],
+      },
+    };
+    expect(
+      checkCorpus({
+        ...base,
+        manifests: [...base.manifests, second],
+        files: [
+          ...base.files,
+          { path: 'corpus/written/c01-copy.pptx', bytes: 1024, sha256: SHA_A },
+        ],
+      }),
+    ).toEqual([]);
   });
 });
 

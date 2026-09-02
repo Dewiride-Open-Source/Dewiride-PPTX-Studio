@@ -89,11 +89,51 @@ export const CAPS = {
 
 export type Kind = 'deck' | 'asset' | 'fixture' | 'record';
 export type Storage = 'committed' | 'generated' | 'pinned';
-export type Collection = 'decks' | 'bench' | 'ground-truth' | 'local';
+
+/**
+ * Which directory under `corpus/` an entry lives in. `C005` checks that a
+ * manifest's `collection` equals its own directory's name, so this enum and the
+ * filesystem cannot drift apart.
+ *
+ * There is one directory per producer, and that is the whole taxonomy: `decks`
+ * is what `tools/corpus/gen` writes, `authored` is what PowerPoint writes, and
+ * `written` is what `packages/opc`'s own writer writes. The split was forced
+ * rather than chosen: `build-probes.ts --manifest` rewrites
+ * `corpus/decks/manifest.json` in full from `PROBE_DECKS`, so an entry from any
+ * other producer parked there would survive exactly until the next time a Tier A
+ * deck changed.
+ *
+ * The three also make different claims about reproducibility, and one directory
+ * per producer lets each manifest state only the claim it can honour:
+ *
+ * | collection | recipe | why                                                    |
+ * | ---------- | ------ | ------------------------------------------------------ |
+ * | `decks`    | yes    | the generator is a pure function of its deck module     |
+ * | `authored` | no     | PowerPoint stamps `dcterms:created` on every save       |
+ * | `written`  | yes    | a no-op write recompresses nothing, so it is bit-stable |
+ *
+ * `written`'s recipe is the surprising one, because a deflating writer normally
+ * cannot promise reproducible bytes at all - deflated output depends on which
+ * zlib produced it, which is why Tier A stores its entries rather than
+ * compressing them. It holds here because a no-op write touches no part:
+ * `passthroughEntry` moves every already-compressed stream across without
+ * inflating it, so nothing in the output depends on which version of `fflate`
+ * happened to be installed.
+ */
+export type Collection =
+  'decks' | 'authored' | 'written' | 'reject' | 'bench' | 'ground-truth' | 'local';
 
 export const KINDS: readonly Kind[] = ['deck', 'asset', 'fixture', 'record'];
 export const STORAGES: readonly Storage[] = ['committed', 'generated', 'pinned'];
-export const COLLECTIONS: readonly Collection[] = ['decks', 'bench', 'ground-truth', 'local'];
+export const COLLECTIONS: readonly Collection[] = [
+  'decks',
+  'authored',
+  'written',
+  'reject',
+  'bench',
+  'ground-truth',
+  'local',
+];
 
 export interface Producer {
   readonly application: string;
@@ -101,6 +141,62 @@ export interface Producer {
   readonly build: string | null;
   readonly platform: string;
 }
+
+/**
+ * Who wrote each layer of every deck in a collection, for `C-LEX` (`C018`).
+ *
+ * Two names rather than one, because a package has two lexical surfaces and
+ * they do not have to come from the same place. `corpus/written` is the case
+ * that forces it: `c01-opc-writer` is `b01-blank` read through `PartStore` and
+ * written straight back out, so its thirty-seven ZIP headers are ours and every
+ * byte inside every part is still Microsoft's. A single `producer` field cannot
+ * say that, and `C-LEX` counting one deck as one producer would score a copy as
+ * independent evidence about XML lexical form.
+ *
+ * Declared per collection rather than per entry because within a collection it
+ * is true by construction, and fifty-one repetitions of the same pair is fifty
+ * chances for one of them to be wrong.
+ *
+ * The values are free-form on purpose: `tools/corpus/gen` names a directory,
+ * `Microsoft PowerPoint 16.0.20326` names a build. What matters is only that
+ * two collections sharing a serializer spell it identically, which is what
+ * makes `written` and `authored` count once for XML and twice for containers.
+ */
+export interface Serializers {
+  /** What serialized the bytes inside the parts. */
+  readonly xml: string;
+  /** What wrote the ZIP headers. */
+  readonly container: string;
+}
+
+/**
+ * A census feature key no deck exercises, and the statement that says so.
+ *
+ * `C-COV` is the rule that every census key is covered by at least one deck
+ * **or** named here. The array is what makes the difference between a corpus
+ * that is 46 keys wide and a corpus that claims to be 47: an undeclared gap is
+ * how a coverage badge becomes a lie, and a declared one is a signature.
+ *
+ * Three fields rather than a bare key, for the same reason `C-LEX`'s rows carry
+ * a `gap` string. "`model3d`" names a hole; it does not say whether anybody
+ * looked, whether closing it is a morning's work or blocked on something
+ * outside this repository, or what the next person should do about it. A gap
+ * nobody can act on is barely better than one nobody declared.
+ *
+ * `C019` also fires when a declared key **is** covered, which is what stops the
+ * array rotting: the entry has to be deleted in the same commit that adds the
+ * deck, so the file cannot go on apologising for a hole that was filled.
+ */
+export interface UncoveredFeature {
+  /** A census feature key, spelled as `census-keys.gen.ts` spells it. */
+  readonly key: string;
+  /** Why no deck exercises it. */
+  readonly why: string;
+  /** What would close it - a deck slot, an experiment, a decision. */
+  readonly closes: string;
+}
+
+export const UNCOVERED_KEYS: readonly string[] = ['key', 'why', 'closes'];
 
 export interface Recipe {
   readonly tool: string;
@@ -167,6 +263,8 @@ export interface CorpusManifest {
   readonly generatedIn: string;
   readonly adr: string;
   readonly entries: readonly CorpusEntry[];
+  readonly serializers?: Serializers;
+  readonly uncovered?: readonly UncoveredFeature[];
   readonly [extra: string]: unknown;
 }
 
@@ -200,6 +298,13 @@ export const ENTRY_KEYS: readonly string[] = [
   'slides',
   'zipEntries',
   'format',
+  // `corpus/reject` only, and load-bearing there: `C-REJECT` reads `rule` to
+  // know which of the validator's twenty-nine each fixture has to trip, and
+  // `refusal` is the sentence PowerPoint gave when the markup was measured -
+  // the only diagnostic that exists, and the thing somebody will want if the
+  // rule ever has to be argued with.
+  'rule',
+  'refusal',
 ];
 
 export const MANIFEST_KEYS: readonly string[] = [
@@ -212,6 +317,7 @@ export const MANIFEST_KEYS: readonly string[] = [
   'generator',
   'targetCount',
   'uncovered',
+  'serializers',
 ];
 
 // --------------------------------------------------------------------- rules
@@ -233,7 +339,9 @@ export type RuleId =
   | 'C014-recipe-tool'
   | 'C015-derivation'
   | 'C016-gitattributes'
-  | 'C017-sorted';
+  | 'C017-sorted'
+  | 'C018-serializers'
+  | 'C019-coverage';
 
 export interface Violation {
   readonly rule: RuleId;

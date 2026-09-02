@@ -36,6 +36,8 @@ export {
 
 export { crc32 } from './crc32.js';
 
+export { sha256, sha256Hex, sha256HexOfText } from './sha256.js';
+
 export { DEFAULT_ZIP_LIMITS, InflationBudget, type ZipLimits } from './limits.js';
 
 export {
@@ -81,6 +83,7 @@ export {
 
 export {
   ContentTypes,
+  isXmlContentType,
   type ContentTypeOrigin,
   type DefaultEntry,
   type OverrideEntry,

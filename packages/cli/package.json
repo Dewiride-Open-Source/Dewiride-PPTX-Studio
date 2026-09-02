@@ -1,7 +1,7 @@
 {
   "name": "@pptx-studio/cli",
   "version": "0.0.0",
-  "description": "Command line tools for PPTX packages: inspect a deck's parts, relationships and features",
+  "description": "Command line tools for PPTX packages: inspect a deck, validate it, prove a round trip, and bisect the change that breaks it",
   "license": "Apache-2.0",
   "type": "module",
   "sideEffects": false,
@@ -17,6 +17,10 @@
     "ooxml",
     "cli",
     "inspect",
+    "validate",
+    "roundtrip",
+    "bisect",
+    "delta-debugging",
     "powerpoint"
   ],
   "engines": {
@@ -27,6 +31,7 @@
   },
   "files": [
     "dist",
+    "scripts",
     "README.md"
   ],
   "bin": {
@@ -45,7 +50,10 @@
   },
   "dependencies": {
     "@pptx-studio/census": "workspace:^",
-    "@pptx-studio/opc": "workspace:^"
+    "@pptx-studio/opc": "workspace:^",
+    "@pptx-studio/validate": "workspace:^",
+    "@pptx-studio/xml": "workspace:^",
+    "@pptx-studio/writer": "workspace:^"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

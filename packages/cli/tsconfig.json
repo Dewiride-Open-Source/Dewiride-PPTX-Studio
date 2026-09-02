@@ -15,7 +15,10 @@
     // sibling code stays out of the emitted bundle. Checked, not assumed.
     "paths": {
       "@pptx-studio/census": ["../census/src/index.ts"],
-      "@pptx-studio/opc": ["../opc/src/index.ts"]
+      "@pptx-studio/opc": ["../opc/src/index.ts"],
+      "@pptx-studio/validate": ["../validate/src/index.ts"],
+      "@pptx-studio/writer": ["../writer/src/index.ts"],
+      "@pptx-studio/xml": ["../xml/src/index.ts"]
     }
   },
   // Tests are **not** excluded here, unlike every other package. Those are

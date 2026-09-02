@@ -117,13 +117,17 @@ export { serializeXmlString, serializeXml, serializeNode } from './serialize.js'
 
 export { checkRoundTrip, type RoundTripDifference } from './roundtrip.js';
 
+export { canonicalXml, firstDifference, excerpt, type CanonicalXmlOptions } from './canonical.js';
+
 export {
   qualifiedKey,
   elementKey,
   childRanks,
   childRank,
   insertionIndex,
+  isSchemaNamespace,
   outOfOrderChildren,
+  SCHEMA_NAMESPACES,
   SCHEMA_SOURCES,
 } from './schema-order.js';
 

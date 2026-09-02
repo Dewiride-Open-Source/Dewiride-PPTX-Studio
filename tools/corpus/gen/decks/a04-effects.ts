@@ -192,7 +192,9 @@ export const a04Effects: ProbeDeck = {
     scene3d: 4,
     // `a:blur`, `a:fillOverlay`, `a:prstShdw` and `a:effectDag` itself are in
     // this deck and are not census keys, so they cannot appear here. That is a
-    // gap in the census rather than in the deck, and `C-COV` will say so.
+    // gap in the census rather than in the deck, and no rule catches it:
+    // `C-COV` runs the other way, from key to deck, so a census key with no
+    // deck fails and markup with no census key is invisible to everything.
   },
   build: () => ({
     title: 'PPTX Studio corpus: a04 effects',

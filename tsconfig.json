@@ -18,6 +18,10 @@
       "@pptx-studio/census/*": ["./packages/census/src/*"],
       "@pptx-studio/opc": ["./packages/opc/src/index.ts"],
       "@pptx-studio/opc/*": ["./packages/opc/src/*"],
+      "@pptx-studio/validate": ["./packages/validate/src/index.ts"],
+      "@pptx-studio/validate/*": ["./packages/validate/src/*"],
+      "@pptx-studio/writer": ["./packages/writer/src/index.ts"],
+      "@pptx-studio/writer/*": ["./packages/writer/src/*"],
       "@pptx-studio/xml": ["./packages/xml/src/index.ts"],
       "@pptx-studio/xml/*": ["./packages/xml/src/*"]
     }

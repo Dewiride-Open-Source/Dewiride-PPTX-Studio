@@ -5,32 +5,55 @@ cannot be written yet. ADR 0009 decides _where a fixture may come from_; this de
 the corpus_.
 
 It is a plan, not a manifest. `corpus/decks/manifest.json` is what exists; a slot named here and
-missing there is a deck still to write. Once the roster is complete, `C-COV` is the rule that
-refuses to let the difference go unnoticed — every census key covered by at least one deck, or
-named in a top-level `uncovered` array. A declared gap is a signed statement; an undeclared one is
-how a 50/50 badge becomes a lie.
+missing there is a deck still to write. `C-COV` is the rule that refuses to let the difference go
+unnoticed — every census key covered by at least one deck, or named in a manifest's `uncovered`
+array with why nothing covers it and what would close it. A declared gap is a signed statement; an
+undeclared one is how a 50/50 badge becomes a lie. It is `C019` in `check.ts`, and it is now
+closed: forty-six of forty-seven keys covered, one declared.
 
 ## Status
 
 | Tier  | Producer                              | Planned | Built  |
 | ----- | ------------------------------------- | ------- | ------ |
-| **A** | `tools/corpus/gen`                    | 42      | **41** |
-| **B** | Microsoft PowerPoint 365 (16.0.20326) | 9       | 0      |
-| **C** | `packages/opc`'s own writer           | 1       | 0      |
+| **A** | `tools/corpus/gen`                    | 41      | **41** |
+| **B** | Microsoft PowerPoint 365 (16.0.20326) | 9       | **9**  |
+| **C** | `packages/opc`'s own writer           | 1       | **1**  |
 
-Tier A is complete but for `a28-model3d`, which is blocked on experiment E4.
+**All three tiers are complete**, and so are all four named rules. `C-LEX` was waiting on the
+second and third producers (`tools/corpus/lexical.test.ts`), so the round-trip gate is no longer a
+proof of idempotence; `C-COV` was waiting on `a28-model3d`, which is **cut**. E4 is blocked on a
+download nobody has approved, and the roster's own instruction for that case was to declare the key
+rather than drop it quietly, so `model3d` is now the single entry in `corpus/decks/manifest.json`'s
+`uncovered` array.
 
-Forty-two is a target, not a promise. It was forty until `a18-slide-sizes` was built and the
+The three do not contribute equally, and the rule now counts the difference rather than describing
+it. PowerPoint is a second producer of everything — part names, element order, lexical form and ZIP
+headers alike. Our own writer is a second producer of the **container only**: `c01-opc-writer` is
+`b01-blank` rewritten, so its XML is Microsoft's byte for byte and only its thirty-seven ZIP
+headers are ours. `C018` makes each manifest declare both halves, and `corpus/written` names
+PowerPoint as its XML serializer using the same string `corpus/authored` uses, so the two collide
+to one producer instead of counting twice.
+
+The result is a corpus that is well evidenced at one layer and thin at the other:
+
+| layer                    | serializers | forms | covered by two |
+| ------------------------ | ----------- | ----- | -------------- |
+| the ZIP container        | **3**       | 24    | **17**         |
+| the XML inside the parts | **2**       | 36    | **12**         |
+
+Forty-one was forty-two until `a28` was cut, and forty until `a18-slide-sizes` was built and the
 obvious became unavoidable: `p:sldSz` is one element on `p:presentation`, so a package has exactly
 one slide size and the roster's "4:3, 16:9, A4 and a custom size" is four decks, not one. `a18` is
 the 4:3 one, `a41-a4` and `a42-custom-size` are the other two, and 16:9 is every other deck in the
 tier — which turned out to be four decks about `p:sldSz` rather than the three that split implies,
 because measuring the sixteen `ST_SlideSizeType` values found `screen16x9` naming two different
-extents. `a28-model3d` is blocked on experiment E4 and may be cut, which would make it forty-one.
+extents.
 
-Any slot that ends up genuinely uncoverable goes into the manifest's
-declared `uncovered` array rather than being quietly dropped — that is what `C-COV` is for, and a
-declared gap is a signed statement where an undeclared one is how a badge becomes a lie.
+`a28-model3d` is the one slot that went the other way, and it went there by the route the roster
+wrote down in advance: a slot that turns out to be genuinely uncoverable goes into the manifest's
+declared `uncovered` array rather than being quietly dropped. Whoever runs E4 deletes that entry in
+the same commit that adds the deck — `C019` fires on a declaration that has been outlived, so the
+file cannot go on apologising for a hole that was filled.
 
 ## Tier A — the generated probes
 
@@ -135,7 +158,7 @@ shape decorative clears its `@descr` and `@title`.
 | `a25-svg-blips`      | `asvg:svgBlip` with and without a raster, in a picture and in a fill, and a hostile SVG     | `svgBlip`                              |
 | `a26-ole`            | the E6 shape: `mc:Choice Requires="v"` with no VML part, plus a transitional frame with one | `oleObject`, `embeddedPackage`         |
 | `a27-ink`            | `inkml:trace` inside `p:contentPart`, with `p14:xfrm` and bare                              | `ink`, `contentPart`                   |
-| `a28-model3d`        | `am3d:model3d` with its baked `am3d:raster` preview                                         | **blocked on E4**                      |
+| ~~`a28-model3d`~~    | ~~`am3d:model3d` with its baked `am3d:raster` preview~~                                     | **cut — declared `uncovered`**         |
 | `a29-math`           | `m:oMath` inside a text body, at both MCE positions                                         | `math`                                 |
 | `a30-vml`            | a `vmlDrawing` part reached by `@spid`, and what VML can express                            | `vml`                                  |
 | `a31-embedded-fonts` | `p:embeddedFontLst`, the six export artifacts, the CC0 probe font                           | `embeddedFont`                         |
@@ -144,11 +167,22 @@ shape decorative clears its `@descr` and `@title`.
 raw pre-MCE markup, so the `mc:Choice` and the `mc:Fallback` both count. That is the right policy
 for a census and `features` must say so.
 
-`a28-model3d` is **blocked**. Experiment E4 needs the `a:ext` GUID that carries `am3d:model3d`,
-which appears in no public specification, and the only way to obtain one is to insert a 3-D model
-in PowerPoint — which fetches a Microsoft-licensed model from their online catalogue. That is a
-download and has not been approved. If E4 is not run, `a28` is cut and `model3d` goes into the
-declared `uncovered` array rather than being quietly absent.
+`a28-model3d` is **cut**, and `model3d` is the corpus's one declared gap. Experiment E4 needs the
+`a:ext` GUID that carries `am3d:model3d`, and it is in no public specification: Microsoft's own
+Open XML SDK documents the element and its namespace — `DocumentFormat.OpenXml.Office2019.Drawing`
+`.Model3D`, serialized `am3d:model3d`, which at least corroborates the census rule's spelling — but
+not the extension URI that hosts it, nor the relationship type and content type of the model part
+beside it. The only way to obtain the set is to insert a 3-D model in PowerPoint and read it back,
+and PowerPoint's gallery fetches a Microsoft-licensed model over the network. That is a download and
+has not been approved.
+
+Guessing the four strings was considered and rejected, and `a34-extlst` is the deck that settles
+it. What that deck measured is that **an unknown `a:ext/@uri` is carried through untouched** — which
+is the contract `extLst` exists for, and here it cuts the wrong way. A fabricated GUID would not be
+refused, would not be stripped, and would not degrade on the fifth resave: PowerPoint would open the
+deck, render the baked raster, and preserve the extension indefinitely as somebody else's. Every
+gate this corpus has would pass, permanently, on a probe that probes nothing. A silent failure that
+never surfaces is worse than a hole that is written down.
 
 Two things paid for this group. Four decks — charts, ChartEx, SmartArt and media — were written
 from decks PowerPoint 16.0.20326 authored on 2026-08-27 and read back, so their relationship types,
@@ -392,36 +426,228 @@ The forms are mixed **within** a part rather than uniform across one, which is w
 per-node serializer from a per-part one and is therefore the fixture architectural bet 2 actually
 needs. `chartEx1.xml` is uniformly spaced and cannot tell the two apart.
 
-## Tier B — PowerPoint-authored
+## Tier B — PowerPoint-authored — built
 
-Nine decks, authored by scripts committed under `tools/corpus/authored/` so the provenance is
-auditable line by line, and carrying **no recipe**: PowerPoint's output is not byte-stable across
-monthly builds, so a recipe claiming to reproduce it would be a lie with a shelf life.
+Nine decks, authored by `tools/corpus/authored/build-tier-b.ps1` so the provenance is auditable
+line by line, and carrying **no recipe**: PowerPoint stamps `dcterms:created` into
+`docProps/core.xml` on every save, so two runs one second apart differ, and the monthly build
+changes the markup underneath. A recipe claiming to reproduce these bytes would be a lie with a
+shelf life. They live in `corpus/authored/` rather than `corpus/decks/` because
+`build-probes.ts --manifest` rewrites the latter in full, so an entry parked there would survive
+exactly until the next Tier A change.
 
-`b01` blank · `b02` the eleven default layouts · `b03` text and autofit · `b04` a table with a
-built-in style · `b05` a chart · `b06` SmartArt · `b07` an OLE object · `b08` transitions and
-animations · `b09` a picture with crop and effects.
+| id                | slides | probes                                                                                                |
+| ----------------- | ------ | ----------------------------------------------------------------------------------------------------- |
+| `b01-blank`       | 1      | the floor — `a01-minimal` as Microsoft writes it, and the file every lexical claim is checked against |
+| `b02-layouts`     | 11     | the eleven built-in layouts, slide _i_ bound to layout _i_, for sub-phase 7.1's matrix                |
+| `b03-text`        | 3      | `a:normAutofit`'s `@fontScale` as the ladder that defines it produced them                            |
+| `b04-table`       | 1      | a built-in style GUID whose definition is nowhere in the package                                      |
+| `b05-chart`       | 2      | one `c:plotArea` holding a `c:barChart` **and** a `c:lineChart`                                       |
+| `b06-smartart`    | 3      | three families, five parts each, and the `dsp:` fallback                                              |
+| `b07-ole`         | 1      | E6's own deck, committed — `mc:AlternateContent` with no `vmlDrawing` part                            |
+| `b08-transitions` | 5      | `p14:honeycomb` in a `mc:Choice` whose `mc:Fallback` is a **different** transition                    |
+| `b09-picture`     | 2      | a four-sided crop, four effects at once, and a filled `pic` placeholder                               |
 
-Four constraints are enforced rather than trusted: Blank Presentation only and never a shipped
-design template, no `ppt/fonts/` part, no Designer suggestion and no stock imagery, and no author
-name, company or machine name in `docProps` — scrubbed at author time via
-`BuiltInDocumentProperties`, never by editing the saved file, which would destroy the exact
-Microsoft serialization the deck exists to capture.
+`b01-blank` is Tier B's subtrahend the way `a01-minimal` is Tier A's, and it is much bigger:
+**37 ZIP entries against our 18**, because all eleven layouts ship whether a slide uses them or
+not and `docProps/thumbnail.jpeg` is written unasked. Every Tier B deck therefore reports at least
+`{placeholder: 65, shape: 65, field: 24, presetGeom: 5, gradientFill: 3, shadow: 1, thumbnail: 1}`,
+and the interesting part of any entry is what exceeds that.
 
-## Tier C — our own writer
+### What the pair of floors is worth
 
-`c01-opc-writer`, one deck round-tripped through `packages/opc`'s writer. It gives `cli roundtrip`
-a case against the writer this project ships.
+`b01` and `a01` are the same deck by two producers, and diffing them is where the lexical
+divergences show up smallest. Three, measured on 2026-08-28:
 
-The cost of stopping there is recorded honestly in ADR 0009: with only two producers of
-foreign-to-us bytes, `C-LEX` rests almost entirely on Tier B, and if Tier B were ever removed the
-round-trip gate would degrade to a proof of idempotence.
+- **`p:sldSz` carries no `@type`.** PowerPoint writes `<p:sldSz cx="12192000" cy="6858000"/>` for
+  a default widescreen deck; our chassis writes `type="screen16x9"` on the identical extent. Both
+  are legal. The consequence is that a renderer keyed on `@type` rather than on `cx`/`cy` works on
+  all 41 Tier A decks and fails on every file PowerPoint ever wrote. `PageSetup.SlideSize` reports
+  `ppSlideSizeCustom` (7) for this deck, so the object model agrees the attribute is absent rather
+  than defaulted — and `a42-custom-size` omits `@type` too, but at a portrait custom extent, so it
+  never covered this case.
+- **`_rels/.rels` is written `rId3`, `rId2`, `rId1`, `rId4`** — core properties, thumbnail,
+  officeDocument, extended properties. This closes the declared gap that asked for it.
+- **The thumbnail is the only STORED entry** in an archive that deflates everything else.
+  `b05` and `b07` extend the rule: `ppt/embeddings/Microsoft_Excel_Worksheet.xlsx` is stored too.
+  PowerPoint appears to store what is already compressed and deflate the rest.
+
+`p:presentation` also carries `saveSubsetFonts="1"`, and `removePersonalInfo="1"` — see below.
+
+### The four constraints, enforced rather than trusted
+
+Blank Presentation only and never a shipped design template; no `ppt/fonts/` part; no Designer
+suggestion and no stock imagery; and no author name, company or machine name anywhere in the
+package. `decks.test.ts` asserts the last two directly — a whole-archive sweep for the account,
+the organisation and the machine, plus the positive form on `dc:creator` and `cp:lastModifiedBy`.
+
+**The scrub does not work the way this file used to say it did.** `BuiltInDocumentProperties` is
+unreachable from PowerShell on this machine: the collection is non-null and enumerates to 34
+items, but `.GetType()`, `.Item('Author')`, `.Name` and `.Value` all throw
+`NullReferenceException`, and `[System.__ComObject].InvokeMember` reports
+`Method 'System.__ComObject.Item' not found` because the Office type library is not bound in this
+host. A scrub written that way runs, reports nothing and changes nothing — the first build of
+`b01` was saved carrying the author's name twice, and the check that caught it was itself passing
+vacuously until a field-name bug in it was fixed.
+
+`RemoveDocumentInformation(ppRDIRemovePersonalInformation)` works, in one call, before the save
+and without editing the saved file. It **empties** `dc:creator` and `cp:lastModifiedBy` rather
+than removing the elements, which is why the test asserts `<dc:creator></dc:creator>` and not
+absence. Its one visible cost is recorded rather than hidden: it writes `removePersonalInfo="1"`
+onto `p:presentation`.
+
+### Three findings from authoring
+
+- **`PpEntryEffect` is one enumeration serving two features, and neither half accepts all of it.**
+  `ppEffectFlashOnceFast` (3841) is rejected for a slide transition with "this enumeration value is
+  not valid for transitions". The transition-valid values used here are `ppEffectFade` 1793,
+  `ppEffectDissolve` 1537, `ppEffectWipeRight` 2819, `ppEffectPushUp` 3855, `ppEffectHoneycomb` 3898.
+- **`Presentations.Add` returns a presentation with zero slides, not one.** Deleting "the
+  auto-created first slide" costs a real one; `b02` first came out with ten layouts instead of
+  eleven that way.
+- **A slide bound to a layout inherits only that layout's content placeholders.** Every layout
+  carries `dt`, `ftr` and `sldNum`, and none of the three reaches a slide unless `p:hf` turns it
+  on — which is why a slide on Title Slide reports two shapes and not five. `b02`'s shape counts
+  read `[2, 2, 2, 3, 5, 1, 0, 3, 3, 2, 2]`, with Blank at zero.
+
+## Tier C — our own writer — built
+
+`c01-opc-writer`, one deck round-tripped through `packages/opc`'s writer: `b01-blank` read through
+`PartStore.open` and written straight back out, with nothing touched in between. It gives
+`cli roundtrip` a case against the writer this project ships, and it is the committed evidence for
+architectural bet 1 at package scale — 37 entries in, 37 out, in the same order, every part
+byte-identical after inflation, and no entry recompressed.
+
+| id               | source                           | bytes           | entries |
+| ---------------- | -------------------------------- | --------------- | ------- |
+| `c01-opc-writer` | `corpus/authored/b01-blank.pptx` | 33 456 (−1 832) | 37      |
+
+Opens in PowerPoint 16.0.20326 with no repair prompt, two shapes on its one slide, which is
+`b01`'s Title Slide count unchanged.
+
+**Tier C has a `C-REGEN` and Tier B cannot**, which looks backwards until you see why. A deflating
+writer normally cannot promise reproducible bytes at all — deflated output depends on which zlib
+produced it, and that is exactly why Tier A stores its entries rather than compressing them. It
+holds here because a no-op write touches no part, so `passthroughEntry` moves every already-
+compressed stream across without inflating it and `fflate` never runs. Writing `c01` again is
+byte-identical; writing `c01` itself is a fixpoint. Both are asserted.
+
+### What our writer normalises away
+
+The whole contribution of this tier is the diff against its source, because its census is `b01`'s
+key for key and adds nothing to `C-COV`. Three header fields differ, every one of them legal to
+drop, none of them a bug — which is precisely why they are asserted in
+`written/decks.test.ts` rather than described here and checked nowhere. A reader ignores all three,
+so nothing else in this repository would ever notice if our writer started emitting them or if
+PowerPoint stopped.
+
+| field           | PowerPoint 16.0.20326              | `packages/opc` |
+| --------------- | ---------------------------------- | -------------- |
+| version made by | 45 (host 0, i.e. ZIP 4.5)          | 20             |
+| general-purpose | `0x0006` deflated, `0x0000` stored | `0x0000`       |
+| extra field     | `0xA220` growth hint × 5           | none           |
+
+- **Version made by 45, not 20.** `zip-writer.ts` said 20 was "measured from a file PowerPoint 365
+  wrote on this machine". It was not; nothing here needs above 2.0 and 20 is the honest value for
+  what we emit, but the sentence claiming it came from a measurement was wrong and has been fixed.
+- **`0x0006` is bits 1 and 2**, which for method 8 are a compression _level hint_ and mean nothing
+  to a decompressor — `0b11` is "super fast". We deflate at level 6, whose encoding is `0b00`.
+- **The `0xA220` growth hint is 512 bytes of padding** so an editor can rewrite a part slightly
+  larger _in place_ without moving every entry after it. PowerPoint writes five — 520 bytes on each
+  of the first two entries and 264 on three more — and 1832 bytes is the **entire** size difference
+  between the two files. We rewrite the whole archive on every save, so it would buy nothing.
+
+The same three sat in `zip-writer.ts`'s header table as "as PowerPoint writes", which
+`corpus/ground-truth/powerpoint-conventions.json` had already contradicted on two of them since E8.
+Nothing in the code was wrong; the documentation beside it was, in the one direction that matters —
+a divergence recorded as an agreement.
+
+### What Tier C does not cover
+
+`packages/opc` has two XML serializers of its own — `ContentTypes.serialize()` and
+`Relationships.serialize()` — and a no-op write invokes neither, because passthrough means nothing
+is dirty. So no committed deck in this corpus carries a part serialized by `packages/opc`. Their
+lexical form is not unmeasured (`flat-xml.test.ts` pins the declaration to Office's exact
+`standalone="yes"` + CRLF + no BOM, and the tight `/>`), but it is unrepresented in the corpus, and
+`C-LEX` has to say so rather than count `c01` as a third XML producer. It is not.
+
+The cost of stopping at one deck is recorded honestly in ADR 0009: for XML lexical form there are
+still only two producers, so `C-LEX` rests almost entirely on Tier B, and if Tier B were ever
+removed the round-trip gate would degrade to a proof of idempotence.
+
+## What `C-LEX` found
+
+Sixty forms declared in `lexical-forms.ts`, each with the evidence that it occurs outside this
+repository — or the counter-evidence, which is a finding of its own. Twenty-nine are covered by two
+or more serializers. The thirty-one that are not divide into three kinds, and the difference between
+them is the useful part:
+
+**Closable by one more deck — one item, and it is the important one.** Every entity reference in
+the corpus was written by `tools/corpus/gen`: the nine PowerPoint-authored decks contain **no
+ampersand at all** across their 387 XML parts. So `&amp;`, `&lt;`, `&gt;` and `&quot;` are each
+checked only against the escaper that wrote them, which is precisely the failure `C-LEX` was written
+to name. It is not a limit of the producer: E8 measured PowerPoint writing all four, and a follow-up
+caught `name="a &quot;quoted&quot; name"` on a renamed shape. Those decks were never committed. A
+tenth Tier B deck whose title and shape names carry `& < > "` closes four rows at once.
+
+**Closable, but only by a deck of a kind we do not have.** `xml.selfClosing=spaced` is the largest:
+70 822 of ADR 0004's 98 777 real self-closing tags are written `<x />`, and the only witness here is
+`a36-spaced-tags`, which we wrote. There is a second producer and it is inside PowerPoint —
+`ppt/charts/chartEx1.xml` spaced 12 of its 12 in the deck measured on 2026-08-27 — so a Tier B deck
+carrying a **ChartEx** chart would supply it. `b05-chart` has `c:` charts and no ChartEx part.
+
+**Not closable at all, and the row says so instead of implying a deck is owed.** ADR 0004 opened 62
+lexical variants in the installed PowerPoint and re-saved the ones it accepted: comments and
+processing instructions are discarded, a CDATA section is rewritten as plain text, `&#72;` resolves
+to `H`, a single-quoted attribute is rewritten double, a byte order mark is stripped. For those
+forms our second producer is not silent but incapable. Three container forms — ZIP64, data
+descriptors, directory entries — are in the same class for a different reason: ADR 0002 found Office
+writes none of them, `tools/ground-truth/zip.ts` cannot write two of them, and all four live in
+`packages/opc/src/zip-reader.test.ts` where they belong.
+
+### Two things it found that nothing else had
+
+- **PowerPoint does not always write an XML declaration.** Four of the corpus's 1422 XML parts have
+  none: `ppt/charts/style1.xml`, `style2.xml`, `colors1.xml` and `colors2.xml` in `b05-chart`
+  begin at `<cs:chartStyle` and `<cs:colorStyle`. ADR 0004 scanned 2834 real parts and E8 scanned
+  38, and no part in either lacked one. It is the same fact as the ChartEx spacing seen from another
+  angle — there is more than one XML serializer inside PowerPoint, and the chart ones are the odd
+  members.
+- **The commonest real-world form of three conventions is absent here entirely.** 1037 of ADR 0004's
+  2834 parts carry a BOM and none of ours do. 2161 of them put nothing between the declaration and
+  the root element; all 1418 declared parts here put a CRLF there. Two of its three declarations
+  spell the encoding `utf-8`; neither of our producers does.
+
+### What `C-LEX` may not assert
+
+**Entry order.** The two E8 decks and `b01` disagree about whether `slide1.xml` precedes its own
+`.rels`, and `b05` interleaves layouts with their rels in no pattern at all. The order is unstable
+_within_ a single producer, so there is no convention there to check — which is a rule about the
+rule, not a gap in it.
+
+## What `C-COV` found
+
+**Forty-six of the census's forty-seven feature keys are exercised by a deck**, and the forty-
+seventh is `model3d`, declared above. That is the number sub-phase 1.1 set out to reach and the
+rule that keeps it honest is `C019`, which runs in `pnpm corpus` on a bare clone.
+
+Two things the number hides, and `coverage.test.ts` pins both so they cannot drift unnoticed:
+
+- **Fourteen of the forty-six rest on a single deck each** — `ink` and `contentPart` on `a27-ink`;
+  `audio`, `video` and `media` on `a24-media`; `innerShadow` and `scene3d` on `a04-effects`; and
+  `chartEx`, `connector`, `decorative`, `groupFill`, `macros`, `math` and `svgBlip` one apiece. That
+  is what a probe corpus looks like when it is built one feature at a time. It is not a violation of
+  anything, and it is the list to read first before deleting a deck.
+- **A count of zero is not coverage, and neither is a `pinned` deck.** `a01-minimal` uses zeroes to
+  say the census looked and found none, which is a statement worth recording and the opposite of
+  exercising the feature; a `pinned` entry is the hash of a file that never left the machine that
+  made it. Reading either as coverage would let the corpus claim breadth no clone can reproduce.
 
 ## Experiments
 
 | id      | question                                                    | status                                                                              |
 | ------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| **E4**  | which `a:ext` GUID carries `am3d:model3d`                   | **blocked** — needs an online model fetch, not approved                             |
+| **E4**  | which `a:ext` GUID carries `am3d:model3d`                   | **blocked** — needs an online model fetch, not approved; `a28` cut, key declared    |
 | **E6**  | what a modern build writes for an OLE object                | ✔ answered — see ADR 0009                                                           |
 | **E8**  | the byte conventions: BOM, declaration, escaping, ZIP flags | ✔ answered — `corpus/ground-truth/powerpoint-conventions.json`                      |
 | **E11** | where `a:rtl` sits in `CT_TextCharacterProperties`          | ✔ closed by the schema order table: `…sym, hlinkClick, hlinkMouseOver, rtl, extLst` |
@@ -430,6 +656,31 @@ round-trip gate would degrade to a proof of idempotence.
 
 Not everything a roster row asks for can be measured yet, and a gap that is written down is a
 different thing from one nobody noticed.
+
+**Tier B being complete does not close the gaps below that say "Tier B".** Five of them said that;
+only `_rels/.rels` was covered by one of the planned nine, and it is struck through. The other four
+— a shape-anchored comment, a VBA project that compiles, a video with coded samples, and ink — each
+need a tenth deck the roster never planned, and two of them additionally need something this project
+may not do on its own: a Trust Center setting, and a machine with a pen. Closing them is a decision
+about widening Tier B, not work that got skipped.
+
+Writing `C-LEX` added two more of the same kind, and they are cheaper than any of the four: neither
+needs a setting, a device or a network, only a decision to author a tenth deck.
+
+- **Text and a shape name that need escaping.** Every entity reference in this corpus was written by
+  `tools/corpus/gen`; the nine PowerPoint-authored decks contain **no ampersand at all** across
+  their 387 XML parts, so `&amp;`, `&lt;`, `&gt;` and `&quot;` are each checked only against the
+  escaper that wrote them. E8 already measured PowerPoint writing all four — the decks it measured
+  were simply never committed. One deck whose title, body text and a shape's `@name` carry
+  `& < > "` closes four `C-LEX` rows at once, and it is the largest single thing this corpus is
+  missing.
+- **A ChartEx chart.** `xml.selfClosing=spaced` is the dominant real-world form — 70 822 of ADR
+  0004's 98 777 — and `a36-spaced-tags` is its only witness here, which is to say we are the only
+  producer of the commonest form in the wild. PowerPoint does write it, from the one serializer that
+  behaves differently: `ppt/charts/chartEx1.xml` spaced 12 of its 12 in the deck measured on
+  2026-08-27. `b05-chart` carries `c:` charts and no ChartEx part, so a deck with a waterfall or a
+  treemap would supply a genuinely independent producer for the form the round-trip gate most needs
+  one for.
 
 - **A modern comment anchored to a shape.** `a15-comments` writes the 2018 `p188:cm` with the
   `pc:sldMkLst` document marker that was measured, and no `pc:spMkLst`. Nothing in any public
@@ -445,10 +696,10 @@ different thing from one nobody noticed.
   `PROJECTREFERENCES` is acceptable are all asserted from the specification and checked by nothing.
   Closing it needs "Trust access to the VBA project object model", which is a Trust Center setting
   on the user's machine rather than something this project may change. Tier B.
-- **`_rels/.rels` in the order PowerPoint writes it.** Measured as `rId3`, `rId2`, `rId1`, `rId4`,
-  and not reproduced: the chassis writes its own three package relationships first and appends. It
-  is a lexical convention of a part every deck has, so it belongs with a producer that writes it
-  that way. Tier B.
+- ~~**`_rels/.rels` in the order PowerPoint writes it.**~~ **Closed by `b01-blank`**, which is
+  written `rId3`, `rId2`, `rId1`, `rId4`. The gap was never that the order was unmeasured — it was
+  that no committed deck exhibited it, because the chassis writes its own three package
+  relationships first and appends. Now one does.
 - **The eighth ChartEx layout, `regionMap`.** `a22` covers the other seven, every one read back
   from PowerPoint. A region map's `cx:layoutPr/cx:geography` is resolved against an online map
   service, so authoring one is a download and has not been approved.
@@ -463,6 +714,11 @@ different thing from one nobody noticed.
 - **Where PowerPoint puts an equation.** Same reason: there is no `Shapes.AddEquation`, so
   `a29`'s two MCE placements are both legal and neither is measured. The `m:oMath` content itself
   is transcribed from ECMA-376 Part 1 §22.1, which is complete and precise.
+- **A 3-D model.** The only gap that is also a `C-COV` `uncovered` entry, and the only one this
+  roster answers by cutting a slot rather than adding one. Everything above is a gap in evidence;
+  this is a gap in the corpus's coverage of the census itself, which is why it is declared in a
+  manifest and not only here. See `a28-model3d` above for why guessing the four undocumented
+  strings would be worse than the hole.
 - **An EMF with text and raster blits.** `tools/corpus/gen/emf.ts` writes a five-record metafile
   that genuinely draws, which is enough to be an OLE preview and nothing like enough for sub-phase
   10.6: the hard part is the ~70 record types `rtf.js` routes into a no-op, and a real Visio or
@@ -534,6 +790,14 @@ no diagnostic log and its refusal message names no part, element or line.
   `a:tile/@flip`, `a:blip` colour effects, `a:grpFill`, `a:ahPolar`, and all 54
   `ST_PresetPatternVal` values.
 
-Once `corpus/reject/` exists, each refusal above becomes a fixture with the smallest markup that
-reproduces it, and `C-REJECT` asserts the validator catches every one before an export is handed
-over.
+`corpus/reject/` exists as of sub-phase 1.2. Seventeen of the refusals above are now fixtures —
+the smallest package we can build carrying the markup that was measured — and `C-REJECT` asserts
+the validator catches every one, by the rule its manifest names, before an export is handed over.
+Each entry records what PowerPoint said and where the finding is written down.
+
+One limitation, stated where it belongs rather than in a footnote: the **markup** in each fixture
+is the markup that was refused, but the **package** around it is new and much smaller, and nobody
+has opened those seventeen files in PowerPoint. `C-REJECT` asserts only what is checkable without
+doing so - that we refuse them, and for the right reason. Confirming that the minimal package
+reproduces the refusal is a run of `gen/open-in-powerpoint.ps1` away, on a machine with PowerPoint,
+by somebody who chooses to.

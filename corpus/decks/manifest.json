@@ -5,7 +5,18 @@
   "generatedIn": "1.1",
   "adr": "docs/adr/0009-the-corpus.md",
   "generator": "tools/corpus/gen/build-probes.ts",
-  "targetCount": 42,
+  "serializers": {
+    "xml": "tools/corpus/gen",
+    "container": "tools/ground-truth/zip.ts"
+  },
+  "targetCount": 41,
+  "uncovered": [
+    {
+      "key": "model3d",
+      "why": "The a:ext GUID that carries am3d:model3d appears in no public specification. Microsoft's own Open XML SDK documents the element and its namespace (DocumentFormat.OpenXml.Office2019.Drawing.Model3D, serialized am3d:model3d) but not the extension URI that hosts it, nor the relationship type and content type of the model part beside it. Guessing the four is worse than the hole, and a34-extlst is the deck that says why: an unknown a:ext/@uri is carried through untouched, so a fabricated GUID would open, render its raster and survive every resave with PowerPoint treating the extension as somebody else's. Nothing here would ever contradict it, and this rule would read green.",
+      "closes": "Experiment E4 - insert a 3-D model in PowerPoint 16.0.20326 and read the extension back out. Blocked, and not on effort: PowerPoint's 3-D gallery fetches a Microsoft-licensed model over the network, which is a download nobody has approved. Inserting a model authored here would avoid that; whether PowerPoint accepts one is the first thing E4 would find out. The Tier A slot is a28-model3d."
+    }
+  ],
   "entries": [
     {
       "id": "a01-minimal",
@@ -531,8 +542,8 @@
       "license": "CC0-1.0",
       "source": "self-authored",
       "producer": "tools/corpus/gen",
-      "sha256": "249fabe59b34215905afe9795d195caf9edc4fd7ba1272a00c80dd2c99840865",
-      "bytes": 45350,
+      "sha256": "9d81f0ad38e6056359e3bd97c80cec2f9379cae9ebbbd171b28b5f39055d8235",
+      "bytes": 45571,
       "slides": 3,
       "zipEntries": 22,
       "format": "pptx",

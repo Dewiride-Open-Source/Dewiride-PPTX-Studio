@@ -217,6 +217,36 @@ export class PartStore {
   }
 
   /**
+   * The parts `write` will serialise afresh, rather than stream from the
+   * archive, in write order.
+   *
+   * "Dirty-part-only export" is the claim this class exists to make, and
+   * `PartInfo.fromArchive` alone cannot express it: a relationship collection
+   * mutated in place through `relationships(...)` leaves its part's `fromArchive`
+   * true while `write` re-emits it, because the parsed collection is the edit
+   * and `replacePart` was never called. Somewhere has to hold both halves, and
+   * this is the only place that can see them.
+   */
+  rewrittenParts(): PartName[] {
+    const dirty = new Set<string>();
+    for (const part of this.#parts.values()) {
+      if (part.source.kind === 'bytes') dirty.add(normalizePartName(part.name));
+    }
+    for (const rels of this.#rels.values()) {
+      if (rels.dirty && rels.size > 0) dirty.add(normalizePartName(rels.partName));
+    }
+
+    const out: PartName[] = [];
+    for (const entryName of this.#entryNames()) {
+      if (entryName === CONTENT_TYPES_PART) continue;
+      const key = normalizePartName('/' + entryName);
+      if (!dirty.has(key)) continue;
+      out.push(this.#parts.get(key)?.name ?? toPartName('/' + entryName));
+    }
+    return out;
+  }
+
+  /**
    * The bytes of a part.
    *
    * An archive-backed part is inflated on every call and its CRC-32 checked on
@@ -395,9 +425,9 @@ export class PartStore {
    * since it has no original order to preserve.
    */
   write(options: WritePackageOptions = {}): Uint8Array {
-    const relsBytes = this.#serializeDirtyRelationships();
-    const entryNames = this.#orderedEntryNames(options.normalizeEntryOrder ?? false, relsBytes);
-    this.#assertWritable(entryNames, relsBytes);
+    this.materializeRelationships();
+    const entryNames = this.#orderedEntryNames(options.normalizeEntryOrder ?? false);
+    this.#assertWritable(entryNames);
 
     const level = options.deflateLevel ?? 6;
     const entries: ZipEntryInput[] = [];
@@ -407,11 +437,6 @@ export class PartStore {
         continue;
       }
       const key = normalizePartName('/' + entryName);
-      const replacement = relsBytes.get(key);
-      if (replacement !== undefined) {
-        entries.push(deflatedEntry(entryName, replacement, level));
-        continue;
-      }
       const part = this.#parts.get(key);
       if (part === undefined) continue;
       entries.push(
@@ -436,13 +461,37 @@ export class PartStore {
   }
 
   /**
-   * Serialise every relationship collection that changed.
+   * Write every changed relationship collection back into the part table.
    *
    * A collection emptied of everything loses its part rather than being written
    * as an empty `<Relationships/>` - Office does not keep those around, and a
    * part that exists only to say nothing is one more thing to explain.
+   *
+   * ## Why this is public, and why it installs bytes rather than only returning them
+   *
+   * A relationship part has two representations here: its bytes, and the parsed
+   * `Relationships` the store hands out and caches. `relationships(...)` returns
+   * a live object, so adding an edge mutates the parsed form and leaves the
+   * bytes alone - and until this runs, the two disagree.
+   *
+   * That was invisible while `write` was the only thing that cared, because it
+   * asked the parsed form. It stopped being invisible the moment something else
+   * read the package: `@pptx-studio/validate` reads relationship markup as raw
+   * XML on purpose - `Relationships.parse` refuses the duplicate and malformed
+   * ids that three of the rules exist to report - so it was validating the
+   * `.rels` as it arrived rather than as it would be written. A relationship
+   * removed in this session still looked present, one added still looked
+   * absent, and a `.rels` created in this session was not in `partNames` at all,
+   * so nothing checked it. Sub-phase 1.3 found this the way these things are
+   * always found: a test asserted a collected image and got a dangling-
+   * relationship finding for the edge that had just been removed.
+   *
+   * So the bytes are installed into the part table, and after this call every
+   * byte-reading consumer - `read`, `info`, `partNames`, the validator, a
+   * census - sees the package that is about to be written. It is idempotent:
+   * calling it again re-serialises the same collections to the same bytes.
    */
-  #serializeDirtyRelationships(): Map<string, Uint8Array> {
+  materializeRelationships(): Map<string, Uint8Array> {
     const out = new Map<string, Uint8Array>();
     for (const rels of this.#rels.values()) {
       if (!rels.dirty) continue;
@@ -453,16 +502,26 @@ export class PartStore {
         continue;
       }
       this.contentTypes.ensureFor(rels.partName, CONTENT_TYPE.relationships);
-      out.set(key, rels.serialize());
+      const bytes = rels.serialize();
+      out.set(key, bytes);
+
+      const existing = this.#parts.get(key);
+      if (existing === undefined) {
+        // A collection that grew from nothing has no part yet. It goes on the
+        // end, which is where `#entryNames` was already putting it.
+        this.#parts.set(key, { name: toPartName(rels.partName), source: { kind: 'bytes', bytes } });
+        this.#order.push(zipEntryNameFor(rels.partName));
+      } else {
+        existing.source = { kind: 'bytes', bytes };
+      }
     }
     return out;
   }
 
-  #orderedEntryNames(normalize: boolean, relsBytes: ReadonlyMap<string, Uint8Array>): string[] {
+  #orderedEntryNames(normalize: boolean): string[] {
     const live = this.#entryNames().filter((entryName) => {
       if (entryName === CONTENT_TYPES_PART) return true;
-      const key = normalizePartName('/' + entryName);
-      return this.#parts.has(key) || relsBytes.has(key);
+      return this.#parts.has(normalizePartName('/' + entryName));
     });
     if (!normalize) return live;
     const first: string[] = [CONTENT_TYPES_PART, zipEntryNameFor(ROOT_RELS_PART as PartName)];
@@ -477,12 +536,12 @@ export class PartStore {
    * reason the CRC check in the reader is not: a flag that turns off a
    * correctness check is a flag somebody sets in a hot path.
    */
-  #assertWritable(entryNames: readonly string[], relsBytes: ReadonlyMap<string, Uint8Array>): void {
+  #assertWritable(entryNames: readonly string[]): void {
     const present = new Set<string>();
     for (const entryName of entryNames) present.add(normalizePartName('/' + entryName));
     this.#assertPackagePartsPresent(entryNames, present);
     this.#assertEveryPartIsTypedAndNameable(entryNames);
-    this.#assertRelationshipsResolve(entryNames, present, relsBytes);
+    this.#assertRelationshipsResolve(entryNames, present);
   }
 
   /** `[Content_Types].xml` and `_rels/.rels`: neither is optional. */
@@ -536,19 +595,14 @@ export class PartStore {
   }
 
   /** Every internal relationship lands on a part that is actually there. */
-  #assertRelationshipsResolve(
-    entryNames: readonly string[],
-    present: ReadonlySet<string>,
-    relsBytes: ReadonlyMap<string, Uint8Array>,
-  ): void {
+  #assertRelationshipsResolve(entryNames: readonly string[], present: ReadonlySet<string>): void {
     for (const entryName of entryNames) {
       const partName = '/' + entryName;
       if (!isRelationshipPartName(partName)) continue;
-      const key = normalizePartName(partName);
       const source = sourcePartNameForRels(partName);
       const rels =
         this.#rels.get(normalizePartName(source)) ??
-        Relationships.parse(relsBytes.get(key) ?? this.read(partName), source);
+        Relationships.parse(this.read(partName), source);
       for (const rel of rels.all) {
         if (rel.targetMode === 'External') continue;
         const target = rels.resolve(rel);

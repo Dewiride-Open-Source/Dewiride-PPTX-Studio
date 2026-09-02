@@ -16,7 +16,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const DIST = resolve(ROOT, 'packages/census/dist/index.js');
@@ -26,7 +26,7 @@ interface Rule {
   readonly key: string;
 }
 
-const census = (await import(DIST)) as {
+const census = (await import(pathToFileURL(DIST).href)) as {
   FEATURE_RULES: readonly Rule[];
   PART_FEATURE_RULES: readonly Rule[];
 };

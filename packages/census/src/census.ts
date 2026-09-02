@@ -3,6 +3,7 @@ import {
   FONT_DATA_CONTENT_TYPE,
   FONT_DATA_EXTENSION,
   isRelationshipPartName,
+  isXmlContentType,
   normalizePartName,
   PartStore,
   readZip,
@@ -79,22 +80,6 @@ export interface CensusOptions {
 
 const P = OOXML_NS.p;
 const P14 = EXTENSION_NS.p14;
-
-/** Content types that are XML but whose media type does not say so. */
-const XML_CONTENT_TYPES = new Set([
-  'application/vnd.openxmlformats-officedocument.vmlDrawing',
-  'application/inkml+xml',
-]);
-
-function isXmlContentType(contentType: string): boolean {
-  const base = contentType.split(';')[0]?.trim() ?? '';
-  return (
-    base.endsWith('+xml') ||
-    base === 'application/xml' ||
-    base === 'text/xml' ||
-    XML_CONTENT_TYPES.has(base)
-  );
-}
 
 /** ST_OnOff: `1`/`0`, `true`/`false`, and the `on`/`off` spelling Office writes. */
 function ooxmlBoolean(value: string | undefined, fallback = false): boolean {

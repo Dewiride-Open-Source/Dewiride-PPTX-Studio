@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CONTENT_TYPE } from './constants.js';
-import { ContentTypes } from './content-types.js';
+import { CONTENT_TYPE, FONT_DATA_CONTENT_TYPE } from './constants.js';
+import { ContentTypes, isXmlContentType } from './content-types.js';
 import { isOpcError } from './errors.js';
 import { contentTypesXml } from './testing/build-package.js';
 
@@ -262,5 +262,42 @@ describe('writing the stream back', () => {
     expect(xml).toContain('<Types xmlns=');
     expect(xml).toContain('</Types>');
     expect(ContentTypes.parse(new TextEncoder().encode(xml)).defaults).toHaveLength(0);
+  });
+});
+
+describe('which parts hold XML', () => {
+  it('answers for the +xml suffix, which covers almost every part', () => {
+    expect(isXmlContentType(CONTENT_TYPE.slide)).toBe(true);
+    expect(isXmlContentType(CONTENT_TYPE.theme)).toBe(true);
+    expect(isXmlContentType(CONTENT_TYPE.relationships)).toBe(true);
+  });
+
+  it('answers for the two media types that are XML without saying so', () => {
+    // `vmlDrawing` is the one that bites: every OLE object in every deck has
+    // one, it carries the on-slide preview and the `@spid` that resolves to it,
+    // and its content type has no `+xml` anywhere in it.
+    expect(isXmlContentType('application/vnd.openxmlformats-officedocument.vmlDrawing')).toBe(true);
+    expect(isXmlContentType('application/inkml+xml')).toBe(true);
+    expect(isXmlContentType('application/xml')).toBe(true);
+    expect(isXmlContentType('text/xml')).toBe(true);
+  });
+
+  it('is case-insensitive, because RFC 2045 makes the media type so', () => {
+    // The spelling Office writes has a capital D. A lookup table that copied
+    // that spelling and lower-cased its input would match nothing at all, which
+    // is exactly the bug this test was written after.
+    expect(isXmlContentType('application/vnd.openxmlformats-OFFICEdocument.VMLDRAWING')).toBe(true);
+    expect(isXmlContentType('APPLICATION/XML')).toBe(true);
+  });
+
+  it('ignores parameters', () => {
+    expect(isXmlContentType('application/xml; charset=utf-8')).toBe(true);
+  });
+
+  it('says no to media, and to nothing at all', () => {
+    expect(isXmlContentType(CONTENT_TYPE.png)).toBe(false);
+    expect(isXmlContentType(FONT_DATA_CONTENT_TYPE)).toBe(false);
+    expect(isXmlContentType('application/vnd.ms-office.vbaProject')).toBe(false);
+    expect(isXmlContentType(undefined)).toBe(false);
   });
 });

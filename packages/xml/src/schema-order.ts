@@ -55,6 +55,28 @@ import { namespaceOf, type XElement } from './xnode.js';
 
 export { SCHEMA_SOURCES };
 
+/**
+ * The four namespaces the ordering table was generated from.
+ *
+ * Exported because "this element is not in the table" has two entirely
+ * different meanings and only one of them is a problem. An `a:solidFill` the
+ * table does not rank under `a:tblBg` is markup in a vocabulary we generated
+ * from, so the table's silence is a statement. A `p14:honeycomb` under
+ * `p:transition` is markup from a vocabulary we did not generate from, so the
+ * table's silence means nothing at all - it is `mc:Ignorable` extension markup
+ * doing exactly what it is for.
+ *
+ * `childRanks` deliberately collapses the two, because a caller trying to
+ * *insert* a child cannot act on either. A caller trying to *judge* one can,
+ * and `@pptx-studio/validate`'s `V012` is that caller.
+ */
+export const SCHEMA_NAMESPACES: readonly string[] = NAMESPACES;
+
+/** True when the ordering table was generated from this element's namespace. */
+export function isSchemaNamespace(namespace: string | undefined): boolean {
+  return namespace !== undefined && NAMESPACES.includes(namespace);
+}
+
 /** The `{namespace}local` key used throughout this module. */
 export function qualifiedKey(namespace: string, local: string): string {
   return '{' + namespace + '}' + local;

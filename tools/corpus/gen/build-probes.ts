@@ -144,7 +144,41 @@ if (options.manifest) {
     generatedIn: '1.1',
     adr: 'docs/adr/0009-the-corpus.md',
     generator: 'tools/corpus/gen/build-probes.ts',
-    targetCount: 42,
+    // C018, and the reason the container is not this generator: the chassis
+    // hands its entries to writeZip and decides no header field itself, so two
+    // decks whose containers both came out of writeZip are one piece of
+    // evidence about ZIP conventions whichever generator called it.
+    serializers: { xml: 'tools/corpus/gen', container: 'tools/ground-truth/zip.ts' },
+    // Forty-one, not the roster's original forty-two. `a28-model3d` is cut and
+    // `model3d` is declared below, which is the outcome ROSTER.md wrote down for
+    // the case where E4 is not run.
+    targetCount: 41,
+    // C019, and the last of the four named rules. The array lives here because
+    // Tier A is the tier that would have covered the key: the slot that is
+    // missing is `a28-model3d`, and whoever builds it deletes this entry in the
+    // same commit - C019 fails if they do not, so the file cannot go on
+    // apologising for a hole that was filled.
+    uncovered: [
+      {
+        key: 'model3d',
+        why:
+          'The a:ext GUID that carries am3d:model3d appears in no public specification. ' +
+          "Microsoft's own Open XML SDK documents the element and its namespace " +
+          '(DocumentFormat.OpenXml.Office2019.Drawing.Model3D, serialized am3d:model3d) but ' +
+          'not the extension URI that hosts it, nor the relationship type and content type of ' +
+          'the model part beside it. Guessing the four is worse than the hole, and a34-extlst is ' +
+          'the deck that says why: an unknown a:ext/@uri is carried through untouched, so a ' +
+          'fabricated GUID would open, render its raster and survive every resave with PowerPoint ' +
+          "treating the extension as somebody else's. Nothing here would ever contradict it, and " +
+          'this rule would read green.',
+        closes:
+          'Experiment E4 - insert a 3-D model in PowerPoint 16.0.20326 and read the extension ' +
+          "back out. Blocked, and not on effort: PowerPoint's 3-D gallery fetches a " +
+          'Microsoft-licensed model over the network, which is a download nobody has approved. ' +
+          'Inserting a model authored here would avoid that; whether PowerPoint accepts one is ' +
+          'the first thing E4 would find out. The Tier A slot is a28-model3d.',
+      },
+    ],
     entries: [...built]
       .sort((a, b) => a.deck.id.localeCompare(b.deck.id))
       .map((item) => ({

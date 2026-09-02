@@ -11,26 +11,52 @@ import {
 /**
  * The ZIP32 writer - the exact inverse of `zip-reader.ts`.
  *
- * Every field value below was measured from a file PowerPoint 365 wrote on this
- * machine, not chosen from the specification's range of legal values. Where
- * the two differ, PowerPoint wins, because acceptance by PowerPoint is the only
- * test that matters:
+ * Every header field below is measured against a file PowerPoint 365 wrote on
+ * this machine - `corpus/authored/b01-blank.pptx` - rather than chosen from the
+ * specification's range of legal values. On four of the seven we write what
+ * PowerPoint writes. On three we do not, and those are the interesting rows:
  *
- * | field                  | value          | why                                            |
- * | ---------------------- | -------------- | ---------------------------------------------- |
- * | version made by        | 20, host 0     | ZIP 2.0, MS-DOS/FAT; external attrs are DOS bits |
- * | version needed         | 10 stored, 20 deflate | PowerPoint writes exactly this split     |
- * | general purpose flags  | 0              | no UTF-8 bit, no data descriptor, no level hint |
- * | last modified          | 1980-01-01 00:00 | PowerPoint zeroes it, so output is reproducible |
- * | internal/external attrs| 0              | as PowerPoint writes                            |
- * | extra field, comment   | empty          | as PowerPoint writes                            |
+ * | field                   | PowerPoint            | us            |
+ * | ----------------------- | --------------------- | ------------- |
+ * | version made by         | 45, host 0            | **20**        |
+ * | version needed          | 10 stored, 20 deflate | same          |
+ * | general purpose flags   | 0x0006 deflated, 0 stored | **0**     |
+ * | last modified           | 1980-01-01 00:00      | same          |
+ * | internal/external attrs | 0                     | same          |
+ * | extra field             | 0xA220 growth hint    | **none**      |
+ * | entry comment           | empty                 | same          |
  *
- * The UTF-8 flag is worth a note. Office never sets bit 11, and it does not
- * need to: the OPC part-name grammar admits only `pchar`, so a part name is
- * always ASCII and anything else is percent-encoded before it becomes an entry
- * name. We tested setting it anyway on a real deck and PowerPoint opened the
- * file without complaint - so this is a choice about honesty rather than
- * compatibility, and the honest flag for an all-ASCII name is zero.
+ * The three divergences are deliberate, and each is a claim we decline to make
+ * rather than a field we forgot:
+ *
+ *   - **Version made by** is the ZIP version an archive was *created* with.
+ *     PowerPoint's zip library stamps 4.5; we emit no ZIP64 record, no data
+ *     descriptor and no encryption, so nothing here needs above 2.0 and saying
+ *     4.5 would overstate what a reader has to understand.
+ *   - **Flags 0x0006** is bits 1 and 2, which for method 8 are a compression
+ *     *level hint* and mean nothing to a decompressor - 0b11 is "super fast".
+ *     We deflate at level 6, whose encoding is 0b00. Copying 0x0006 would
+ *     describe a compressor we are not.
+ *   - **The 0xA220 growth hint** is 512 bytes of padding so an editor can
+ *     rewrite a part slightly larger *in place* without moving every entry
+ *     after it. We rewrite the whole archive on every save, so the padding
+ *     would buy nothing and announce a capability we do not have. PowerPoint
+ *     writes five of them, 1832 bytes in all, which is the entire size
+ *     difference between `b01-blank.pptx` and `c01-opc-writer.pptx`.
+ *
+ * None of the three is guesswork about whether PowerPoint minds:
+ * `corpus/written/c01-opc-writer.pptx` is that same deck rewritten by this
+ * writer, committed, and opened in PowerPoint 16.0.20326 with no repair prompt.
+ * `tools/corpus/written/decks.test.ts` asserts all three in both directions, so
+ * neither our drifting nor PowerPoint's can pass unnoticed.
+ *
+ * The UTF-8 flag is the fourth bit worth a note, and the one place where our
+ * zero and PowerPoint's agree for the same reason. Office never sets bit 11 and
+ * does not need to: the OPC part-name grammar admits only `pchar`, so a part
+ * name is always ASCII and anything else is percent-encoded before it becomes
+ * an entry name. We tested setting it anyway on a real deck and PowerPoint
+ * opened the file without complaint - so this too is a choice about honesty
+ * rather than compatibility, and the honest flag for an all-ASCII name is zero.
  *
  * `fflate.deflateSync` produces a **raw** DEFLATE stream, verified rather than
  * assumed: its output begins `cb 48` where a zlib-wrapped stream would begin

@@ -44,10 +44,12 @@ import { a42CustomSize } from './a42-custom-size.ts';
 /**
  * The Tier A roster, in id order.
  *
- * `tools/corpus/ROSTER.md` is the plan: forty decks, what each is the probe
- * for, and which experiment gates the ones that are not yet buildable. This
- * array is what exists. A slot named in the roster and missing here is a deck
- * still to write, not an omission - and `C-COV`, once the roster is complete,
+ * `tools/corpus/ROSTER.md` is the plan: forty-one decks, what each is the
+ * probe for, and which experiment gates the ones that are not yet buildable.
+ * This array is what exists, and the two agree: the forty-second slot,
+ * `a28-model3d`, is cut rather than pending, and its census key is declared in
+ * the manifest's `uncovered` array. A slot named in the roster and missing here
+ * would be a deck still to write rather than an omission, and `C-COV` (`C019`)
  * is what refuses to let the difference go unnoticed.
  */
 export const PROBE_DECKS: readonly ProbeDeck[] = [

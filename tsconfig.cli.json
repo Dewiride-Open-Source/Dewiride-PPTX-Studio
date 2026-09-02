@@ -8,6 +8,8 @@
     "paths": {
       "@pptx-studio/census": ["./packages/census/src/index.ts"],
       "@pptx-studio/opc": ["./packages/opc/src/index.ts"],
+      "@pptx-studio/validate": ["./packages/validate/src/index.ts"],
+      "@pptx-studio/writer": ["./packages/writer/src/index.ts"],
       "@pptx-studio/xml": ["./packages/xml/src/index.ts"]
     }
   },

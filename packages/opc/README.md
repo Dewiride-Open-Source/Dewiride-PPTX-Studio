@@ -115,6 +115,19 @@ archive ever does.
 Every failure throws an `OpcError` with a machine-readable `code`. Never a `RangeError`, never
 whatever a dependency happened to throw.
 
+## Two digests, and they are not interchangeable
+
+`crc32` is here because the ZIP format requires it: every read ends in one, and it is the right
+tool for "did this entry survive the archive". It is a 32-bit error-detecting code, so a birthday
+collision is expected within about 2^16 inputs — fewer than the parts in our corpus.
+
+`sha256` is here because "are these two media parts the same file" is a different question, and 1.4
+asks it on every export. It is synchronous and hand-rolled rather than a call to
+`crypto.subtle.digest`, for two reasons: everything that wants a digest here is synchronous, and
+`crypto.subtle` is gated on a **secure context** — present on `https:` and `http://localhost`,
+absent on a plain `http:` origin, which a library that runs entirely in someone else's tab does not
+get to choose. Checked against FIPS 180-4's own vectors, not against itself.
+
 ## What arrives later
 
 - **0.4–0.6** `@pptx-studio/xml`: the tokenizer, `XNode`, byte-identical re-serialization, and

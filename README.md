@@ -55,7 +55,12 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | Schema order, Markup Compatibility, invertible edits | ✅ 0.6         |
 | Ground truth: embedded fonts, colour transforms      | ✅ 0.7         |
 | Feature census, `cli inspect`, the Worker boundary   | ✅ 0.8         |
-| Byte-perfect round trip across a 50-deck corpus      | ⬜ Phase 1     |
+| The corpus: 51 licensed decks, three producers       | ✅ 1.1         |
+| The repair firewall: 29 rules, `cli validate`        | ✅ 1.2         |
+| Writer: dirty-part export, media GC, prepare hooks   | ✅ 1.3         |
+| The round-trip oracle and `cli roundtrip`            | ✅ 1.4         |
+| `cli bisect` and the PowerPoint oracle               | ✅ 1.5         |
+| The CI round-trip gate and badge                     | ⬜ 1.6         |
 | Geometry, fills, strokes, effects                    | ⬜ Phase 2     |
 | Text engine, viewer, fidelity scoreboard             | ⬜ Phase 3     |
 | Tables and SmartArt                                  | ⬜ Phase 4     |
@@ -73,7 +78,9 @@ packages/
   opc/     OPC container: zip, parts, content types, relationships
   xml/     byte-preserving XML tokenizer, XNode, serializer
   census/  what is inside a package: parts, relationship graph, feature census
-  cli/     the Node entry point — `pptx-studio inspect`
+  validate/ the repair firewall: the 29 rules a .pptx must not break
+  writer/  export: dirty-part-only serialization, media GC, prepare hooks
+  cli/     the Node entry point — `pptx-studio inspect` and `validate`
 apps/
   studio/  drop a .pptx on a page; the parse Worker boundary lives here
 tools/
@@ -82,7 +89,12 @@ tools/
   schema-codegen/ the ECMA-376 element-order table generator
   ground-truth/  experiments that ask real PowerPoint what it actually does
   bench/         synthetic decks, and the browser benchmark that reads them
+  corpus/        the corpus generators, its five rules, and the roster
 corpus/
+  decks/         41 synthetic probe decks, one feature each
+  authored/      9 decks PowerPoint wrote, so the corpus has a second producer
+  written/       1 deck our own writer round-tripped
+  reject/        17 packages PowerPoint refuses, one measured finding each
   ground-truth/  what PowerPoint answered, as committed fixtures
   bench/         benchmark deck recipes, their hashes, and recorded timings
 docs/adr/        architecture decision records
@@ -126,6 +138,7 @@ To look inside a deck:
 
 ```sh
 node packages/cli/dist/cli.js inspect deck.pptx        # after pnpm build
+node packages/cli/dist/cli.js validate deck.pptx       # the 29 must-not-break rules
 node tools/bench/serve.ts --decks <dir>                # then drop one on the page
 ```
 

@@ -78,6 +78,38 @@ function sameContentType(a: string, b: string): boolean {
   return normalizePartName(a.trim()) === normalizePartName(b.trim());
 }
 
+/**
+ * Media types that are XML but do not say so.
+ *
+ * The `+xml` structured-syntax suffix of RFC 6839 answers the question for
+ * almost every part in a package. These two are the exceptions in a `.pptx`,
+ * and the first one is the one that bites: `vmlDrawing` carries no suffix at
+ * all, and every OLE object in every deck has one. A reader that trusts the
+ * suffix alone treats VML - which is where an OLE object's on-slide preview
+ * lives, and where `@spid` resolves to - as an opaque blob.
+ */
+const XML_CONTENT_TYPES: ReadonlySet<string> = new Set([
+  'application/xml',
+  'text/xml',
+  // Lower case, because the lookup lower-cases first. Office writes this one
+  // `vmlDrawing`, and a set that copied that spelling would never match.
+  'application/vnd.openxmlformats-officedocument.vmldrawing',
+  'application/inkml+xml',
+]);
+
+/**
+ * Whether a part with this content type holds XML.
+ *
+ * Parameters are stripped and the media type is lower-cased first, for the same
+ * reason {@link sameContentType} does it: RFC 2045 makes the media type
+ * case-insensitive, and a deck in the wild spells things how it likes.
+ */
+export function isXmlContentType(contentType: string | undefined): boolean {
+  if (contentType === undefined) return false;
+  const base = (contentType.split(';')[0] ?? '').trim().toLowerCase();
+  return base.endsWith('+xml') || XML_CONTENT_TYPES.has(base);
+}
+
 export class ContentTypes {
   #defaults: DefaultEntry[] = [];
   #overrides: OverrideEntry[] = [];
