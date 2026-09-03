@@ -40,8 +40,30 @@ export interface EvaluateOptions {
   readonly adjust?: AdjustOverrides;
 }
 
-function toGuides(adjust: AdjustOverrides | undefined): Map<string, PresetGuide> {
-  const map = new Map<string, PresetGuide>();
+/**
+ * An override is either a guide to run or a number that is already the answer.
+ *
+ * The two forms of `AdjustOverrides` are not the same thing wearing different
+ * clothes. A `PresetGuide[]` came out of a file and may carry any formula; a
+ * `Record<string, number>` came from a caller that has already reduced its
+ * adjust values to numbers, and there is nothing left to evaluate.
+ */
+type Override = PresetGuide | number;
+
+/**
+ * A number stays a number.
+ *
+ * It used to become `{ fmla: ['val', String(value)] }` and go back through the
+ * operand reader, which meant a caller's number was serialised to a string and
+ * re-parsed against the *file format's* integer grammar. Any value that grammar
+ * does not admit threw: `0.5` and `1e21` both do, and `1e21` is what
+ * `String()` gives for a large `ST_Coordinate`. 2.5 made that reachable - the
+ * handle inverter evaluates the geometry at fractional adjust values while it
+ * searches - but it was always wrong, because the integer grammar is a fact
+ * about the markup and not about the numbers a caller may hold.
+ */
+function toGuides(adjust: AdjustOverrides | undefined): Map<string, Override> {
+  const map = new Map<string, Override>();
   if (adjust === undefined) return map;
 
   if (Array.isArray(adjust)) {
@@ -50,21 +72,47 @@ function toGuides(adjust: AdjustOverrides | undefined): Map<string, PresetGuide>
   }
 
   for (const [name, value] of Object.entries(adjust as Readonly<Record<string, number>>)) {
-    map.set(name, { name, fmla: ['val', String(value)] });
+    map.set(name, value);
   }
   return map;
 }
 
-/** Only an integer. `ST_AdjCoordinate` is a guide name or an integer, and nothing else. */
+function runOverride(
+  override: Override,
+  guides: ReadonlyMap<string, number>,
+  preset: string | null,
+): number {
+  return typeof override === 'number' ? override : runGuide(override, guides, preset);
+}
+
+/**
+ * Only an integer.
+ *
+ * Every operand across the 187 presets is a guide name or an integer, which is
+ * what this module reads. `ST_AdjCoordinate` itself is wider: it is a union
+ * with `ST_Coordinate`, which admits a universal measure like `2in` as well as
+ * a plain EMU count. No preset writes one and no deck we have seen does, so
+ * such an operand throws `FMLA_OPERAND` here rather than being silently
+ * converted. That is a gap rather than a decision - nobody on this project has
+ * read the schema itself, and it is written down as an open question in ADR
+ * 0020 rather than guessed at.
+ */
 const LITERAL = /^[-+]?\d+$/;
 
 /**
  * Resolve one operand: a guide already in scope, or an integer literal.
  *
  * The two cases cannot be told apart by looking, which is the whole reason 2.1
- * kept every operand as a string. A name wins over a literal reading because a
- * name cannot be an integer and an integer cannot be a name, so there is no
- * ambiguity to resolve - only an order to state.
+ * kept every operand as a string, so an order has to be stated: a name in scope
+ * wins.
+ *
+ * That order is a decision and not a consequence of the two spaces being
+ * disjoint. `ST_GeomGuideName` is reported to be an unrestricted token, which
+ * would make a guide literally named `50000` expressible in a `custGeom` - and
+ * it would then capture every literal `50000` in that shape. No preset does it,
+ * and the alternative order is worse: a shape that names a guide and then
+ * cannot reference it is broken in a way that shows, while a shadowed literal
+ * at least draws.
  */
 export function resolveOperand(
   token: string,
@@ -168,11 +216,17 @@ export function evaluateGuides(
   const overrides = toGuides(options.adjust);
 
   for (const gd of shape.avLst) {
-    guides.set(gd.name, runGuide(overrides.get(gd.name) ?? gd, guides, shape.name));
+    const override = overrides.get(gd.name);
+    guides.set(
+      gd.name,
+      override === undefined
+        ? runGuide(gd, guides, shape.name)
+        : runOverride(override, guides, shape.name),
+    );
   }
 
-  for (const [name, gd] of overrides) {
-    if (!guides.has(name)) guides.set(name, runGuide(gd, guides, shape.name));
+  for (const [name, override] of overrides) {
+    if (!guides.has(name)) guides.set(name, runOverride(override, guides, shape.name));
   }
 
   for (const gd of shape.gdLst) {

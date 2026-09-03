@@ -20,6 +20,8 @@
       "@pptx-studio/geometry/*": ["./packages/geometry/src/*"],
       "@pptx-studio/opc": ["./packages/opc/src/index.ts"],
       "@pptx-studio/opc/*": ["./packages/opc/src/*"],
+      "@pptx-studio/paint": ["./packages/paint/src/index.ts"],
+      "@pptx-studio/paint/*": ["./packages/paint/src/*"],
       "@pptx-studio/validate": ["./packages/validate/src/index.ts"],
       "@pptx-studio/validate/*": ["./packages/validate/src/*"],
       "@pptx-studio/writer": ["./packages/writer/src/index.ts"],

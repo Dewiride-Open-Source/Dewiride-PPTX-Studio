@@ -321,8 +321,15 @@ export function applyOperator(
       // theoretical. The chain is what ECMA describes, so the chain is what
       // this is.
       //
-      // Nothing in the preset data inverts its bounds - every use is of the
-      // form `pin 0 adjN <constant>`. Hand-authored custom geometry can.
+      // And it is reachable from a committed preset, which was not known when
+      // this was written. All three operands are free: across the 196 uses in
+      // the 187 presets the first is non-zero 20 times, the second is not an
+      // adjust value twice, and the third is a computed guide 84 times. So the
+      // bounds can invert at a size, and one does - `mathDivide.a3` is
+      // `pin 1000 adj3 maxAdj3`, and on a 1x1000 shape `maxAdj3` works out to
+      // 36.745 against a floor of 1000. The chain returns 36.745; the min/max
+      // composition returns 1000. Measured over 1568 evaluations at eight
+      // aspect ratios, and pinned in `formula.test.ts`.
       if (y < x) return x;
       if (y > z) return z;
       return y;

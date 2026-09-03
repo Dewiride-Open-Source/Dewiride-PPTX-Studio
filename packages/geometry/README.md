@@ -2,9 +2,10 @@
 
 DrawingML geometry: the **187 preset shape definitions** (2.1), the **formula evaluator** that turns
 one of them plus a size into numbers (2.2), the **arc math** that says where each of the 393
-`a:arcTo` commands in them actually goes (2.3), and the **path emitter** that turns all of it into
-SVG path data (2.4). `a:prstGeom` and `a:custGeom` go through the same code, because they are the
-same thing written two ways.
+`a:arcTo` commands in them actually goes (2.3), the **path emitter** that turns all of it into SVG
+path data (2.4), and the **adjust handles** that run the whole thing backwards — drag a yellow dot
+and get the number to write into `a:avLst` (2.5). `a:prstGeom` and `a:custGeom` go through the same
+code, because they are the same thing written two ways.
 
 Nothing is _painted_ — a `d` string is not a fill, a stroke or an effect. That is 2.6 to 2.8.
 
@@ -150,6 +151,44 @@ Four things worth knowing:
 
 `close` maps straight to `Z`, which has the same meaning — the next command starts a new subpath at
 the closed one's first point. 35 presets rely on that and carry on drawing after a `close`.
+
+## Dragging one
+
+```ts
+import { dragHandle, getPreset, resolveHandles } from '@pptx-studio/geometry';
+
+const roundRect = getPreset('roundRect')!;
+const size = { w: 200, h: 100 };
+
+resolveHandles(roundRect, size);
+// [{ kind: 'xy', pos: { x: 16.667, y: 0 }, finite: true,
+//    axes: [{ kind: 'x', guide: 'adj', value: 16667, min: 0, max: 50000,
+//             widened: false, readout: 16.667 }] }]
+
+dragHandle(roundRect, size, roundRect.ahLst[0]!, { x: 25, y: 0 });
+// { adj: 25000 }  <- ready to write into a:prstGeom/a:avLst
+```
+
+`dragHandle` returns only the adjust values the handle it was given controls — at most two — so a
+caller merges the result into the shape's own `a:avLst` without disturbing anything else. `to` is in
+shape space, the same coordinates `pos` comes back in.
+
+- **An axis is a scalar readout of the position, and there are four.** `gdRefX` and `gdRefY` move
+  the handle's `x` and `y`; `gdRefR` and `gdRefAng` move its distance and its angle **about the
+  shape centre**. That origin is not in the spec — it is measured: ten of the eighteen polar angle
+  axes place `pos` on the ray at their own angle to within 2.2e-8 of a 60000th of a degree, at six
+  aspect ratios. The other eight are out by up to 156°, which is why the readout is always inverted
+  and never read off the pointer.
+- **One method for all 287 axes**: sample the readout across the range, take the straddling interval
+  nearest the current value, refine with false position. On an affine map — 243 of the 287 axes at
+  every size — the first step is exact, so there is no separate analytic path to keep in step.
+- **Ties break towards where the shape already is.** Five axis-and-size combinations fold back, so
+  more than one adjust value can put the handle under the pointer; taking the nearest is what makes
+  a small mouse movement a small change.
+- **`minX`/`maxX` bound the guide, not the position**, in the guide's own units — `arc` bounds an
+  angle at 21599999 and the callouts bound nothing at ±2147483647. An **omitted** bound freezes that
+  axis, which is the opposite reading and is what ISO says.
+- **The value written is an integer**, rounded once after the clamp. The search is not.
 
 ## The definitions themselves are still strings
 

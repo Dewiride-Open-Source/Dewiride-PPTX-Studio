@@ -80,6 +80,9 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | The formula evaluator: 17 operators, built-in guides | ✅ 2.2         |
 | Arc math: the unskew, winding, the whole-turn split  | ✅ 2.3         |
 | Path emit, and `custGeom` as the same thing          | ✅ 2.4         |
+| Adjust handles: drag one, get the value to write     | ✅ 2.5         |
+| Colour: six bases, 28 transforms, theme and clrMap   | ✅ 2.6         |
+| Gradients and the 54 pattern tiles, both measured    | ✅ 2.7         |
 | Painted: fills, strokes, gradients, effects          | ⬜ Phase 2     |
 | Text engine, viewer, fidelity scoreboard             | ⬜ Phase 3     |
 | Tables and SmartArt                                  | ⬜ Phase 4     |
@@ -97,7 +100,8 @@ packages/
   opc/     OPC container: zip, parts, content types, relationships
   xml/     byte-preserving XML tokenizer, XNode, serializer
   census/  what is inside a package: parts, relationship graph, feature census
-  geometry/ preset and custom geometry: 187 shapes, the evaluator, arcs, paths
+  geometry/ preset and custom geometry: 187 shapes, the evaluator, arcs, paths, handles
+  paint/   colour: the six bases, the 28 transforms, theme and clrMap resolution
   validate/ the repair firewall: the 29 rules a .pptx must not break
   writer/  export: dirty-part-only serialization, media GC, prepare hooks
   cli/     the Node entry point — `pptx-studio inspect` and `validate`

@@ -116,12 +116,43 @@ function spTreeHead(): string {
   );
 }
 
-function slideMaster(): string {
+/** The twelve `p:clrMap` attributes, in schema order. */
+const CLR_MAP_KEYS = [
+  'bg1',
+  'tx1',
+  'bg2',
+  'tx2',
+  'accent1',
+  'accent2',
+  'accent3',
+  'accent4',
+  'accent5',
+  'accent6',
+  'hlink',
+  'folHlink',
+] as const;
+
+export type ClrMapAttrs = Readonly<Record<(typeof CLR_MAP_KEYS)[number], string>>;
+
+/** What every master this project writes has said until now. */
+export const IDENTITY_CLR_MAP: ClrMapAttrs = {
+  bg1: 'lt1',
+  tx1: 'dk1',
+  bg2: 'lt2',
+  tx2: 'dk2',
+  accent1: 'accent1',
+  accent2: 'accent2',
+  accent3: 'accent3',
+  accent4: 'accent4',
+  accent5: 'accent5',
+  accent6: 'accent6',
+  hlink: 'hlink',
+  folHlink: 'folHlink',
+};
+
+function slideMaster(map: ClrMapAttrs): string {
   // All twelve clrMap attributes. Eleven is a repair prompt.
-  const clrMap =
-    '<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2"' +
-    ' accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6"' +
-    ' hlink="hlink" folHlink="folHlink"/>';
+  const clrMap = '<p:clrMap ' + CLR_MAP_KEYS.map((k) => k + '="' + map[k] + '"').join(' ') + '/>';
   return (
     DECLARATION +
     `<p:sldMaster ${NS_DECLS}>` +
@@ -188,6 +219,12 @@ export interface BuildOptions {
   /** One entry per slide: the children of `p:spTree` after `grpSpPr`. */
   readonly slides: readonly string[];
   readonly fonts?: readonly EmbeddedFont[];
+  /**
+   * The master colour map. Defaults to the identity, which is what every deck
+   * this project has written so far used - and is exactly the configuration in
+   * which a resolver that runs `dk1` through the map looks correct.
+   */
+  readonly clrMap?: ClrMapAttrs;
 }
 
 export function buildPptx(options: BuildOptions): Uint8Array {
@@ -303,7 +340,10 @@ export function buildPptx(options: BuildOptions): Uint8Array {
     { name: 'ppt/presentation.xml', bytes: utf8(presentation) },
     { name: 'ppt/_rels/presentation.xml.rels', bytes: utf8(rels(presRels)) },
     { name: 'ppt/theme/theme1.xml', bytes: utf8(theme()) },
-    { name: 'ppt/slideMasters/slideMaster1.xml', bytes: utf8(slideMaster()) },
+    {
+      name: 'ppt/slideMasters/slideMaster1.xml',
+      bytes: utf8(slideMaster(options.clrMap ?? IDENTITY_CLR_MAP)),
+    },
     {
       name: 'ppt/slideMasters/_rels/slideMaster1.xml.rels',
       bytes: utf8(
@@ -395,5 +435,64 @@ export function textBox(
     '<a:bodyPr wrap="none" lIns="0" tIns="0" rIns="0" bIns="0"><a:spAutoFit/></a:bodyPr><a:lstStyle/>' +
     `<a:p>${runs}</a:p>` +
     '</p:txBody></p:sp>'
+  );
+}
+
+/** How a probe shape is positioned, shaped and filled. */
+export interface ShapeOptions {
+  readonly id: number;
+  readonly name: string;
+  readonly x: number;
+  readonly y: number;
+  readonly cx: number;
+  readonly cy: number;
+  /** A whole fill element: `<a:gradFill>...</a:gradFill>`, `<a:pattFill .../>`, `<a:noFill/>`. */
+  readonly fill: string;
+  /** `ST_ShapeType`. Defaults to `rect`. Ignored when `geom` is given. */
+  readonly prst?: string | undefined;
+  /**
+   * A whole geometry element - `<a:prstGeom .../>` or `<a:custGeom>...</a:custGeom>`.
+   *
+   * C4 needs `prst="line"` and a hand-written `custGeom` with a corner of a
+   * chosen angle, neither of which `prst` alone can express.
+   */
+  readonly geom?: string | undefined;
+  /** Sixtieths of a degree, on `a:xfrm/@rot`. */
+  readonly rot?: number | undefined;
+  readonly flipH?: boolean | undefined;
+  readonly flipV?: boolean | undefined;
+  /** A whole `a:ln` element. Defaults to no outline, which keeps edges clean for sampling. */
+  readonly line?: string | undefined;
+  /**
+   * A whole `a:effectLst`. Goes after `a:ln` - `CT_ShapeProperties` is a
+   * sequence and there is only one place it opens from.
+   */
+  readonly effect?: string | undefined;
+}
+
+/**
+ * A shape with an arbitrary fill.
+ *
+ * `rect()` above takes a *colour* and wraps it in `a:solidFill`, which is all
+ * experiments C and C2 needed. C3 fills shapes with gradients and patterns, so
+ * it hands over the fill element whole.
+ */
+export function shapeXml(options: ShapeOptions): string {
+  const { id, name, x, y, cx, cy, fill } = options;
+  const flip =
+    (options.flipH === true ? ' flipH="1"' : '') + (options.flipV === true ? ' flipV="1"' : '');
+  const rot = options.rot === undefined || options.rot === 0 ? '' : ` rot="${String(options.rot)}"`;
+  return (
+    '<p:sp><p:nvSpPr>' +
+    `<p:cNvPr id="${String(id)}" name="${name}"/><p:cNvSpPr/><p:nvPr/>` +
+    '</p:nvSpPr><p:spPr>' +
+    `<a:xfrm${rot}${flip}>` +
+    `<a:off x="${String(x)}" y="${String(y)}"/><a:ext cx="${String(cx)}" cy="${String(cy)}"/>` +
+    '</a:xfrm>' +
+    (options.geom ?? `<a:prstGeom prst="${options.prst ?? 'rect'}"><a:avLst/></a:prstGeom>`) +
+    fill +
+    (options.line ?? '<a:ln><a:noFill/></a:ln>') +
+    (options.effect ?? '') +
+    '</p:spPr></p:sp>'
   );
 }

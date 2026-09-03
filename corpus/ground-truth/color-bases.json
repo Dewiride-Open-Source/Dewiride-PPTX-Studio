@@ -1,0 +1,4336 @@
+{
+  "$comment": "Ground truth for the DrawingML colour bases, alpha, the clrMap and the percentage grammar, measured in Microsoft PowerPoint. The companion to color-transforms.json, which covers the transforms. See docs/adr/0021-colour.md. `expected` is the RGB PowerPoint painted, sampled from its own bitmap export at the centre of each swatch; `transparency` is Shape.Fill.Transparency from the object model.",
+  "source": {
+    "application": "Microsoft PowerPoint",
+    "generatedBy": "tools/ground-truth/build-swatch-deck2.ts + analyse-swatches2.ts"
+  },
+  "clrScheme": {
+    "dk1": "000000",
+    "lt1": "FFFFFF",
+    "dk2": "44546A",
+    "lt2": "E7E6E6",
+    "accent1": "4472C4",
+    "accent2": "ED7D31",
+    "accent3": "A5A5A5",
+    "accent4": "FFC000",
+    "accent5": "5B9BD5",
+    "accent6": "70AD47",
+    "hlink": "0563C1",
+    "folHlink": "954F72"
+  },
+  "crossedClrMap": {
+    "bg1": "dk1",
+    "tx1": "lt1",
+    "bg2": "dk2",
+    "tx2": "lt2",
+    "accent1": "accent2",
+    "accent2": "accent1",
+    "accent3": "accent3",
+    "accent4": "accent4",
+    "accent5": "accent5",
+    "accent6": "accent6",
+    "hlink": "hlink",
+    "folHlink": "folHlink"
+  },
+  "decks": [
+    {
+      "deck": "scrgb-grey",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "scrgb",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "scrgb-range",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "hsl-hue",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "hsl-sat",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "hsl-lum",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "hsl-range",
+      "opened": true,
+      "repaired": true,
+      "error": "The file or directory is corrupted and unreadable. (Exception from HRESULT: 0x80070570)"
+    },
+    {
+      "deck": "sys-lastclr",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "alpha",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "alpha-chain",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "alpha-mixed",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "clamp",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "channel-set",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "edge",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "identity",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "prst",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "prst-grey",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "sys",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "clrmap",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "percent-literal",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    },
+    {
+      "deck": "percent-control",
+      "opened": true,
+      "repaired": false,
+      "error": null
+    }
+  ],
+  "swatches": [
+    {
+      "id": "t000",
+      "group": "scrgb-grey",
+      "description": "scrgb(0,0,0)",
+      "base": {
+        "kind": "scrgb",
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"0\" g=\"0\" b=\"0\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t001",
+      "group": "scrgb-grey",
+      "description": "scrgb(10000,10000,10000)",
+      "base": {
+        "kind": "scrgb",
+        "r": 10000,
+        "g": 10000,
+        "b": 10000
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"10000\" g=\"10000\" b=\"10000\"/>",
+      "expected": "595959",
+      "objectModel": "595959",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t002",
+      "group": "scrgb-grey",
+      "description": "scrgb(25000,25000,25000)",
+      "base": {
+        "kind": "scrgb",
+        "r": 25000,
+        "g": 25000,
+        "b": 25000
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"25000\" g=\"25000\" b=\"25000\"/>",
+      "expected": "898989",
+      "objectModel": "898989",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t003",
+      "group": "scrgb-grey",
+      "description": "scrgb(50000,50000,50000)",
+      "base": {
+        "kind": "scrgb",
+        "r": 50000,
+        "g": 50000,
+        "b": 50000
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"50000\" g=\"50000\" b=\"50000\"/>",
+      "expected": "BCBCBC",
+      "objectModel": "BCBCBC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t004",
+      "group": "scrgb-grey",
+      "description": "scrgb(75000,75000,75000)",
+      "base": {
+        "kind": "scrgb",
+        "r": 75000,
+        "g": 75000,
+        "b": 75000
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"75000\" g=\"75000\" b=\"75000\"/>",
+      "expected": "E1E1E1",
+      "objectModel": "E1E1E1",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t005",
+      "group": "scrgb-grey",
+      "description": "scrgb(90000,90000,90000)",
+      "base": {
+        "kind": "scrgb",
+        "r": 90000,
+        "g": 90000,
+        "b": 90000
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"90000\" g=\"90000\" b=\"90000\"/>",
+      "expected": "F3F3F3",
+      "objectModel": "F3F3F3",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t006",
+      "group": "scrgb-grey",
+      "description": "scrgb(100000,100000,100000)",
+      "base": {
+        "kind": "scrgb",
+        "r": 100000,
+        "g": 100000,
+        "b": 100000
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"100000\" g=\"100000\" b=\"100000\"/>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t007",
+      "group": "scrgb",
+      "description": "scrgb(100000,0,0)",
+      "base": {
+        "kind": "scrgb",
+        "r": 100000,
+        "g": 0,
+        "b": 0
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"100000\" g=\"0\" b=\"0\"/>",
+      "expected": "FF0000",
+      "objectModel": "FF0000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t008",
+      "group": "scrgb",
+      "description": "scrgb(0,100000,0)",
+      "base": {
+        "kind": "scrgb",
+        "r": 0,
+        "g": 100000,
+        "b": 0
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"0\" g=\"100000\" b=\"0\"/>",
+      "expected": "00FF00",
+      "objectModel": "00FF00",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t009",
+      "group": "scrgb",
+      "description": "scrgb(0,0,100000)",
+      "base": {
+        "kind": "scrgb",
+        "r": 0,
+        "g": 0,
+        "b": 100000
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"0\" g=\"0\" b=\"100000\"/>",
+      "expected": "0000FF",
+      "objectModel": "0000FF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t010",
+      "group": "scrgb",
+      "description": "scrgb(26667,44706,76863)",
+      "base": {
+        "kind": "scrgb",
+        "r": 26667,
+        "g": 44706,
+        "b": 76863
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"26667\" g=\"44706\" b=\"76863\"/>",
+      "expected": "8DB2E3",
+      "objectModel": "8DB2E3",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t011",
+      "group": "scrgb",
+      "description": "scrgb(20000,60000,80000)",
+      "base": {
+        "kind": "scrgb",
+        "r": 20000,
+        "g": 60000,
+        "b": 80000
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"20000\" g=\"60000\" b=\"80000\"/>",
+      "expected": "7CCBE7",
+      "objectModel": "7CCBE7",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t012",
+      "group": "scrgb-range",
+      "description": "scrgb(150000,50000,0)",
+      "base": {
+        "kind": "scrgb",
+        "r": 150000,
+        "g": 50000,
+        "b": 0
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"150000\" g=\"50000\" b=\"0\"/>",
+      "expected": "FFBC00",
+      "objectModel": "FFBC00",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t013",
+      "group": "scrgb-range",
+      "description": "scrgb(-50000,50000,100000)",
+      "base": {
+        "kind": "scrgb",
+        "r": -50000,
+        "g": 50000,
+        "b": 100000
+      },
+      "transforms": [],
+      "xml": "<a:scrgbClr r=\"-50000\" g=\"50000\" b=\"100000\"/>",
+      "expected": "00BCFF",
+      "objectModel": "00BCFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t014",
+      "group": "hsl-hue",
+      "description": "hsl(0,100000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 0,
+        "sat": 100000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"0\" sat=\"100000\" lum=\"50000\"/>",
+      "expected": "FF0000",
+      "objectModel": "FF0000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t015",
+      "group": "hsl-hue",
+      "description": "hsl(3600000,100000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 3600000,
+        "sat": 100000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"3600000\" sat=\"100000\" lum=\"50000\"/>",
+      "expected": "FFFF00",
+      "objectModel": "FFFF00",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t016",
+      "group": "hsl-hue",
+      "description": "hsl(7200000,100000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 7200000,
+        "sat": 100000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"7200000\" sat=\"100000\" lum=\"50000\"/>",
+      "expected": "00FF00",
+      "objectModel": "00FF00",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t017",
+      "group": "hsl-hue",
+      "description": "hsl(10800000,100000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 10800000,
+        "sat": 100000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"10800000\" sat=\"100000\" lum=\"50000\"/>",
+      "expected": "00FFFF",
+      "objectModel": "00FFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t018",
+      "group": "hsl-hue",
+      "description": "hsl(14400000,100000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 14400000,
+        "sat": 100000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"14400000\" sat=\"100000\" lum=\"50000\"/>",
+      "expected": "0000FF",
+      "objectModel": "0000FF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t019",
+      "group": "hsl-hue",
+      "description": "hsl(18000000,100000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 18000000,
+        "sat": 100000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"18000000\" sat=\"100000\" lum=\"50000\"/>",
+      "expected": "FF00FF",
+      "objectModel": "FF00FF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t020",
+      "group": "hsl-sat",
+      "description": "hsl(13080000,0,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 13080000,
+        "sat": 0,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"13080000\" sat=\"0\" lum=\"50000\"/>",
+      "expected": "7F7F7F",
+      "objectModel": "7F7F7F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t021",
+      "group": "hsl-sat",
+      "description": "hsl(13080000,25000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 13080000,
+        "sat": 25000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"13080000\" sat=\"25000\" lum=\"50000\"/>",
+      "expected": "60779F",
+      "objectModel": "60779F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t022",
+      "group": "hsl-sat",
+      "description": "hsl(13080000,50000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 13080000,
+        "sat": 50000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"13080000\" sat=\"50000\" lum=\"50000\"/>",
+      "expected": "406FBF",
+      "objectModel": "406FBF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t023",
+      "group": "hsl-sat",
+      "description": "hsl(13080000,75000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 13080000,
+        "sat": 75000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"13080000\" sat=\"75000\" lum=\"50000\"/>",
+      "expected": "2066DF",
+      "objectModel": "2066DF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t024",
+      "group": "hsl-sat",
+      "description": "hsl(13080000,100000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 13080000,
+        "sat": 100000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"13080000\" sat=\"100000\" lum=\"50000\"/>",
+      "expected": "005DFF",
+      "objectModel": "005DFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t025",
+      "group": "hsl-lum",
+      "description": "hsl(13080000,52000,0)",
+      "base": {
+        "kind": "hsl",
+        "hue": 13080000,
+        "sat": 52000,
+        "lum": 0
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"13080000\" sat=\"52000\" lum=\"0\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t026",
+      "group": "hsl-lum",
+      "description": "hsl(13080000,52000,25000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 13080000,
+        "sat": 52000,
+        "lum": 25000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"13080000\" sat=\"52000\" lum=\"25000\"/>",
+      "expected": "1F3761",
+      "objectModel": "1F3761",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t027",
+      "group": "hsl-lum",
+      "description": "hsl(13080000,52000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 13080000,
+        "sat": 52000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"13080000\" sat=\"52000\" lum=\"50000\"/>",
+      "expected": "3D6EC2",
+      "objectModel": "3D6EC2",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t028",
+      "group": "hsl-lum",
+      "description": "hsl(13080000,52000,75000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 13080000,
+        "sat": 52000,
+        "lum": 75000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"13080000\" sat=\"52000\" lum=\"75000\"/>",
+      "expected": "9EB6E0",
+      "objectModel": "9EB6E0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t029",
+      "group": "hsl-lum",
+      "description": "hsl(13080000,52000,100000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 13080000,
+        "sat": 52000,
+        "lum": 100000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"13080000\" sat=\"52000\" lum=\"100000\"/>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t030",
+      "group": "hsl-range",
+      "description": "hsl(24000000,100000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": 24000000,
+        "sat": 100000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"24000000\" sat=\"100000\" lum=\"50000\"/>",
+      "expected": "FF0000",
+      "objectModel": "FF0000",
+      "transparency": 0,
+      "fromRepairedDeck": true
+    },
+    {
+      "id": "t031",
+      "group": "hsl-range",
+      "description": "hsl(-3600000,100000,50000)",
+      "base": {
+        "kind": "hsl",
+        "hue": -3600000,
+        "sat": 100000,
+        "lum": 50000
+      },
+      "transforms": [],
+      "xml": "<a:hslClr hue=\"-3600000\" sat=\"100000\" lum=\"50000\"/>",
+      "expected": "FF0000",
+      "objectModel": "FF0000",
+      "transparency": 0,
+      "fromRepairedDeck": true
+    },
+    {
+      "id": "t032",
+      "group": "sys-lastclr",
+      "description": "sys:windowText@FF00FF",
+      "base": {
+        "kind": "sys",
+        "value": "windowText",
+        "lastClr": "FF00FF"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"windowText\" lastClr=\"FF00FF\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t033",
+      "group": "sys-lastclr",
+      "description": "sys:window@00FF00",
+      "base": {
+        "kind": "sys",
+        "value": "window",
+        "lastClr": "00FF00"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"window\" lastClr=\"00FF00\"/>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t034",
+      "group": "sys-lastclr",
+      "description": "sys:btnFace@123456",
+      "base": {
+        "kind": "sys",
+        "value": "btnFace",
+        "lastClr": "123456"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"btnFace\" lastClr=\"123456\"/>",
+      "expected": "F0F0F0",
+      "objectModel": "F0F0F0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t035",
+      "group": "alpha",
+      "description": "#4472C4 alpha=0",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "alpha",
+          "val": 0
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:alpha val=\"0\"/></a:srgbClr>",
+      "expected": "FFFFFF",
+      "objectModel": "4472C4",
+      "transparency": 1,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t036",
+      "group": "alpha",
+      "description": "#4472C4 alpha=25000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "alpha",
+          "val": 25000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:alpha val=\"25000\"/></a:srgbClr>",
+      "expected": "D0DCF0",
+      "objectModel": "4472C4",
+      "transparency": 0.75,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t037",
+      "group": "alpha",
+      "description": "#4472C4 alpha=50000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "alpha",
+          "val": 50000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:alpha val=\"50000\"/></a:srgbClr>",
+      "expected": "A1B8E1",
+      "objectModel": "4472C4",
+      "transparency": 0.5,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t038",
+      "group": "alpha",
+      "description": "#4472C4 alpha=75000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "alpha",
+          "val": 75000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:alpha val=\"75000\"/></a:srgbClr>",
+      "expected": "7395D3",
+      "objectModel": "4472C4",
+      "transparency": 0.25,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t039",
+      "group": "alpha",
+      "description": "#4472C4 alpha=100000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "alpha",
+          "val": 100000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:alpha val=\"100000\"/></a:srgbClr>",
+      "expected": "4472C4",
+      "objectModel": "4472C4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t040",
+      "group": "alpha-chain",
+      "description": "#4472C4 alpha=50000 alphaMod=50000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "alpha",
+          "val": 50000
+        },
+        {
+          "name": "alphaMod",
+          "val": 50000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:alpha val=\"50000\"/><a:alphaMod val=\"50000\"/></a:srgbClr>",
+      "expected": "D0DCF0",
+      "objectModel": "4472C4",
+      "transparency": 0.75,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t041",
+      "group": "alpha-chain",
+      "description": "#4472C4 alpha=50000 alphaOff=25000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "alpha",
+          "val": 50000
+        },
+        {
+          "name": "alphaOff",
+          "val": 25000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:alpha val=\"50000\"/><a:alphaOff val=\"25000\"/></a:srgbClr>",
+      "expected": "7395D3",
+      "objectModel": "4472C4",
+      "transparency": 0.25,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t042",
+      "group": "alpha-chain",
+      "description": "#4472C4 alpha=50000 alphaOff=-25000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "alpha",
+          "val": 50000
+        },
+        {
+          "name": "alphaOff",
+          "val": -25000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:alpha val=\"50000\"/><a:alphaOff val=\"-25000\"/></a:srgbClr>",
+      "expected": "D0DCF0",
+      "objectModel": "4472C4",
+      "transparency": 0.75,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t043",
+      "group": "alpha-mixed",
+      "description": "#4472C4 alpha=50000 lumMod=60000 lumOff=40000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "alpha",
+          "val": 50000
+        },
+        {
+          "name": "lumMod",
+          "val": 60000
+        },
+        {
+          "name": "lumOff",
+          "val": 40000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:alpha val=\"50000\"/><a:lumMod val=\"60000\"/><a:lumOff val=\"40000\"/></a:srgbClr>",
+      "expected": "C7D4ED",
+      "objectModel": "8FAADC",
+      "transparency": 0.5,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t044",
+      "group": "alpha-mixed",
+      "description": "#4472C4 lumMod=60000 alpha=50000 lumOff=40000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "lumMod",
+          "val": 60000
+        },
+        {
+          "name": "alpha",
+          "val": 50000
+        },
+        {
+          "name": "lumOff",
+          "val": 40000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:lumMod val=\"60000\"/><a:alpha val=\"50000\"/><a:lumOff val=\"40000\"/></a:srgbClr>",
+      "expected": "C7D4ED",
+      "objectModel": "8FAADC",
+      "transparency": 0.5,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t045",
+      "group": "clamp",
+      "description": "#4472C4 satMod=300000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "satMod",
+          "val": 300000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:satMod val=\"300000\"/></a:srgbClr>",
+      "expected": "004EFF",
+      "objectModel": "004EFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t046",
+      "group": "clamp",
+      "description": "#4472C4 satMod=300000 satMod=33333",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "satMod",
+          "val": 300000
+        },
+        {
+          "name": "satMod",
+          "val": 33333
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:satMod val=\"300000\"/><a:satMod val=\"33333\"/></a:srgbClr>",
+      "expected": "556FAA",
+      "objectModel": "556FAA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t047",
+      "group": "clamp",
+      "description": "#4472C4 satMod=300000 gamma invGamma satMod=33333",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "satMod",
+          "val": 300000
+        },
+        {
+          "name": "gamma"
+        },
+        {
+          "name": "invGamma"
+        },
+        {
+          "name": "satMod",
+          "val": 33333
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:satMod val=\"300000\"/><a:gamma/><a:invGamma/><a:satMod val=\"33333\"/></a:srgbClr>",
+      "expected": "556FAA",
+      "objectModel": "556FAA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t048",
+      "group": "clamp",
+      "description": "#4472C4 satMod=300000 alpha=100000 satMod=33333",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "satMod",
+          "val": 300000
+        },
+        {
+          "name": "alpha",
+          "val": 100000
+        },
+        {
+          "name": "satMod",
+          "val": 33333
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:satMod val=\"300000\"/><a:alpha val=\"100000\"/><a:satMod val=\"33333\"/></a:srgbClr>",
+      "expected": "556FAA",
+      "objectModel": "556FAA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t049",
+      "group": "clamp",
+      "description": "#4472C4 lumOff=60000 lumOff=-60000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "lumOff",
+          "val": 60000
+        },
+        {
+          "name": "lumOff",
+          "val": -60000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:lumOff val=\"60000\"/><a:lumOff val=\"-60000\"/></a:srgbClr>",
+      "expected": "666666",
+      "objectModel": "666666",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t050",
+      "group": "clamp",
+      "description": "#4472C4 lumOff=60000 gray",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "lumOff",
+          "val": 60000
+        },
+        {
+          "name": "gray"
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:lumOff val=\"60000\"/><a:gray/></a:srgbClr>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t051",
+      "group": "channel-set",
+      "description": "#4472C4 red=50000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "red",
+          "val": 50000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:red val=\"50000\"/></a:srgbClr>",
+      "expected": "BC72C4",
+      "objectModel": "BC72C4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t052",
+      "group": "channel-set",
+      "description": "#4472C4 green=50000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "green",
+          "val": 50000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:green val=\"50000\"/></a:srgbClr>",
+      "expected": "44BCC4",
+      "objectModel": "44BCC4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t053",
+      "group": "channel-set",
+      "description": "#4472C4 blue=50000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "blue",
+          "val": 50000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:blue val=\"50000\"/></a:srgbClr>",
+      "expected": "4472BC",
+      "objectModel": "4472BC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t054",
+      "group": "edge",
+      "description": "#4472C4 tint=0",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "tint",
+          "val": 0
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:tint val=\"0\"/></a:srgbClr>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t055",
+      "group": "edge",
+      "description": "#4472C4 tint=100000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "tint",
+          "val": 100000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:tint val=\"100000\"/></a:srgbClr>",
+      "expected": "4472C4",
+      "objectModel": "4472C4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t056",
+      "group": "edge",
+      "description": "#4472C4 shade=0",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "shade",
+          "val": 0
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:shade val=\"0\"/></a:srgbClr>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t057",
+      "group": "edge",
+      "description": "#4472C4 shade=100000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "shade",
+          "val": 100000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:shade val=\"100000\"/></a:srgbClr>",
+      "expected": "4472C4",
+      "objectModel": "4472C4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t058",
+      "group": "edge",
+      "description": "#4472C4 lumOff=-20000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "lumOff",
+          "val": -20000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:lumOff val=\"-20000\"/></a:srgbClr>",
+      "expected": "27457B",
+      "objectModel": "27457B",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t059",
+      "group": "edge",
+      "description": "#4472C4 satOff=-50000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "satOff",
+          "val": -50000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:satOff val=\"-50000\"/></a:srgbClr>",
+      "expected": "828387",
+      "objectModel": "828387",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t060",
+      "group": "edge",
+      "description": "#4472C4 hueOff=-3600000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "hueOff",
+          "val": -3600000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:hueOff val=\"-3600000\"/></a:srgbClr>",
+      "expected": "44C496",
+      "objectModel": "44C496",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t061",
+      "group": "edge",
+      "description": "#808080 hueOff=5400000",
+      "base": {
+        "kind": "srgb",
+        "value": "808080"
+      },
+      "transforms": [
+        {
+          "name": "hueOff",
+          "val": 5400000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"808080\"><a:hueOff val=\"5400000\"/></a:srgbClr>",
+      "expected": "808080",
+      "objectModel": "808080",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t062",
+      "group": "edge",
+      "description": "#808080 satMod=200000",
+      "base": {
+        "kind": "srgb",
+        "value": "808080"
+      },
+      "transforms": [
+        {
+          "name": "satMod",
+          "val": 200000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"808080\"><a:satMod val=\"200000\"/></a:srgbClr>",
+      "expected": "808080",
+      "objectModel": "808080",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t063",
+      "group": "edge",
+      "description": "#000000 lumOff=50000",
+      "base": {
+        "kind": "srgb",
+        "value": "000000"
+      },
+      "transforms": [
+        {
+          "name": "lumOff",
+          "val": 50000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"000000\"><a:lumOff val=\"50000\"/></a:srgbClr>",
+      "expected": "7F7F7F",
+      "objectModel": "7F7F7F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t064",
+      "group": "identity",
+      "description": "#000000",
+      "base": {
+        "kind": "srgb",
+        "value": "000000"
+      },
+      "transforms": [],
+      "xml": "<a:srgbClr val=\"000000\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t065",
+      "group": "identity",
+      "description": "#FFFFFF",
+      "base": {
+        "kind": "srgb",
+        "value": "FFFFFF"
+      },
+      "transforms": [],
+      "xml": "<a:srgbClr val=\"FFFFFF\"/>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t066",
+      "group": "identity",
+      "description": "#4472C4",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [],
+      "xml": "<a:srgbClr val=\"4472C4\"/>",
+      "expected": "4472C4",
+      "objectModel": "4472C4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t067",
+      "group": "prst",
+      "description": "prst:aliceBlue",
+      "base": {
+        "kind": "prst",
+        "value": "aliceBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"aliceBlue\"/>",
+      "expected": "F0F8FF",
+      "objectModel": "F0F8FF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t068",
+      "group": "prst",
+      "description": "prst:antiqueWhite",
+      "base": {
+        "kind": "prst",
+        "value": "antiqueWhite"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"antiqueWhite\"/>",
+      "expected": "FAEBD7",
+      "objectModel": "FAEBD7",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t069",
+      "group": "prst",
+      "description": "prst:aqua",
+      "base": {
+        "kind": "prst",
+        "value": "aqua"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"aqua\"/>",
+      "expected": "00FFFF",
+      "objectModel": "00FFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t070",
+      "group": "prst",
+      "description": "prst:aquamarine",
+      "base": {
+        "kind": "prst",
+        "value": "aquamarine"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"aquamarine\"/>",
+      "expected": "7FFFD4",
+      "objectModel": "7FFFD4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t071",
+      "group": "prst",
+      "description": "prst:azure",
+      "base": {
+        "kind": "prst",
+        "value": "azure"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"azure\"/>",
+      "expected": "F0FFFF",
+      "objectModel": "F0FFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t072",
+      "group": "prst",
+      "description": "prst:beige",
+      "base": {
+        "kind": "prst",
+        "value": "beige"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"beige\"/>",
+      "expected": "F5F5DC",
+      "objectModel": "F5F5DC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t073",
+      "group": "prst",
+      "description": "prst:bisque",
+      "base": {
+        "kind": "prst",
+        "value": "bisque"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"bisque\"/>",
+      "expected": "FFE4C4",
+      "objectModel": "FFE4C4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t074",
+      "group": "prst",
+      "description": "prst:black",
+      "base": {
+        "kind": "prst",
+        "value": "black"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"black\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t075",
+      "group": "prst",
+      "description": "prst:blanchedAlmond",
+      "base": {
+        "kind": "prst",
+        "value": "blanchedAlmond"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"blanchedAlmond\"/>",
+      "expected": "FFEBCD",
+      "objectModel": "FFEBCD",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t076",
+      "group": "prst",
+      "description": "prst:blue",
+      "base": {
+        "kind": "prst",
+        "value": "blue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"blue\"/>",
+      "expected": "0000FF",
+      "objectModel": "0000FF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t077",
+      "group": "prst",
+      "description": "prst:blueViolet",
+      "base": {
+        "kind": "prst",
+        "value": "blueViolet"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"blueViolet\"/>",
+      "expected": "8A2BE2",
+      "objectModel": "8A2BE2",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t078",
+      "group": "prst",
+      "description": "prst:brown",
+      "base": {
+        "kind": "prst",
+        "value": "brown"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"brown\"/>",
+      "expected": "A52A2A",
+      "objectModel": "A52A2A",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t079",
+      "group": "prst",
+      "description": "prst:burlyWood",
+      "base": {
+        "kind": "prst",
+        "value": "burlyWood"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"burlyWood\"/>",
+      "expected": "DEB887",
+      "objectModel": "DEB887",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t080",
+      "group": "prst",
+      "description": "prst:cadetBlue",
+      "base": {
+        "kind": "prst",
+        "value": "cadetBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"cadetBlue\"/>",
+      "expected": "5F9EA0",
+      "objectModel": "5F9EA0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t081",
+      "group": "prst",
+      "description": "prst:chartreuse",
+      "base": {
+        "kind": "prst",
+        "value": "chartreuse"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"chartreuse\"/>",
+      "expected": "7FFF00",
+      "objectModel": "7FFF00",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t082",
+      "group": "prst",
+      "description": "prst:chocolate",
+      "base": {
+        "kind": "prst",
+        "value": "chocolate"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"chocolate\"/>",
+      "expected": "D2691E",
+      "objectModel": "D2691E",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t083",
+      "group": "prst",
+      "description": "prst:coral",
+      "base": {
+        "kind": "prst",
+        "value": "coral"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"coral\"/>",
+      "expected": "FF7F50",
+      "objectModel": "FF7F50",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t084",
+      "group": "prst",
+      "description": "prst:cornflowerBlue",
+      "base": {
+        "kind": "prst",
+        "value": "cornflowerBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"cornflowerBlue\"/>",
+      "expected": "6495ED",
+      "objectModel": "6495ED",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t085",
+      "group": "prst",
+      "description": "prst:cornsilk",
+      "base": {
+        "kind": "prst",
+        "value": "cornsilk"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"cornsilk\"/>",
+      "expected": "FFF8DC",
+      "objectModel": "FFF8DC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t086",
+      "group": "prst",
+      "description": "prst:crimson",
+      "base": {
+        "kind": "prst",
+        "value": "crimson"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"crimson\"/>",
+      "expected": "DC143C",
+      "objectModel": "DC143C",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t087",
+      "group": "prst",
+      "description": "prst:cyan",
+      "base": {
+        "kind": "prst",
+        "value": "cyan"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"cyan\"/>",
+      "expected": "00FFFF",
+      "objectModel": "00FFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t088",
+      "group": "prst",
+      "description": "prst:dkBlue",
+      "base": {
+        "kind": "prst",
+        "value": "dkBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkBlue\"/>",
+      "expected": "00008B",
+      "objectModel": "00008B",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t089",
+      "group": "prst",
+      "description": "prst:dkCyan",
+      "base": {
+        "kind": "prst",
+        "value": "dkCyan"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkCyan\"/>",
+      "expected": "008B8B",
+      "objectModel": "008B8B",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t090",
+      "group": "prst",
+      "description": "prst:dkGoldenrod",
+      "base": {
+        "kind": "prst",
+        "value": "dkGoldenrod"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkGoldenrod\"/>",
+      "expected": "B8860B",
+      "objectModel": "B8860B",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t091",
+      "group": "prst",
+      "description": "prst:dkGray",
+      "base": {
+        "kind": "prst",
+        "value": "dkGray"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkGray\"/>",
+      "expected": "A9A9A9",
+      "objectModel": "A9A9A9",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t092",
+      "group": "prst",
+      "description": "prst:dkGreen",
+      "base": {
+        "kind": "prst",
+        "value": "dkGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkGreen\"/>",
+      "expected": "006400",
+      "objectModel": "006400",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t093",
+      "group": "prst",
+      "description": "prst:dkKhaki",
+      "base": {
+        "kind": "prst",
+        "value": "dkKhaki"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkKhaki\"/>",
+      "expected": "BDB76B",
+      "objectModel": "BDB76B",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t094",
+      "group": "prst",
+      "description": "prst:dkMagenta",
+      "base": {
+        "kind": "prst",
+        "value": "dkMagenta"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkMagenta\"/>",
+      "expected": "8B008B",
+      "objectModel": "8B008B",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t095",
+      "group": "prst",
+      "description": "prst:dkOliveGreen",
+      "base": {
+        "kind": "prst",
+        "value": "dkOliveGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkOliveGreen\"/>",
+      "expected": "556B2F",
+      "objectModel": "556B2F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t096",
+      "group": "prst",
+      "description": "prst:dkOrange",
+      "base": {
+        "kind": "prst",
+        "value": "dkOrange"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkOrange\"/>",
+      "expected": "FF8C00",
+      "objectModel": "FF8C00",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t097",
+      "group": "prst",
+      "description": "prst:dkOrchid",
+      "base": {
+        "kind": "prst",
+        "value": "dkOrchid"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkOrchid\"/>",
+      "expected": "9932CC",
+      "objectModel": "9932CC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t098",
+      "group": "prst",
+      "description": "prst:dkRed",
+      "base": {
+        "kind": "prst",
+        "value": "dkRed"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkRed\"/>",
+      "expected": "8B0000",
+      "objectModel": "8B0000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t099",
+      "group": "prst",
+      "description": "prst:dkSalmon",
+      "base": {
+        "kind": "prst",
+        "value": "dkSalmon"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkSalmon\"/>",
+      "expected": "E9967A",
+      "objectModel": "E9967A",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t100",
+      "group": "prst",
+      "description": "prst:dkSeaGreen",
+      "base": {
+        "kind": "prst",
+        "value": "dkSeaGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkSeaGreen\"/>",
+      "expected": "8FBC8F",
+      "objectModel": "8FBC8F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t101",
+      "group": "prst",
+      "description": "prst:dkSlateBlue",
+      "base": {
+        "kind": "prst",
+        "value": "dkSlateBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkSlateBlue\"/>",
+      "expected": "483D8B",
+      "objectModel": "483D8B",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t102",
+      "group": "prst",
+      "description": "prst:dkSlateGray",
+      "base": {
+        "kind": "prst",
+        "value": "dkSlateGray"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkSlateGray\"/>",
+      "expected": "2F4F4F",
+      "objectModel": "2F4F4F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t103",
+      "group": "prst",
+      "description": "prst:dkTurquoise",
+      "base": {
+        "kind": "prst",
+        "value": "dkTurquoise"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkTurquoise\"/>",
+      "expected": "00CED1",
+      "objectModel": "00CED1",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t104",
+      "group": "prst",
+      "description": "prst:dkViolet",
+      "base": {
+        "kind": "prst",
+        "value": "dkViolet"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkViolet\"/>",
+      "expected": "9400D3",
+      "objectModel": "9400D3",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t105",
+      "group": "prst",
+      "description": "prst:deepPink",
+      "base": {
+        "kind": "prst",
+        "value": "deepPink"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"deepPink\"/>",
+      "expected": "FF1493",
+      "objectModel": "FF1493",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t106",
+      "group": "prst",
+      "description": "prst:deepSkyBlue",
+      "base": {
+        "kind": "prst",
+        "value": "deepSkyBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"deepSkyBlue\"/>",
+      "expected": "00BFFF",
+      "objectModel": "00BFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t107",
+      "group": "prst",
+      "description": "prst:dimGray",
+      "base": {
+        "kind": "prst",
+        "value": "dimGray"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dimGray\"/>",
+      "expected": "696969",
+      "objectModel": "696969",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t108",
+      "group": "prst",
+      "description": "prst:dodgerBlue",
+      "base": {
+        "kind": "prst",
+        "value": "dodgerBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dodgerBlue\"/>",
+      "expected": "1E90FF",
+      "objectModel": "1E90FF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t109",
+      "group": "prst",
+      "description": "prst:firebrick",
+      "base": {
+        "kind": "prst",
+        "value": "firebrick"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"firebrick\"/>",
+      "expected": "B22222",
+      "objectModel": "B22222",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t110",
+      "group": "prst",
+      "description": "prst:floralWhite",
+      "base": {
+        "kind": "prst",
+        "value": "floralWhite"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"floralWhite\"/>",
+      "expected": "FFFAF0",
+      "objectModel": "FFFAF0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t111",
+      "group": "prst",
+      "description": "prst:forestGreen",
+      "base": {
+        "kind": "prst",
+        "value": "forestGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"forestGreen\"/>",
+      "expected": "228B22",
+      "objectModel": "228B22",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t112",
+      "group": "prst",
+      "description": "prst:fuchsia",
+      "base": {
+        "kind": "prst",
+        "value": "fuchsia"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"fuchsia\"/>",
+      "expected": "FF00FF",
+      "objectModel": "FF00FF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t113",
+      "group": "prst",
+      "description": "prst:gainsboro",
+      "base": {
+        "kind": "prst",
+        "value": "gainsboro"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"gainsboro\"/>",
+      "expected": "DCDCDC",
+      "objectModel": "DCDCDC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t114",
+      "group": "prst",
+      "description": "prst:ghostWhite",
+      "base": {
+        "kind": "prst",
+        "value": "ghostWhite"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ghostWhite\"/>",
+      "expected": "F8F8FF",
+      "objectModel": "F8F8FF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t115",
+      "group": "prst",
+      "description": "prst:gold",
+      "base": {
+        "kind": "prst",
+        "value": "gold"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"gold\"/>",
+      "expected": "FFD700",
+      "objectModel": "FFD700",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t116",
+      "group": "prst",
+      "description": "prst:goldenrod",
+      "base": {
+        "kind": "prst",
+        "value": "goldenrod"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"goldenrod\"/>",
+      "expected": "DAA520",
+      "objectModel": "DAA520",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t117",
+      "group": "prst",
+      "description": "prst:gray",
+      "base": {
+        "kind": "prst",
+        "value": "gray"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"gray\"/>",
+      "expected": "808080",
+      "objectModel": "808080",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t118",
+      "group": "prst",
+      "description": "prst:green",
+      "base": {
+        "kind": "prst",
+        "value": "green"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"green\"/>",
+      "expected": "008000",
+      "objectModel": "008000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t119",
+      "group": "prst",
+      "description": "prst:greenYellow",
+      "base": {
+        "kind": "prst",
+        "value": "greenYellow"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"greenYellow\"/>",
+      "expected": "ADFF2F",
+      "objectModel": "ADFF2F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t120",
+      "group": "prst",
+      "description": "prst:honeydew",
+      "base": {
+        "kind": "prst",
+        "value": "honeydew"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"honeydew\"/>",
+      "expected": "F0FFF0",
+      "objectModel": "F0FFF0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t121",
+      "group": "prst",
+      "description": "prst:hotPink",
+      "base": {
+        "kind": "prst",
+        "value": "hotPink"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"hotPink\"/>",
+      "expected": "FF69B4",
+      "objectModel": "FF69B4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t122",
+      "group": "prst",
+      "description": "prst:indianRed",
+      "base": {
+        "kind": "prst",
+        "value": "indianRed"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"indianRed\"/>",
+      "expected": "CD5C5C",
+      "objectModel": "CD5C5C",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t123",
+      "group": "prst",
+      "description": "prst:indigo",
+      "base": {
+        "kind": "prst",
+        "value": "indigo"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"indigo\"/>",
+      "expected": "4B0082",
+      "objectModel": "4B0082",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t124",
+      "group": "prst",
+      "description": "prst:ivory",
+      "base": {
+        "kind": "prst",
+        "value": "ivory"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ivory\"/>",
+      "expected": "FFFFF0",
+      "objectModel": "FFFFF0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t125",
+      "group": "prst",
+      "description": "prst:khaki",
+      "base": {
+        "kind": "prst",
+        "value": "khaki"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"khaki\"/>",
+      "expected": "F0E68C",
+      "objectModel": "F0E68C",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t126",
+      "group": "prst",
+      "description": "prst:lavender",
+      "base": {
+        "kind": "prst",
+        "value": "lavender"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"lavender\"/>",
+      "expected": "E6E6FA",
+      "objectModel": "E6E6FA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t127",
+      "group": "prst",
+      "description": "prst:lavenderBlush",
+      "base": {
+        "kind": "prst",
+        "value": "lavenderBlush"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"lavenderBlush\"/>",
+      "expected": "FFF0F5",
+      "objectModel": "FFF0F5",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t128",
+      "group": "prst",
+      "description": "prst:lawnGreen",
+      "base": {
+        "kind": "prst",
+        "value": "lawnGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"lawnGreen\"/>",
+      "expected": "7CFC00",
+      "objectModel": "7CFC00",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t129",
+      "group": "prst",
+      "description": "prst:lemonChiffon",
+      "base": {
+        "kind": "prst",
+        "value": "lemonChiffon"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"lemonChiffon\"/>",
+      "expected": "FFFACD",
+      "objectModel": "FFFACD",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t130",
+      "group": "prst",
+      "description": "prst:ltBlue",
+      "base": {
+        "kind": "prst",
+        "value": "ltBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltBlue\"/>",
+      "expected": "ADD8E6",
+      "objectModel": "ADD8E6",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t131",
+      "group": "prst",
+      "description": "prst:ltCoral",
+      "base": {
+        "kind": "prst",
+        "value": "ltCoral"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltCoral\"/>",
+      "expected": "F08080",
+      "objectModel": "F08080",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t132",
+      "group": "prst",
+      "description": "prst:ltCyan",
+      "base": {
+        "kind": "prst",
+        "value": "ltCyan"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltCyan\"/>",
+      "expected": "E0FFFF",
+      "objectModel": "E0FFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t133",
+      "group": "prst",
+      "description": "prst:ltGoldenrodYellow",
+      "base": {
+        "kind": "prst",
+        "value": "ltGoldenrodYellow"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltGoldenrodYellow\"/>",
+      "expected": "FAFAD2",
+      "objectModel": "FAFAD2",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t134",
+      "group": "prst",
+      "description": "prst:ltGray",
+      "base": {
+        "kind": "prst",
+        "value": "ltGray"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltGray\"/>",
+      "expected": "D3D3D3",
+      "objectModel": "D3D3D3",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t135",
+      "group": "prst",
+      "description": "prst:ltGreen",
+      "base": {
+        "kind": "prst",
+        "value": "ltGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltGreen\"/>",
+      "expected": "90EE90",
+      "objectModel": "90EE90",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t136",
+      "group": "prst",
+      "description": "prst:ltPink",
+      "base": {
+        "kind": "prst",
+        "value": "ltPink"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltPink\"/>",
+      "expected": "FFB6C1",
+      "objectModel": "FFB6C1",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t137",
+      "group": "prst",
+      "description": "prst:ltSalmon",
+      "base": {
+        "kind": "prst",
+        "value": "ltSalmon"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltSalmon\"/>",
+      "expected": "FFA07A",
+      "objectModel": "FFA07A",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t138",
+      "group": "prst",
+      "description": "prst:ltSeaGreen",
+      "base": {
+        "kind": "prst",
+        "value": "ltSeaGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltSeaGreen\"/>",
+      "expected": "20B2AA",
+      "objectModel": "20B2AA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t139",
+      "group": "prst",
+      "description": "prst:ltSkyBlue",
+      "base": {
+        "kind": "prst",
+        "value": "ltSkyBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltSkyBlue\"/>",
+      "expected": "87CEFA",
+      "objectModel": "87CEFA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t140",
+      "group": "prst",
+      "description": "prst:ltSlateGray",
+      "base": {
+        "kind": "prst",
+        "value": "ltSlateGray"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltSlateGray\"/>",
+      "expected": "778899",
+      "objectModel": "778899",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t141",
+      "group": "prst",
+      "description": "prst:ltSteelBlue",
+      "base": {
+        "kind": "prst",
+        "value": "ltSteelBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltSteelBlue\"/>",
+      "expected": "B0C4DE",
+      "objectModel": "B0C4DE",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t142",
+      "group": "prst",
+      "description": "prst:ltYellow",
+      "base": {
+        "kind": "prst",
+        "value": "ltYellow"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltYellow\"/>",
+      "expected": "FFFFE0",
+      "objectModel": "FFFFE0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t143",
+      "group": "prst",
+      "description": "prst:lime",
+      "base": {
+        "kind": "prst",
+        "value": "lime"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"lime\"/>",
+      "expected": "00FF00",
+      "objectModel": "00FF00",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t144",
+      "group": "prst",
+      "description": "prst:limeGreen",
+      "base": {
+        "kind": "prst",
+        "value": "limeGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"limeGreen\"/>",
+      "expected": "32CD32",
+      "objectModel": "32CD32",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t145",
+      "group": "prst",
+      "description": "prst:linen",
+      "base": {
+        "kind": "prst",
+        "value": "linen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"linen\"/>",
+      "expected": "FAF0E6",
+      "objectModel": "FAF0E6",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t146",
+      "group": "prst",
+      "description": "prst:magenta",
+      "base": {
+        "kind": "prst",
+        "value": "magenta"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"magenta\"/>",
+      "expected": "FF00FF",
+      "objectModel": "FF00FF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t147",
+      "group": "prst",
+      "description": "prst:maroon",
+      "base": {
+        "kind": "prst",
+        "value": "maroon"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"maroon\"/>",
+      "expected": "800000",
+      "objectModel": "800000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t148",
+      "group": "prst",
+      "description": "prst:medAquamarine",
+      "base": {
+        "kind": "prst",
+        "value": "medAquamarine"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"medAquamarine\"/>",
+      "expected": "66CDAA",
+      "objectModel": "66CDAA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t149",
+      "group": "prst",
+      "description": "prst:medBlue",
+      "base": {
+        "kind": "prst",
+        "value": "medBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"medBlue\"/>",
+      "expected": "0000CD",
+      "objectModel": "0000CD",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t150",
+      "group": "prst",
+      "description": "prst:medOrchid",
+      "base": {
+        "kind": "prst",
+        "value": "medOrchid"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"medOrchid\"/>",
+      "expected": "BA55D3",
+      "objectModel": "BA55D3",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t151",
+      "group": "prst",
+      "description": "prst:medPurple",
+      "base": {
+        "kind": "prst",
+        "value": "medPurple"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"medPurple\"/>",
+      "expected": "9370DB",
+      "objectModel": "9370DB",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t152",
+      "group": "prst",
+      "description": "prst:medSeaGreen",
+      "base": {
+        "kind": "prst",
+        "value": "medSeaGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"medSeaGreen\"/>",
+      "expected": "3CB371",
+      "objectModel": "3CB371",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t153",
+      "group": "prst",
+      "description": "prst:medSlateBlue",
+      "base": {
+        "kind": "prst",
+        "value": "medSlateBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"medSlateBlue\"/>",
+      "expected": "7B68EE",
+      "objectModel": "7B68EE",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t154",
+      "group": "prst",
+      "description": "prst:medSpringGreen",
+      "base": {
+        "kind": "prst",
+        "value": "medSpringGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"medSpringGreen\"/>",
+      "expected": "00FA9A",
+      "objectModel": "00FA9A",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t155",
+      "group": "prst",
+      "description": "prst:medTurquoise",
+      "base": {
+        "kind": "prst",
+        "value": "medTurquoise"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"medTurquoise\"/>",
+      "expected": "48D1CC",
+      "objectModel": "48D1CC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t156",
+      "group": "prst",
+      "description": "prst:medVioletRed",
+      "base": {
+        "kind": "prst",
+        "value": "medVioletRed"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"medVioletRed\"/>",
+      "expected": "C71585",
+      "objectModel": "C71585",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t157",
+      "group": "prst",
+      "description": "prst:midnightBlue",
+      "base": {
+        "kind": "prst",
+        "value": "midnightBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"midnightBlue\"/>",
+      "expected": "191970",
+      "objectModel": "191970",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t158",
+      "group": "prst",
+      "description": "prst:mintCream",
+      "base": {
+        "kind": "prst",
+        "value": "mintCream"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"mintCream\"/>",
+      "expected": "F5FFFA",
+      "objectModel": "F5FFFA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t159",
+      "group": "prst",
+      "description": "prst:mistyRose",
+      "base": {
+        "kind": "prst",
+        "value": "mistyRose"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"mistyRose\"/>",
+      "expected": "FFE4E1",
+      "objectModel": "FFE4E1",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t160",
+      "group": "prst",
+      "description": "prst:moccasin",
+      "base": {
+        "kind": "prst",
+        "value": "moccasin"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"moccasin\"/>",
+      "expected": "FFE4B5",
+      "objectModel": "FFE4B5",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t161",
+      "group": "prst",
+      "description": "prst:navajoWhite",
+      "base": {
+        "kind": "prst",
+        "value": "navajoWhite"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"navajoWhite\"/>",
+      "expected": "FFDEAD",
+      "objectModel": "FFDEAD",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t162",
+      "group": "prst",
+      "description": "prst:navy",
+      "base": {
+        "kind": "prst",
+        "value": "navy"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"navy\"/>",
+      "expected": "000080",
+      "objectModel": "000080",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t163",
+      "group": "prst",
+      "description": "prst:oldLace",
+      "base": {
+        "kind": "prst",
+        "value": "oldLace"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"oldLace\"/>",
+      "expected": "FDF5E6",
+      "objectModel": "FDF5E6",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t164",
+      "group": "prst",
+      "description": "prst:olive",
+      "base": {
+        "kind": "prst",
+        "value": "olive"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"olive\"/>",
+      "expected": "808000",
+      "objectModel": "808000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t165",
+      "group": "prst",
+      "description": "prst:oliveDrab",
+      "base": {
+        "kind": "prst",
+        "value": "oliveDrab"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"oliveDrab\"/>",
+      "expected": "6B8E23",
+      "objectModel": "6B8E23",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t166",
+      "group": "prst",
+      "description": "prst:orange",
+      "base": {
+        "kind": "prst",
+        "value": "orange"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"orange\"/>",
+      "expected": "FFA500",
+      "objectModel": "FFA500",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t167",
+      "group": "prst",
+      "description": "prst:orangeRed",
+      "base": {
+        "kind": "prst",
+        "value": "orangeRed"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"orangeRed\"/>",
+      "expected": "FF4500",
+      "objectModel": "FF4500",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t168",
+      "group": "prst",
+      "description": "prst:orchid",
+      "base": {
+        "kind": "prst",
+        "value": "orchid"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"orchid\"/>",
+      "expected": "DA70D6",
+      "objectModel": "DA70D6",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t169",
+      "group": "prst",
+      "description": "prst:paleGoldenrod",
+      "base": {
+        "kind": "prst",
+        "value": "paleGoldenrod"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"paleGoldenrod\"/>",
+      "expected": "EEE8AA",
+      "objectModel": "EEE8AA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t170",
+      "group": "prst",
+      "description": "prst:paleGreen",
+      "base": {
+        "kind": "prst",
+        "value": "paleGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"paleGreen\"/>",
+      "expected": "98FB98",
+      "objectModel": "98FB98",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t171",
+      "group": "prst",
+      "description": "prst:paleTurquoise",
+      "base": {
+        "kind": "prst",
+        "value": "paleTurquoise"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"paleTurquoise\"/>",
+      "expected": "AFEEEE",
+      "objectModel": "AFEEEE",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t172",
+      "group": "prst",
+      "description": "prst:paleVioletRed",
+      "base": {
+        "kind": "prst",
+        "value": "paleVioletRed"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"paleVioletRed\"/>",
+      "expected": "DB7093",
+      "objectModel": "DB7093",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t173",
+      "group": "prst",
+      "description": "prst:papayaWhip",
+      "base": {
+        "kind": "prst",
+        "value": "papayaWhip"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"papayaWhip\"/>",
+      "expected": "FFEFD5",
+      "objectModel": "FFEFD5",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t174",
+      "group": "prst",
+      "description": "prst:peachPuff",
+      "base": {
+        "kind": "prst",
+        "value": "peachPuff"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"peachPuff\"/>",
+      "expected": "FFDAB9",
+      "objectModel": "FFDAB9",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t175",
+      "group": "prst",
+      "description": "prst:peru",
+      "base": {
+        "kind": "prst",
+        "value": "peru"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"peru\"/>",
+      "expected": "CD853F",
+      "objectModel": "CD853F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t176",
+      "group": "prst",
+      "description": "prst:pink",
+      "base": {
+        "kind": "prst",
+        "value": "pink"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"pink\"/>",
+      "expected": "FFC0CB",
+      "objectModel": "FFC0CB",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t177",
+      "group": "prst",
+      "description": "prst:plum",
+      "base": {
+        "kind": "prst",
+        "value": "plum"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"plum\"/>",
+      "expected": "DDA0DD",
+      "objectModel": "DDA0DD",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t178",
+      "group": "prst",
+      "description": "prst:powderBlue",
+      "base": {
+        "kind": "prst",
+        "value": "powderBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"powderBlue\"/>",
+      "expected": "B0E0E6",
+      "objectModel": "B0E0E6",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t179",
+      "group": "prst",
+      "description": "prst:purple",
+      "base": {
+        "kind": "prst",
+        "value": "purple"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"purple\"/>",
+      "expected": "800080",
+      "objectModel": "800080",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t180",
+      "group": "prst",
+      "description": "prst:red",
+      "base": {
+        "kind": "prst",
+        "value": "red"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"red\"/>",
+      "expected": "FF0000",
+      "objectModel": "FF0000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t181",
+      "group": "prst",
+      "description": "prst:rosyBrown",
+      "base": {
+        "kind": "prst",
+        "value": "rosyBrown"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"rosyBrown\"/>",
+      "expected": "BC8F8F",
+      "objectModel": "BC8F8F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t182",
+      "group": "prst",
+      "description": "prst:royalBlue",
+      "base": {
+        "kind": "prst",
+        "value": "royalBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"royalBlue\"/>",
+      "expected": "4169E1",
+      "objectModel": "4169E1",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t183",
+      "group": "prst",
+      "description": "prst:saddleBrown",
+      "base": {
+        "kind": "prst",
+        "value": "saddleBrown"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"saddleBrown\"/>",
+      "expected": "8B4513",
+      "objectModel": "8B4513",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t184",
+      "group": "prst",
+      "description": "prst:salmon",
+      "base": {
+        "kind": "prst",
+        "value": "salmon"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"salmon\"/>",
+      "expected": "FA8072",
+      "objectModel": "FA8072",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t185",
+      "group": "prst",
+      "description": "prst:sandyBrown",
+      "base": {
+        "kind": "prst",
+        "value": "sandyBrown"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"sandyBrown\"/>",
+      "expected": "F4A460",
+      "objectModel": "F4A460",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t186",
+      "group": "prst",
+      "description": "prst:seaGreen",
+      "base": {
+        "kind": "prst",
+        "value": "seaGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"seaGreen\"/>",
+      "expected": "2E8B57",
+      "objectModel": "2E8B57",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t187",
+      "group": "prst",
+      "description": "prst:seaShell",
+      "base": {
+        "kind": "prst",
+        "value": "seaShell"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"seaShell\"/>",
+      "expected": "FFF5EE",
+      "objectModel": "FFF5EE",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t188",
+      "group": "prst",
+      "description": "prst:sienna",
+      "base": {
+        "kind": "prst",
+        "value": "sienna"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"sienna\"/>",
+      "expected": "A0522D",
+      "objectModel": "A0522D",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t189",
+      "group": "prst",
+      "description": "prst:silver",
+      "base": {
+        "kind": "prst",
+        "value": "silver"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"silver\"/>",
+      "expected": "C0C0C0",
+      "objectModel": "C0C0C0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t190",
+      "group": "prst",
+      "description": "prst:skyBlue",
+      "base": {
+        "kind": "prst",
+        "value": "skyBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"skyBlue\"/>",
+      "expected": "87CEEB",
+      "objectModel": "87CEEB",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t191",
+      "group": "prst",
+      "description": "prst:slateBlue",
+      "base": {
+        "kind": "prst",
+        "value": "slateBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"slateBlue\"/>",
+      "expected": "6A5ACD",
+      "objectModel": "6A5ACD",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t192",
+      "group": "prst",
+      "description": "prst:slateGray",
+      "base": {
+        "kind": "prst",
+        "value": "slateGray"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"slateGray\"/>",
+      "expected": "708090",
+      "objectModel": "708090",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t193",
+      "group": "prst",
+      "description": "prst:snow",
+      "base": {
+        "kind": "prst",
+        "value": "snow"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"snow\"/>",
+      "expected": "FFFAFA",
+      "objectModel": "FFFAFA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t194",
+      "group": "prst",
+      "description": "prst:springGreen",
+      "base": {
+        "kind": "prst",
+        "value": "springGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"springGreen\"/>",
+      "expected": "00FF7F",
+      "objectModel": "00FF7F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t195",
+      "group": "prst",
+      "description": "prst:steelBlue",
+      "base": {
+        "kind": "prst",
+        "value": "steelBlue"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"steelBlue\"/>",
+      "expected": "4682B4",
+      "objectModel": "4682B4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t196",
+      "group": "prst",
+      "description": "prst:tan",
+      "base": {
+        "kind": "prst",
+        "value": "tan"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"tan\"/>",
+      "expected": "D2B48C",
+      "objectModel": "D2B48C",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t197",
+      "group": "prst",
+      "description": "prst:teal",
+      "base": {
+        "kind": "prst",
+        "value": "teal"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"teal\"/>",
+      "expected": "008080",
+      "objectModel": "008080",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t198",
+      "group": "prst",
+      "description": "prst:thistle",
+      "base": {
+        "kind": "prst",
+        "value": "thistle"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"thistle\"/>",
+      "expected": "D8BFD8",
+      "objectModel": "D8BFD8",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t199",
+      "group": "prst",
+      "description": "prst:tomato",
+      "base": {
+        "kind": "prst",
+        "value": "tomato"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"tomato\"/>",
+      "expected": "FF6347",
+      "objectModel": "FF6347",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t200",
+      "group": "prst",
+      "description": "prst:turquoise",
+      "base": {
+        "kind": "prst",
+        "value": "turquoise"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"turquoise\"/>",
+      "expected": "40E0D0",
+      "objectModel": "40E0D0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t201",
+      "group": "prst",
+      "description": "prst:violet",
+      "base": {
+        "kind": "prst",
+        "value": "violet"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"violet\"/>",
+      "expected": "EE82EE",
+      "objectModel": "EE82EE",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t202",
+      "group": "prst",
+      "description": "prst:wheat",
+      "base": {
+        "kind": "prst",
+        "value": "wheat"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"wheat\"/>",
+      "expected": "F5DEB3",
+      "objectModel": "F5DEB3",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t203",
+      "group": "prst",
+      "description": "prst:white",
+      "base": {
+        "kind": "prst",
+        "value": "white"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"white\"/>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t204",
+      "group": "prst",
+      "description": "prst:whiteSmoke",
+      "base": {
+        "kind": "prst",
+        "value": "whiteSmoke"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"whiteSmoke\"/>",
+      "expected": "F5F5F5",
+      "objectModel": "F5F5F5",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t205",
+      "group": "prst",
+      "description": "prst:yellow",
+      "base": {
+        "kind": "prst",
+        "value": "yellow"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"yellow\"/>",
+      "expected": "FFFF00",
+      "objectModel": "FFFF00",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t206",
+      "group": "prst",
+      "description": "prst:yellowGreen",
+      "base": {
+        "kind": "prst",
+        "value": "yellowGreen"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"yellowGreen\"/>",
+      "expected": "9ACD32",
+      "objectModel": "9ACD32",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t207",
+      "group": "prst-grey",
+      "description": "prst:dkGrey",
+      "base": {
+        "kind": "prst",
+        "value": "dkGrey"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkGrey\"/>",
+      "expected": "A9A9A9",
+      "objectModel": "A9A9A9",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t208",
+      "group": "prst-grey",
+      "description": "prst:dimGrey",
+      "base": {
+        "kind": "prst",
+        "value": "dimGrey"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dimGrey\"/>",
+      "expected": "696969",
+      "objectModel": "696969",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t209",
+      "group": "prst-grey",
+      "description": "prst:dkSlateGrey",
+      "base": {
+        "kind": "prst",
+        "value": "dkSlateGrey"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"dkSlateGrey\"/>",
+      "expected": "2F4F4F",
+      "objectModel": "2F4F4F",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t210",
+      "group": "prst-grey",
+      "description": "prst:grey",
+      "base": {
+        "kind": "prst",
+        "value": "grey"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"grey\"/>",
+      "expected": "808080",
+      "objectModel": "808080",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t211",
+      "group": "prst-grey",
+      "description": "prst:ltGrey",
+      "base": {
+        "kind": "prst",
+        "value": "ltGrey"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltGrey\"/>",
+      "expected": "D3D3D3",
+      "objectModel": "D3D3D3",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t212",
+      "group": "prst-grey",
+      "description": "prst:ltSlateGrey",
+      "base": {
+        "kind": "prst",
+        "value": "ltSlateGrey"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"ltSlateGrey\"/>",
+      "expected": "778899",
+      "objectModel": "778899",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t213",
+      "group": "prst-grey",
+      "description": "prst:slateGrey",
+      "base": {
+        "kind": "prst",
+        "value": "slateGrey"
+      },
+      "transforms": [],
+      "xml": "<a:prstClr val=\"slateGrey\"/>",
+      "expected": "708090",
+      "objectModel": "708090",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t214",
+      "group": "sys",
+      "description": "sys:scrollBar",
+      "base": {
+        "kind": "sys",
+        "value": "scrollBar"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"scrollBar\"/>",
+      "expected": "C8C8C8",
+      "objectModel": "C8C8C8",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t215",
+      "group": "sys",
+      "description": "sys:background",
+      "base": {
+        "kind": "sys",
+        "value": "background"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"background\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t216",
+      "group": "sys",
+      "description": "sys:activeCaption",
+      "base": {
+        "kind": "sys",
+        "value": "activeCaption"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"activeCaption\"/>",
+      "expected": "99B4D1",
+      "objectModel": "99B4D1",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t217",
+      "group": "sys",
+      "description": "sys:inactiveCaption",
+      "base": {
+        "kind": "sys",
+        "value": "inactiveCaption"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"inactiveCaption\"/>",
+      "expected": "BFCDDB",
+      "objectModel": "BFCDDB",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t218",
+      "group": "sys",
+      "description": "sys:menu",
+      "base": {
+        "kind": "sys",
+        "value": "menu"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"menu\"/>",
+      "expected": "F0F0F0",
+      "objectModel": "F0F0F0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t219",
+      "group": "sys",
+      "description": "sys:window",
+      "base": {
+        "kind": "sys",
+        "value": "window"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"window\"/>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t220",
+      "group": "sys",
+      "description": "sys:windowFrame",
+      "base": {
+        "kind": "sys",
+        "value": "windowFrame"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"windowFrame\"/>",
+      "expected": "646464",
+      "objectModel": "646464",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t221",
+      "group": "sys",
+      "description": "sys:menuText",
+      "base": {
+        "kind": "sys",
+        "value": "menuText"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"menuText\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t222",
+      "group": "sys",
+      "description": "sys:windowText",
+      "base": {
+        "kind": "sys",
+        "value": "windowText"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"windowText\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t223",
+      "group": "sys",
+      "description": "sys:captionText",
+      "base": {
+        "kind": "sys",
+        "value": "captionText"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"captionText\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t224",
+      "group": "sys",
+      "description": "sys:activeBorder",
+      "base": {
+        "kind": "sys",
+        "value": "activeBorder"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"activeBorder\"/>",
+      "expected": "B4B4B4",
+      "objectModel": "B4B4B4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t225",
+      "group": "sys",
+      "description": "sys:inactiveBorder",
+      "base": {
+        "kind": "sys",
+        "value": "inactiveBorder"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"inactiveBorder\"/>",
+      "expected": "F4F7FC",
+      "objectModel": "F4F7FC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t226",
+      "group": "sys",
+      "description": "sys:appWorkspace",
+      "base": {
+        "kind": "sys",
+        "value": "appWorkspace"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"appWorkspace\"/>",
+      "expected": "ABABAB",
+      "objectModel": "ABABAB",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t227",
+      "group": "sys",
+      "description": "sys:highlight",
+      "base": {
+        "kind": "sys",
+        "value": "highlight"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"highlight\"/>",
+      "expected": "0078D7",
+      "objectModel": "0078D7",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t228",
+      "group": "sys",
+      "description": "sys:highlightText",
+      "base": {
+        "kind": "sys",
+        "value": "highlightText"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"highlightText\"/>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t229",
+      "group": "sys",
+      "description": "sys:btnFace",
+      "base": {
+        "kind": "sys",
+        "value": "btnFace"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"btnFace\"/>",
+      "expected": "F0F0F0",
+      "objectModel": "F0F0F0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t230",
+      "group": "sys",
+      "description": "sys:btnShadow",
+      "base": {
+        "kind": "sys",
+        "value": "btnShadow"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"btnShadow\"/>",
+      "expected": "A0A0A0",
+      "objectModel": "A0A0A0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t231",
+      "group": "sys",
+      "description": "sys:grayText",
+      "base": {
+        "kind": "sys",
+        "value": "grayText"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"grayText\"/>",
+      "expected": "6D6D6D",
+      "objectModel": "6D6D6D",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t232",
+      "group": "sys",
+      "description": "sys:btnText",
+      "base": {
+        "kind": "sys",
+        "value": "btnText"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"btnText\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t233",
+      "group": "sys",
+      "description": "sys:inactiveCaptionText",
+      "base": {
+        "kind": "sys",
+        "value": "inactiveCaptionText"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"inactiveCaptionText\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t234",
+      "group": "sys",
+      "description": "sys:btnHighlight",
+      "base": {
+        "kind": "sys",
+        "value": "btnHighlight"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"btnHighlight\"/>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t235",
+      "group": "sys",
+      "description": "sys:3dDkShadow",
+      "base": {
+        "kind": "sys",
+        "value": "3dDkShadow"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"3dDkShadow\"/>",
+      "expected": "696969",
+      "objectModel": "696969",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t236",
+      "group": "sys",
+      "description": "sys:3dLight",
+      "base": {
+        "kind": "sys",
+        "value": "3dLight"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"3dLight\"/>",
+      "expected": "E3E3E3",
+      "objectModel": "E3E3E3",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t237",
+      "group": "sys",
+      "description": "sys:infoText",
+      "base": {
+        "kind": "sys",
+        "value": "infoText"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"infoText\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t238",
+      "group": "sys",
+      "description": "sys:infoBk",
+      "base": {
+        "kind": "sys",
+        "value": "infoBk"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"infoBk\"/>",
+      "expected": "FFFFE1",
+      "objectModel": "FFFFE1",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t239",
+      "group": "sys",
+      "description": "sys:hotLight",
+      "base": {
+        "kind": "sys",
+        "value": "hotLight"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"hotLight\"/>",
+      "expected": "0066CC",
+      "objectModel": "0066CC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t240",
+      "group": "sys",
+      "description": "sys:gradientActiveCaption",
+      "base": {
+        "kind": "sys",
+        "value": "gradientActiveCaption"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"gradientActiveCaption\"/>",
+      "expected": "B9D1EA",
+      "objectModel": "B9D1EA",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t241",
+      "group": "sys",
+      "description": "sys:gradientInactiveCaption",
+      "base": {
+        "kind": "sys",
+        "value": "gradientInactiveCaption"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"gradientInactiveCaption\"/>",
+      "expected": "D7E4F2",
+      "objectModel": "D7E4F2",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t242",
+      "group": "sys",
+      "description": "sys:menuHighlight",
+      "base": {
+        "kind": "sys",
+        "value": "menuHighlight"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"menuHighlight\"/>",
+      "expected": "3399FF",
+      "objectModel": "3399FF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t243",
+      "group": "sys",
+      "description": "sys:menuBar",
+      "base": {
+        "kind": "sys",
+        "value": "menuBar"
+      },
+      "transforms": [],
+      "xml": "<a:sysClr val=\"menuBar\"/>",
+      "expected": "F0F0F0",
+      "objectModel": "F0F0F0",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t244",
+      "group": "clrmap",
+      "description": "scheme:dk1",
+      "base": {
+        "kind": "scheme",
+        "value": "dk1"
+      },
+      "transforms": [],
+      "xml": "<a:schemeClr val=\"dk1\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t245",
+      "group": "clrmap",
+      "description": "scheme:lt1",
+      "base": {
+        "kind": "scheme",
+        "value": "lt1"
+      },
+      "transforms": [],
+      "xml": "<a:schemeClr val=\"lt1\"/>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t246",
+      "group": "clrmap",
+      "description": "scheme:dk2",
+      "base": {
+        "kind": "scheme",
+        "value": "dk2"
+      },
+      "transforms": [],
+      "xml": "<a:schemeClr val=\"dk2\"/>",
+      "expected": "44546A",
+      "objectModel": "44546A",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t247",
+      "group": "clrmap",
+      "description": "scheme:lt2",
+      "base": {
+        "kind": "scheme",
+        "value": "lt2"
+      },
+      "transforms": [],
+      "xml": "<a:schemeClr val=\"lt2\"/>",
+      "expected": "E7E6E6",
+      "objectModel": "E7E6E6",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t248",
+      "group": "clrmap",
+      "description": "scheme:bg1",
+      "base": {
+        "kind": "scheme",
+        "value": "bg1"
+      },
+      "transforms": [],
+      "xml": "<a:schemeClr val=\"bg1\"/>",
+      "expected": "000000",
+      "objectModel": "000000",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t249",
+      "group": "clrmap",
+      "description": "scheme:tx1",
+      "base": {
+        "kind": "scheme",
+        "value": "tx1"
+      },
+      "transforms": [],
+      "xml": "<a:schemeClr val=\"tx1\"/>",
+      "expected": "FFFFFF",
+      "objectModel": "FFFFFF",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t250",
+      "group": "clrmap",
+      "description": "scheme:bg2",
+      "base": {
+        "kind": "scheme",
+        "value": "bg2"
+      },
+      "transforms": [],
+      "xml": "<a:schemeClr val=\"bg2\"/>",
+      "expected": "44546A",
+      "objectModel": "44546A",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t251",
+      "group": "clrmap",
+      "description": "scheme:tx2",
+      "base": {
+        "kind": "scheme",
+        "value": "tx2"
+      },
+      "transforms": [],
+      "xml": "<a:schemeClr val=\"tx2\"/>",
+      "expected": "E7E6E6",
+      "objectModel": "E7E6E6",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t252",
+      "group": "clrmap",
+      "description": "scheme:accent1",
+      "base": {
+        "kind": "scheme",
+        "value": "accent1"
+      },
+      "transforms": [],
+      "xml": "<a:schemeClr val=\"accent1\"/>",
+      "expected": "ED7D31",
+      "objectModel": "ED7D31",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t253",
+      "group": "clrmap",
+      "description": "scheme:accent2",
+      "base": {
+        "kind": "scheme",
+        "value": "accent2"
+      },
+      "transforms": [],
+      "xml": "<a:schemeClr val=\"accent2\"/>",
+      "expected": "4472C4",
+      "objectModel": "4472C4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t254",
+      "group": "percent-literal",
+      "description": "raw:lumMod 60% lumOff 40%",
+      "base": {
+        "kind": "raw",
+        "xml": "<a:srgbClr val=\"4472C4\"><a:lumMod val=\"60%\"/><a:lumOff val=\"40%\"/></a:srgbClr>",
+        "value": "lumMod 60% lumOff 40%"
+      },
+      "transforms": [],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:lumMod val=\"60%\"/><a:lumOff val=\"40%\"/></a:srgbClr>",
+      "expected": "8FAADC",
+      "objectModel": "8FAADC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t255",
+      "group": "percent-literal",
+      "description": "raw:tint 50%",
+      "base": {
+        "kind": "raw",
+        "xml": "<a:srgbClr val=\"4472C4\"><a:tint val=\"50%\"/></a:srgbClr>",
+        "value": "tint 50%"
+      },
+      "transforms": [],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:tint val=\"50%\"/></a:srgbClr>",
+      "expected": "C0C9E4",
+      "objectModel": "C0C9E4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t256",
+      "group": "percent-literal",
+      "description": "raw:lumMod 60.5%",
+      "base": {
+        "kind": "raw",
+        "xml": "<a:srgbClr val=\"4472C4\"><a:lumMod val=\"60.5%\"/></a:srgbClr>",
+        "value": "lumMod 60.5%"
+      },
+      "transforms": [],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:lumMod val=\"60.5%\"/></a:srgbClr>",
+      "expected": "264479",
+      "objectModel": "264479",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t257",
+      "group": "percent-control",
+      "description": "#4472C4 lumMod=60000 lumOff=40000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "lumMod",
+          "val": 60000
+        },
+        {
+          "name": "lumOff",
+          "val": 40000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:lumMod val=\"60000\"/><a:lumOff val=\"40000\"/></a:srgbClr>",
+      "expected": "8FAADC",
+      "objectModel": "8FAADC",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    },
+    {
+      "id": "t258",
+      "group": "percent-control",
+      "description": "#4472C4 tint=50000",
+      "base": {
+        "kind": "srgb",
+        "value": "4472C4"
+      },
+      "transforms": [
+        {
+          "name": "tint",
+          "val": 50000
+        }
+      ],
+      "xml": "<a:srgbClr val=\"4472C4\"><a:tint val=\"50000\"/></a:srgbClr>",
+      "expected": "C0C9E4",
+      "objectModel": "C0C9E4",
+      "transparency": 0,
+      "fromRepairedDeck": false
+    }
+  ]
+}

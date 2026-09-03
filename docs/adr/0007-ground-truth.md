@@ -3,6 +3,8 @@
 Date: 2026-08-27
 Sub-phase: 0.7
 Status: accepted, and it changes the plan
+Amended by: [0021](0021-colour.md), which measured the questions experiment C did not ask and
+overturned two things recorded here — see "Also confirmed" and "Rounding" below
 
 ---
 
@@ -284,6 +286,11 @@ so this is recorded as what fits rather than as settled: the fixture holds
 PowerPoint's answers either way, and a renderer that is off by one on a colour
 that lands precisely on a half is not the problem worth solving first.
 
+> **Amended by ADR 0021.** Four more tie cases were measured in sub-phase 2.6, and
+> round-half-down fits only four of the resulting seven. No rounding mode fits all
+> of them, and neither does single-precision representation error. The caution
+> above was warranted; the rule was a coincidence of three samples.
+
 ### Also confirmed
 
 Theme resolution and the `clrMap` on all 16 scheme names, including that
@@ -292,6 +299,14 @@ not; `a:sysClr/@lastClr` preferred over the system colour name; and seven
 identity swatches with no transform, which is the control that says the whole
 pipeline — hand-built package, PowerPoint, bitmap export, sampling — is not
 introducing an error of its own.
+
+> **Amended by ADR 0021: the `@lastClr` claim is wrong.** Every `sysClr` in this
+> experiment named a colour whose `lastClr` agreed with what this machine says, so
+> both readings gave the same number and nothing here could tell them apart.
+> Sub-phase 2.6 wrote `<a:sysClr val="windowText" lastClr="FF00FF"/>` and PowerPoint
+> painted it black, from the machine. `@lastClr` is a cache for a reader that has no
+> machine to ask — which is what `@pptx-studio/paint` is, so it prefers `@lastClr`
+> deliberately rather than because PowerPoint does.
 
 ---
 

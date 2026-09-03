@@ -241,6 +241,21 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
+  packages/paint:
+    devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: 'catalog:'
+        version: 0.18.5
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.24
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.14(@arethetypeswrong/core@0.18.5)(publint@0.3.24)(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   packages/validate:
     dependencies:
       '@pptx-studio/opc':

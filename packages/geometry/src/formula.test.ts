@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GeometryError } from './errors.js';
+import { evaluateGuides } from './evaluate.js';
+import { getPreset } from './presets/index.js';
 import {
   ANGLE_UNITS_PER_DEGREE,
   FMLA_ARITY,
@@ -138,9 +140,25 @@ describe('pin clamps its middle operand', () => {
     expect(applyOperator('pin', [10, 20, 3])).toBe(3);
     expect(applyOperator('pin', [10, 5, 0])).toBe(10);
 
-    // Not reachable from any preset - every use is `pin 0 adjN <constant>`.
     // Pinned so the behaviour is a decision rather than an accident of how the
     // comparisons happened to be ordered.
+  });
+
+  it('and a committed preset reaches the divergence at a legal size', () => {
+    // Found while building 2.5, which had to know whether a handle's search
+    // range could invert. `mathDivide.a3` is `pin 1000 adj3 maxAdj3`, and
+    // `maxAdj3` is `min(ma3h, ma3w)` with `ma3w = 36745*w/h`. On a shape one
+    // unit wide and a thousand tall that is 36.745, well under the floor of
+    // 1000, so the bounds cross. This is the only one: 1568 evaluations of the
+    // 196 `pin` formulas at eight aspect ratios turn up exactly one.
+    const shape = getPreset('mathDivide');
+    if (shape === undefined) throw new Error('no mathDivide');
+    const thin = evaluateGuides(shape, { w: 1, h: 1000 });
+    expect(thin.get('maxAdj3')).toBeCloseTo(36.745, 6);
+    // The chain takes the ceiling, because it is applied last.
+    expect(thin.get('a3')).toBeCloseTo(36.745, 6);
+    // Apache POI's min/max rewrite would take the floor instead.
+    expect(Math.max(1000, Math.min(11760, 36.745))).toBe(1000);
   });
 });
 

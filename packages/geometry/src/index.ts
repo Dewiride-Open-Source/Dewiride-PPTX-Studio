@@ -56,6 +56,21 @@ export {
   type ShapeSize,
 } from './evaluate.js';
 export {
+  HANDLE_SAMPLES,
+  HANDLE_TOLERANCE,
+  dragHandle,
+  handleCentre,
+  invertAxis,
+  readHandleAxis,
+  resolveHandles,
+  roundAdjust,
+  type HandleAxisKind,
+  type InvertAxisOptions,
+  type ResolveHandleOptions,
+  type ResolvedHandle,
+  type ResolvedHandleAxis,
+} from './handles.js';
+export {
   DEFAULT_PRECISION,
   pathData,
   pathScale,
