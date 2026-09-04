@@ -31,10 +31,12 @@ import {
   parseLine,
   parseLineElement,
 } from './parse-paint.js';
+import { parseTextBodyChild, parseTextStyles } from './parse-text.js';
 import {
   PLACEHOLDER_TYPES,
   type Background,
   type ColorMapOverride,
+  type FontCollection,
   type FontScheme,
   type FormatScheme,
   type Placeholder,
@@ -316,6 +318,7 @@ function parseShape(element: XElement, kind: ShapeKind, partName: string): Shape
     style: parseStyle(element, partName),
     prstGeom: prstGeom === undefined ? undefined : (attributeValue(prstGeom, 'prst') ?? ''),
     geometry: parseGeometry(spPr, partName),
+    text: parseTextBodyChild(element, partName),
     children,
     node: element,
   };
@@ -381,17 +384,22 @@ function parseScheme(element: XElement, partName: string): ClrScheme {
 }
 
 function parseFontScheme(element: XElement | undefined): FontScheme {
-  const latin = (which: string): string | null => {
-    if (element === undefined) return null;
-    const font = firstChild(element, which);
-    if (font === undefined) return null;
-    const face = firstChild(font, 'a:latin');
-    return face === undefined ? null : (attributeValue(face, 'typeface') ?? null);
+  // All three scripts, because `a:rPr` has four typeface slots and three of them
+  // take a theme reference: `+mn-ea` on an `a:ea` is how a CJK run follows the
+  // theme, and reading only `a:latin` leaves it unresolvable.
+  const collection = (which: string): FontCollection => {
+    const font = element === undefined ? undefined : firstChild(element, which);
+    const face = (script: string): string | null => {
+      if (font === undefined) return null;
+      const child = firstChild(font, script);
+      return child === undefined ? null : (attributeValue(child, 'typeface') ?? null);
+    };
+    return { latin: face('a:latin'), ea: face('a:ea'), cs: face('a:cs') };
   };
   return {
     name: element === undefined ? null : (attributeValue(element, 'name') ?? null),
-    majorLatin: latin('a:majorFont'),
-    minorLatin: latin('a:minorFont'),
+    major: collection('a:majorFont'),
+    minor: collection('a:minorFont'),
   };
 }
 
@@ -466,6 +474,10 @@ export function parseSheet(root: XElement, partName: string): Omit<Sheet, 'paren
     throw new ModelError('MODEL_PART_KIND', `${root.qname} has no p:cSld`, partName);
   }
   const clrMapElement = kind === 'master' ? firstChild(root, 'p:clrMap') : undefined;
+  // Only a master carries `p:txStyles`, and whether it carries one at all is a
+  // load-bearing distinction: PowerPoint substitutes its whole built-in set for
+  // a master that declares none, measured in 3.1.
+  const txStylesElement = kind === 'master' ? firstChild(root, 'p:txStyles') : undefined;
 
   return {
     kind,
@@ -476,6 +488,8 @@ export function parseSheet(root: XElement, partName: string): Omit<Sheet, 'paren
     shapes: parseShapeTree(cSld, partName),
     background: parseBackground(cSld, partName),
     clrMap: clrMapElement === undefined ? undefined : parseClrMap(clrMapElement, partName),
+    txStyles:
+      txStylesElement === undefined ? undefined : parseTextStyles(txStylesElement, partName),
     clrMapOvr: kind === 'master' ? undefined : parseClrMapOvr(root, partName),
     // `@showMasterSp` sits on `p:sld` and `p:sldLayout` themselves, not inside
     // `p:cSld` where the rest of this comes from.

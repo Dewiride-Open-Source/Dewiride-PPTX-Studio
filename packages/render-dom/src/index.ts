@@ -26,3 +26,12 @@ export {
   type MountOptions,
   type MountedSlide,
 } from './mount.js';
+
+export {
+  mergeAdjust,
+  mountOverlay,
+  slidePoint,
+  type HandleEdit,
+  type MountedOverlay,
+  type OverlayMountOptions,
+} from './overlay.js';

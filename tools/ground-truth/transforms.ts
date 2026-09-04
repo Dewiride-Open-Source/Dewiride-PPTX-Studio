@@ -1023,7 +1023,7 @@ function inheritDeck(
     probes: [probe],
     bytes: () =>
       buildSheetPackage({
-        themes: [SCHEME_ONE],
+        themes: [{ scheme: SCHEME_ONE }],
         masters: [
           {
             theme: 0,

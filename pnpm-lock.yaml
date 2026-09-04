@@ -134,9 +134,21 @@ importers:
       '@pptx-studio/census':
         specifier: workspace:^
         version: link:../../packages/census
+      '@pptx-studio/geometry':
+        specifier: workspace:^
+        version: link:../../packages/geometry
+      '@pptx-studio/model':
+        specifier: workspace:^
+        version: link:../../packages/model
       '@pptx-studio/opc':
         specifier: workspace:^
         version: link:../../packages/opc
+      '@pptx-studio/render-dom':
+        specifier: workspace:^
+        version: link:../../packages/render-dom
+      '@pptx-studio/render-svg':
+        specifier: workspace:^
+        version: link:../../packages/render-svg
       '@pptx-studio/validate':
         specifier: workspace:^
         version: link:../../packages/validate
@@ -323,6 +335,21 @@ importers:
       '@pptx-studio/paint':
         specifier: workspace:^
         version: link:../paint
+    devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: 'catalog:'
+        version: 0.18.5
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.24
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.14(@arethetypeswrong/core@0.18.5)(publint@0.3.24)(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/text:
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: 'catalog:'

@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PPTX Studio — the 187 preset shapes</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --ink: #16181d;
+        --dim: #5d636e;
+        --line: #d9dde4;
+        --bg: #fbfcfd;
+        --panel: #ffffff;
+        --accent: #2f5bd0;
+        --warn: #9a5b00;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #e6e9ef;
+          --dim: #99a1af;
+          --line: #2a2f38;
+          --bg: #14161a;
+          --panel: #1b1e24;
+          --accent: #7ea2ff;
+          --warn: #e0a35a;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.55 ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
+      }
+      header {
+        padding: 1.25rem 1.5rem 1rem;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        gap: 1rem;
+        align-items: baseline;
+        flex-wrap: wrap;
+      }
+      header h1 {
+        font-size: 1.05rem;
+        margin: 0;
+      }
+      header p {
+        margin: 0;
+        color: var(--dim);
+        font-size: 0.85rem;
+      }
+      header a {
+        color: var(--accent);
+        margin-left: auto;
+        font-size: 0.85rem;
+      }
+      main {
+        display: grid;
+        grid-template-columns: minmax(280px, 1fr) minmax(420px, 1.4fr) minmax(260px, 0.9fr);
+        gap: 1px;
+        background: var(--line);
+        min-height: calc(100vh - 4.2rem);
+      }
+      section {
+        background: var(--bg);
+        padding: 1rem 1.1rem;
+        overflow: auto;
+      }
+      h2 {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        color: var(--dim);
+        margin: 0 0 0.7rem;
+        font-weight: 600;
+      }
+      .controls {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.8rem;
+      }
+      input[type='search'] {
+        flex: 1;
+        padding: 0.4rem 0.6rem;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.85rem;
+      }
+      #found {
+        color: var(--dim);
+        font-size: 0.78rem;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      #grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+        gap: 0.5rem;
+      }
+      .cell {
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--panel);
+        padding: 0.4rem 0.3rem 0.35rem;
+        cursor: pointer;
+        font: inherit;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+      }
+      .cell:hover {
+        border-color: var(--accent);
+      }
+      .cell.on {
+        border-color: var(--accent);
+        box-shadow: inset 0 0 0 1px var(--accent);
+      }
+      .cell .name {
+        font-size: 0.68rem;
+        color: var(--dim);
+        text-align: center;
+        word-break: break-word;
+        line-height: 1.2;
+      }
+      .thumb svg {
+        display: block;
+      }
+      #stage-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+      }
+      #stage {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        touch-action: none;
+      }
+      #shape-name {
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      #counter {
+        color: var(--dim);
+        font-size: 0.8rem;
+      }
+      .stage-controls {
+        display: flex;
+        gap: 0.7rem;
+        align-items: center;
+        font-size: 0.8rem;
+        color: var(--dim);
+      }
+      button.plain {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+        border-radius: 6px;
+        padding: 0.3rem 0.7rem;
+        font: inherit;
+        font-size: 0.8rem;
+        cursor: pointer;
+      }
+      .rows {
+        display: flex;
+        flex-direction: column;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.6rem;
+        padding: 0.22rem 0;
+        border-bottom: 1px dashed var(--line);
+        font-size: 0.8rem;
+        font-family:
+          ui-monospace,
+          Cascadia Mono,
+          Consolas,
+          monospace;
+      }
+      .row .v {
+        font-variant-numeric: tabular-nums;
+      }
+      .row.dim {
+        color: var(--dim);
+      }
+      .row.bad .v {
+        color: var(--warn);
+      }
+      .row.widened {
+        color: var(--warn);
+      }
+      .handle {
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 0.5rem 0.7rem;
+        margin-bottom: 0.6rem;
+        background: var(--panel);
+      }
+      .handle h4 {
+        margin: 0 0 0.3rem;
+        font-size: 0.75rem;
+        color: var(--dim);
+        font-weight: 600;
+      }
+      .handle .row {
+        grid-template-columns: 1fr auto auto;
+      }
+      .range {
+        color: var(--dim);
+        font-size: 0.72rem;
+      }
+      .note {
+        color: var(--dim);
+        font-size: 0.78rem;
+        margin: 0.4rem 0 0;
+      }
+      pre {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 0.6rem 0.7rem;
+        font-size: 0.75rem;
+        overflow: auto;
+        margin: 0;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 0.9rem;
+        font-size: 0.75rem;
+        color: var(--dim);
+        margin-top: 0.5rem;
+      }
+      .legend i {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        margin-right: 0.3rem;
+        vertical-align: -1px;
+      }
+      @media (max-width: 1100px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>The 187 preset shapes</h1>
+      <p>Drag a handle. It writes an <code>a:avLst</code>, and the shape is rebuilt from it.</p>
+      <a href="/apps/studio/index.html">← the package explorer</a>
+    </header>
+    <main>
+      <section>
+        <h2>Presets</h2>
+        <div class="controls">
+          <input id="search" type="search" placeholder="Filter by name…" autocomplete="off" />
+          <span id="found"></span>
+        </div>
+        <div id="grid"></div>
+      </section>
+
+      <section>
+        <h2>Stage</h2>
+        <div id="stage-wrap">
+          <div id="stage"></div>
+          <div id="shape-name"></div>
+          <div id="counter"></div>
+          <div class="stage-controls">
+            <label for="size">height</label>
+            <input id="size" type="range" min="20" max="100" value="70" />
+            <button id="reset" class="plain" type="button">Reset adjusts</button>
+          </div>
+          <div class="legend">
+            <span><i style="background: #e8453c"></i>path 1 · handle</span>
+            <span><i style="background: #1b9e4b"></i>path 2</span>
+            <span><i style="background: #7b1fa2"></i>a:rect</span>
+            <span><i style="background: #00838f"></i>cxnLst</span>
+            <span><i style="background: #b26a00"></i>widened bound</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Adjust handles</h2>
+        <div id="adjust"></div>
+        <h2 style="margin-top: 1.2rem">What a save would write</h2>
+        <pre id="xml"></pre>
+        <h2 style="margin-top: 1.2rem">gdLst, live</h2>
+        <div id="guides"></div>
+      </section>
+    </main>
+    <script type="module" src="./dist/gallery.js"></script>
+  </body>
+</html>

@@ -28,6 +28,8 @@
       "@pptx-studio/render-dom/*": ["./packages/render-dom/src/*"],
       "@pptx-studio/render-svg": ["./packages/render-svg/src/index.ts"],
       "@pptx-studio/render-svg/*": ["./packages/render-svg/src/*"],
+      "@pptx-studio/text": ["./packages/text/src/index.ts"],
+      "@pptx-studio/text/*": ["./packages/text/src/*"],
       "@pptx-studio/validate": ["./packages/validate/src/index.ts"],
       "@pptx-studio/validate/*": ["./packages/validate/src/*"],
       "@pptx-studio/writer": ["./packages/writer/src/index.ts"],

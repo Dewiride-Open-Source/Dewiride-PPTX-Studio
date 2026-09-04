@@ -11,7 +11,12 @@
     "types": [],
     "paths": {
       "@pptx-studio/census": ["../../packages/census/src/index.ts"],
+      "@pptx-studio/geometry": ["../../packages/geometry/src/index.ts"],
+      "@pptx-studio/model": ["../../packages/model/src/index.ts"],
       "@pptx-studio/opc": ["../../packages/opc/src/index.ts"],
+      "@pptx-studio/paint": ["../../packages/paint/src/index.ts"],
+      "@pptx-studio/render-dom": ["../../packages/render-dom/src/index.ts"],
+      "@pptx-studio/render-svg": ["../../packages/render-svg/src/index.ts"],
       "@pptx-studio/xml": ["../../packages/xml/src/index.ts"]
     }
   },

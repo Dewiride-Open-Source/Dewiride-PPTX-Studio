@@ -299,6 +299,63 @@ export function frameTransform(frame: Frame): string {
   return parts.join(' ');
 }
 
+/* -------------------------------------------------------------------------- */
+/* the same transform, as arithmetic                                          */
+/* -------------------------------------------------------------------------- */
+
+/** A point, in whichever space the function taking it names. */
+export interface Vec {
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * A point in the shape's own space, moved onto the slide.
+ *
+ * The arithmetic form of `frameTransform`, and it has to stay the arithmetic
+ * form of it: `render.test.ts` asserts the two agree by asking a browser to
+ * apply the emitted attribute and comparing. A renderer that draws with one and
+ * hit-tests with the other is a renderer whose handles are subtly in the wrong
+ * place on exactly the rotated shapes where it matters.
+ */
+export function framePoint(frame: Frame, point: Vec): Vec {
+  let x = point.x - frame.cx / 2;
+  let y = point.y - frame.cy / 2;
+  // Flip first. Measured; see the note at the top of this file.
+  if (frame.flipH) x = -x;
+  if (frame.flipV) y = -y;
+  const turned = rotate(x, y, frame.rot);
+  return { x: turned.x + frame.x + frame.cx / 2, y: turned.y + frame.y + frame.cy / 2 };
+}
+
+/**
+ * A point on the slide, brought back into the shape's own space.
+ *
+ * The exact inverse of `framePoint`, which is what a pointer needs: the adjust
+ * handles of `@pptx-studio/geometry` live in shape space, and a drag arrives in
+ * slide space. Every step is undone in reverse, so the mirror comes *after* the
+ * un-rotation here even though it comes before the rotation there.
+ */
+export function inverseFramePoint(frame: Frame, point: Vec): Vec {
+  const turned = rotate(
+    point.x - frame.x - frame.cx / 2,
+    point.y - frame.y - frame.cy / 2,
+    -frame.rot,
+  );
+  let { x, y } = turned;
+  if (frame.flipH) x = -x;
+  if (frame.flipV) y = -y;
+  return { x: x + frame.cx / 2, y: y + frame.cy / 2 };
+}
+
+function rotate(x: number, y: number, degrees: number): Vec {
+  if (degrees === 0) return { x, y };
+  const radians = (degrees * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  return { x: x * cos - y * sin, y: x * sin + y * cos };
+}
+
 /** The union of two boxes. */
 export function unionBox(a: Box | null, b: Box | null): Box | null {
   if (a === null) return b;

@@ -48,7 +48,13 @@ export type ModelErrorCode =
   /** A sheet that does not belong to the document it was asked about. */
   | 'MODEL_FOREIGN_SHEET'
   /** `a:prstGeom` with no `@prst`, or an `a:custGeom` command missing a point. */
-  | 'MODEL_GEOMETRY';
+  | 'MODEL_GEOMETRY'
+  /** A text attribute whose value is not of the type its schema names. */
+  | 'MODEL_TEXT_ATTR'
+  /** An `a:fld` with no `@id`, which is a required `ST_Guid`. */
+  | 'MODEL_TEXT_FIELD'
+  /** A paragraph level that is not an integer. */
+  | 'MODEL_TEXT_LEVEL';
 
 export class ModelError extends Error {
   override readonly name = 'ModelError';
@@ -92,4 +98,7 @@ export const MODEL_ERROR_CODES: readonly ModelErrorCode[] = [
   'MODEL_STYLE_LIST_EMPTY',
   'MODEL_SHEET_CYCLE',
   'MODEL_FOREIGN_SHEET',
+  'MODEL_TEXT_ATTR',
+  'MODEL_TEXT_FIELD',
+  'MODEL_TEXT_LEVEL',
 ];

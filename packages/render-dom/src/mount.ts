@@ -31,6 +31,7 @@
  */
 
 import {
+  num,
   serializeSvg,
   slideNode,
   type Placed,
@@ -45,13 +46,23 @@ import { RenderDomError } from './errors.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-/** One node into one element. Exported because the debug overlay wants it too. */
+/**
+ * One node into one element. Exported because the debug overlay wants it too.
+ *
+ * A number goes through `render-svg`'s own `num`, not `String`. That is the
+ * whole "one tree, two renderers" claim in one line: the string emitter rounds
+ * to three decimals and normalises `-0`, so a DOM path using `String` would
+ * write `117158.34312` where a thumbnail wrote `117158.343`. Every coordinate
+ * in a slide render happens to be a whole number of EMU, which is why this went
+ * unnoticed until the overlay's text rectangle - the first fractional one -
+ * disagreed at the fourth decimal.
+ */
 export function createNode(document: Document, node: SvgNode): Node {
   if (node.kind === 'text') return document.createTextNode(node.text);
   const el = document.createElementNS(SVG_NS, node.tag);
   for (const [name, value] of Object.entries(node.attrs)) {
     if (value === null || value === undefined) continue;
-    el.setAttribute(name, typeof value === 'number' ? String(value) : value);
+    el.setAttribute(name, typeof value === 'number' ? num(value) : value);
   }
   for (const child of node.children) el.appendChild(createNode(document, child));
   return el;

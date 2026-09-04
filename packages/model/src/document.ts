@@ -35,6 +35,8 @@ import { parseXml, type XElement } from '@pptx-studio/xml';
 
 import { ModelError } from './errors.js';
 import { parseSheet, parseTheme } from './parse-sheet.js';
+import { parseDefaultTextStyle } from './parse-text.js';
+import type { ListStyle } from './text.js';
 import type { Sheet, Theme } from './types.js';
 
 /** One thing wrong with the package that did not stop the load. */
@@ -190,6 +192,15 @@ export interface Document {
   readonly layouts: readonly Sheet[];
   readonly themes: readonly Theme[];
   readonly problems: readonly DocumentProblem[];
+  /**
+   * `p:defaultTextStyle`, the terminus of the text cascade for every shape that
+   * reaches no `p:txStyles` bucket - which is every shape that is not a
+   * placeholder, and the `dt`, `ftr`, `sldNum` and `hdr` placeholders besides.
+   *
+   * It lives on the presentation part, so it belongs to the package rather than
+   * to any sheet, and `undefined` means the package declared none.
+   */
+  readonly defaultTextStyle: ListStyle | undefined;
   /** Slide size in EMU, from `p:sldSz`. */
   readonly slideSize: { readonly cx: number; readonly cy: number };
   sheet(partName: string): Sheet | undefined;
@@ -286,6 +297,7 @@ export function loadDocument(store: PartStore): Document {
     layouts,
     themes: [...state.themes.values()],
     problems: state.problems,
+    defaultTextStyle: parseDefaultTextStyle(presentation, presentationPartName),
     slideSize: { cx: dimension('cx'), cy: dimension('cy') },
     sheet(partName: string): Sheet | undefined {
       return sheets.get(partName);

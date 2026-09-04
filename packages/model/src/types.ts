@@ -18,6 +18,7 @@
 
 import type { ClrMap, ClrScheme, Color, Effect, Fill, Line } from '@pptx-studio/paint';
 import type { ShapeGeometry } from './parse-geometry.js';
+import type { TextBody, TextStyles } from './text.js';
 import type { XElement } from '@pptx-studio/xml';
 
 /* -------------------------------------------------------------------------- */
@@ -195,6 +196,14 @@ export interface Shape {
    * inherits its rectangle, and `resolve` is what asks.
    */
   readonly geometry: ShapeGeometry | undefined;
+  /**
+   * `p:txBody`, when the shape has one.
+   *
+   * Present on every `p:sp` PowerPoint writes, including the ones with no text
+   * in them, and absent from a `p:pic` or a `p:graphicFrame`. Its `a:lstStyle`
+   * is one level of the text cascade; the paragraphs are the text itself.
+   */
+  readonly text: TextBody | undefined;
   /** Children, for a `grpSp`. Empty for everything else. */
   readonly children: readonly Shape[];
   /** The element this was read from. Edits go here, never to the fields above. */
@@ -234,11 +243,25 @@ export interface FormatScheme {
   readonly bgFillStyles: readonly Fill[];
 }
 
-/** `a:fontScheme`, far enough for 2.9. The ten-source text cascade is 3.1. */
+/**
+ * `a:fontScheme`: the two collections `+mj-` and `+mn-` name.
+ *
+ * Three scripts each, because `a:rPr` has four typeface slots and three of them
+ * take a theme reference - `+mn-ea` on an `a:ea` is how a CJK run follows the
+ * theme. The `a:font` script-tag list under each collection is 3.7's business
+ * and is not modelled here.
+ */
+export interface FontCollection {
+  /** `a:latin/@typeface`. An empty string means the theme states none. */
+  readonly latin: string | null;
+  readonly ea: string | null;
+  readonly cs: string | null;
+}
+
 export interface FontScheme {
   readonly name: string | null;
-  readonly majorLatin: string | null;
-  readonly minorLatin: string | null;
+  readonly major: FontCollection;
+  readonly minor: FontCollection;
 }
 
 export interface Theme {
@@ -292,6 +315,15 @@ export interface Sheet {
   readonly background: Background | undefined;
   /** `p:clrMap`, on a master. `undefined` everywhere else. */
   readonly clrMap: ClrMap | undefined;
+  /**
+   * `p:txStyles`, on a master. `undefined` everywhere else, and meaningfully so.
+   *
+   * A master that declares none does not get a partial one: PowerPoint
+   * substitutes its whole built-in set, measured in 3.1. So the difference
+   * between `undefined` and a `p:txStyles` whose buckets say nothing is the
+   * difference between a 28-point body placeholder and an 18-point one.
+   */
+  readonly txStyles: TextStyles | undefined;
   /** `p:clrMapOvr`, on a layout or a slide. */
   readonly clrMapOvr: ColorMapOverride | undefined;
   /** `@showMasterSp`, defaulting to true. Slides and layouts. */
@@ -312,18 +344,28 @@ export interface Sheet {
 /**
  * Where a resolved value came from.
  *
- * The full union is declared here, including the five members only the text
- * cascade can produce, so that 3.1 adds cases rather than widening a type every
- * consumer has already switched on. Sub-phase 2.9 emits `shape`, `layoutPh`,
- * `masterPh`, `theme` and `schemaDefault`.
+ * 2.9 declared this union in advance, guessing at the members the text cascade
+ * would need. 3.1 measured them, and the guess was wrong in one place:
+ * `themeObjDefaults` is gone, because `a:objectDefaults/a:spDef/a:lstStyle` is
+ * not a source. A package declaring a size there and nowhere else resolves to
+ * the built-in default, so the member named a level that never fires - see
+ * `corpus/ground-truth/text-cascade.json`.
  */
 export type Origin =
+  /** The run's own `a:rPr`. */
+  | 'run'
+  /** The paragraph's `a:pPr`, or its `a:defRPr`. */
+  | 'paragraph'
+  /** The shape itself: its `p:spPr`, or its own `a:lstStyle`. */
   | 'shape'
   | 'layoutPh'
   | 'masterPh'
+  /** The master's `p:txStyles`, in the bucket the chain's last type selects. */
   | 'txStyles'
+  /** `p:defaultTextStyle`, which only a shape with no bucket reaches. */
   | 'defaultTextStyle'
-  | 'themeObjDefaults'
+  /** PowerPoint's own text styles, substituted for a master that declares none. */
+  | 'builtin'
   | 'theme'
   | 'schemaDefault';
 

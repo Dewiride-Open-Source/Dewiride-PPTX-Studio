@@ -133,7 +133,24 @@ export const BG_FILL_STYLES: readonly string[] = [
 /** Half a point, two points, four and a half. Read back through `Line.Weight`. */
 export const LINE_STYLE_WIDTHS: readonly number[] = [6350, 25400, 57150];
 
-function themeXml(scheme: Scheme, name: string): string {
+/**
+ * A theme part: the colour scheme, and the two things 3.1 needs to vary.
+ *
+ * The font scheme matters because `+mj-lt`/`+mn-lt` is the last hop of the text
+ * cascade, and `a:objectDefaults` because it is the second-to-last and no
+ * implementation this project has read consults it at all.
+ */
+export interface ThemeSpec {
+  readonly scheme: Scheme;
+  /** `a:majorFont/a:latin/@typeface`. */
+  readonly majorLatin?: string | undefined;
+  readonly minorLatin?: string | undefined;
+  /** A whole `a:objectDefaults`, written after `a:themeElements`. */
+  readonly objectDefaults?: string | undefined;
+}
+
+function themeXml(spec: ThemeSpec, name: string): string {
+  const scheme = spec.scheme;
   const slot = (k: keyof Scheme): string =>
     k === 'dk1'
       ? `<a:dk1><a:sysClr val="windowText" lastClr="${scheme.dk1}"/></a:dk1>`
@@ -172,7 +189,7 @@ function themeXml(scheme: Scheme, name: string): string {
     `<a:theme xmlns:a="${NS_A}" name="${name}">` +
     '<a:themeElements>' +
     `<a:clrScheme name="${name}">${clrScheme}</a:clrScheme>` +
-    `<a:fontScheme name="${name}">${font('major', 'Calibri Light')}${font('minor', 'Calibri')}</a:fontScheme>` +
+    `<a:fontScheme name="${name}">${font('major', spec.majorLatin ?? 'Calibri Light')}${font('minor', spec.minorLatin ?? 'Calibri')}</a:fontScheme>` +
     `<a:fmtScheme name="${name}">` +
     `<a:fillStyleLst>${FILL_STYLES.join('')}</a:fillStyleLst>` +
     `<a:lnStyleLst>${LINE_STYLE_WIDTHS.map(line).join('')}</a:lnStyleLst>` +
@@ -182,6 +199,7 @@ function themeXml(scheme: Scheme, name: string): string {
     `<a:bgFillStyleLst>${BG_FILL_STYLES.join('')}</a:bgFillStyleLst>` +
     '</a:fmtScheme>' +
     '</a:themeElements>' +
+    (spec.objectDefaults ?? '') +
     '</a:theme>'
   );
 }
@@ -213,6 +231,12 @@ export interface ShapeSpec {
   readonly style?: string | undefined;
   /** `ST_ShapeType`. Defaults to `rect`. */
   readonly prst?: string | undefined;
+  /** A whole `a:bodyPr`. Defaults to an empty one. */
+  readonly bodyPr?: string | undefined;
+  /** A whole `a:lstStyle`. Defaults to an empty one, which declares nothing. */
+  readonly lstStyle?: string | undefined;
+  /** Whole `a:p` elements. Defaults to one empty paragraph. */
+  readonly paragraphs?: readonly string[] | undefined;
 }
 
 export function shape(spec: ShapeSpec): string {
@@ -234,7 +258,11 @@ export function shape(spec: ShapeSpec): string {
     (spec.line ?? '') +
     '</p:spPr>' +
     (spec.style ?? '') +
-    '<p:txBody><a:bodyPr/><a:lstStyle/><a:p/></p:txBody>' +
+    '<p:txBody>' +
+    (spec.bodyPr ?? '<a:bodyPr/>') +
+    (spec.lstStyle ?? '<a:lstStyle/>') +
+    (spec.paragraphs ?? ['<a:p/>']).join('') +
+    '</p:txBody>' +
     '</p:sp>'
   );
 }
@@ -298,6 +326,13 @@ export interface MasterSpec {
   /** A whole `p:bg`. Defaults to `bgRef idx="1001"` with `bg1`, as PowerPoint writes. */
   readonly bg?: string | undefined;
   readonly shapes?: readonly string[] | undefined;
+  /**
+   * A whole `p:txStyles`, written after `p:sldLayoutIdLst` as `CT_SlideMaster`
+   * sequences it. Absent means the master states no text styles at all, which
+   * no PowerPoint-authored master does and which is exactly why it is worth
+   * being able to write.
+   */
+  readonly txStyles?: string | undefined;
   /** Replaces the generated rels entirely. For hostile probes only. */
   readonly rels?: readonly RelSpec[] | undefined;
 }
@@ -330,10 +365,16 @@ export interface SlideSpec {
 }
 
 export interface SheetPackage {
-  readonly themes: readonly Scheme[];
+  readonly themes: readonly ThemeSpec[];
   readonly masters: readonly MasterSpec[];
   readonly layouts: readonly LayoutSpec[];
   readonly slides: readonly SlideSpec[];
+  /**
+   * A whole `p:defaultTextStyle` on `ppt/presentation.xml`, written after
+   * `p:notesSz`. The seventh source of the text cascade, and the one the plan
+   * claims a placeholder never reaches.
+   */
+  readonly defaultTextStyle?: string | undefined;
 }
 
 function relsXml(entries: readonly RelSpec[]): string {
@@ -354,11 +395,11 @@ export function buildSheetPackage(pkg: SheetPackage): Uint8Array {
   const CT = 'application/vnd.openxmlformats-officedocument';
 
   // ---- themes -------------------------------------------------------------
-  pkg.themes.forEach((scheme, i) => {
+  pkg.themes.forEach((theme, i) => {
     const n = String(i + 1);
     entries.push({
       name: `ppt/theme/theme${n}.xml`,
-      bytes: utf8(themeXml(scheme, `Ground Truth ${n}`)),
+      bytes: utf8(themeXml(theme, `Ground Truth ${n}`)),
     });
     overrides.push({ part: `/ppt/theme/theme${n}.xml`, type: `${CT}.theme+xml` });
   });
@@ -409,6 +450,7 @@ export function buildSheetPackage(pkg: SheetPackage): Uint8Array {
         )
         .join('') +
       '</p:sldLayoutIdLst>' +
+      (master.txStyles ?? '') +
       '</p:sldMaster>';
     entries.push({ name: `ppt/slideMasters/slideMaster${n}.xml`, bytes: utf8(xml) });
     overrides.push({
@@ -545,6 +587,7 @@ export function buildSheetPackage(pkg: SheetPackage): Uint8Array {
     '</p:sldIdLst>' +
     `<p:sldSz cx="${String(emu(SLIDE_WIDTH_PT, 'slide'))}" cy="${String(emu(SLIDE_HEIGHT_PT, 'slide'))}"/>` +
     '<p:notesSz cx="6858000" cy="9144000"/>' +
+    (pkg.defaultTextStyle ?? '') +
     '</p:presentation>';
 
   entries.push({ name: 'ppt/presentation.xml', bytes: utf8(presentation) });

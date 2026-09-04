@@ -11,7 +11,11 @@
   },
   "dependencies": {
     "@pptx-studio/census": "workspace:^",
+    "@pptx-studio/geometry": "workspace:^",
+    "@pptx-studio/model": "workspace:^",
     "@pptx-studio/opc": "workspace:^",
+    "@pptx-studio/render-dom": "workspace:^",
+    "@pptx-studio/render-svg": "workspace:^",
     "@pptx-studio/validate": "workspace:^",
     "@pptx-studio/writer": "workspace:^",
     "@pptx-studio/xml": "workspace:^"

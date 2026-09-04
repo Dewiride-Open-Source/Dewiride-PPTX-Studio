@@ -296,7 +296,7 @@ function matchDeck(): SheetDeck {
   return {
     deck: 'match',
     hostile: false,
-    pkg: { themes: [SCHEME_ONE], masters: [matchMaster()], layouts: [layout], slides },
+    pkg: { themes: [{ scheme: SCHEME_ONE }], masters: [matchMaster()], layouts: [layout], slides },
     probes,
   };
 }
@@ -334,7 +334,7 @@ function tier4Deck(): SheetDeck {
     deck: 'tier4',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE],
+      themes: [{ scheme: SCHEME_ONE }],
       masters: [matchMaster()],
       layouts: [layout],
       slides: cases.map((c) => probeSlide(0, c.id, c.ph)),
@@ -388,7 +388,7 @@ function familyDeck(): SheetDeck {
     deck: 'family',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE],
+      themes: [{ scheme: SCHEME_ONE }],
       masters: [matchMaster()],
       layouts: [layout],
       slides: cases.map((c) => probeSlide(0, c.id, c.ph)),
@@ -483,7 +483,7 @@ function twoHopDeck(): SheetDeck {
     deck: 'twohop',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE],
+      themes: [{ scheme: SCHEME_ONE }],
       masters: [matchMaster()],
       layouts: [layout],
       slides: cases.map((c) => probeSlide(0, c.id, c.ph)),
@@ -547,7 +547,7 @@ function orphanDeck(): SheetDeck {
     deck: 'orphan',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE],
+      themes: [{ scheme: SCHEME_ONE }],
       masters: [{ theme: 0, shapes: [] }],
       layouts,
       slides: cases.map((c) => probeSlide(c.layout, c.id, c.ph)),
@@ -614,7 +614,7 @@ function match2Deck(): SheetDeck {
     deck: 'match2',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE],
+      themes: [{ scheme: SCHEME_ONE }],
       masters: [matchMaster()],
       layouts: [layout],
       slides: cases.map((c) => probeSlide(0, c.id, c.ph)),
@@ -677,7 +677,7 @@ function twoHop2Deck(): SheetDeck {
     deck: 'twohop2',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE],
+      themes: [{ scheme: SCHEME_ONE }],
       masters: [master],
       layouts: [layout],
       slides: cases.map((c) => probeSlide(0, c.id, c.ph)),
@@ -727,7 +727,7 @@ function styleHopDeck(): SheetDeck {
     deck: 'stylehop',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE],
+      themes: [{ scheme: SCHEME_ONE }],
       masters: [master],
       layouts: [layout],
       slides: [
@@ -858,7 +858,12 @@ function inheritDeck(): SheetDeck {
   return {
     deck: 'inherit',
     hostile: false,
-    pkg: { themes: [SCHEME_ONE], masters: [{ theme: 0, shapes: [] }], layouts: [layout], slides },
+    pkg: {
+      themes: [{ scheme: SCHEME_ONE }],
+      masters: [{ theme: 0, shapes: [] }],
+      layouts: [layout],
+      slides,
+    },
     probes: [
       {
         id: 'i-fill',
@@ -1038,7 +1043,7 @@ function styleDeck(): SheetDeck {
     deck: 'style',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE],
+      themes: [{ scheme: SCHEME_ONE }],
       masters: [{ theme: 0, shapes: [] }],
       layouts: [{ master: 0, type: 'blank', name: 'Blank', shapes: [] }],
       slides: [{ layout: 0, name: 'styles', shapes }],
@@ -1103,7 +1108,7 @@ function bgIdxDeck(): SheetDeck {
   return {
     deck: 'bgidx',
     hostile: false,
-    pkg: { themes: BG_IDX.map(() => SCHEME_ONE), masters, layouts, slides },
+    pkg: { themes: BG_IDX.map(() => ({ scheme: SCHEME_ONE })), masters, layouts, slides },
     probes: BG_IDX.map((idx, i) => ({
       id: `bg-${String(idx)}`,
       deck: 'bgidx',
@@ -1127,7 +1132,7 @@ function bgChainDeck(): SheetDeck {
     deck: 'bgchain',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE],
+      themes: [{ scheme: SCHEME_ONE }],
       masters: [{ theme: 0, bg: solid('FF0000'), shapes: [] }],
       layouts: [
         { master: 0, type: 'blank', name: 'Layout with bg', bg: solid('00FF00'), shapes: [] },
@@ -1201,7 +1206,7 @@ function mastersDeck(): SheetDeck {
     deck: 'masters',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE, SCHEME_TWO],
+      themes: [{ scheme: SCHEME_ONE }, { scheme: SCHEME_TWO }],
       masters: [
         {
           theme: 0,
@@ -1322,7 +1327,7 @@ function clrMapOvrDeck(): SheetDeck {
     deck: 'clrmapovr',
     hostile: false,
     pkg: {
-      themes: [SCHEME_ONE],
+      themes: [{ scheme: SCHEME_ONE }],
       masters: [{ theme: 0, shapes: [] }],
       layouts: [
         {
@@ -1409,7 +1414,7 @@ function plainMaster(): MasterSpec {
 }
 
 function hostileDecks(): SheetDeck[] {
-  const themes = [SCHEME_ONE];
+  const themes = [{ scheme: SCHEME_ONE }];
   const layout: LayoutSpec = { master: 0, type: 'blank', name: 'Blank', shapes: [] };
   const one = (shapes: readonly string[] = []): SlideSpec => ({ layout: 0, name: 'h', shapes });
 

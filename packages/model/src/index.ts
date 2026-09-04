@@ -37,6 +37,7 @@ export {
   PLACEHOLDER_TYPES,
   type Background,
   type ColorMapOverride,
+  type FontCollection,
   type FontScheme,
   type FormatScheme,
   type NormalPlaceholder,
@@ -117,3 +118,51 @@ export {
 } from './background.js';
 
 export { loadDocument, type Document, type DocumentProblem } from './document.js';
+
+export {
+  LEVELS,
+  themeFontRef,
+  type Caps,
+  type FontAlign,
+  type ListStyle,
+  type Paragraph,
+  type ParaProps,
+  type RunProps,
+  type Spacing,
+  type Strike,
+  type TextAlign,
+  type TextBody,
+  type TextBreak,
+  type TextContent,
+  type TextField,
+  type TextRun,
+  type TextStyleBucket,
+  type TextStyles,
+  type ThemeFontRef,
+  type Typeface,
+  type Underline,
+} from './text.js';
+
+export {
+  parseDefaultTextStyle,
+  parseListStyle,
+  parseParaProps,
+  parseRunProps,
+  parseTextBody,
+  parseTextBodyChild,
+  parseTextStyles,
+} from './parse-text.js';
+
+export { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from './builtin-text-styles.js';
+
+export {
+  bucketOf,
+  floorOf,
+  resolveIndent,
+  resolveMarginLeft,
+  resolveParagraph,
+  resolveRun,
+  resolveSize,
+  textLevels,
+  type TextContext,
+} from './resolve-text.js';

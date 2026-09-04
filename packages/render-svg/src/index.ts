@@ -50,8 +50,20 @@ export {
   inheritedSheets,
   layoutSheet,
   layoutSlide,
+  type GeometrySource,
   type Placed,
 } from './layout.js';
+
+export {
+  DEFAULT_UNIT,
+  LOCUS_SAMPLES,
+  PATH_COLORS,
+  shapeOverlay,
+  type OverlayGuide,
+  type OverlayHandle,
+  type OverlayOptions,
+  type ShapeOverlay,
+} from './overlay.js';
 
 export {
   element,
@@ -92,7 +104,9 @@ export {
   childSpace,
   composeTurn,
   frameOf,
+  framePoint,
   frameTransform,
+  inverseFramePoint,
   placeChild,
   swapsExtents,
   turnVector,
@@ -100,4 +114,5 @@ export {
   type Box,
   type ChildSpace,
   type Frame,
+  type Vec,
 } from './transform.js';

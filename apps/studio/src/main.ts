@@ -2,6 +2,7 @@ import { humanBytes, type PackageCensus } from '@pptx-studio/census';
 import { StudioWorker, type CensusResult, type ExportResult } from './client.js';
 import type { EditKind } from './export.js';
 import type { WorkerEnvironment } from './protocol.js';
+import { slidesView } from './slides.js';
 
 /**
  * Gate 0: drop a `.pptx` on the page and get a live explorer of its internals.
@@ -542,6 +543,12 @@ function render(result: CensusResult): void {
 
   const problems = renderProblems(result.census);
   if (problems !== null) output.append(problems);
+  // The slides go first, because a picture of the deck is what anyone who
+  // dropped one came for. Everything below it is the package, not the deck.
+  if (source !== null) {
+    const read = source.read;
+    output.append(section('Slides — geometry only, no text yet', slidesView(read)));
+  }
   output.append(
     renderExport(),
     renderTimings(result),

@@ -32,6 +32,7 @@ import {
   resolveGeometry,
   getPreset,
   type Geometry,
+  type PresetGuide,
   type ResolvedGeometry,
 } from '@pptx-studio/geometry';
 import {
@@ -71,6 +72,16 @@ export interface Placed {
    * `p:graphicFrame`, or a text box that is nothing but its text.
    */
   readonly geometry: ResolvedGeometry | null;
+  /**
+   * The definition `geometry` was evaluated from, and the adjust values in
+   * force.
+   *
+   * `geometry` is the answer at one size; this is what produced it. The adjust
+   * handles need the definition itself - `resolveHandles` and `dragHandle` both
+   * take a `Geometry` - and re-deriving it in the overlay would mean redoing the
+   * inheritance walk somewhere that cannot see the sheet chain.
+   */
+  readonly geometrySource: GeometrySource | null;
   readonly appearance: ResolvedAppearance;
   /** What is painted, after `a:grpFill` has been followed. `null` paints nothing. */
   readonly fill: Fill | null;
@@ -89,12 +100,24 @@ export interface Placed {
   readonly contentBounds: Box | null;
 }
 
+/** A geometry definition, with whatever `a:avLst` the file put over it. */
+export interface GeometrySource {
+  readonly geometry: Geometry;
+  readonly adjust: readonly PresetGuide[];
+}
+
 /** How deep a group tree may nest before it is treated as hostile. */
 export const MAX_GROUP_DEPTH = 64;
 
-function geometryFor(spec: ShapeGeometry, frame: Frame, name: string): ResolvedGeometry {
-  const size = { w: frame.cx, h: frame.cy };
-  if (spec.kind === 'custom') return resolveGeometry(spec.geometry, size, { name });
+/**
+ * The definition behind a shape's geometry.
+ *
+ * A `custGeom` is its own definition and carries no separate adjust list - its
+ * `a:avLst` is already inside it - which is 2.4's finding restated: the two are
+ * one type, and a preset is only a definition looked up by name.
+ */
+function sourceFor(spec: ShapeGeometry): GeometrySource {
+  if (spec.kind === 'custom') return { geometry: spec.geometry, adjust: [] };
   const preset = getPreset(spec.prst);
   if (preset === undefined) {
     throw new RenderError(
@@ -103,7 +126,15 @@ function geometryFor(spec: ShapeGeometry, frame: Frame, name: string): ResolvedG
       spec.prst,
     );
   }
-  return resolveGeometry(preset satisfies Geometry, size, { adjust: spec.adjust, name });
+  return { geometry: preset satisfies Geometry, adjust: spec.adjust };
+}
+
+function geometryFor(source: GeometrySource, frame: Frame, name: string): ResolvedGeometry {
+  return resolveGeometry(
+    source.geometry,
+    { w: frame.cx, h: frame.cy },
+    { adjust: source.adjust, name },
+  );
 }
 
 interface Descent {
@@ -130,8 +161,8 @@ function placeOne(shape: Shape, parent: Descent): Placed {
   );
 
   const geometrySpec = resolve(shape, parent.sheet, (s) => s.geometry);
-  const geometry =
-    geometrySpec === undefined ? null : geometryFor(geometrySpec.value, frame, shape.name);
+  const geometrySource = geometrySpec === undefined ? null : sourceFor(geometrySpec.value);
+  const geometry = geometrySource === null ? null : geometryFor(geometrySource, frame, shape.name);
 
   let children: readonly Placed[] = [];
   let contentBounds: Box | null = null;
@@ -161,6 +192,7 @@ function placeOne(shape: Shape, parent: Descent): Placed {
     sheet: parent.sheet,
     frame,
     geometry,
+    geometrySource,
     appearance,
     // A group's own fill is never painted; `resolveGroupFills` gives the
     // children that ask for it their answer.
