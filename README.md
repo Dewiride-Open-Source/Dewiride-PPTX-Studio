@@ -83,6 +83,7 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | Adjust handles: drag one, get the value to write     | ✅ 2.5         |
 | Colour: six bases, 28 transforms, theme and clrMap   | ✅ 2.6         |
 | Gradients and the 54 pattern tiles, both measured    | ✅ 2.7         |
+| Dashes, joins, arrowheads and effects, all measured  | ✅ 2.8         |
 | Painted: fills, strokes, gradients, effects          | ⬜ Phase 2     |
 | Text engine, viewer, fidelity scoreboard             | ⬜ Phase 3     |
 | Tables and SmartArt                                  | ⬜ Phase 4     |
@@ -101,7 +102,10 @@ packages/
   xml/     byte-preserving XML tokenizer, XNode, serializer
   census/  what is inside a package: parts, relationship graph, feature census
   geometry/ preset and custom geometry: 187 shapes, the evaluator, arcs, paths, handles
-  paint/   colour: the six bases, the 28 transforms, theme and clrMap resolution
+  paint/   colour, fills, strokes and effects, every rule measured against PowerPoint
+  model/   sheets, the inheritance chain, and the resolver everything else reads
+  render-svg/ slides to SVG: group transforms, flip order, grpFill, as a string
+  render-dom/ the live renderer, over the same node tree as render-svg
   validate/ the repair firewall: the 29 rules a .pptx must not break
   writer/  export: dirty-part-only serialization, media GC, prepare hooks
   cli/     the Node entry point — `pptx-studio inspect` and `validate`

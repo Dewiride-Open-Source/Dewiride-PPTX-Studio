@@ -22,651 +22,118 @@
         "sequence": []
       },
       "dot": {
-        "on": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
-        "off": [
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        "sequence": [
-          1,
-          3
-        ]
+        "on": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        "off": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        "sequence": [1, 3]
       },
       "sysDot": {
         "on": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
+          1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+          1, 1, 1, 1, 1, 1
         ],
         "off": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
+          1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+          1, 1, 1, 1, 1, 1
         ],
-        "sequence": [
-          1,
-          1
-        ]
+        "sequence": [1, 1]
       },
       "dash": {
-        "on": [
-          4,
-          4,
-          4,
-          4,
-          4,
-          4,
-          4,
-          4
-        ],
-        "off": [
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        "sequence": [
-          4,
-          3
-        ]
+        "on": [4, 4, 4, 4, 4, 4, 4, 4],
+        "off": [3, 3, 3, 3, 3, 3, 3, 3],
+        "sequence": [4, 3]
       },
       "sysDash": {
-        "on": [
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        "off": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
-        "sequence": [
-          3,
-          1
-        ]
+        "on": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        "off": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        "sequence": [3, 1]
       },
       "lgDash": {
-        "on": [
-          8,
-          8,
-          8,
-          8
-        ],
-        "off": [
-          3,
-          3,
-          3,
-          3
-        ],
-        "sequence": [
-          8,
-          3
-        ]
+        "on": [8, 8, 8, 8],
+        "off": [3, 3, 3, 3],
+        "sequence": [8, 3]
       },
       "dashDot": {
-        "on": [
-          4,
-          1,
-          4,
-          1,
-          4,
-          1,
-          4,
-          1,
-          4,
-          1,
-          4
-        ],
-        "off": [
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        "sequence": [
-          1,
-          3,
-          4,
-          3
-        ]
+        "on": [4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4],
+        "off": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        "sequence": [1, 3, 4, 3]
       },
       "sysDashDot": {
-        "on": [
-          3,
-          1,
-          3,
-          1,
-          3,
-          1,
-          3,
-          1,
-          3,
-          1,
-          3,
-          1,
-          3,
-          1,
-          3,
-          1,
-          3,
-          1,
-          3,
-          1,
-          3,
-          1,
-          3
-        ],
-        "off": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
-        "sequence": [
-          1,
-          1,
-          3,
-          1
-        ]
+        "on": [3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3, 1, 3],
+        "off": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        "sequence": [1, 1, 3, 1]
       },
       "lgDashDot": {
-        "on": [
-          8,
-          1,
-          8,
-          1,
-          8,
-          1,
-          8,
-          1
-        ],
-        "off": [
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        "sequence": [
-          1,
-          3,
-          8,
-          3
-        ]
+        "on": [8, 1, 8, 1, 8, 1, 8, 1],
+        "off": [3, 3, 3, 3, 3, 3, 3, 3],
+        "sequence": [1, 3, 8, 3]
       },
       "lgDashDotDot": {
-        "on": [
-          1,
-          8,
-          1,
-          1,
-          8,
-          1,
-          1,
-          8,
-          1,
-          1
-        ],
-        "off": [
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        "sequence": [
-          1,
-          3,
-          1,
-          3,
-          8,
-          3
-        ]
+        "on": [1, 8, 1, 1, 8, 1, 1, 8, 1, 1],
+        "off": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        "sequence": [1, 3, 1, 3, 8, 3]
       },
       "sysDashDotDot": {
-        "on": [
-          1,
-          3,
-          1,
-          1,
-          3,
-          1,
-          1,
-          3,
-          1,
-          1,
-          3,
-          1,
-          1,
-          3,
-          1,
-          1,
-          3,
-          1,
-          1,
-          3,
-          1,
-          1,
-          3,
-          1,
-          1,
-          3
-        ],
-        "off": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
-        "sequence": [
-          1,
-          1,
-          1,
-          1,
-          3,
-          1
-        ]
+        "on": [1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3],
+        "off": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        "sequence": [1, 1, 1, 1, 3, 1]
       }
     },
     "folklore": {
       "dot": {
         "same": true,
-        "preset": [
-          1,
-          3,
-          1,
-          3,
-          1,
-          3
-        ],
-        "folklore": [
-          1,
-          3,
-          1,
-          3,
-          1,
-          3
-        ]
+        "preset": [1, 3, 1, 3, 1, 3],
+        "folklore": [1, 3, 1, 3, 1, 3]
       },
       "sysDot": {
         "same": true,
-        "preset": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
-        "folklore": [
-          1,
-          1,
-          1,
-          1,
-          1,
-          1
-        ]
+        "preset": [1, 1, 1, 1, 1, 1],
+        "folklore": [1, 1, 1, 1, 1, 1]
       },
       "dash": {
         "same": true,
-        "preset": [
-          4,
-          3,
-          4,
-          3,
-          4,
-          3
-        ],
-        "folklore": [
-          4,
-          3,
-          4,
-          3,
-          4,
-          3
-        ]
+        "preset": [4, 3, 4, 3, 4, 3],
+        "folklore": [4, 3, 4, 3, 4, 3]
       },
       "sysDash": {
         "same": true,
-        "preset": [
-          3,
-          1,
-          3,
-          1,
-          3,
-          1
-        ],
-        "folklore": [
-          3,
-          1,
-          3,
-          1,
-          3,
-          1
-        ]
+        "preset": [3, 1, 3, 1, 3, 1],
+        "folklore": [3, 1, 3, 1, 3, 1]
       },
       "lgDash": {
         "same": true,
-        "preset": [
-          8,
-          3,
-          8,
-          3,
-          8,
-          3
-        ],
-        "folklore": [
-          8,
-          3,
-          8,
-          3,
-          8,
-          3
-        ]
+        "preset": [8, 3, 8, 3, 8, 3],
+        "folklore": [8, 3, 8, 3, 8, 3]
       },
       "dashDot": {
         "same": true,
-        "preset": [
-          1,
-          3,
-          4,
-          3,
-          1,
-          3
-        ],
-        "folklore": [
-          1,
-          3,
-          4,
-          3,
-          1,
-          3
-        ]
+        "preset": [1, 3, 4, 3, 1, 3],
+        "folklore": [1, 3, 4, 3, 1, 3]
       },
       "sysDashDot": {
         "same": true,
-        "preset": [
-          1,
-          1,
-          3,
-          1,
-          1,
-          1
-        ],
-        "folklore": [
-          1,
-          1,
-          3,
-          1,
-          1,
-          1
-        ]
+        "preset": [1, 1, 3, 1, 1, 1],
+        "folklore": [1, 1, 3, 1, 1, 1]
       },
       "lgDashDot": {
         "same": true,
-        "preset": [
-          1,
-          3,
-          8,
-          3,
-          1,
-          3
-        ],
-        "folklore": [
-          1,
-          3,
-          8,
-          3,
-          1,
-          3
-        ]
+        "preset": [1, 3, 8, 3, 1, 3],
+        "folklore": [1, 3, 8, 3, 1, 3]
       },
       "lgDashDotDot": {
         "same": true,
-        "preset": [
-          1,
-          3,
-          1,
-          3,
-          8,
-          3
-        ],
-        "folklore": [
-          1,
-          3,
-          1,
-          3,
-          8,
-          3
-        ]
+        "preset": [1, 3, 1, 3, 8, 3],
+        "folklore": [1, 3, 1, 3, 8, 3]
       },
       "sysDashDotDot": {
         "same": true,
-        "preset": [
-          1,
-          1,
-          1,
-          1,
-          3,
-          1
-        ],
-        "folklore": [
-          1,
-          1,
-          1,
-          1,
-          3,
-          1
-        ]
+        "preset": [1, 1, 1, 1, 3, 1],
+        "folklore": [1, 1, 1, 1, 3, 1]
       }
     },
     "widthScaling": {
-      "3": [
-        12,
-        9,
-        4,
-        3
-      ],
-      "6": [
-        24,
-        18,
-        4,
-        3
-      ],
-      "24": [
-        96,
-        72,
-        4,
-        3
-      ]
+      "3": [12, 9, 4, 3],
+      "6": [24, 18, 4, 3],
+      "24": [96, 72, 4, 3]
     },
     "capExtents": {
       "absent": {
@@ -776,108 +243,49 @@
     },
     "compound": {
       "cmpd-sng": {
-        "at": [
-          -0.5,
-          0.5
-        ],
-        "rails": [
-          1
-        ],
+        "at": [-0.5, 0.5],
+        "rails": [1],
         "gaps": [],
         "ink": 1,
         "span": 1,
         "firstAt": -0.5
       },
       "cmpd-dbl": {
-        "at": [
-          -0.5,
-          -0.1667,
-          0.1667,
-          0.5
-        ],
-        "rails": [
-          0.3333,
-          0.3333
-        ],
-        "gaps": [
-          0.3333
-        ],
+        "at": [-0.5, -0.1667, 0.1667, 0.5],
+        "rails": [0.3333, 0.3333],
+        "gaps": [0.3333],
         "ink": 0.6667,
         "span": 1,
         "firstAt": -0.5
       },
       "cmpd-thickThin": {
-        "at": [
-          -0.5,
-          0.0996,
-          0.3014,
-          0.5
-        ],
-        "rails": [
-          0.5996,
-          0.1986
-        ],
-        "gaps": [
-          0.2018
-        ],
+        "at": [-0.5, 0.0996, 0.3014, 0.5],
+        "rails": [0.5996, 0.1986],
+        "gaps": [0.2018],
         "ink": 0.7982,
         "span": 1,
         "firstAt": -0.5
       },
       "cmpd-thinThick": {
-        "at": [
-          -0.5,
-          -0.2986,
-          -0.0982,
-          0.5
-        ],
-        "rails": [
-          0.2014,
-          0.5982
-        ],
-        "gaps": [
-          0.2003
-        ],
+        "at": [-0.5, -0.2986, -0.0982, 0.5],
+        "rails": [0.2014, 0.5982],
+        "gaps": [0.2003],
         "ink": 0.7997,
         "span": 1,
         "firstAt": -0.5
       },
       "cmpd-tri": {
-        "at": [
-          -0.5,
-          -0.3333,
-          -0.1667,
-          0.1667,
-          0.3333,
-          0.5
-        ],
-        "rails": [
-          0.1667,
-          0.3333,
-          0.1667
-        ],
-        "gaps": [
-          0.1667,
-          0.1667
-        ],
+        "at": [-0.5, -0.3333, -0.1667, 0.1667, 0.3333, 0.5],
+        "rails": [0.1667, 0.3333, 0.1667],
+        "gaps": [0.1667, 0.1667],
         "ink": 0.6667,
         "span": 1,
         "firstAt": -0.5
       },
       "cmpd-dbl-in": {
-        "at": [
-          -0.0139,
-          0.3194,
-          0.6528,
-          0.9861
-        ],
-        "rails": [
-          0.3333,
-          0.3333
-        ],
-        "gaps": [
-          0.3333
-        ],
+        "at": [-0.0139, 0.3194, 0.6528, 0.9861],
+        "rails": [0.3333, 0.3333],
+        "gaps": [0.3333],
         "ink": 0.6667,
         "span": 1,
         "firstAt": -0.0139
@@ -1026,6 +434,7 @@
         "width": 0,
         "rms": 0,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 0
       },
       "none-lsm-wmed": {
@@ -1034,6 +443,7 @@
         "width": 0,
         "rms": 0,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 0
       },
       "none-lsm-wlg": {
@@ -1042,6 +452,7 @@
         "width": 0,
         "rms": 0,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 0
       },
       "none-lmed-wsm": {
@@ -1050,6 +461,7 @@
         "width": 0,
         "rms": 0,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 0
       },
       "none-lmed-wmed": {
@@ -1058,6 +470,7 @@
         "width": 0,
         "rms": 0,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 0
       },
       "none-lmed-wlg": {
@@ -1066,6 +479,7 @@
         "width": 0,
         "rms": 0,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 0
       },
       "none-llg-wsm": {
@@ -1074,6 +488,7 @@
         "width": 0,
         "rms": 0,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 0
       },
       "none-llg-wmed": {
@@ -1082,6 +497,7 @@
         "width": 0,
         "rms": 0,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 0
       },
       "none-llg-wlg": {
@@ -1090,6 +506,7 @@
         "width": 0,
         "rms": 0,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 0
       },
       "triangle-lsm-wsm": {
@@ -1098,6 +515,7 @@
         "width": 2,
         "rms": 1.696,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 90
       },
       "triangle-lsm-wmed": {
@@ -1106,6 +524,7 @@
         "width": 3,
         "rms": 1.353,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 390
       },
       "triangle-lsm-wlg": {
@@ -1114,6 +533,7 @@
         "width": 4.938,
         "rms": 1.039,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 690
       },
       "triangle-lmed-wsm": {
@@ -1122,6 +542,7 @@
         "width": 2,
         "rms": 2.071,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 90
       },
       "triangle-lmed-wmed": {
@@ -1130,6 +551,7 @@
         "width": 3,
         "rms": 1.699,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 390
       },
       "triangle-lmed-wlg": {
@@ -1138,6 +560,7 @@
         "width": 5,
         "rms": 1.307,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 690
       },
       "triangle-llg-wsm": {
@@ -1146,6 +569,7 @@
         "width": 2,
         "rms": 2.677,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 90
       },
       "triangle-llg-wmed": {
@@ -1154,6 +578,7 @@
         "width": 3,
         "rms": 2.185,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 390
       },
       "triangle-llg-wlg": {
@@ -1162,6 +587,7 @@
         "width": 5,
         "rms": 1.705,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 690
       },
       "stealth-lsm-wsm": {
@@ -1170,6 +596,7 @@
         "width": 1.875,
         "rms": 1.725,
         "fillRatio": 0.919,
+        "notch": 0.188,
         "tipAt": 90
       },
       "stealth-lsm-wmed": {
@@ -1178,6 +605,7 @@
         "width": 2.875,
         "rms": 1.353,
         "fillRatio": 0.806,
+        "notch": 0.29,
         "tipAt": 390
       },
       "stealth-lsm-wlg": {
@@ -1186,6 +614,7 @@
         "width": 4.75,
         "rms": 1.036,
         "fillRatio": 0.712,
+        "notch": 0.387,
         "tipAt": 690
       },
       "stealth-lmed-wsm": {
@@ -1194,6 +623,7 @@
         "width": 1.938,
         "rms": 2.071,
         "fillRatio": 0.938,
+        "notch": 0.146,
         "tipAt": 90
       },
       "stealth-lmed-wmed": {
@@ -1202,6 +632,7 @@
         "width": 2.875,
         "rms": 1.699,
         "fillRatio": 0.876,
+        "notch": 0.213,
         "tipAt": 390
       },
       "stealth-lmed-wlg": {
@@ -1210,6 +641,7 @@
         "width": 4.875,
         "rms": 1.306,
         "fillRatio": 0.814,
+        "notch": 0.25,
         "tipAt": 690
       },
       "stealth-llg-wsm": {
@@ -1218,6 +650,7 @@
         "width": 1.875,
         "rms": 2.697,
         "fillRatio": 0.927,
+        "notch": 0.179,
         "tipAt": 90
       },
       "stealth-llg-wmed": {
@@ -1226,6 +659,7 @@
         "width": 2.875,
         "rms": 2.287,
         "fillRatio": 0.842,
+        "notch": 0.253,
         "tipAt": 390
       },
       "stealth-llg-wlg": {
@@ -1234,6 +668,7 @@
         "width": 4.875,
         "rms": 1.705,
         "fillRatio": 0.757,
+        "notch": 0.304,
         "tipAt": 690
       },
       "diamond-lsm-wsm": {
@@ -1242,6 +677,7 @@
         "width": 1.938,
         "rms": 1.123,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 98
       },
       "diamond-lsm-wmed": {
@@ -1250,6 +686,7 @@
         "width": 2.875,
         "rms": 0.932,
         "fillRatio": 1.001,
+        "notch": 0,
         "tipAt": 398
       },
       "diamond-lsm-wlg": {
@@ -1258,6 +695,7 @@
         "width": 4.875,
         "rms": 0.718,
         "fillRatio": 0.997,
+        "notch": 0,
         "tipAt": 698
       },
       "diamond-lmed-wsm": {
@@ -1266,6 +704,7 @@
         "width": 2,
         "rms": 1.349,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 102
       },
       "diamond-lmed-wmed": {
@@ -1274,6 +713,7 @@
         "width": 2.938,
         "rms": 1.093,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 402
       },
       "diamond-lmed-wlg": {
@@ -1282,6 +722,7 @@
         "width": 4.875,
         "rms": 0.872,
         "fillRatio": 1.001,
+        "notch": 0,
         "tipAt": 702
       },
       "diamond-llg-wsm": {
@@ -1290,6 +731,7 @@
         "width": 2,
         "rms": 1.73,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 110
       },
       "diamond-llg-wmed": {
@@ -1298,6 +740,7 @@
         "width": 3,
         "rms": 1.421,
         "fillRatio": 1.001,
+        "notch": 0,
         "tipAt": 410
       },
       "diamond-llg-wlg": {
@@ -1306,6 +749,7 @@
         "width": 4.938,
         "rms": 1.099,
         "fillRatio": 1,
+        "notch": 0,
         "tipAt": 710
       },
       "oval-lsm-wsm": {
@@ -1314,6 +758,7 @@
         "width": 2,
         "rms": 0.374,
         "fillRatio": 0.995,
+        "notch": 0,
         "tipAt": 98
       },
       "oval-lsm-wmed": {
@@ -1322,6 +767,7 @@
         "width": 3,
         "rms": 0.289,
         "fillRatio": 0.997,
+        "notch": 0,
         "tipAt": 398
       },
       "oval-lsm-wlg": {
@@ -1330,6 +776,7 @@
         "width": 5,
         "rms": 0.462,
         "fillRatio": 0.999,
+        "notch": 0,
         "tipAt": 698
       },
       "oval-lmed-wsm": {
@@ -1338,6 +785,7 @@
         "width": 2,
         "rms": 0.463,
         "fillRatio": 0.997,
+        "notch": 0,
         "tipAt": 102
       },
       "oval-lmed-wmed": {
@@ -1346,6 +794,7 @@
         "width": 3,
         "rms": 0.325,
         "fillRatio": 0.998,
+        "notch": 0,
         "tipAt": 402
       },
       "oval-lmed-wlg": {
@@ -1354,6 +803,7 @@
         "width": 5,
         "rms": 0.381,
         "fillRatio": 0.998,
+        "notch": 0,
         "tipAt": 702
       },
       "oval-llg-wsm": {
@@ -1362,6 +812,7 @@
         "width": 2,
         "rms": 0.622,
         "fillRatio": 0.996,
+        "notch": 0,
         "tipAt": 110
       },
       "oval-llg-wmed": {
@@ -1370,6 +821,7 @@
         "width": 3,
         "rms": 0.398,
         "fillRatio": 0.996,
+        "notch": 0,
         "tipAt": 410
       },
       "oval-llg-wlg": {
@@ -1378,6 +830,7 @@
         "width": 5,
         "rms": 0.369,
         "fillRatio": 0.999,
+        "notch": 0,
         "tipAt": 710
       },
       "arrow-lsm-wsm": {
@@ -1386,6 +839,7 @@
         "width": 3.5,
         "rms": 2.478,
         "fillRatio": 0.944,
+        "notch": 0.2,
         "tipAt": 90
       },
       "arrow-lsm-wmed": {
@@ -1394,6 +848,7 @@
         "width": 4.5,
         "rms": 2.969,
         "fillRatio": 0.861,
+        "notch": 0.346,
         "tipAt": 390
       },
       "arrow-lsm-wlg": {
@@ -1402,6 +857,7 @@
         "width": 6,
         "rms": 4.025,
         "fillRatio": 0.769,
+        "notch": 0.46,
         "tipAt": 690
       },
       "arrow-lmed-wsm": {
@@ -1410,6 +866,7 @@
         "width": 3.5,
         "rms": 2.5,
         "fillRatio": 0.948,
+        "notch": 0.208,
         "tipAt": 90
       },
       "arrow-lmed-wmed": {
@@ -1418,6 +875,7 @@
         "width": 4.5,
         "rms": 2.709,
         "fillRatio": 0.854,
+        "notch": 0.361,
         "tipAt": 390
       },
       "arrow-lmed-wlg": {
@@ -1426,6 +884,7 @@
         "width": 6,
         "rms": 3.311,
         "fillRatio": 0.749,
+        "notch": 0.485,
         "tipAt": 690
       },
       "arrow-llg-wsm": {
@@ -1434,6 +893,7 @@
         "width": 3.5,
         "rms": 2.639,
         "fillRatio": 0.955,
+        "notch": 0.173,
         "tipAt": 90
       },
       "arrow-llg-wmed": {
@@ -1442,6 +902,7 @@
         "width": 4.5,
         "rms": 2.594,
         "fillRatio": 0.861,
+        "notch": 0.353,
         "tipAt": 390
       },
       "arrow-llg-wlg": {
@@ -1450,8 +911,25 @@
         "width": 6,
         "rms": 2.835,
         "fillRatio": 0.737,
+        "notch": 0.5,
         "tipAt": 690
       }
+    },
+    "headAnchors": {
+      "none": "none",
+      "triangle": "tip",
+      "stealth": "tip",
+      "diamond": "centre",
+      "oval": "centre",
+      "arrow": "tip"
+    },
+    "headAnchorOvershoot": {
+      "none": [],
+      "triangle": [0, 0, 0],
+      "stealth": [0, 0, 0],
+      "diamond": [0.48, 0.49, 0.49],
+      "oval": [0.49, 0.49, 0.5],
+      "arrow": [0, 0, 0]
     },
     "shadowDirs": {
       "0": {
@@ -2246,10 +1724,7 @@
           "x1": 323.5,
           "y1": 254
         },
-        "centre": [
-          261.25,
-          190.25
-        ]
+        "centre": [261.25, 190.25]
       },
       "shdw-rotwith1": {
         "box": {
@@ -2258,10 +1733,7 @@
           "x1": 700.5,
           "y1": 310.5
         },
-        "centre": [
-          636.75,
-          246.75
-        ]
+        "centre": [636.75, 246.75]
       }
     },
     "headScale": {
@@ -12647,24 +12119,19 @@
       "read": {
         "mode": "row",
         "y": 500,
-        "x0": 640,
-        "x1": 760
+        "x0": 710,
+        "x1": 790
       },
       "export": {
         "file": "arrow0-slide1-3840.bmp",
         "pxPerPoint": 4,
-        "samples": 481,
-        "start": 640.125,
+        "samples": 321,
+        "start": 710.125,
         "step": 0.25
       },
-      "edges": [
-        {
-          "at": 699.813,
-          "rising": false
-        }
-      ],
-      "total": 59.8127,
-      "cover": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffdf6000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "edges": [],
+      "total": 0,
+      "cover": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "columns": null,
       "boxes": null,
       "com": {
@@ -12700,17 +12167,21 @@
       "read": {
         "mode": "row",
         "y": 430,
-        "x0": 260,
-        "x1": 760
+        "x0": 180,
+        "x1": 790
       },
       "export": {
         "file": "arrow0-slide1-3840.bmp",
         "pxPerPoint": 4,
-        "samples": 2001,
-        "start": 260.125,
+        "samples": 2441,
+        "start": 180.125,
         "step": 0.25
       },
       "edges": [
+        {
+          "at": 260.013,
+          "rising": true
+        },
         {
           "at": 699.813,
           "rising": false

@@ -1,0 +1,514 @@
+/**
+ * Turn the C4 fixture into the two tables `@pptx-studio/paint` ships.
+ *
+ * ```
+ * node tools/ground-truth/write-line-tables.ts
+ * ```
+ *
+ * Writes `packages/paint/src/dash-table.ts` and `packages/paint/src/marker-table.ts`
+ * from `corpus/ground-truth/lines.json`. Neither is hand-written, and
+ * `line.test.ts` re-derives both from the same fixture - so a measured constant
+ * cannot quietly become somebody's memory of one.
+ *
+ * ## The dash arrays are recovered from the crossings, not from the run lists
+ *
+ * The fixture stores, for each preset, the sub-pixel positions where coverage
+ * crossed one half and whether each crossing was rising or falling. That is the
+ * measurement; everything else is derived. A rising crossing followed by a
+ * falling one is painted ink, and a falling followed by a rising is a gap, so
+ * the whole alternating sequence comes straight off the list with its phase
+ * intact - which the separate on/off run lists do not carry, because trimming
+ * the clipped run at each end of the line trims them independently.
+ */
+
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const FIXTURE = 'corpus/ground-truth/lines.json';
+const DASH_OUT = 'packages/paint/src/dash-table.ts';
+const MARKER_OUT = 'packages/paint/src/marker-table.ts';
+
+interface Edge {
+  at: number;
+  rising: boolean;
+}
+
+interface ProbeRecord {
+  id: string;
+  group: string;
+  edges: Edge[];
+}
+
+interface HeadRecord {
+  outline: string;
+  length: number;
+  width: number;
+  notch: number;
+  fillRatio: number;
+}
+
+interface Fixture {
+  strokeWidths: { dash: number; arrowhead: number };
+  findings: {
+    dashArrays: Record<string, { sequence: number[] }>;
+    arrowheads: Record<string, HeadRecord>;
+    headAnchors?: Record<string, string>;
+  };
+  probes: ProbeRecord[];
+}
+
+const fixture = JSON.parse(readFileSync(FIXTURE, 'utf8')) as Fixture;
+const byId = new Map(fixture.probes.map((p) => [p.id, p]));
+const DASH_W = fixture.strokeWidths.dash;
+const AH_W = fixture.strokeWidths.arrowhead;
+
+/** How far a measured value may sit from a whole number before we stop trusting it. */
+const TOLERANCE = 0.08;
+
+function whole(value: number, what: string): number {
+  const rounded = Math.round(value);
+  if (Math.abs(value - rounded) > TOLERANCE) {
+    throw new Error(
+      `${what}: measured ${String(value)}, which is not within ${String(TOLERANCE)} of a whole number`,
+    );
+  }
+  return rounded;
+}
+
+/* -------------------------------------------------------------------------- */
+/* the dash arrays                                                            */
+/* -------------------------------------------------------------------------- */
+
+const PRESET_ORDER = [
+  'solid',
+  'dot',
+  'sysDot',
+  'dash',
+  'sysDash',
+  'lgDash',
+  'dashDot',
+  'sysDashDot',
+  'lgDashDot',
+  'lgDashDotDot',
+  'sysDashDotDot',
+];
+
+/** `[on, off]` pairs in multiples of the stroke width, longest dash first. */
+function dashPairs(name: string): [number, number][] {
+  const probe = byId.get(`dash-${name}`);
+  if (probe === undefined) throw new Error(`no probe for prstDash val="${name}"`);
+  if (name === 'solid') return [];
+
+  // Drop the first and last crossing: the run at either end of the line is cut
+  // short by the endpoint and is not a whole segment.
+  const edges = probe.edges.slice(1, -1);
+  const period = fixture.findings.dashArrays[name]?.sequence.length ?? 0;
+  if (period < 2 || period % 2 !== 0) {
+    throw new Error(`prstDash val="${name}": measured period of ${String(period)} lengths`);
+  }
+
+  // Walk to the first rising crossing, so segment zero is ink.
+  let start = 0;
+  while (start < edges.length && !edges[start]!.rising) start++;
+
+  const pairs: [number, number][] = [];
+  for (let k = 0; k < period / 2; k++) {
+    const a = edges[start + k * 2];
+    const b = edges[start + k * 2 + 1];
+    const c = edges[start + k * 2 + 2];
+    if (a === undefined || b === undefined || c === undefined) {
+      throw new Error(`prstDash val="${name}": only ${String(edges.length)} usable crossings`);
+    }
+    if (!a.rising || b.rising || !c.rising) {
+      throw new Error(`prstDash val="${name}": crossings do not alternate at index ${String(k)}`);
+    }
+    pairs.push([
+      whole((b.at - a.at) / DASH_W, `${name} dash ${String(k)}`),
+      whole((c.at - b.at) / DASH_W, `${name} gap ${String(k)}`),
+    ]);
+  }
+
+  // Rotate so the longest dash leads. The pattern is a cycle and every rotation
+  // paints the same line, so the choice is arbitrary - but it has to be made
+  // once, here, or the table and the tests disagree about a file they agree on.
+  let lead = 0;
+  for (let i = 1; i < pairs.length; i++) if (pairs[i]![0] > pairs[lead]![0]) lead = i;
+  return [...pairs.slice(lead), ...pairs.slice(0, lead)];
+}
+
+const dashTable = PRESET_ORDER.map((name) => [name, dashPairs(name)] as const);
+
+const dashSource = `/**
+ * The eleven preset dash arrays, in multiples of the stroke width.
+ *
+ * GENERATED by tools/ground-truth/write-line-tables.ts from
+ * corpus/ground-truth/lines.json. Do not edit by hand.
+ *
+ * Measured, not transcribed. Each preset was drawn as a 920pt line at 12pt wide,
+ * exported at four pixels to the point, and the on and off lengths recovered
+ * from where coverage crosses one half - which locates an edge to about a tenth
+ * of a pixel, so a segment of four stroke widths is measured to better than half
+ * a percent. Every one of the 34 numbers below came out within 0.02 of a whole
+ * number, at three different stroke widths.
+ *
+ * The arrays that circulate for these presets are, for once, exactly right: all
+ * ten non-solid presets were also written as an explicit \`a:custDash\` of the
+ * quoted array in the same experiment, and all ten painted an identical row.
+ *
+ * The unit is deliberate and not a convenience. \`a:custDash/a:ds/@d\` is a
+ * percentage *of the line width*, so a width multiple is the only form in which
+ * a dash can be written back into a file at all.
+ */
+
+/** One dash and the gap that follows it, both in multiples of the stroke width. */
+export interface DashSegment {
+  readonly d: number;
+  readonly sp: number;
+}
+
+export const PRESET_DASHES: Readonly<Record<string, readonly DashSegment[]>> = {
+${dashTable
+  .map(
+    ([name, pairs]) =>
+      `  ${name}: [${pairs.map(([d, sp]) => `{ d: ${String(d)}, sp: ${String(sp)} }`).join(', ')}],`,
+  )
+  .join('\n')}
+};
+
+/** The eleven \`ST_PresetLineDashVal\` names, as PowerPoint spelled them itself. */
+export const PRESET_DASH_NAMES: readonly string[] = [
+${PRESET_ORDER.map((n) => `  '${n}',`).join('\n')}
+];
+
+/**
+ * Deliberately not a type predicate.
+ *
+ * \`PRESET_DASHES\` is keyed by \`string\`, so narrowing here would narrow the
+ * failing branch to \`never\` and the error path could not name what it rejected.
+ */
+export function isPresetDashName(name: string): boolean {
+  return Object.hasOwn(PRESET_DASHES, name);
+}
+`;
+
+writeFileSync(DASH_OUT, dashSource);
+console.log(`${DASH_OUT}: ${String(dashTable.length)} presets`);
+for (const [name, pairs] of dashTable) {
+  console.log(`  ${name.padEnd(14)} ${JSON.stringify(pairs.flat())}`);
+}
+
+/* -------------------------------------------------------------------------- */
+/* the compound strokes                                                       */
+/* -------------------------------------------------------------------------- */
+
+const COMPOUND_ORDER = ['sng', 'dbl', 'thickThin', 'thinThick', 'tri'];
+
+/**
+ * Each compound stroke as an alternating run of rail, gap, rail, ... in
+ * fractions of `@w`, running from the outside of the shape inwards.
+ *
+ * Recovered from the crossings the same way the dashes are. The read row cut
+ * across a rectangle's left edge going right, so the first run is the outermost
+ * - which is what makes `thickThin` thick on the outside and `thinThick` thin
+ * there, and is the only thing distinguishing the two.
+ */
+function compoundRuns(name: string): number[] {
+  const record = (fixture.findings as unknown as { compound: Record<string, { at: number[] }> })
+    .compound[`cmpd-${name}`];
+  if (record === undefined) throw new Error(`no probe for cmpd="${name}"`);
+  const at = record.at;
+  if (at.length < 2 || at.length % 2 !== 0) {
+    throw new Error(
+      `cmpd="${name}": ${String(at.length)} crossings, which is not a whole number of rails`,
+    );
+  }
+  // Emitted as whole sixtieths, not as decimals.
+  //
+  // Every measured run is a third, a fifth, a sixth or a tenth of the width, and
+  // sixtieths express all four exactly. Rounding a third to six decimal places
+  // instead - which the first version of this did - leaves a 36000 EMU double
+  // stroke six thousandths of a unit narrow, and a rail that should be exactly a
+  // third of the width provably is not one.
+  const runs: number[] = [];
+  for (let i = 1; i < at.length; i++) {
+    const raw = at[i]! - at[i - 1]!;
+    const sixtieths = Math.round(raw * 60);
+    if (Math.abs(raw - sixtieths / 60) > 0.01) {
+      throw new Error(`cmpd="${name}": a run of ${String(raw)} x w is not a whole sixtieth`);
+    }
+    runs.push(sixtieths);
+  }
+  const total = runs.reduce((a, b) => a + b, 0);
+  if (total !== 60) {
+    throw new Error(`cmpd="${name}": the rails and gaps total ${String(total)} sixtieths, not 60`);
+  }
+  return runs;
+}
+
+const compoundTable = COMPOUND_ORDER.map((name) => [name, compoundRuns(name)] as const);
+
+const compoundSource = `/**
+ * The five compound strokes, as the fractions of \`@w\` they divide it into.
+ *
+ * GENERATED by tools/ground-truth/write-line-tables.ts from
+ * corpus/ground-truth/lines.json. Do not edit by hand.
+ *
+ * Each entry alternates rail, gap, rail, ... from the **outside** of the shape
+ * inwards, and every one of them sums to exactly one stroke width. That last
+ * part is the useful finding: a compound stroke does not make the outline wider,
+ * it subdivides the width already declared, so a renderer that draws two rails
+ * of \`@w\` each is twice as heavy as PowerPoint and one that draws them inside a
+ * band of \`@w\` is right.
+ *
+ * Measured across a 36pt outline at two pixels to the point. The first attempt
+ * measured the *neighbouring* shape as well - a 36pt compound stroke reaches
+ * 22pt outside its own rectangle - and reported an extra rail on every row.
+ *
+ * The numbers are whole **sixtieths** of the width rather than decimals, because
+ * every one of them is a third, a fifth, a sixth or a tenth and sixtieths carry
+ * all four exactly. \`compoundRails\` divides by sixty last, so a rail of a third
+ * of a 36000 EMU stroke is 12000 and not 11999.988.
+ */
+
+/** Alternating rail and gap widths, in sixtieths of \`a:ln/@w\`, outside first. */
+export const COMPOUND_RUNS_60: Readonly<Record<string, readonly number[]>> = {
+${compoundTable.map(([name, runs]) => `  ${name}: [${runs.join(', ')}],`).join('\n')}
+};
+
+/** The same, as fractions - convenient to read, and not what the maths uses. */
+export const COMPOUND_RUNS: Readonly<Record<string, readonly number[]>> = Object.fromEntries(
+  Object.entries(COMPOUND_RUNS_60).map(([name, runs]) => [name, runs.map((r) => r / 60)]),
+);
+
+export const COMPOUND_NAMES: readonly string[] = [${COMPOUND_ORDER.map((n) => `'${n}'`).join(', ')}];
+
+/** Deliberately not a type predicate; see \`isPresetDashName\` for why. */
+export function isCompoundName(name: string): boolean {
+  return Object.hasOwn(COMPOUND_RUNS_60, name);
+}
+`;
+
+writeFileSync('packages/paint/src/compound-table.ts', compoundSource);
+console.log(
+  `\npackages/paint/src/compound-table.ts: ${String(compoundTable.length)} compound strokes`,
+);
+for (const [name, runs] of compoundTable) {
+  console.log(
+    `  ${name.padEnd(11)} ${runs.map((r) => r.toFixed(4)).join(' ')}  (sums to ${runs.reduce((a, b) => a + b, 0).toFixed(4)})`,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* the arrowheads                                                             */
+/* -------------------------------------------------------------------------- */
+
+const TYPES = ['none', 'triangle', 'stealth', 'diamond', 'oval', 'arrow'];
+const SIZES = ['sm', 'med', 'lg'];
+
+/** Every head of one type, so the size table can be checked against all nine. */
+function headsOf(type: string): { len: string; wid: string; head: HeadRecord }[] {
+  const out: { len: string; wid: string; head: HeadRecord }[] = [];
+  for (const len of SIZES) {
+    for (const wid of SIZES) {
+      const head = fixture.findings.arrowheads[`${type}-l${len}-w${wid}`];
+      if (head !== undefined) out.push({ len, wid, head });
+    }
+  }
+  return out;
+}
+
+/**
+ * The three `@len` and `@w` steps, in stroke widths.
+ *
+ * Derived from the `triangle` heads alone and then checked against every other
+ * filled type. A triangle is the one outline whose silhouette reaches its full
+ * width exactly at its back edge, so it is the one whose extent a measurement
+ * recovers without having to fit a curve first.
+ */
+function sizeSteps(): Record<string, number> {
+  const steps: Record<string, number[]> = { sm: [], med: [], lg: [] };
+  for (const { len, wid, head } of headsOf('triangle')) {
+    steps[len]!.push(head.length);
+    steps[wid]!.push(head.width);
+  }
+  const out: Record<string, number> = {};
+  for (const size of SIZES) {
+    const values = steps[size]!;
+    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+    out[size] = whole(mean, `lineEnd size "${size}"`);
+  }
+  return out;
+}
+
+const SIZE_STEPS = sizeSteps();
+
+/**
+ * Which end of the marker sits on the line's own endpoint.
+ *
+ * Read from the fixture, never inferred from the type name. Inferring it here
+ * would be a guess wearing a measurement's clothes, and the two families that
+ * turned out to be centred - diamond and oval - are not the ones the names
+ * suggest.
+ */
+function anchorOf(type: string): 'tip' | 'centre' {
+  const recorded = fixture.findings.headAnchors?.[type];
+  if (recorded === 'tip' || recorded === 'centre') return recorded;
+  if (type === 'none') return 'tip';
+  throw new Error(
+    `lineEnd type "${type}": the fixture records its anchor as "${String(recorded)}", which is neither tip nor centre`,
+  );
+}
+
+/** The measured notch depth, as a fraction of the head's length. */
+function notchOf(type: string): number {
+  const heads = headsOf(type);
+  if (heads.length === 0) return 0;
+  const values = heads.map((h) => h.head.notch).filter((v) => v > 0.05);
+  if (values.length < heads.length / 2) return 0;
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  return Math.round(mean * 100) / 100;
+}
+
+interface MarkerRow {
+  type: string;
+  outline: string;
+  anchor: 'tip' | 'centre';
+  filled: boolean;
+  notch: number;
+  path: string;
+  fillRatio: number;
+}
+
+/**
+ * The outline as a path in a unit box: x from 0 at the back to 1 at the tip, y
+ * from -0.5 to 0.5. Scaled by (length x w, width x w) it is the marker.
+ */
+function pathOf(type: string, notch: number): string {
+  switch (type) {
+    case 'none':
+      return '';
+    case 'triangle':
+      return 'M0,-0.5 L1,0 L0,0.5 Z';
+    case 'stealth':
+      return `M0,-0.5 L1,0 L0,0.5 L${String(notch)},0 Z`;
+    case 'diamond':
+      return 'M0,0 L0.5,-0.5 L1,0 L0.5,0.5 Z';
+    case 'oval':
+      return 'M0,0 A0.5,0.5 0 0 1 1,0 A0.5,0.5 0 0 1 0,0 Z';
+    case 'arrow':
+      // Two strokes, not an outline: an open arrow is a stroked V, which is why
+      // its measured silhouette is wider than its nominal width by about one
+      // stroke either side and why no closed path reproduces it.
+      return 'M0,-0.5 L1,0 L0,0.5';
+    default:
+      throw new Error(`unknown lineEnd type "${type}"`);
+  }
+}
+
+const markerRows: MarkerRow[] = TYPES.map((type) => {
+  const heads = headsOf(type);
+  const fillRatio =
+    heads.length === 0 ? 1 : heads.reduce((a, h) => a + h.head.fillRatio, 0) / heads.length;
+  const notch = notchOf(type);
+  return {
+    type,
+    outline: heads[0]?.head.outline ?? 'none',
+    anchor: anchorOf(type),
+    filled: type !== 'arrow' && type !== 'none',
+    notch,
+    path: pathOf(type, notch),
+    fillRatio: Math.round(fillRatio * 100) / 100,
+  };
+});
+
+const markerSource = `/**
+ * The six \`ST_LineEndType\` markers and the three sizes each takes.
+ *
+ * GENERATED by tools/ground-truth/write-line-tables.ts from
+ * corpus/ground-truth/lines.json. Do not edit by hand.
+ *
+ * Measured, and deliberately so. The obvious source for arrowhead geometry is
+ * LibreOffice's vertex tables, which are MPL-2.0 - a file-level copyleft this
+ * Apache-2.0 tree cannot take. So every head was drawn at ${String(AH_W)}pt, exported at
+ * four pixels to the point, and recovered as a per-column ink profile around the
+ * line's endpoint. That profile is the silhouette, sampled; fitting the three
+ * outline families to it gives the extent that no threshold can, because an
+ * ellipse's silhouette reaches the shaft's own height well inside its back edge
+ * and thresholding one reports every oval about nine percent short.
+ *
+ * What came out:
+ *
+ *   - Three sizes, and the same three for both \`@len\` and \`@w\`:
+ *     sm = ${String(SIZE_STEPS['sm'])}, med = ${String(SIZE_STEPS['med'])}, lg = ${String(SIZE_STEPS['lg'])} stroke widths. Confirmed on all 54
+ *     combinations, and at stroke widths of 4, 8 and 16 points.
+ *   - A triangle and a stealth share a silhouette. Only how much of it is inked
+ *     tells them apart, and the stealth's notch is a quarter of its length.
+ *   - A diamond and an oval are **centred on the line's endpoint**. The other
+ *     three put their tip there. Getting this wrong moves a large head by half
+ *     its length.
+ *   - An open arrow is a stroked V rather than a filled outline, which is why
+ *     its silhouette measures wider than its nominal width.
+ */
+
+/** Which end of the marker sits on the line's own endpoint. */
+export type MarkerAnchor = 'tip' | 'centre';
+
+export interface Marker {
+  /** The family the silhouette was fitted to. */
+  readonly outline: string;
+  readonly anchor: MarkerAnchor;
+  /** False for \`arrow\`, which is stroked rather than filled. */
+  readonly filled: boolean;
+  /** How far the back is cut forward, as a fraction of the length. Zero for most. */
+  readonly notch: number;
+  /**
+   * The outline in a unit box: x from 0 at the back to 1 at the tip, y from
+   * -0.5 to 0.5. Scale by (len x w, wid x w) to get the marker at a stroke
+   * width of w.
+   */
+  readonly path: string;
+}
+
+/** \`@len\` and \`@w\`, in multiples of the stroke width. */
+export const MARKER_SIZE: Readonly<Record<string, number>> = {
+${SIZES.map((s) => `  ${s}: ${String(SIZE_STEPS[s])},`).join('\n')}
+};
+
+export const MARKER_SIZE_NAMES: readonly string[] = [${SIZES.map((s) => `'${s}'`).join(', ')}];
+
+export const MARKERS: Readonly<Record<string, Marker>> = {
+${markerRows
+  .map(
+    (r) =>
+      `  ${r.type}: {\n` +
+      `    outline: '${r.outline}',\n` +
+      `    anchor: '${r.anchor}',\n` +
+      `    filled: ${String(r.filled)},\n` +
+      `    notch: ${String(r.notch)},\n` +
+      `    path: '${r.path}',\n` +
+      `  },`,
+  )
+  .join('\n')}
+};
+
+export const MARKER_TYPE_NAMES: readonly string[] = [${TYPES.map((t) => `'${t}'`).join(', ')}];
+
+/** Deliberately not a type predicate; see \`isPresetDashName\` for why. */
+export function isMarkerTypeName(name: string): boolean {
+  return Object.hasOwn(MARKERS, name);
+}
+
+/** Deliberately not a type predicate. */
+export function isMarkerSizeName(name: string): boolean {
+  return Object.hasOwn(MARKER_SIZE, name);
+}
+`;
+
+writeFileSync(MARKER_OUT, markerSource);
+console.log(`\n${MARKER_OUT}: ${String(markerRows.length)} markers`);
+console.log(`  sizes ${JSON.stringify(SIZE_STEPS)}`);
+for (const r of markerRows) {
+  console.log(
+    `  ${r.type.padEnd(9)} ${r.outline.padEnd(9)} anchor ${r.anchor.padEnd(7)} ` +
+      `${r.filled ? 'filled' : 'stroked'}  notch ${String(r.notch)}  ink/silhouette ${String(r.fillRatio)}`,
+  );
+}

@@ -222,6 +222,34 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
+  packages/model:
+    dependencies:
+      '@pptx-studio/geometry':
+        specifier: workspace:^
+        version: link:../geometry
+      '@pptx-studio/opc':
+        specifier: workspace:^
+        version: link:../opc
+      '@pptx-studio/paint':
+        specifier: workspace:^
+        version: link:../paint
+      '@pptx-studio/xml':
+        specifier: workspace:^
+        version: link:../xml
+    devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: 'catalog:'
+        version: 0.18.5
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.24
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.14(@arethetypeswrong/core@0.18.5)(publint@0.3.24)(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   packages/opc:
     dependencies:
       fflate:
@@ -242,6 +270,59 @@ importers:
         version: 6.0.3
 
   packages/paint:
+    devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: 'catalog:'
+        version: 0.18.5
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.24
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.14(@arethetypeswrong/core@0.18.5)(publint@0.3.24)(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/render-dom:
+    dependencies:
+      '@pptx-studio/geometry':
+        specifier: workspace:^
+        version: link:../geometry
+      '@pptx-studio/model':
+        specifier: workspace:^
+        version: link:../model
+      '@pptx-studio/paint':
+        specifier: workspace:^
+        version: link:../paint
+      '@pptx-studio/render-svg':
+        specifier: workspace:^
+        version: link:../render-svg
+    devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: 'catalog:'
+        version: 0.18.5
+      publint:
+        specifier: 'catalog:'
+        version: 0.3.24
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.14(@arethetypeswrong/core@0.18.5)(publint@0.3.24)(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/render-svg:
+    dependencies:
+      '@pptx-studio/geometry':
+        specifier: workspace:^
+        version: link:../geometry
+      '@pptx-studio/model':
+        specifier: workspace:^
+        version: link:../model
+      '@pptx-studio/paint':
+        specifier: workspace:^
+        version: link:../paint
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: 'catalog:'

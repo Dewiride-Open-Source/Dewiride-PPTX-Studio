@@ -1,0 +1,5418 @@
+{
+  "experiment": "C6 - group transforms, flip order and a:grpFill",
+  "generatedBy": "tools/ground-truth/analyse-transforms.ts",
+  "slidePoints": {
+    "w": 960,
+    "h": 540
+  },
+  "emuPerPoint": 12700,
+  "exportPixels": {
+    "w": 1920,
+    "h": 1080
+  },
+  "decks": [
+    {
+      "deck": "map",
+      "hostile": false,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "turn",
+      "hostile": false,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "fill",
+      "hostile": false,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "extent",
+      "hostile": false,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "shear",
+      "hostile": false,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "inherit-default",
+      "hostile": false,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "inherit-slide-off",
+      "hostile": false,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "inherit-layout-off",
+      "hostile": false,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "inherit-both-off",
+      "hostile": false,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "h-chext-zero-x",
+      "hostile": true,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "h-chext-zero-both",
+      "hostile": true,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "h-ext-zero-x",
+      "hostile": true,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "h-chext-tiny",
+      "hostile": true,
+      "opened": true,
+      "repaired": false
+    },
+    {
+      "deck": "h-chext-negative",
+      "hostile": true,
+      "opened": true,
+      "repaired": true
+    },
+    {
+      "deck": "h-no-chxfrm",
+      "hostile": true,
+      "opened": true,
+      "repaired": false
+    }
+  ],
+  "probes": [
+    {
+      "id": "m-identity",
+      "deck": "map",
+      "slide": 1,
+      "kind": "map",
+      "question": "a group whose chOff/chExt equal its off/ext changes nothing",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 120,
+          "w": 80,
+          "h": 40
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "m-scale2",
+      "deck": "map",
+      "slide": 2,
+      "kind": "map",
+      "question": "ext twice chExt doubles the child",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 400
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 200,
+          "y": 140,
+          "w": 160,
+          "h": 80
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "m-half",
+      "deck": "map",
+      "slide": 3,
+      "kind": "map",
+      "question": "ext half of chExt halves the child",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 200,
+            "h": 100
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 125,
+          "y": 110,
+          "w": 40,
+          "h": 20
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "m-nonuniform",
+      "deck": "map",
+      "slide": 4,
+      "kind": "map",
+      "question": "the two axes scale independently",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 100
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 200,
+          "y": 110,
+          "w": 160,
+          "h": 20
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "m-choff-zero",
+      "deck": "map",
+      "slide": 5,
+      "kind": "map",
+      "question": "chOff of zero: the children are written relative to the origin",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "child": {
+            "x": 0,
+            "y": 0,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 50,
+        "y": 20,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 120,
+          "w": 80,
+          "h": 40
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "m-choff-neg",
+      "deck": "map",
+      "slide": 6,
+      "kind": "map",
+      "question": "a negative chOff",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "child": {
+            "x": -200,
+            "y": -100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": -150,
+        "y": -80,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 120,
+          "w": 80,
+          "h": 40
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "m-choff-far",
+      "deck": "map",
+      "slide": 7,
+      "kind": "map",
+      "question": "a child space nowhere near the slide, scaled a tenth",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "child": {
+            "x": 10000,
+            "y": 20000,
+            "w": 4000,
+            "h": 2000
+          }
+        }
+      ],
+      "leaf": {
+        "x": 10500,
+        "y": 20200,
+        "w": 800,
+        "h": 400
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 120,
+          "w": 80,
+          "h": 40
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "m-nested",
+      "deck": "map",
+      "slide": 8,
+      "kind": "map",
+      "question": "two groups, and the scales multiply",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 400
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        },
+        {
+          "rect": {
+            "x": 150,
+            "y": 120,
+            "w": 200,
+            "h": 60
+          },
+          "child": {
+            "x": 150,
+            "y": 120,
+            "w": 100,
+            "h": 30
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 130,
+        "w": 50,
+        "h": 15
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 400,
+          "y": 180,
+          "w": 200,
+          "h": 60
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "m-three",
+      "deck": "map",
+      "slide": 9,
+      "kind": "map",
+      "question": "three levels of group",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 400
+          },
+          "child": {
+            "x": 0,
+            "y": 0,
+            "w": 200,
+            "h": 200
+          }
+        },
+        {
+          "rect": {
+            "x": 20,
+            "y": 20,
+            "w": 100,
+            "h": 100
+          },
+          "child": {
+            "x": 0,
+            "y": 0,
+            "w": 50,
+            "h": 50
+          }
+        },
+        {
+          "rect": {
+            "x": 10,
+            "y": 10,
+            "w": 60,
+            "h": 60
+          },
+          "child": {
+            "x": 20,
+            "y": 20,
+            "w": 30,
+            "h": 30
+          }
+        }
+      ],
+      "leaf": {
+        "x": 40,
+        "y": 40,
+        "w": 10,
+        "h": 10
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 340,
+          "y": 340,
+          "w": 80,
+          "h": 80
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-grot",
+      "deck": "turn",
+      "slide": 1,
+      "kind": "turn",
+      "question": "a group rotation, with an unturned child",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "rot": 30
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 366.69873046875,
+          "y": 177.67953491210938,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 30,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-grot-crot",
+      "deck": "turn",
+      "slide": 2,
+      "kind": "turn",
+      "question": "a group rotation and a child rotation",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "rot": 30
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 40,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 366.69873046875,
+          "y": 177.67953491210938,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 70,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-gfliph-crot",
+      "deck": "turn",
+      "slide": 3,
+      "kind": "turn",
+      "question": "a flipped group holding a rotated child",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "flipH": true
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 40,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 450,
+          "y": 200,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 320,
+        "flipH": true,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-gfliph-cfliph",
+      "deck": "turn",
+      "slide": 4,
+      "kind": "turn",
+      "question": "two flips on the same axis",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "flipH": true
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 0,
+      "leafFlipH": true,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 450,
+          "y": 200,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-gflipv-crot",
+      "deck": "turn",
+      "slide": 5,
+      "kind": "turn",
+      "question": "a vertically flipped group, rotated child",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "flipV": true
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 40,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 350,
+          "y": 240,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 320,
+        "flipH": false,
+        "flipV": true,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-gfliph-cflipv",
+      "deck": "turn",
+      "slide": 6,
+      "kind": "turn",
+      "question": "one flip on each axis",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "flipH": true
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": true,
+      "reading": {
+        "frame": {
+          "x": 450,
+          "y": 200,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 0,
+        "flipH": true,
+        "flipV": true,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-gboth-crot",
+      "deck": "turn",
+      "slide": 7,
+      "kind": "turn",
+      "question": "a group flipped on both axes, which is a half turn",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "flipH": true,
+          "flipV": true
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 40,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 450,
+          "y": 240,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 40,
+        "flipH": true,
+        "flipV": true,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-grot-gflip-crot-cflip",
+      "deck": "turn",
+      "slide": 8,
+      "kind": "turn",
+      "question": "everything at once",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "rot": 30,
+          "flipH": true
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 40,
+      "leafFlipH": true,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 453.30126953125,
+          "y": 227.67953491210938,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 350,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-nested-rot",
+      "deck": "turn",
+      "slide": 9,
+      "kind": "turn",
+      "question": "three rotations down a chain",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 250,
+            "y": 100,
+            "w": 400,
+            "h": 300
+          },
+          "child": {
+            "x": 250,
+            "y": 100,
+            "w": 400,
+            "h": 300
+          },
+          "rot": 20
+        },
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "rot": 30
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 40,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 383.1814880371094,
+          "y": 168.842041015625,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 90,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-nested-flip",
+      "deck": "turn",
+      "slide": 10,
+      "kind": "turn",
+      "question": "a flip above two rotations",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 250,
+            "y": 100,
+            "w": 400,
+            "h": 300
+          },
+          "child": {
+            "x": 250,
+            "y": 100,
+            "w": 400,
+            "h": 300
+          },
+          "flipH": true
+        },
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "rot": 30
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 40,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 433.30126953125,
+          "y": 177.67953491210938,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 290,
+        "flipH": true,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-scale-rot",
+      "deck": "turn",
+      "slide": 11,
+      "kind": "turn",
+      "question": "a rotation about the centre of a rectangle the group scaled",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 200,
+            "h": 100
+          },
+          "rot": 90
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 50,
+        "h": 25
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 285,
+          "y": 125,
+          "w": 100,
+          "h": 50
+        },
+        "rotation": 90,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-shear",
+      "deck": "turn",
+      "slide": 12,
+      "kind": "turn",
+      "question": "a rotated child inside a non-uniformly scaled group - where does the shear go?",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 45,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 350,
+          "y": 100,
+          "w": 100,
+          "h": 200
+        },
+        "rotation": 45,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-rot-negative",
+      "deck": "turn",
+      "slide": 13,
+      "kind": "turn",
+      "question": "a negative rot attribute",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": -30,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 350,
+          "y": 200,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 330,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-rot-over",
+      "deck": "turn",
+      "slide": 14,
+      "kind": "turn",
+      "question": "a rot past a full turn",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 300,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 350,
+        "y": 200,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 390,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 350,
+          "y": 200,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 30,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "t-width",
+      "deck": "turn",
+      "slide": 15,
+      "kind": "width",
+      "question": "does a group scale the stroke of the shapes inside it?",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 400
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 100,
+        "h": 50
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 200,
+          "y": 140,
+          "w": 200,
+          "h": 100
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": 4
+      }
+    },
+    {
+      "id": "f-control",
+      "deck": "fill",
+      "slide": 1,
+      "kind": "fill",
+      "question": "an ordinary solid fill inside a group, so the sampling is proved",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "f-solid",
+      "deck": "fill",
+      "slide": 2,
+      "kind": "fill",
+      "question": "a:grpFill against a solid group fill",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:solidFill><a:srgbClr val=\"E53935\"/></a:solidFill>"
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "f-gradient",
+      "deck": "fill",
+      "slide": 3,
+      "kind": "fill",
+      "question": "a slice of the group gradient, or a copy of it?",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:gradFill flip=\"none\" rotWithShape=\"1\"><a:gsLst><a:gs pos=\"0\"><a:srgbClr val=\"FF0000\"/></a:gs><a:gs pos=\"100000\"><a:srgbClr val=\"0000FF\"/></a:gs></a:gsLst><a:lin ang=\"0\" scaled=\"0\"/></a:gradFill>"
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "f-pattern",
+      "deck": "fill",
+      "slide": 4,
+      "kind": "fill",
+      "question": "does a:grpFill reach a pattern fill?",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:pattFill prst=\"pct50\"><a:fgClr><a:srgbClr val=\"FF0000\"/></a:fgClr><a:bgClr><a:srgbClr val=\"FFFFFF\"/></a:bgClr></a:pattFill>"
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "f-nofill",
+      "deck": "fill",
+      "slide": 5,
+      "kind": "fill",
+      "question": "a:grpFill over an explicit a:noFill group",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:noFill/>"
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "f-silent",
+      "deck": "fill",
+      "slide": 6,
+      "kind": "fill",
+      "question": "a:grpFill over a group that states no fill at all",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "f-toplevel",
+      "deck": "fill",
+      "slide": 7,
+      "kind": "fill",
+      "question": "a:grpFill on a shape that is in no group",
+      "fromRepairedDeck": false,
+      "chain": [],
+      "leaf": {
+        "x": 150,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "f-nested",
+      "deck": "fill",
+      "slide": 8,
+      "kind": "fill",
+      "question": "does a:grpFill walk past an inner group that also says a:grpFill?",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:gradFill flip=\"none\" rotWithShape=\"1\"><a:gsLst><a:gs pos=\"0\"><a:srgbClr val=\"FF0000\"/></a:gs><a:gs pos=\"100000\"><a:srgbClr val=\"0000FF\"/></a:gs></a:gsLst><a:lin ang=\"0\" scaled=\"0\"/></a:gradFill>"
+        },
+        {
+          "rect": {
+            "x": 120,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 120,
+            "y": 150,
+            "w": 300,
+            "h": 200
+          },
+          "fill": "<a:grpFill/>"
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "f-group-alone",
+      "deck": "fill",
+      "slide": 9,
+      "kind": "fill",
+      "question": "is a group fill painted at all when nothing asks for it?",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:solidFill><a:srgbClr val=\"E53935\"/></a:solidFill>"
+        }
+      ],
+      "leaf": {
+        "x": 750,
+        "y": 420,
+        "w": 60,
+        "h": 60
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 750,
+          "y": 420,
+          "w": 60,
+          "h": 60
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "g-one",
+      "deck": "extent",
+      "slide": 1,
+      "kind": "fill",
+      "question": "one grpFill child: does it see the whole ramp or a sliver of it?",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:gradFill flip=\"none\" rotWithShape=\"1\"><a:gsLst><a:gs pos=\"0\"><a:srgbClr val=\"FF0000\"/></a:gs><a:gs pos=\"100000\"><a:srgbClr val=\"0000FF\"/></a:gs></a:gsLst><a:lin ang=\"0\" scaled=\"0\"/></a:gradFill>"
+        }
+      ],
+      "leaf": {
+        "x": 300,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "g-solid-sibling",
+      "deck": "extent",
+      "slide": 2,
+      "kind": "fill",
+      "question": "does a sibling that does not use grpFill still set the extent?",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:gradFill flip=\"none\" rotWithShape=\"1\"><a:gsLst><a:gs pos=\"0\"><a:srgbClr val=\"FF0000\"/></a:gs><a:gs pos=\"100000\"><a:srgbClr val=\"0000FF\"/></a:gs></a:gsLst><a:lin ang=\"0\" scaled=\"0\"/></a:gradFill>"
+        }
+      ],
+      "leaf": {
+        "x": 300,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "g-outside",
+      "deck": "extent",
+      "slide": 3,
+      "kind": "fill",
+      "question": "a sibling outside the group rectangle: is the extent clipped to it?",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:gradFill flip=\"none\" rotWithShape=\"1\"><a:gsLst><a:gs pos=\"0\"><a:srgbClr val=\"FF0000\"/></a:gs><a:gs pos=\"100000\"><a:srgbClr val=\"0000FF\"/></a:gs></a:gsLst><a:lin ang=\"0\" scaled=\"0\"/></a:gradFill>"
+        }
+      ],
+      "leaf": {
+        "x": 300,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "g-deep",
+      "deck": "extent",
+      "slide": 4,
+      "kind": "fill",
+      "question": "three groups deep, each saying grpFill",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:gradFill flip=\"none\" rotWithShape=\"1\"><a:gsLst><a:gs pos=\"0\"><a:srgbClr val=\"FF0000\"/></a:gs><a:gs pos=\"100000\"><a:srgbClr val=\"0000FF\"/></a:gs></a:gsLst><a:lin ang=\"0\" scaled=\"0\"/></a:gradFill>"
+        },
+        {
+          "rect": {
+            "x": 200,
+            "y": 150,
+            "w": 400,
+            "h": 220
+          },
+          "child": {
+            "x": 200,
+            "y": 150,
+            "w": 400,
+            "h": 220
+          },
+          "fill": "<a:grpFill/>"
+        },
+        {
+          "rect": {
+            "x": 250,
+            "y": 160,
+            "w": 300,
+            "h": 200
+          },
+          "child": {
+            "x": 250,
+            "y": 160,
+            "w": 300,
+            "h": 200
+          },
+          "fill": "<a:grpFill/>"
+        }
+      ],
+      "leaf": {
+        "x": 300,
+        "y": 180,
+        "w": 100,
+        "h": 140
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 180,
+          "w": 100,
+          "h": 140
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "g-vert",
+      "deck": "extent",
+      "slide": 5,
+      "kind": "fill",
+      "question": "the same question on the other axis",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 600,
+            "h": 300
+          },
+          "fill": "<a:gradFill flip=\"none\" rotWithShape=\"1\"><a:gsLst><a:gs pos=\"0\"><a:srgbClr val=\"FF0000\"/></a:gs><a:gs pos=\"100000\"><a:srgbClr val=\"0000FF\"/></a:gs></a:gsLst><a:lin ang=\"5400000\" scaled=\"0\"/></a:gradFill>"
+        }
+      ],
+      "leaf": {
+        "x": 300,
+        "y": 130,
+        "w": 100,
+        "h": 60
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 130,
+          "w": 100,
+          "h": 60
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-0",
+      "deck": "shear",
+      "slide": 1,
+      "kind": "turn",
+      "question": "a child at 0 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 150,
+          "w": 200,
+          "h": 100
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-15",
+      "deck": "shear",
+      "slide": 2,
+      "kind": "turn",
+      "question": "a child at 15 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 15,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 150,
+          "w": 200,
+          "h": 100
+        },
+        "rotation": 15,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-30",
+      "deck": "shear",
+      "slide": 3,
+      "kind": "turn",
+      "question": "a child at 30 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 30,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 150,
+          "w": 200,
+          "h": 100
+        },
+        "rotation": 30,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-44",
+      "deck": "shear",
+      "slide": 4,
+      "kind": "turn",
+      "question": "a child at 44 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 44,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 150,
+          "w": 200,
+          "h": 100
+        },
+        "rotation": 44,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-45",
+      "deck": "shear",
+      "slide": 5,
+      "kind": "turn",
+      "question": "a child at 45 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 45,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 350,
+          "y": 100,
+          "w": 100,
+          "h": 200
+        },
+        "rotation": 45,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-46",
+      "deck": "shear",
+      "slide": 6,
+      "kind": "turn",
+      "question": "a child at 46 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 46,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 350,
+          "y": 100,
+          "w": 100,
+          "h": 200
+        },
+        "rotation": 46,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-60",
+      "deck": "shear",
+      "slide": 7,
+      "kind": "turn",
+      "question": "a child at 60 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 60,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 350,
+          "y": 100,
+          "w": 100,
+          "h": 200
+        },
+        "rotation": 60,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-75",
+      "deck": "shear",
+      "slide": 8,
+      "kind": "turn",
+      "question": "a child at 75 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 75,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 350,
+          "y": 100,
+          "w": 100,
+          "h": 200
+        },
+        "rotation": 75,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-90",
+      "deck": "shear",
+      "slide": 9,
+      "kind": "turn",
+      "question": "a child at 90 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 90,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 350,
+          "y": 100,
+          "w": 100,
+          "h": 200
+        },
+        "rotation": 90,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-135",
+      "deck": "shear",
+      "slide": 10,
+      "kind": "turn",
+      "question": "a child at 135 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 135,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 150,
+          "w": 200,
+          "h": 100
+        },
+        "rotation": 135,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-wide-180",
+      "deck": "shear",
+      "slide": 11,
+      "kind": "turn",
+      "question": "a child at 180 degrees in a group scaling x by 2 and y by 1",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 180,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 150,
+          "w": 200,
+          "h": 100
+        },
+        "rotation": 180,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-tall-30",
+      "deck": "shear",
+      "slide": 12,
+      "kind": "turn",
+      "question": "a child at 30 degrees in a group scaling x by 1 and y by 2",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 400
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 30,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 200,
+          "y": 200,
+          "w": 100,
+          "h": 200
+        },
+        "rotation": 30,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-tall-45",
+      "deck": "shear",
+      "slide": 13,
+      "kind": "turn",
+      "question": "a child at 45 degrees in a group scaling x by 1 and y by 2",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 400
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 45,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 250,
+          "w": 200,
+          "h": 100
+        },
+        "rotation": 45,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-tall-60",
+      "deck": "shear",
+      "slide": 14,
+      "kind": "turn",
+      "question": "a child at 60 degrees in a group scaling x by 1 and y by 2",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 400
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 60,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 250,
+          "w": 200,
+          "h": 100
+        },
+        "rotation": 60,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-both-30",
+      "deck": "shear",
+      "slide": 15,
+      "kind": "turn",
+      "question": "a child at 30 degrees in a group scaling x by 2 and y by 3",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 600
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 30,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 250,
+          "w": 200,
+          "h": 300
+        },
+        "rotation": 30,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-both-60",
+      "deck": "shear",
+      "slide": 16,
+      "kind": "turn",
+      "question": "a child at 60 degrees in a group scaling x by 2 and y by 3",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 600
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 60,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 250,
+          "y": 300,
+          "w": 300,
+          "h": 200
+        },
+        "rotation": 60,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "s-flip",
+      "deck": "shear",
+      "slide": 17,
+      "kind": "turn",
+      "question": "a flipped, unrotated child in a non-uniformly scaled group",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 800,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 200,
+        "y": 150,
+        "w": 100,
+        "h": 100
+      },
+      "leafRot": 0,
+      "leafFlipH": true,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 150,
+          "w": 200,
+          "h": 100
+        },
+        "rotation": 0,
+        "flipH": true,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "inherit-default",
+      "deck": "inherit-default",
+      "slide": 1,
+      "kind": "fill",
+      "question": "what a slide shows with slide showMasterSp=true and layout showMasterSp=true",
+      "fromRepairedDeck": false,
+      "chain": [],
+      "leaf": {
+        "x": 380,
+        "y": 60,
+        "w": 120,
+        "h": 120
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 380,
+          "y": 60,
+          "w": 120,
+          "h": 120
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "inherit-slide-off",
+      "deck": "inherit-slide-off",
+      "slide": 1,
+      "kind": "fill",
+      "question": "what a slide shows with slide showMasterSp=false and layout showMasterSp=true",
+      "fromRepairedDeck": false,
+      "chain": [],
+      "leaf": {
+        "x": 380,
+        "y": 60,
+        "w": 120,
+        "h": 120
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 380,
+          "y": 60,
+          "w": 120,
+          "h": 120
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "inherit-layout-off",
+      "deck": "inherit-layout-off",
+      "slide": 1,
+      "kind": "fill",
+      "question": "what a slide shows with slide showMasterSp=true and layout showMasterSp=false",
+      "fromRepairedDeck": false,
+      "chain": [],
+      "leaf": {
+        "x": 380,
+        "y": 60,
+        "w": 120,
+        "h": 120
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 380,
+          "y": 60,
+          "w": 120,
+          "h": 120
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "inherit-both-off",
+      "deck": "inherit-both-off",
+      "slide": 1,
+      "kind": "fill",
+      "question": "what a slide shows with slide showMasterSp=false and layout showMasterSp=false",
+      "fromRepairedDeck": false,
+      "chain": [],
+      "leaf": {
+        "x": 380,
+        "y": 60,
+        "w": 120,
+        "h": 120
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 380,
+          "y": 60,
+          "w": 120,
+          "h": 120
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "h-chext-zero-x",
+      "deck": "h-chext-zero-x",
+      "slide": 1,
+      "kind": "map",
+      "question": "a chExt of zero on one axis: no scaling, or a collapse?",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 0,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 120,
+          "w": 80,
+          "h": 40
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "h-chext-zero-both",
+      "deck": "h-chext-zero-both",
+      "slide": 1,
+      "kind": "map",
+      "question": "a chExt of zero on both axes",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 0,
+            "h": 0
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 120,
+          "w": 80,
+          "h": 40
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "h-ext-zero-x",
+      "deck": "h-ext-zero-x",
+      "slide": 1,
+      "kind": "map",
+      "question": "an ext of zero: a group with no width",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 0,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 100,
+          "y": 120,
+          "w": 0,
+          "h": 40
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "h-chext-tiny",
+      "deck": "h-chext-tiny",
+      "slide": 1,
+      "kind": "map",
+      "question": "a chExt of four points against an ext of four hundred",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 4,
+            "h": 2
+          }
+        }
+      ],
+      "leaf": {
+        "x": 102,
+        "y": 101,
+        "w": 1,
+        "h": 1
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 300,
+          "y": 200,
+          "w": 100,
+          "h": 100
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "h-chext-negative",
+      "deck": "h-chext-negative",
+      "slide": 1,
+      "kind": "map",
+      "question": "a negative chExt",
+      "fromRepairedDeck": true,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": -400,
+            "h": 200
+          }
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 150,
+          "y": 120,
+          "w": 80,
+          "h": 40
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    },
+    {
+      "id": "h-no-chxfrm",
+      "deck": "h-no-chxfrm",
+      "slide": 1,
+      "kind": "map",
+      "question": "a group whose a:xfrm has off and ext but no chOff or chExt",
+      "fromRepairedDeck": false,
+      "chain": [
+        {
+          "rect": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "child": {
+            "x": 100,
+            "y": 100,
+            "w": 400,
+            "h": 200
+          },
+          "noChildTransform": true
+        }
+      ],
+      "leaf": {
+        "x": 150,
+        "y": 120,
+        "w": 80,
+        "h": 40
+      },
+      "leafRot": 0,
+      "leafFlipH": false,
+      "leafFlipV": false,
+      "reading": {
+        "frame": {
+          "x": 250,
+          "y": 220,
+          "w": 80,
+          "h": 40
+        },
+        "rotation": 0,
+        "flipH": false,
+        "flipV": false,
+        "lineWeight": -2147483648
+      }
+    }
+  ],
+  "samples": [
+    {
+      "id": "t-shear-left",
+      "probe": "t-shear",
+      "x": 265,
+      "y": 200,
+      "asks": "inside a sheared parallelogram only",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "t-shear-centre",
+      "probe": "t-shear",
+      "x": 400,
+      "y": 200,
+      "asks": "inside under either reading",
+      "expect": null,
+      "rgb": "1E88E5",
+      "block": "1E88E5",
+      "ink": 1,
+      "mean": "1E88E5"
+    },
+    {
+      "id": "t-shear-right",
+      "probe": "t-shear",
+      "x": 535,
+      "y": 200,
+      "asks": "inside a sheared parallelogram only",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "t-shear-top",
+      "probe": "t-shear",
+      "x": 365,
+      "y": 110,
+      "asks": "inside a rotated rectangle only",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "t-width-scaled",
+      "probe": "t-width",
+      "x": 300,
+      "y": 137,
+      "asks": "black only if the group scaled the stroke",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0.429,
+      "mean": "93989D"
+    },
+    {
+      "id": "t-width-stroke",
+      "probe": "t-width",
+      "x": 300,
+      "y": 141,
+      "asks": "on the stroke under either reading",
+      "expect": null,
+      "rgb": "000000",
+      "block": "000000",
+      "ink": 0.81,
+      "mean": "3D6B93"
+    },
+    {
+      "id": "t-width-fill",
+      "probe": "t-width",
+      "x": 300,
+      "y": 150,
+      "asks": "the interior",
+      "expect": "1E88E5",
+      "rgb": "1E88E5",
+      "block": "1E88E5",
+      "ink": 1,
+      "mean": "1E88E5"
+    },
+    {
+      "id": "f-control-centre",
+      "probe": "f-control",
+      "x": 200,
+      "y": 250,
+      "asks": "the leaf",
+      "expect": "00A000",
+      "rgb": "00A000",
+      "block": "00A000",
+      "ink": 1,
+      "mean": "00A000"
+    },
+    {
+      "id": "f-solid-leaf",
+      "probe": "f-solid",
+      "x": 200,
+      "y": 250,
+      "asks": "the grpFill child",
+      "expect": "E53935",
+      "rgb": "E53935",
+      "block": "E53935",
+      "ink": 1,
+      "mean": "E53935"
+    },
+    {
+      "id": "f-solid-bare",
+      "probe": "f-solid",
+      "x": 400,
+      "y": 250,
+      "asks": "the group rectangle where no child is",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "f-grad-left",
+      "probe": "f-gradient",
+      "x": 200,
+      "y": 250,
+      "asks": "the left grpFill child",
+      "expect": null,
+      "rgb": "FB0037",
+      "block": "FB0037",
+      "ink": 1,
+      "mean": "FB0037"
+    },
+    {
+      "id": "f-grad-right",
+      "probe": "f-gradient",
+      "x": 600,
+      "y": 250,
+      "asks": "the right grpFill child",
+      "expect": null,
+      "rgb": "3600FB",
+      "block": "3600FB",
+      "ink": 1,
+      "mean": "3600FB"
+    },
+    {
+      "id": "f-grad-ref-left",
+      "probe": "f-gradient",
+      "x": 200,
+      "y": 130,
+      "asks": "the reference ramp at the left child x",
+      "expect": null,
+      "rgb": "F6004D",
+      "block": "F6004D",
+      "ink": 1,
+      "mean": "F6004D"
+    },
+    {
+      "id": "f-grad-ref-right",
+      "probe": "f-gradient",
+      "x": 600,
+      "y": 130,
+      "asks": "the reference ramp at the right child x",
+      "expect": null,
+      "rgb": "4D00F6",
+      "block": "4D00F6",
+      "ink": 1,
+      "mean": "4D00F6"
+    },
+    {
+      "id": "f-patt-leaf",
+      "probe": "f-pattern",
+      "x": 200,
+      "y": 250,
+      "asks": "the grpFill child",
+      "expect": null,
+      "rgb": "FF0000",
+      "block": "FF0000",
+      "ink": 0.714,
+      "mean": "FF7E7E"
+    },
+    {
+      "id": "f-patt-group",
+      "probe": "f-pattern",
+      "x": 400,
+      "y": 130,
+      "asks": "the group fill itself",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "f-patt-ref",
+      "probe": "f-pattern",
+      "x": 400,
+      "y": 390,
+      "asks": "the same pattern on an ordinary shape",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FF8080",
+      "ink": 0.778,
+      "mean": "FF8080"
+    },
+    {
+      "id": "f-nofill-leaf",
+      "probe": "f-nofill",
+      "x": 200,
+      "y": 250,
+      "asks": "the grpFill child",
+      "expect": "FFFFFF",
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "f-silent-leaf",
+      "probe": "f-silent",
+      "x": 200,
+      "y": 250,
+      "asks": "the grpFill child",
+      "expect": "FFFFFF",
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "f-top-leaf",
+      "probe": "f-toplevel",
+      "x": 200,
+      "y": 250,
+      "asks": "the shape",
+      "expect": "FFFFFF",
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "f-nested-leaf",
+      "probe": "f-nested",
+      "x": 200,
+      "y": 250,
+      "asks": "the doubly-nested grpFill child",
+      "expect": null,
+      "rgb": "B900BB",
+      "block": "BC00B8",
+      "ink": 1,
+      "mean": "B900BB"
+    },
+    {
+      "id": "f-alone-inside",
+      "probe": "f-group-alone",
+      "x": 400,
+      "y": 250,
+      "asks": "inside the group rectangle, no child there",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "f-alone-leaf",
+      "probe": "f-group-alone",
+      "x": 780,
+      "y": 450,
+      "asks": "the leaf",
+      "expect": "00A000",
+      "rgb": "00A000",
+      "block": "00A000",
+      "ink": 1,
+      "mean": "00A000"
+    },
+    {
+      "id": "g-one-a",
+      "probe": "g-one",
+      "x": 310,
+      "y": 250,
+      "asks": "near the left edge of the only child",
+      "expect": null,
+      "rgb": "FB0037",
+      "block": "FB0034",
+      "ink": 1,
+      "mean": "FB0037"
+    },
+    {
+      "id": "g-one-b",
+      "probe": "g-one",
+      "x": 350,
+      "y": 250,
+      "asks": "the middle of the only child",
+      "expect": null,
+      "rgb": "B900BB",
+      "block": "BC00B8",
+      "ink": 1,
+      "mean": "B900BB"
+    },
+    {
+      "id": "g-one-c",
+      "probe": "g-one",
+      "x": 390,
+      "y": 250,
+      "asks": "near the right edge of the only child",
+      "expect": null,
+      "rgb": "3600FB",
+      "block": "3900FB",
+      "ink": 1,
+      "mean": "3600FB"
+    },
+    {
+      "id": "g-sib-a",
+      "probe": "g-solid-sibling",
+      "x": 350,
+      "y": 250,
+      "asks": "the middle of the grpFill child",
+      "expect": null,
+      "rgb": "FA003F",
+      "block": "FA003F",
+      "ink": 1,
+      "mean": "FA003F"
+    },
+    {
+      "id": "g-sib-b",
+      "probe": "g-solid-sibling",
+      "x": 650,
+      "y": 250,
+      "asks": "the solid sibling",
+      "expect": "00A000",
+      "rgb": "00A000",
+      "block": "00A000",
+      "ink": 1,
+      "mean": "00A000"
+    },
+    {
+      "id": "g-out-a",
+      "probe": "g-outside",
+      "x": 350,
+      "y": 250,
+      "asks": "the middle of the grpFill child",
+      "expect": null,
+      "rgb": "FC002F",
+      "block": "FC002F",
+      "ink": 1,
+      "mean": "FC002F"
+    },
+    {
+      "id": "g-deep-a",
+      "probe": "g-deep",
+      "x": 310,
+      "y": 250,
+      "asks": "near the left edge of the leaf",
+      "expect": null,
+      "rgb": "FB0037",
+      "block": "FB0034",
+      "ink": 1,
+      "mean": "FB0037"
+    },
+    {
+      "id": "g-deep-b",
+      "probe": "g-deep",
+      "x": 350,
+      "y": 250,
+      "asks": "the middle of the leaf",
+      "expect": null,
+      "rgb": "B900BB",
+      "block": "BC00B8",
+      "ink": 1,
+      "mean": "B900BB"
+    },
+    {
+      "id": "g-deep-c",
+      "probe": "g-deep",
+      "x": 390,
+      "y": 250,
+      "asks": "near the right edge of the leaf",
+      "expect": null,
+      "rgb": "3600FB",
+      "block": "3900FB",
+      "ink": 1,
+      "mean": "3600FB"
+    },
+    {
+      "id": "g-vert-top",
+      "probe": "g-vert",
+      "x": 350,
+      "y": 160,
+      "asks": "the middle of the upper child",
+      "expect": null,
+      "rgb": "FA003E",
+      "block": "FA003E",
+      "ink": 1,
+      "mean": "FA003E"
+    },
+    {
+      "id": "g-vert-bot",
+      "probe": "g-vert",
+      "x": 350,
+      "y": 350,
+      "asks": "the middle of the lower child",
+      "expect": null,
+      "rgb": "3D00FA",
+      "block": "3E00FA",
+      "ink": 1,
+      "mean": "3D00FA"
+    },
+    {
+      "id": "inherit-default-master",
+      "probe": "inherit-default",
+      "x": 120,
+      "y": 120,
+      "asks": "the master's own shape",
+      "expect": null,
+      "rgb": "D32F2F",
+      "block": "D32F2F",
+      "ink": 1,
+      "mean": "D32F2F"
+    },
+    {
+      "id": "inherit-default-layout",
+      "probe": "inherit-default",
+      "x": 280,
+      "y": 120,
+      "asks": "the layout's own shape",
+      "expect": null,
+      "rgb": "388E3C",
+      "block": "388E3C",
+      "ink": 1,
+      "mean": "388E3C"
+    },
+    {
+      "id": "inherit-default-slide",
+      "probe": "inherit-default",
+      "x": 440,
+      "y": 120,
+      "asks": "the slide's own shape",
+      "expect": null,
+      "rgb": "1976D2",
+      "block": "1976D2",
+      "ink": 1,
+      "mean": "1976D2"
+    },
+    {
+      "id": "inherit-default-master-ph",
+      "probe": "inherit-default",
+      "x": 120,
+      "y": 300,
+      "asks": "a master placeholder the slide never matched",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-default-layout-ph",
+      "probe": "inherit-default",
+      "x": 280,
+      "y": 300,
+      "asks": "a layout placeholder the slide never matched",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-slide-off-master",
+      "probe": "inherit-slide-off",
+      "x": 120,
+      "y": 120,
+      "asks": "the master's own shape",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-slide-off-layout",
+      "probe": "inherit-slide-off",
+      "x": 280,
+      "y": 120,
+      "asks": "the layout's own shape",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-slide-off-slide",
+      "probe": "inherit-slide-off",
+      "x": 440,
+      "y": 120,
+      "asks": "the slide's own shape",
+      "expect": null,
+      "rgb": "1976D2",
+      "block": "1976D2",
+      "ink": 1,
+      "mean": "1976D2"
+    },
+    {
+      "id": "inherit-slide-off-master-ph",
+      "probe": "inherit-slide-off",
+      "x": 120,
+      "y": 300,
+      "asks": "a master placeholder the slide never matched",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-slide-off-layout-ph",
+      "probe": "inherit-slide-off",
+      "x": 280,
+      "y": 300,
+      "asks": "a layout placeholder the slide never matched",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-layout-off-master",
+      "probe": "inherit-layout-off",
+      "x": 120,
+      "y": 120,
+      "asks": "the master's own shape",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-layout-off-layout",
+      "probe": "inherit-layout-off",
+      "x": 280,
+      "y": 120,
+      "asks": "the layout's own shape",
+      "expect": null,
+      "rgb": "388E3C",
+      "block": "388E3C",
+      "ink": 1,
+      "mean": "388E3C"
+    },
+    {
+      "id": "inherit-layout-off-slide",
+      "probe": "inherit-layout-off",
+      "x": 440,
+      "y": 120,
+      "asks": "the slide's own shape",
+      "expect": null,
+      "rgb": "1976D2",
+      "block": "1976D2",
+      "ink": 1,
+      "mean": "1976D2"
+    },
+    {
+      "id": "inherit-layout-off-master-ph",
+      "probe": "inherit-layout-off",
+      "x": 120,
+      "y": 300,
+      "asks": "a master placeholder the slide never matched",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-layout-off-layout-ph",
+      "probe": "inherit-layout-off",
+      "x": 280,
+      "y": 300,
+      "asks": "a layout placeholder the slide never matched",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-both-off-master",
+      "probe": "inherit-both-off",
+      "x": 120,
+      "y": 120,
+      "asks": "the master's own shape",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-both-off-layout",
+      "probe": "inherit-both-off",
+      "x": 280,
+      "y": 120,
+      "asks": "the layout's own shape",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-both-off-slide",
+      "probe": "inherit-both-off",
+      "x": 440,
+      "y": 120,
+      "asks": "the slide's own shape",
+      "expect": null,
+      "rgb": "1976D2",
+      "block": "1976D2",
+      "ink": 1,
+      "mean": "1976D2"
+    },
+    {
+      "id": "inherit-both-off-master-ph",
+      "probe": "inherit-both-off",
+      "x": 120,
+      "y": 300,
+      "asks": "a master placeholder the slide never matched",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    },
+    {
+      "id": "inherit-both-off-layout-ph",
+      "probe": "inherit-both-off",
+      "x": 280,
+      "y": 300,
+      "asks": "a layout placeholder the slide never matched",
+      "expect": null,
+      "rgb": "FFFFFF",
+      "block": "FFFFFF",
+      "ink": 0,
+      "mean": "FFFFFF"
+    }
+  ],
+  "authored": {
+    "flipCases": [
+      {
+        "name": "flip-0-none",
+        "angle": 0,
+        "op": "none",
+        "writtenRot": null,
+        "flipH": false,
+        "flipV": false
+      },
+      {
+        "name": "flip-30-none",
+        "angle": 30,
+        "op": "none",
+        "writtenRot": 1800000,
+        "flipH": false,
+        "flipV": false
+      },
+      {
+        "name": "flip-45-none",
+        "angle": 45,
+        "op": "none",
+        "writtenRot": 2700000,
+        "flipH": false,
+        "flipV": false
+      },
+      {
+        "name": "flip-120-none",
+        "angle": 120,
+        "op": "none",
+        "writtenRot": 7200000,
+        "flipH": false,
+        "flipV": false
+      },
+      {
+        "name": "flip-200-none",
+        "angle": 200,
+        "op": "none",
+        "writtenRot": 12000000,
+        "flipH": false,
+        "flipV": false
+      },
+      {
+        "name": "flip-0-H",
+        "angle": 0,
+        "op": "H",
+        "writtenRot": null,
+        "flipH": true,
+        "flipV": false
+      },
+      {
+        "name": "flip-30-H",
+        "angle": 30,
+        "op": "H",
+        "writtenRot": 19800000,
+        "flipH": true,
+        "flipV": false
+      },
+      {
+        "name": "flip-45-H",
+        "angle": 45,
+        "op": "H",
+        "writtenRot": 18900000,
+        "flipH": true,
+        "flipV": false
+      },
+      {
+        "name": "flip-120-H",
+        "angle": 120,
+        "op": "H",
+        "writtenRot": 14400000,
+        "flipH": true,
+        "flipV": false
+      },
+      {
+        "name": "flip-200-H",
+        "angle": 200,
+        "op": "H",
+        "writtenRot": 9600000,
+        "flipH": true,
+        "flipV": false
+      },
+      {
+        "name": "flip-0-V",
+        "angle": 0,
+        "op": "V",
+        "writtenRot": null,
+        "flipH": false,
+        "flipV": true
+      },
+      {
+        "name": "flip-30-V",
+        "angle": 30,
+        "op": "V",
+        "writtenRot": 19800000,
+        "flipH": false,
+        "flipV": true
+      },
+      {
+        "name": "flip-45-V",
+        "angle": 45,
+        "op": "V",
+        "writtenRot": 18900000,
+        "flipH": false,
+        "flipV": true
+      },
+      {
+        "name": "flip-120-V",
+        "angle": 120,
+        "op": "V",
+        "writtenRot": 14400000,
+        "flipH": false,
+        "flipV": true
+      },
+      {
+        "name": "flip-200-V",
+        "angle": 200,
+        "op": "V",
+        "writtenRot": 9600000,
+        "flipH": false,
+        "flipV": true
+      },
+      {
+        "name": "flip-0-HV",
+        "angle": 0,
+        "op": "HV",
+        "writtenRot": null,
+        "flipH": true,
+        "flipV": true
+      },
+      {
+        "name": "flip-30-HV",
+        "angle": 30,
+        "op": "HV",
+        "writtenRot": 1800000,
+        "flipH": true,
+        "flipV": true
+      },
+      {
+        "name": "flip-45-HV",
+        "angle": 45,
+        "op": "HV",
+        "writtenRot": 2700000,
+        "flipH": true,
+        "flipV": true
+      },
+      {
+        "name": "flip-120-HV",
+        "angle": 120,
+        "op": "HV",
+        "writtenRot": 7200000,
+        "flipH": true,
+        "flipV": true
+      },
+      {
+        "name": "flip-200-HV",
+        "angle": 200,
+        "op": "HV",
+        "writtenRot": 12000000,
+        "flipH": true,
+        "flipV": true
+      }
+    ],
+    "fresh": [
+      {
+        "name": "g1",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 5080000,
+          "cy": 2794000
+        },
+        "chOff": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "chExt": {
+          "cx": 5080000,
+          "cy": 2794000
+        }
+      },
+      {
+        "name": "g1-child-a",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 1524000,
+          "cy": 762000
+        },
+        "chOff": null,
+        "chExt": null
+      },
+      {
+        "name": "g1-child-b",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 3810000,
+          "y": 2794000
+        },
+        "ext": {
+          "cx": 2540000,
+          "cy": 1270000
+        },
+        "chOff": null,
+        "chExt": null
+      }
+    ],
+    "resized": [
+      {
+        "name": "g2",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 10160000,
+          "cy": 1397000
+        },
+        "chOff": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "chExt": {
+          "cx": 5080000,
+          "cy": 2794000
+        }
+      },
+      {
+        "name": "g2-child-a",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 1524000,
+          "cy": 762000
+        },
+        "chOff": null,
+        "chExt": null
+      },
+      {
+        "name": "g2-child-b",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 3810000,
+          "y": 2794000
+        },
+        "ext": {
+          "cx": 2540000,
+          "cy": 1270000
+        },
+        "chOff": null,
+        "chExt": null
+      }
+    ],
+    "turned": [
+      {
+        "name": "g3",
+        "rot": 19800000,
+        "flipH": true,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 5080000,
+          "cy": 2794000
+        },
+        "chOff": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "chExt": {
+          "cx": 5080000,
+          "cy": 2794000
+        }
+      },
+      {
+        "name": "g3-child-a",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 1524000,
+          "cy": 762000
+        },
+        "chOff": null,
+        "chExt": null
+      },
+      {
+        "name": "g3-child-b",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 3810000,
+          "y": 2794000
+        },
+        "ext": {
+          "cx": 2540000,
+          "cy": 1270000
+        },
+        "chOff": null,
+        "chExt": null
+      }
+    ],
+    "turnedUngrouped": [
+      {
+        "name": "g3-child-a",
+        "rot": 19800000,
+        "flipH": true,
+        "flipV": false,
+        "off": {
+          "x": 4079793,
+          "y": 517118
+        },
+        "ext": {
+          "cx": 1524000,
+          "cy": 762000
+        },
+        "chOff": null,
+        "chExt": null
+      },
+      {
+        "name": "g3-child-b",
+        "rot": 19800000,
+        "flipH": true,
+        "flipV": false,
+        "off": {
+          "x": 1821148,
+          "y": 3326911
+        },
+        "ext": {
+          "cx": 2540000,
+          "cy": 1270000
+        },
+        "chOff": null,
+        "chExt": null
+      }
+    ],
+    "nested": [
+      {
+        "name": "g5-outer",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 6477000,
+          "cy": 3556000
+        },
+        "chOff": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "chExt": {
+          "cx": 4318000,
+          "cy": 3556000
+        }
+      },
+      {
+        "name": "g5-inner",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 3048000,
+          "cy": 762000
+        },
+        "chOff": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "chExt": {
+          "cx": 3048000,
+          "cy": 762000
+        }
+      },
+      {
+        "name": "g5-a",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 1270000,
+          "cy": 762000
+        },
+        "chOff": null,
+        "chExt": null
+      },
+      {
+        "name": "g5-b",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 3048000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 1270000,
+          "cy": 762000
+        },
+        "chOff": null,
+        "chExt": null
+      },
+      {
+        "name": "g5-c",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 3810000
+        },
+        "ext": {
+          "cx": 4318000,
+          "cy": 1016000
+        },
+        "chOff": null,
+        "chExt": null
+      }
+    ],
+    "nestedUngrouped": [
+      {
+        "name": "g5-inner",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 4572000,
+          "cy": 762000
+        },
+        "chOff": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "chExt": {
+          "cx": 3048000,
+          "cy": 762000
+        }
+      },
+      {
+        "name": "g5-a",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 1270000,
+          "cy": 762000
+        },
+        "chOff": null,
+        "chExt": null
+      },
+      {
+        "name": "g5-b",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 3048000,
+          "y": 1270000
+        },
+        "ext": {
+          "cx": 1270000,
+          "cy": 762000
+        },
+        "chOff": null,
+        "chExt": null
+      },
+      {
+        "name": "g5-c",
+        "rot": null,
+        "flipH": false,
+        "flipV": false,
+        "off": {
+          "x": 1270000,
+          "y": 3810000
+        },
+        "ext": {
+          "cx": 6477000,
+          "cy": 1016000
+        },
+        "chOff": null,
+        "chExt": null
+      }
+    ]
+  },
+  "findings": {
+    "childMap": {
+      "winner": "reference",
+      "scores": [
+        {
+          "model": "reference",
+          "right": 46,
+          "of": 46,
+          "misses": []
+        },
+        {
+          "model": "chExtZeroCollapses",
+          "right": 44,
+          "of": 46,
+          "misses": ["h-chext-zero-x", "h-chext-zero-both"]
+        },
+        {
+          "model": "noScale",
+          "right": 36,
+          "of": 46,
+          "misses": [
+            "m-scale2",
+            "m-half",
+            "m-nonuniform",
+            "m-choff-far",
+            "m-nested",
+            "m-three",
+            "t-scale-rot",
+            "t-width",
+            "h-ext-zero-x",
+            "h-chext-tiny"
+          ]
+        },
+        {
+          "model": "noChOff",
+          "right": 7,
+          "of": 46,
+          "misses": [
+            "m-identity",
+            "m-scale2",
+            "m-half",
+            "m-nonuniform",
+            "m-choff-neg",
+            "m-choff-far",
+            "m-nested",
+            "m-three",
+            "t-grot",
+            "t-grot-crot",
+            "t-gfliph-crot",
+            "t-gfliph-cfliph",
+            "t-gflipv-crot",
+            "t-gfliph-cflipv",
+            "t-gboth-crot",
+            "t-grot-gflip-crot-cflip",
+            "t-nested-rot",
+            "t-nested-flip",
+            "t-scale-rot",
+            "t-rot-negative",
+            "t-rot-over",
+            "t-width",
+            "f-control",
+            "f-solid",
+            "f-gradient",
+            "f-pattern",
+            "f-nofill",
+            "f-silent",
+            "f-nested",
+            "f-group-alone",
+            "g-one",
+            "g-solid-sibling",
+            "g-outside",
+            "g-deep",
+            "g-vert",
+            "h-chext-zero-x",
+            "h-chext-zero-both",
+            "h-ext-zero-x",
+            "h-chext-tiny"
+          ]
+        },
+        {
+          "model": "missingChildIsFrame",
+          "right": 45,
+          "of": 46,
+          "misses": ["h-no-chxfrm"]
+        },
+        {
+          "model": "rotBeforeFlip",
+          "right": 45,
+          "of": 46,
+          "misses": ["t-grot-gflip-crot-cflip"]
+        }
+      ],
+      "options": {
+        "chExtZeroIsOne": true,
+        "missingChildIsOrigin": true,
+        "useChOff": true,
+        "useScale": true,
+        "flipFirst": true
+      }
+    },
+    "orientation": {
+      "winner": "rotAfterFlip",
+      "scores": [
+        {
+          "model": "rotAfterFlip",
+          "right": 13,
+          "of": 13,
+          "misses": []
+        },
+        {
+          "model": "flipAfterRot",
+          "right": 9,
+          "of": 13,
+          "misses": ["t-gfliph-crot", "t-gflipv-crot", "t-grot-gflip-crot-cflip", "t-nested-flip"]
+        },
+        {
+          "model": "sumOfAngles",
+          "right": 9,
+          "of": 13,
+          "misses": ["t-gfliph-crot", "t-gflipv-crot", "t-grot-gflip-crot-cflip", "t-nested-flip"]
+        }
+      ]
+    },
+    "flipVerdict": [
+      {
+        "name": "flip-30-H",
+        "angle": 30,
+        "written": 330,
+        "negated": true
+      },
+      {
+        "name": "flip-45-H",
+        "angle": 45,
+        "written": 315,
+        "negated": true
+      },
+      {
+        "name": "flip-120-H",
+        "angle": 120,
+        "written": 240,
+        "negated": true
+      },
+      {
+        "name": "flip-200-H",
+        "angle": 200,
+        "written": 160,
+        "negated": true
+      },
+      {
+        "name": "flip-30-V",
+        "angle": 30,
+        "written": 330,
+        "negated": true
+      },
+      {
+        "name": "flip-45-V",
+        "angle": 45,
+        "written": 315,
+        "negated": true
+      },
+      {
+        "name": "flip-120-V",
+        "angle": 120,
+        "written": 240,
+        "negated": true
+      },
+      {
+        "name": "flip-200-V",
+        "angle": 200,
+        "written": 160,
+        "negated": true
+      }
+    ],
+    "groupFill": {
+      "solidReachesGroup": true,
+      "groundIsPainted": false,
+      "groundIsPaintedAlone": false,
+      "gradientLeft": "FB0037",
+      "gradientRight": "3600FB",
+      "groupLeft": "F6004D",
+      "groupRight": "4D00F6",
+      "gradientIsSlice": true,
+      "spanChecks": [
+        {
+          "probe": "f-gradient",
+          "axis": "x",
+          "measured": {
+            "x0": 150,
+            "x1": 650
+          },
+          "contentBounds": {
+            "x0": 150,
+            "x1": 650
+          },
+          "declaredBox": {
+            "x0": 100,
+            "x1": 700
+          },
+          "matchesContent": true,
+          "matchesDeclared": false
+        },
+        {
+          "probe": "g-one",
+          "axis": "x",
+          "measured": {
+            "x0": 300.83,
+            "x1": 400.83
+          },
+          "contentBounds": {
+            "x0": 300,
+            "x1": 400
+          },
+          "declaredBox": {
+            "x0": 100,
+            "x1": 700
+          },
+          "matchesContent": true,
+          "matchesDeclared": false
+        },
+        {
+          "probe": "g-deep",
+          "axis": "x",
+          "measured": {
+            "x0": 300.83,
+            "x1": 400.83
+          },
+          "contentBounds": {
+            "x0": 300,
+            "x1": 400
+          },
+          "declaredBox": {
+            "x0": 100,
+            "x1": 700
+          },
+          "matchesContent": true,
+          "matchesDeclared": false
+        },
+        {
+          "probe": "g-vert",
+          "axis": "y",
+          "measured": {
+            "x0": 129.87,
+            "x1": 380.97
+          },
+          "contentBounds": {
+            "x0": 130,
+            "x1": 380
+          },
+          "declaredBox": {
+            "x0": 100,
+            "x1": 400
+          },
+          "matchesContent": true,
+          "matchesDeclared": false
+        }
+      ],
+      "extents": {
+        "twoChildren": {
+          "x0": 150,
+          "x1": 650
+        },
+        "oneChild": {
+          "x0": 300.83,
+          "x1": 400.83
+        },
+        "deep": {
+          "x0": 300.83,
+          "x1": 400.83
+        },
+        "vertical": {
+          "x0": 129.87,
+          "x1": 380.97
+        },
+        "solidSiblingT": 0.12333333333333334,
+        "outsideSiblingT": 0.0775,
+        "onlyChildT": 0.49
+      },
+      "ramps": [
+        {
+          "id": "f-grad-left",
+          "probe": "f-gradient",
+          "at": 200,
+          "rgb": "FB0037",
+          "t": 0.1,
+          "refAt": 160
+        },
+        {
+          "id": "f-grad-right",
+          "probe": "f-gradient",
+          "at": 600,
+          "rgb": "3600FB",
+          "t": 0.9,
+          "refAt": 640
+        },
+        {
+          "id": "f-grad-ref-left",
+          "probe": "f-gradient",
+          "at": 200,
+          "rgb": "F6004D",
+          "t": 0.16583333333333333,
+          "refAt": 199.5
+        },
+        {
+          "id": "f-grad-ref-right",
+          "probe": "f-gradient",
+          "at": 600,
+          "rgb": "4D00F6",
+          "t": 0.8308333333333333,
+          "refAt": 598.5
+        },
+        {
+          "id": "g-one-a",
+          "probe": "g-one",
+          "at": 310,
+          "rgb": "FB0034",
+          "t": 0.09166666666666666,
+          "refAt": 155
+        },
+        {
+          "id": "g-one-b",
+          "probe": "g-one",
+          "at": 350,
+          "rgb": "BC00B8",
+          "t": 0.49,
+          "refAt": 394
+        },
+        {
+          "id": "g-one-c",
+          "probe": "g-one",
+          "at": 390,
+          "rgb": "3900FB",
+          "t": 0.8916666666666667,
+          "refAt": 635
+        },
+        {
+          "id": "g-sib-a",
+          "probe": "g-solid-sibling",
+          "at": 350,
+          "rgb": "FA003F",
+          "t": 0.12333333333333334,
+          "refAt": 174
+        },
+        {
+          "id": "g-sib-b",
+          "probe": "g-solid-sibling",
+          "at": 650,
+          "rgb": "00A000",
+          "t": null,
+          "refAt": null
+        },
+        {
+          "id": "g-out-a",
+          "probe": "g-outside",
+          "at": 350,
+          "rgb": "FC002F",
+          "t": 0.0775,
+          "refAt": 146.5
+        },
+        {
+          "id": "g-deep-a",
+          "probe": "g-deep",
+          "at": 310,
+          "rgb": "FB0034",
+          "t": 0.09166666666666666,
+          "refAt": 155
+        },
+        {
+          "id": "g-deep-b",
+          "probe": "g-deep",
+          "at": 350,
+          "rgb": "BC00B8",
+          "t": 0.49,
+          "refAt": 394
+        },
+        {
+          "id": "g-deep-c",
+          "probe": "g-deep",
+          "at": 390,
+          "rgb": "3900FB",
+          "t": 0.8916666666666667,
+          "refAt": 635
+        },
+        {
+          "id": "g-vert-top",
+          "probe": "g-vert",
+          "at": 160,
+          "rgb": "FA003E",
+          "t": 0.12,
+          "refAt": 136
+        },
+        {
+          "id": "g-vert-bot",
+          "probe": "g-vert",
+          "at": 350,
+          "rgb": "3E00FA",
+          "t": 0.8766666666666667,
+          "refAt": 363
+        }
+      ],
+      "patternLeafInk": 0.714,
+      "patternGroundInk": 0,
+      "patternReferenceInk": 0.778,
+      "overNoFill": "FFFFFF",
+      "overSilence": "FFFFFF",
+      "atTopLevel": "FFFFFF",
+      "nested": "BC00B8",
+      "nestedReachesOuter": false
+    },
+    "compositing": [
+      {
+        "deck": "inherit-default",
+        "masterShape": "D32F2F",
+        "layoutShape": "388E3C",
+        "slideShape": "1976D2",
+        "masterPlaceholder": "FFFFFF",
+        "layoutPlaceholder": "FFFFFF",
+        "masterVisible": true,
+        "layoutVisible": true,
+        "slideVisible": true,
+        "placeholdersVisible": false
+      },
+      {
+        "deck": "inherit-slide-off",
+        "masterShape": "FFFFFF",
+        "layoutShape": "FFFFFF",
+        "slideShape": "1976D2",
+        "masterPlaceholder": "FFFFFF",
+        "layoutPlaceholder": "FFFFFF",
+        "masterVisible": false,
+        "layoutVisible": false,
+        "slideVisible": true,
+        "placeholdersVisible": false
+      },
+      {
+        "deck": "inherit-layout-off",
+        "masterShape": "FFFFFF",
+        "layoutShape": "388E3C",
+        "slideShape": "1976D2",
+        "masterPlaceholder": "FFFFFF",
+        "layoutPlaceholder": "FFFFFF",
+        "masterVisible": false,
+        "layoutVisible": true,
+        "slideVisible": true,
+        "placeholdersVisible": false
+      },
+      {
+        "deck": "inherit-both-off",
+        "masterShape": "FFFFFF",
+        "layoutShape": "FFFFFF",
+        "slideShape": "1976D2",
+        "masterPlaceholder": "FFFFFF",
+        "layoutPlaceholder": "FFFFFF",
+        "masterVisible": false,
+        "layoutVisible": false,
+        "slideVisible": true,
+        "placeholdersVisible": false
+      }
+    ],
+    "strokeScale": {
+      "weightAfterUngroup": 4,
+      "declaredWidth": 4,
+      "groupScale": 2,
+      "scaledRow": "FFFFFF",
+      "strokeRow": "000000",
+      "strokeIsScaled": false
+    },
+    "shear": {
+      "cases": [
+        {
+          "id": "t-shear",
+          "rot": 45,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 350,
+            "y": 100,
+            "w": 100,
+            "h": 200
+          },
+          "reportedRotation": 45,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": true,
+          "baked_": false,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-0",
+          "rot": 0,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reportedRotation": 0,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": false,
+          "baked_": true,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-15",
+          "rot": 15,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reportedRotation": 15,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": false,
+          "baked_": true,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-30",
+          "rot": 30,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reportedRotation": 30,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": false,
+          "baked_": true,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-44",
+          "rot": 44,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reportedRotation": 44,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": false,
+          "baked_": true,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-45",
+          "rot": 45,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 350,
+            "y": 100,
+            "w": 100,
+            "h": 200
+          },
+          "reportedRotation": 45,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": true,
+          "baked_": false,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-46",
+          "rot": 46,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 350,
+            "y": 100,
+            "w": 100,
+            "h": 200
+          },
+          "reportedRotation": 46,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": true,
+          "baked_": false,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-60",
+          "rot": 60,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 350,
+            "y": 100,
+            "w": 100,
+            "h": 200
+          },
+          "reportedRotation": 60,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": true,
+          "baked_": false,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-75",
+          "rot": 75,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 350,
+            "y": 100,
+            "w": 100,
+            "h": 200
+          },
+          "reportedRotation": 75,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": true,
+          "baked_": false,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-90",
+          "rot": 90,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 350,
+            "y": 100,
+            "w": 100,
+            "h": 200
+          },
+          "reportedRotation": 90,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": true,
+          "baked_": false,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-135",
+          "rot": 135,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reportedRotation": 135,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": false,
+          "baked_": true,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-wide-180",
+          "rot": 180,
+          "flipH": false,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reportedRotation": 180,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": false,
+          "baked_": true,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-tall-30",
+          "rot": 30,
+          "flipH": false,
+          "sx": 1,
+          "sy": 2,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 200,
+            "y": 200,
+            "w": 100,
+            "h": 200
+          },
+          "reported": {
+            "x": 200,
+            "y": 200,
+            "w": 100,
+            "h": 200
+          },
+          "reportedRotation": 30,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": false,
+          "baked_": true,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-tall-45",
+          "rot": 45,
+          "flipH": false,
+          "sx": 1,
+          "sy": 2,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 200,
+            "y": 200,
+            "w": 100,
+            "h": 200
+          },
+          "reported": {
+            "x": 150,
+            "y": 250,
+            "w": 200,
+            "h": 100
+          },
+          "reportedRotation": 45,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": true,
+          "baked_": false,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-tall-60",
+          "rot": 60,
+          "flipH": false,
+          "sx": 1,
+          "sy": 2,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 200,
+            "y": 200,
+            "w": 100,
+            "h": 200
+          },
+          "reported": {
+            "x": 150,
+            "y": 250,
+            "w": 200,
+            "h": 100
+          },
+          "reportedRotation": 60,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": true,
+          "baked_": false,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-both-30",
+          "rot": 30,
+          "flipH": false,
+          "sx": 2,
+          "sy": 3,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 250,
+            "w": 200,
+            "h": 300
+          },
+          "reported": {
+            "x": 300,
+            "y": 250,
+            "w": 200,
+            "h": 300
+          },
+          "reportedRotation": 30,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": false,
+          "baked_": true,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-both-60",
+          "rot": 60,
+          "flipH": false,
+          "sx": 2,
+          "sy": 3,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 250,
+            "w": 200,
+            "h": 300
+          },
+          "reported": {
+            "x": 250,
+            "y": 300,
+            "w": 300,
+            "h": 200
+          },
+          "reportedRotation": 60,
+          "reportedFlipH": false,
+          "reportedFlipV": false,
+          "swapped": true,
+          "baked_": false,
+          "centreAgrees": true
+        },
+        {
+          "id": "s-flip",
+          "rot": 0,
+          "flipH": true,
+          "sx": 2,
+          "sy": 1,
+          "leaf": {
+            "x": 200,
+            "y": 150,
+            "w": 100,
+            "h": 100
+          },
+          "baked": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reported": {
+            "x": 300,
+            "y": 150,
+            "w": 200,
+            "h": 100
+          },
+          "reportedRotation": 0,
+          "reportedFlipH": true,
+          "reportedFlipV": false,
+          "swapped": false,
+          "baked_": true,
+          "centreAgrees": true
+        }
+      ],
+      "swapRule": {
+        "winner": "quadrantRoundHalfUp",
+        "scores": [
+          {
+            "model": "quadrantRoundHalfUp",
+            "right": 18,
+            "of": 18,
+            "misses": []
+          },
+          {
+            "model": "sinStrictlyGreater",
+            "right": 14,
+            "of": 18,
+            "misses": ["t-shear", "s-wide-45", "s-wide-135", "s-tall-45"]
+          },
+          {
+            "model": "sinAtLeast",
+            "right": 17,
+            "of": 18,
+            "misses": ["s-wide-135"]
+          }
+        ]
+      },
+      "centreAlwaysAgrees": true,
+      "rotationAlwaysKept": true,
+      "paintsTheReportedFrame": [true, true, true, true],
+      "samples": [
+        {
+          "id": "t-shear-left",
+          "probe": "t-shear",
+          "x": 265,
+          "y": 200,
+          "asks": "inside a sheared parallelogram only",
+          "expect": null,
+          "rgb": "FFFFFF",
+          "block": "FFFFFF",
+          "ink": 0,
+          "mean": "FFFFFF"
+        },
+        {
+          "id": "t-shear-centre",
+          "probe": "t-shear",
+          "x": 400,
+          "y": 200,
+          "asks": "inside under either reading",
+          "expect": null,
+          "rgb": "1E88E5",
+          "block": "1E88E5",
+          "ink": 1,
+          "mean": "1E88E5"
+        },
+        {
+          "id": "t-shear-right",
+          "probe": "t-shear",
+          "x": 535,
+          "y": 200,
+          "asks": "inside a sheared parallelogram only",
+          "expect": null,
+          "rgb": "FFFFFF",
+          "block": "FFFFFF",
+          "ink": 0,
+          "mean": "FFFFFF"
+        },
+        {
+          "id": "t-shear-top",
+          "probe": "t-shear",
+          "x": 365,
+          "y": 110,
+          "asks": "inside a rotated rectangle only",
+          "expect": null,
+          "rgb": "FFFFFF",
+          "block": "FFFFFF",
+          "ink": 0,
+          "mean": "FFFFFF"
+        }
+      ]
+    },
+    "chExtZero": {
+      "probe": "h-chext-zero-x",
+      "reading": {
+        "x": 150,
+        "y": 120,
+        "w": 80,
+        "h": 40
+      },
+      "meansNoScaling": true
+    },
+    "extZero": {
+      "probe": "h-ext-zero-x",
+      "reading": {
+        "x": 100,
+        "y": 120,
+        "w": 0,
+        "h": 40
+      }
+    },
+    "missingChildTransform": {
+      "probe": "h-no-chxfrm",
+      "reading": {
+        "x": 250,
+        "y": 220,
+        "w": 80,
+        "h": 40
+      }
+    },
+    "negativeChExt": {
+      "probe": "h-chext-negative",
+      "repaired": true
+    }
+  }
+}

@@ -1,9 +1,10 @@
 # `@pptx-studio/paint`
 
-DrawingML colour and fills: the **six colour bases**, the **twenty-eight transforms** applied in
-document order, and resolution against a **theme** and a **colour map** (2.6); then **gradients**
-and the **54 preset pattern tiles** (2.7). Dashes, arrowheads and effects are 2.8 and are not here
-yet.
+DrawingML colour, fills, strokes and effects: the **six colour bases**, the **twenty-eight
+transforms** applied in document order, and resolution against a **theme** and a **colour map**
+(2.6); **gradients** and the **54 preset pattern tiles** (2.7); the **eleven dash arrays**, the
+**five compound strokes**, the **six arrowheads**, and the **blur that four different attributes all
+turn out to be** (2.8).
 
 Every rule in this package was measured against Microsoft PowerPoint rather than derived from the
 standard, because on the question that matters most the standard says nothing at all: ECMA-376
@@ -167,9 +168,133 @@ the only such pair and matches GDI+ aliasing `LargeGrid` to `Cross`. The `pctNN`
 
 A missing `a:fgClr` paints black and a missing `a:bgClr` paints white, whatever the theme.
 
+## Strokes
+
+`a:ln` is where the standard and Office part company most often. Four of the numbers below
+contradict either ECMA-376 or the obvious reading of it.
+
+### The eleven dash arrays, in multiples of the stroke width
+
+| preset    | array | preset          | array       |
+| --------- | ----- | --------------- | ----------- |
+| `solid`   | —     | `dashDot`       | 4 3 1 3     |
+| `dot`     | 1 3   | `sysDashDot`    | 3 1 1 1     |
+| `sysDot`  | 1 1   | `lgDashDot`     | 8 3 1 3     |
+| `dash`    | 4 3   | `lgDashDotDot`  | 8 3 1 3 1 3 |
+| `sysDash` | 3 1   | `sysDashDotDot` | 3 1 1 1 1 1 |
+| `lgDash`  | 8 3   |                 |             |
+
+For once the widely quoted arrays are exactly right, and they are right three ways over: measured
+from the pixels, cross-checked against an explicit `a:custDash` of each quoted array painting
+an identical row, and shown to scale with `@w` at 3, 6 and 24 points.
+
+### The cap, which is both a default and a trap
+
+`a:ln/@cap` **defaults to `flat`**, not to the `sq` ECMA-376 specifies — a 200pt
+line at 24pt wide spans 300..500 with no `@cap` and 288..512 with `cap="sq"`. This is not
+an obscure corner: PowerPoint's authoring UI writes `@cap` for exactly two of its twelve dash
+styles and for nothing else, so this default is the state of almost every line in almost every deck.
+
+And a cap **does not lengthen a dash**. `dot` is `[1, 3]`, and with `cap="rnd"` it
+still paints ink of exactly one width and a gap of exactly three. SVG's `stroke-dasharray` does
+not work that way — it describes the path the cap is then added to — so `dashArray()` shortens
+each dash by one width and lengthens each gap by one whenever the cap is not flat:
+
+```ts
+dashArray(PRESET_DASHES.dot, w, 'flat'); // [w, 3w]
+dashArray(PRESET_DASHES.dot, w, 'rnd'); //  [0, 4w]  - a disc, and the same period
+```
+
+Copy the array across unchanged with `stroke-linecap: round` and every dot is twice as long as
+it should be.
+
+### Joins, and two more defaults SVG disagrees with
+
+The join **defaults to `round`** where SVG defaults to `miter`, and the miter limit is
+**8** where SVG's is **4** — bracketed between a corner of miter ratio 7.91 that paints a full spike
+and one of 8.01 that falls back to a bevel. `@lim` is a percentage of the _whole_ stroke width,
+not of half of it. `svgStroke` therefore always writes `stroke-linejoin` and
+`stroke-miterlimit` out; omitting either would be wrong twice over.
+
+An `a:ln` with no `@w` is **0.75pt**. An unstyled shape has no `a:ln` at all and
+takes its stroke from `p:style/a:lnRef` into the theme, which is 2.9's problem rather than this
+package's.
+
+### `@cmpd` subdivides the width; it does not add to it
+
+| `@cmpd`     | rails and gaps, outside first |
+| ----------- | ----------------------------- |
+| `sng`       | 1                             |
+| `dbl`       | ⅓ · ⅓ · ⅓                     |
+| `thickThin` | 0.6 · 0.2 · 0.2               |
+| `thinThick` | 0.2 · 0.2 · 0.6               |
+| `tri`       | ⅙ · ⅙ · ⅓ · ⅙ · ⅙             |
+
+A `dbl` at 36pt is two 12pt rails with a 12pt gap, spanning 36pt in total — not two 36pt rails,
+and not a 72pt band. The table is stored as whole sixtieths and `compoundRails` divides last,
+so a third of a 36000 EMU stroke is 12000 and not 11999.988.
+
+### The six arrowheads, measured rather than transcribed
+
+`@len` and `@w` are the same three steps: **sm = 2, med = 3, lg = 5** stroke widths,
+confirmed on all 54 combinations and at stroke widths of 4, 8 and 16 points.
+
+- **A diamond and an oval are centred on the line's endpoint.** The other three put their tip there.
+  Getting this wrong displaces a large head by half its length.
+- **A stealth shares its silhouette with a triangle.** Only the ink tells them apart, and the notch
+  is a quarter of the head's length.
+- **An open `arrow` is a stroked V**, not a filled outline, which is why its silhouette
+  measures wider than its nominal width.
+
+The obvious source for this geometry is LibreOffice's vertex tables, which are MPL-2.0 — a
+file-level copyleft an Apache-2.0 tree cannot take. So it was measured instead, which costs no
+licence and is the more faithful answer anyway.
+
+## Effects
+
+Four attributes on four elements — `a:outerShdw/@blurRad`, `a:blur/@rad`,
+`a:glow/@rad` and `a:softEdge/@rad` — turn out to be one operator with one constant:
+
+> **σ = r / 3**, over fourteen measurements, with the measured ratio never leaving 0.3300…0.3338.
+
+The edge moves for two of the four: a glow grows the shape and a soft edge shrinks it, both by
+**0.9 r**, while a shadow and a plain blur leave it alone. And a glow's `r` is **half** the
+radius it declares — with that halving, a glow's numbers are the same two constants as everything
+else's, and without it they look like two more to remember.
+
+Neither "Gaussian" nor "isotropic" is assumed. An error function fitted to the measured edge left a
+worst residual of 0.84/255 across every radius, and the ramp across a horizontal edge matched the one
+across a vertical edge to **0/255** over 75 samples.
+
+Three more things a renderer has to get right:
+
+- **`dir` is zero along +x and turns toward +y** — clockwise on screen. Measured at all eight
+  multiples of 45° and agreeing with `Shape.Shadow.OffsetX`/`OffsetY`.
+- **`@algn` names the point that stays put** under a shadow's scale and skew, and defaults to
+  `b`, bottom-centre. `sy="-100000"` therefore mirrors about the bottom edge.
+- **An inner shadow darkens the edge `dir` points at**, which is the opposite of what the naive
+  offset-and-invert derivation predicts. Probed in both directions, because one reading is not a
+  rule.
+
+`effectFilter` returns a typed list of SVG filter primitives rather than markup — the package
+has no DOM, and the two renderers build their nodes differently. The painting order in that list is
+measured rather than schematic: **the glow is painted over the outer shadow**, which is the reverse
+of the order `a:effectLst` lists them in. That element is an `xsd:sequence`, so a file
+cannot express an order at all and the renderer has to know one.
+
+**`a:prstShdw` is real and undocumented.** Twenty of PowerPoint's forty-three legacy shadow
+presets save as this element, which the plan for this sub-phase does not mention and no renderer this
+project has read implements. What each of the twenty paints is recorded in the fixture; they are not
+all plain offset shadows — some are squashed to half height, some stretched to three times the
+width, some skewed.
+
 ## What is not here
 
-- Dashes, arrowheads and effects — 2.8.
+- Nothing is painted; the renderers are 2.10.
+- `a:prstShdw` is recorded, not modelled — twenty measured boxes, no transforms behind them.
+- `a:reflection` is a type and a measurement, not a renderer.
+- `algn="in"` is measured and confirmed to sit wholly inside the geometry; building the
+  clip-and-double-stroke that emulates it in SVG is 2.10.
 - `a:blipFill` and `a:grpFill` have a place in the `Fill` union and nothing behind them. A `grpFill`
   child has to show the _slice_ of the enclosing group's gradient that falls under it, which needs
   the group's rectangle: 2.10.
@@ -186,6 +311,7 @@ A missing `a:fgClr` paints black and a missing `a:bgClr` paints white, whatever 
 `corpus/ground-truth/color-bases.json` — 259 swatches, sub-phase 2.6, the bases, alpha, the colour
 map and the percentage grammar.
 `corpus/ground-truth/fills.json` — 144 probes in 23 packages, sub-phase 2.7, gradients and patterns.
+`corpus/ground-truth/lines.json` — 213 probes in 47 packages, sub-phase 2.8, strokes and effects.
 
 The colour fixtures were read back two independent ways — PowerPoint's object model and the centre
 pixel of its own bitmap export — and the two agree on all 464 opaque swatches. `color.test.ts` runs
@@ -196,4 +322,13 @@ A gradient has no single colour, so for C3 the bitmap is the oracle and the obje
 corroborates. `fill.test.ts` predicts every ramp in that fixture to within two bytes, with two named
 exceptions where PowerPoint's rasteriser softens a corner in the ramp profile.
 
-See `docs/adr/0007-ground-truth.md`, `docs/adr/0021-colour.md` and `docs/adr/0022-fills.md`.
+A stroke's answer is usually a _position_ rather than a curve, and a position is recovered far more
+precisely than a pixel: an antialiased edge crosses half coverage somewhere inside one pixel, and
+interpolating between the two straddling samples locates it to about a tenth of one. So the C4
+fixture stores sub-pixel crossings, in points, and keeps the raw profile only where the answer really
+is a shape. That is why all 34 numbers in the dash table came out within 0.02 of a whole number.
+`line.test.ts` re-derives all three shipped tables from those crossings, so a measured constant
+cannot quietly become somebody's memory of one.
+
+See `docs/adr/0007-ground-truth.md`, `docs/adr/0021-colour.md`,
+`docs/adr/0022-fills.md` and `docs/adr/0023-lines.md`.

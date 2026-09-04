@@ -56,20 +56,29 @@ export const EMU_PER_POINT = 12700;
 
 export interface LineOptions {
   /** Points. Omitted means no `@w`, which is a question in itself. */
-  readonly w?: number;
-  readonly cap?: 'flat' | 'sq' | 'rnd' | string;
-  readonly cmpd?: 'sng' | 'dbl' | 'thickThin' | 'thinThick' | 'tri' | string;
-  readonly algn?: 'ctr' | 'in' | string;
+  readonly w?: number | undefined;
+  /**
+   * `flat`, `sq` or `rnd` - typed as a plain string, not as that union.
+   *
+   * Half the point of this file is to write attribute values PowerPoint has
+   * never seen, and a union that also admits `string` is just `string` with a
+   * comment attached. This is the comment.
+   */
+  readonly cap?: string | undefined;
+  /** `sng`, `dbl`, `thickThin`, `thinThick` or `tri` - or a hostile probe's own. */
+  readonly cmpd?: string | undefined;
+  /** `ctr` or `in` - or a hostile probe's own. */
+  readonly algn?: string | undefined;
   /** Defaults to solid black. Pass `'<a:noFill/>'` for an invisible stroke. */
-  readonly fill?: string;
+  readonly fill?: string | undefined;
   /** A whole `a:prstDash` or `a:custDash`. */
-  readonly dash?: string;
+  readonly dash?: string | undefined;
   /** A whole `a:round`, `a:bevel` or `a:miter`. */
-  readonly join?: string;
-  readonly headEnd?: string;
-  readonly tailEnd?: string;
+  readonly join?: string | undefined;
+  readonly headEnd?: string | undefined;
+  readonly tailEnd?: string | undefined;
   /** Written verbatim in place of a computed `@w`, for the hostile probes. */
-  readonly rawW?: string;
+  readonly rawW?: string | undefined;
 }
 
 /**
@@ -112,7 +121,10 @@ export function prstDash(val: string): string {
 export function custDash(pairs: readonly (readonly [number, number])[]): string {
   if (pairs.length === 0) return '<a:custDash/>';
   const ds = pairs
-    .map(([d, sp]) => `<a:ds d="${String(Math.round(d * 100000))}" sp="${String(Math.round(sp * 100000))}"/>`)
+    .map(
+      ([d, sp]) =>
+        `<a:ds d="${String(Math.round(d * 100000))}" sp="${String(Math.round(sp * 100000))}"/>`,
+    )
     .join('');
   return `<a:custDash>${ds}</a:custDash>`;
 }
@@ -160,7 +172,7 @@ export interface ShadowOptions {
   /** Degrees. */
   readonly kxDeg?: number;
   readonly kyDeg?: number;
-  readonly algn?: string;
+  readonly algn?: string | undefined;
   readonly rotWithShape?: 0 | 1;
   readonly color?: string;
   /** Written verbatim in place of every computed attribute, for hostile probes. */
@@ -226,7 +238,9 @@ export function reflection(attrs: string): string {
  * assembled in any other order does not open.
  */
 export function effectLst(...children: readonly string[]): string {
-  return children.length === 0 ? '<a:effectLst/>' : `<a:effectLst>${children.join('')}</a:effectLst>`;
+  return children.length === 0
+    ? '<a:effectLst/>'
+    : `<a:effectLst>${children.join('')}</a:effectLst>`;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -272,16 +286,16 @@ export interface Probe {
   readonly cx: number;
   readonly cy: number;
   /** A whole `a:prstGeom` or `a:custGeom`. Defaults to `prst="line"`. */
-  readonly geom?: string;
+  readonly geom?: string | undefined;
   /** Defaults to `a:noFill`. */
-  readonly fill?: string;
+  readonly fill?: string | undefined;
   /** A whole `a:ln`. */
-  readonly line?: string;
+  readonly line?: string | undefined;
   /** A whole `a:effectLst`. */
-  readonly effect?: string;
+  readonly effect?: string | undefined;
   readonly read: ReadSpec;
   /** Sixtieths of a degree on `a:xfrm/@rot`. */
-  readonly rot?: number;
+  readonly rot?: number | undefined;
 }
 
 export const LINE_GEOM = '<a:prstGeom prst="line"><a:avLst/></a:prstGeom>';
@@ -520,8 +534,16 @@ export function lineProbes(): Probe[] {
     { id: 'w-absent', line: ln({}), question: 'a:ln with no @w - how thick is it?' },
     { id: 'w-zero', line: ln({ rawW: '0' }), question: 'w="0" - hairline, or nothing at all?' },
     { id: 'w-1pt', line: ln({ w: 1 }), question: 'w=1pt, as a scale check' },
-    { id: 'w-quarter', line: ln({ rawW: '3175' }), question: 'w=0.25pt - is a sub-pixel width painted?' },
-    { id: 'w-9525', line: ln({ rawW: '9525' }), question: 'w=0.75pt, the width Office calls "hairline" in its UI' },
+    {
+      id: 'w-quarter',
+      line: ln({ rawW: '3175' }),
+      question: 'w=0.25pt - is a sub-pixel width painted?',
+    },
+    {
+      id: 'w-9525',
+      line: ln({ rawW: '9525' }),
+      question: 'w=0.75pt, the width Office calls "hairline" in its UI',
+    },
   ];
   widthCases.forEach((c, i) => {
     const y = 60 + i * 100;
@@ -669,10 +691,18 @@ export function lineProbes(): Probe[] {
   // extent sets the scale.
   const JOIN_W = 20;
   const joinCases: { id: string; join: string | undefined; question: string }[] = [
-    { id: 'join-absent', join: undefined, question: 'with no join element, which join does Office use?' },
+    {
+      id: 'join-absent',
+      join: undefined,
+      question: 'with no join element, which join does Office use?',
+    },
     { id: 'join-round', join: '<a:round/>', question: 'a:round on a sharp corner' },
     { id: 'join-bevel', join: '<a:bevel/>', question: 'a:bevel on a sharp corner' },
-    { id: 'join-miter', join: '<a:miter/>', question: 'a:miter with no @lim - what is the default limit?' },
+    {
+      id: 'join-miter',
+      join: '<a:miter/>',
+      question: 'a:miter with no @lim - what is the default limit?',
+    },
     {
       id: 'join-miter-lim',
       join: '<a:miter lim="100000"/>',
@@ -885,14 +915,15 @@ export function lineProbes(): Probe[] {
     id: 'ah-shaft',
     deck: 'arrow0',
     group: 'arrowhead',
-    question: 'does the shaft still reach the endpoint under a triangle head, or is it pulled back?',
+    question:
+      'does the shaft still reach the endpoint under a triangle head, or is it pulled back?',
     x: 300,
     y: 500,
     cx: 400,
     cy: 0,
     geom: LINE_GEOM,
     line: ln({ w: 24, tailEnd: lineEnd('tailEnd', 'triangle', 'med', 'med') }),
-    read: { mode: 'row', y: 500, x0: 640, x1: 760 },
+    read: { mode: 'row', y: 500, x0: 710, x1: 790 },
   });
   // Does the head scale with the stroke? Every length in section H is quoted in
   // stroke widths, which is only the right unit if the same head at a different
@@ -929,7 +960,7 @@ export function lineProbes(): Probe[] {
       headEnd: lineEnd('headEnd', 'oval', 'lg', 'lg'),
       tailEnd: lineEnd('tailEnd', 'triangle', 'sm', 'sm'),
     }),
-    read: { mode: 'row', y: 430, x0: 260, x1: 760 },
+    read: { mode: 'row', y: 430, x0: 180, x1: 790 },
   });
 
   /* --------------------------------------------------------------- shadows */
@@ -952,7 +983,9 @@ export function lineProbes(): Probe[] {
       geom: RECT_GEOM,
       fill: BLACK_FILL,
       line: '<a:ln><a:noFill/></a:ln>',
-      effect: effectLst(outerShdw({ blurRad: 0, dist: 30, dirDeg: deg, color: shadowColor('FF0000') })),
+      effect: effectLst(
+        outerShdw({ blurRad: 0, dist: 30, dirDeg: deg, color: shadowColor('FF0000') }),
+      ),
       read: { mode: 'cols', x0: x - 50, y0: y - 50, x1: x + 150, y1: y + 150 },
     });
   });
@@ -1039,7 +1072,12 @@ export function lineProbes(): Probe[] {
       o: { sx: 200 },
       question: 'sx=200% - which edge of the shadow box stays put?',
     },
-    { deck: 'shaffine', id: 'shdw-sy', o: { sy: 200 }, question: 'sy=200% - which edge stays put?' },
+    {
+      deck: 'shaffine',
+      id: 'shdw-sy',
+      o: { sy: 200 },
+      question: 'sy=200% - which edge stays put?',
+    },
     {
       deck: 'shaffine',
       id: 'shdw-syneg',

@@ -496,3 +496,62 @@ export function shapeXml(options: ShapeOptions): string {
     '</p:spPr></p:sp>'
   );
 }
+
+/** A `p:grpSp`. The child coordinate space is the whole subject of C6. */
+export interface GroupOptions {
+  readonly id: number;
+  readonly name: string;
+  /** `a:off` and `a:ext`, in EMU: the rectangle the group occupies on the slide. */
+  readonly x: number;
+  readonly y: number;
+  readonly cx: number;
+  readonly cy: number;
+  /**
+   * `a:chOff` and `a:chExt`, in EMU: the coordinate system the children are
+   * written in. A group PowerPoint has just made sets these equal to `off` and
+   * `ext`, so the children keep their slide coordinates verbatim; every
+   * subsequent resize changes `ext` alone and leaves both the children and
+   * `chExt` untouched, which is how the two come apart.
+   */
+  readonly chX: number;
+  readonly chY: number;
+  readonly chCx: number;
+  readonly chCy: number;
+  readonly rot?: number | undefined;
+  readonly flipH?: boolean | undefined;
+  readonly flipV?: boolean | undefined;
+  /** A whole fill element on `p:grpSpPr` - what `a:grpFill` children reach for. */
+  readonly fill?: string | undefined;
+  /**
+   * Write no `a:chOff` and no `a:chExt` at all.
+   *
+   * Both are optional in `CT_GroupTransform2D`, and what a group without them
+   * does to its children is a question only a hand-written package can ask -
+   * PowerPoint always writes all four.
+   */
+  readonly noChild?: boolean | undefined;
+  /** Already-built `p:sp` / `p:grpSp` markup. */
+  readonly children: string;
+}
+
+export function groupXml(o: GroupOptions): string {
+  const flip = (o.flipH === true ? ' flipH="1"' : '') + (o.flipV === true ? ' flipV="1"' : '');
+  const rot = o.rot === undefined || o.rot === 0 ? '' : ` rot="${String(o.rot)}"`;
+  const child =
+    o.noChild === true
+      ? ''
+      : `<a:chOff x="${String(o.chX)}" y="${String(o.chY)}"/><a:chExt cx="${String(o.chCx)}" cy="${String(o.chCy)}"/>`;
+  return (
+    '<p:grpSp><p:nvGrpSpPr>' +
+    `<p:cNvPr id="${String(o.id)}" name="${o.name}"/><p:cNvGrpSpPr/><p:nvPr/>` +
+    '</p:nvGrpSpPr><p:grpSpPr>' +
+    `<a:xfrm${rot}${flip}>` +
+    `<a:off x="${String(o.x)}" y="${String(o.y)}"/><a:ext cx="${String(o.cx)}" cy="${String(o.cy)}"/>` +
+    child +
+    '</a:xfrm>' +
+    (o.fill ?? '') +
+    '</p:grpSpPr>' +
+    o.children +
+    '</p:grpSp>'
+  );
+}

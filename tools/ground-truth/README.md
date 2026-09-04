@@ -123,22 +123,184 @@ Three things about the rig are worth copying rather than rediscovering:
 Fifteen of the 144 probes are hostile and each is alone in its package. Seven were refused, and
 because of that split each refusal names its own cause instead of taking seven other answers with it.
 
+### C4 — the stroke, and the things drawn around it _(added in 2.8)_
+
+Same two halves as C3, and the cheap one first again.
+
+**Ask PowerPoint to author the strokes** — `author-lines.ps1`, then unzip
+`ppt/slides/slide1.xml` from what it saved. `Line.DashStyle` over the whole
+`MsoLineDashStyle` range, `Line.Style`, `Line.InsetPen`, the arrowhead triples, and
+`Shadow.Type` over `msoShadow1`..`msoShadow43` plus glow, soft edge and reflection.
+One script, and it settled six things before a probe existed — among them that two of the twelve
+dash styles differ **only by `@cap`**, that PowerPoint writes `@cap` for nothing else,
+and that twenty of the forty-three shadow presets save as `a:prstShdw`, an element no renderer
+this project has read implements.
+
+**Then measure what it paints.**
+
+```bash
+node tools/ground-truth/build-line-deck.ts <dir>
+powershell -File tools/ground-truth/read-lines.ps1 -Dir <dir>
+node tools/ground-truth/analyse-lines.ts <dir> --fixture corpus/ground-truth/lines.json
+npx prettier --write corpus/ground-truth/lines.json
+node tools/ground-truth/write-line-tables.ts
+```
+
+The last step regenerates the three tables `@pptx-studio/paint` ships — the dash arrays, the
+compound divisions and the arrowheads. None is hand-written and `line.test.ts` re-derives all
+three from the fixture.
+
+Four things about this rig are worth copying rather than rediscovering:
+
+- **A position is a better measurement than a pixel.** An antialiased edge crosses half coverage
+  somewhere _inside_ one pixel, and interpolating between the two straddling samples locates it to
+  about a tenth of one. So the fixture stores sub-pixel **crossings**, in points, and keeps a raw
+  profile only where the answer really is a shape — a blur's falloff, an arrowhead's silhouette.
+  That is what makes a four-width dash segment measurable to better than half a percent.
+- **Placement is absolute, not a grid.** C3 let the builder place each probe. A stroke is drawn
+  _around_ its geometry, so half of what is being measured is outside the shape's own rectangle: a
+  square cap on a 24pt line paints 12pt past the endpoint and a 24pt blur reaches 24pt past the
+  shape. Every probe states its rectangle **and its read window** in points on the slide.
+- **Leave more room than looks necessary.** Two separate rounds of this experiment measured the
+  neighbouring shape instead of the intended one — a 36pt compound stroke reaches 22pt outside its
+  own rectangle, and a doubled shadow grew up into the row above's window. Both produced
+  plausible-looking numbers rather than errors.
+- **Fit the model; do not threshold it.** An ellipse's silhouette reaches the shaft's own height well
+  inside its back edge, so thresholding one reports every oval about nine percent short. Fitting the
+  outline family recovers the extent and the residual says whether the family was right.
+
+Fifteen of the 213 probes are hostile and each is alone in its package. **Thirteen were refused**,
+against seven of fifteen in C3: every enumeration in the stroke vocabulary is policed, and the only
+two that get through are both `a:custDash` degeneracies.
+
+### C5 — what a shape inherits, and from where _(added in 2.9)_
+
+Two halves again, and this time the cheap half answered the sub-phase's central architectural
+question outright.
+
+**Ask PowerPoint to author the inheritance** — `author-sheets.ps1`, then unzip the slide,
+layout and master parts from what it saved. Three slides on one layout: one untouched, one typed
+into, one nudged a single point. **Only the nudged one has an `a:xfrm`**, and it has the whole
+resolved rectangle, inherited two hops and baked in at once. Typing does not create geometry. That
+is architectural bet 3 confirmed by the format's own author, for the cost of one script — along with
+the eleven stock layouts' placeholder sets, the forty-two theme shape styles, and a two-master deck
+whose 22 layouts sit in one flat folder.
+
+**Then measure what it resolved.**
+
+```bash
+node tools/ground-truth/build-sheet-deck.ts <dir>
+powershell -File tools/ground-truth/read-sheets.ps1 -Dir <dir>
+node tools/ground-truth/analyse-sheets.ts <dir> --fixture corpus/ground-truth/sheets.json
+npx prettier --write corpus/ground-truth/sheets.json
+```
+
+**The measurement is a position, and PowerPoint reports it directly.** C3 and C4 sampled bitmaps
+because a fill and a stroke are pictures; an inheritance is not. A placeholder with no `a:xfrm`
+of its own still has a position, `Shape.Left` reports it in points exactly, and that is the
+resolver's own answer read out of the resolver rather than reconstructed from what it painted. So
+every candidate parent gets a rectangle no other candidate shares — five bands of seven boxes, 80
+points apart in y and 130 in x — and **the box a probe lands in names the parent it matched**. One
+number, no fitting, no error bars, and the whole run takes about a minute. Bitmaps are exported
+anyway, for a human to look at; nothing depends on them.
+
+Three things about this rig are worth copying rather than rediscovering:
+
+- **A repaired deck is not a measurement.** Four clean-looking decks came back REPAIRED and their
+  readings were of files PowerPoint had rewritten. Bisecting eight variants localised it to one
+  attribute value: a slide master may carry only `title`, `body`, `dt`,
+  `ftr`, `sldNum` and `hdr`. A second bisection found that every master must own
+  its own theme part. Both rules are now hostile probes, so nobody has to find them twice.
+- **A probe must not declare the thing it is asking about.** The two-hop _style_ probes first
+  reported the layout's magenta position marker rather than the master's style, because the shared
+  placeholder helper carried a fill. A plausible colour, and the wrong question answered.
+- **Two identical overrides cannot tell you which one applied.** The colour-map precedence probe had
+  to be rebuilt with a slide override that _disagrees_ with its layout's before it said anything.
+
+Twenty-three of the 37 packages are hostile and each is alone in its own file; 16 were refused or
+repaired.
+
+### C6 — what a group does to the shapes inside it _(added in 2.10)_
+
+Third sub-phase running that the cheapest thing in this directory was the highest-yield.
+
+**Ask PowerPoint in writing, first** — `author-transforms.ps1`, then unzip what it saved. `a:xfrm`
+carries `@rot`, `@flipH` and `@flipV` and says nothing about the order they compose in, and the two
+readings are not equivalent: for any reflection `F R(t) F = R(-t)`, so they differ by the **sign of
+the angle**. Hand PowerPoint a shape already rotated 30 degrees, ask it to mirror the shape, and read
+back what it writes. It wrote `rot="19800000" flipH="1"` — minus thirty — at 30, 45, 120 and 200
+degrees and on both axes. Only a renderer that flips _before_ it rotates has to negate the angle to
+reproduce a mirrored figure. One script, and the sub-phase's central question was settled before a
+probe existed — along with what a group resize writes (the group's `ext`, and nothing else) and what
+`Ungroup` bakes.
+
+**Then measure what a group does.**
+
+```bash
+node tools/ground-truth/build-transform-deck.ts <dir>
+powershell -File tools/ground-truth/read-transforms.ps1 -Dir <dir>
+node tools/ground-truth/analyse-transforms.ts <dir> --fixture corpus/ground-truth/transforms.json
+npx prettier --write corpus/ground-truth/transforms.json
+pnpm build && node tools/ground-truth/verify-render.ts <dir>
+```
+
+The measurement is C5's again and cheaper still: a leaf inside a group has no slide position of its
+own, the group's transform gives it one, and `Shape.Left` reports it. Confirmed against PowerPoint's
+own output to four decimal places — a child of a group turned 30 degrees and mirrored reported
+`L=321.2435302734375`, and `x="4079793"` appears in the file once that group is ungrouped. So 46 of
+the 65 probes need no bitmap at all.
+
+Four things worth copying:
+
+- **Read the shapes twice.** `GroupItems(i).Rotation` reports the _composed_ rotation while
+  `HorizontalFlip` reports the child's own attribute. The reader therefore ungroups everything **in
+  memory** and reads again; nothing is saved, and `Saved` is forced true before the close.
+- **A colour is not an answer; a position is.** The `a:grpFill` probes read a colour and needed a
+  _rectangle_ out of it. Every gradient slide carries a reference shape with the identical gradient
+  over a known rectangle, drawn behind everything, so a sampled colour turns back into a fraction
+  along the ramp — and two fractions solve for the span outright. Without it the first run compared a
+  `grpFill` child against the group's own ground and found white, because a group's fill is not
+  painted at all.
+- **One angle is not a rule.** At 45 degrees a rotated child in a non-uniformly scaled group came
+  back with its two extents swapped. Eighteen angles turned that into a quadrant snap that rounds
+  halves up, and refuted the two `|sin|`-versus-`|cos|` forms anybody would write first.
+- **Close the loop the other way.** `verify-render.ts` renders the same decks with `render-svg`,
+  rasterises them in Chromium at PowerPoint's export size, and reads PowerPoint's own sample points.
+  It found a bug nothing else did: `svgStops` returns a fraction and the renderer divided it by a
+  hundred thousand again, collapsing every gradient to its last stop. Seventeen samples at once, and
+  not one unit test.
+
 ## The files
 
-| file                    | what it is                                                     |
-| ----------------------- | -------------------------------------------------------------- |
-| `zip.ts`                | a small ZIP reader/writer, deliberately not `@pptx-studio/opc` |
-| `sfnt.ts`               | enough of the SFNT container to cross-examine an EOT header    |
-| `eot.ts`                | EOT read and write, versions 1 and 2.2, compressed or not      |
-| `pptx.ts`               | writes a minimal PresentationML package by hand                |
-| `swatches.ts`           | the 214 colour swatches and why each one is there              |
-| `swatches2.ts`          | the 259 C2 adds, and the question each block settles           |
-| `fills.ts`              | the 144 C3 probes: gradients, tiles, and fifteen hostile ones  |
-| `write-paint-tables.ts` | turns the C3 fixture into the tables `paint` ships             |
-| `author-fills.ps1`      | makes PowerPoint write the fills, so it names its own values   |
-| `color-models.ts`       | the candidate models, side by side, so one can win             |
-| `bmp.ts`                | sample a pixel out of PowerPoint's bitmap export               |
-| `build-font.ts`         | synthesises the probe font from nothing                        |
+| file                      | what it is                                                     |
+| ------------------------- | -------------------------------------------------------------- |
+| `zip.ts`                  | a small ZIP reader/writer, deliberately not `@pptx-studio/opc` |
+| `sfnt.ts`                 | enough of the SFNT container to cross-examine an EOT header    |
+| `eot.ts`                  | EOT read and write, versions 1 and 2.2, compressed or not      |
+| `pptx.ts`                 | writes a minimal PresentationML package by hand                |
+| `swatches.ts`             | the 214 colour swatches and why each one is there              |
+| `swatches2.ts`            | the 259 C2 adds, and the question each block settles           |
+| `fills.ts`                | the 144 C3 probes: gradients, tiles, and fifteen hostile ones  |
+| `write-paint-tables.ts`   | turns the C3 fixture into the tables `paint` ships             |
+| `author-fills.ps1`        | makes PowerPoint write the fills, so it names its own values   |
+| `lines.ts`                | the 213 C4 probes: dashes, caps, joins, arrowheads, effects    |
+| `write-line-tables.ts`    | turns the C4 fixture into the three tables `paint` ships       |
+| `author-lines.ps1`        | the same trick for strokes; six answers for one script         |
+| `sheets.ts`               | the 114 C5 probes: matching, inheritance, backgrounds, maps    |
+| `sheet-pptx.ts`           | a package builder with more than one master and layout         |
+| `build-sheet-deck.ts`     | writes the C5 decks and `sheet-inputs.json`                    |
+| `read-sheets.ps1`         | what PowerPoint resolved, through its own object model         |
+| `analyse-sheets.ts`       | scores the candidate matching rules and emits the fixture      |
+| `author-sheets.ps1`       | makes PowerPoint author the inheritance, and the xfrm answer   |
+| `transforms.ts`           | the 65 C6 probes: group maps, turns, `a:grpFill`, compositing  |
+| `build-transform-deck.ts` | writes the C6 decks and `transform-inputs.json`                |
+| `read-transforms.ps1`     | each shape twice: in place, and after an in-memory ungroup     |
+| `analyse-transforms.ts`   | scores the map, turn and swap rules; emits the fixture         |
+| `author-transforms.ps1`   | makes PowerPoint mirror and ungroup, and write the answer down |
+| `verify-render.ts`        | renders the decks with `render-svg` and compares the pixels    |
+| `color-models.ts`         | the candidate models, side by side, so one can win             |
+| `bmp.ts`                  | sample a pixel out of PowerPoint's bitmap export               |
+| `build-font.ts`           | synthesises the probe font from nothing                        |
 
 ## Driving PowerPoint
 

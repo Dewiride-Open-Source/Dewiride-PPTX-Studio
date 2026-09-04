@@ -40,7 +40,28 @@ export type PaintErrorCode =
    */
   | 'FILL_NO_STOPS'
   /** A `pattFill/@prst` outside the 54 names PowerPoint accepts. */
-  | 'FILL_PATTERN_UNKNOWN';
+  | 'FILL_PATTERN_UNKNOWN'
+  /**
+   * A `prstDash/@val` outside the eleven `ST_PresetLineDashVal` names.
+   *
+   * PowerPoint refuses the package for this, so a deck in the wild will not
+   * contain one and a caller that has synthesised one has made a mistake.
+   */
+  | 'LINE_DASH_UNKNOWN'
+  /** An `a:ln/@cmpd` outside the five `ST_CompoundLine` values. Also refused. */
+  | 'LINE_COMPOUND_UNKNOWN'
+  /** A `headEnd`/`tailEnd` `@type` outside the six. Also refused. */
+  | 'LINE_END_UNKNOWN'
+  /** A line end `@w` or `@len` that is not `sm`, `med` or `lg`. Also refused. */
+  | 'LINE_END_SIZE'
+  /**
+   * A negative blur radius.
+   *
+   * `a:outerShdw/@blurRad` and `a:glow/@rad` are both positive coordinates and
+   * PowerPoint refuses a package carrying a negative one, so this is a caller
+   * mistake rather than a file it will ever have to cope with.
+   */
+  | 'EFFECT_NEGATIVE_RADIUS';
 
 export class PaintError extends Error {
   readonly code: PaintErrorCode;

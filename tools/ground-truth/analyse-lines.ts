@@ -39,7 +39,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readBmp, type Bitmap } from './bmp.ts';
-import { ARROW_SIZES, ARROW_TYPES, FOLKLORE_DASHES, PRESET_DASHES, type ReadSpec } from './lines.ts';
+import {
+  ARROW_SIZES,
+  ARROW_TYPES,
+  FOLKLORE_DASHES,
+  PRESET_DASHES,
+  type ReadSpec,
+} from './lines.ts';
 
 /* -------------------------------------------------------------------------- */
 /* inputs                                                                     */
@@ -130,7 +136,9 @@ function coarse(deck: string): { file: string; scale: number } | null {
   const record = deckOf.get(deck);
   if (record === undefined) return null;
   const found = record.bitmaps.find((b) => b.width === 1920);
-  return found === undefined ? null : { file: found.file, scale: found.width / inputs.slidePoints.w };
+  return found === undefined
+    ? null
+    : { file: found.file, scale: found.width / inputs.slidePoints.w };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -171,7 +179,14 @@ interface Sampled {
   readonly step: number;
 }
 
-function sampleRow(bmp: Bitmap, scale: number, y: number, x0: number, x1: number, what: string): Sampled {
+function sampleRow(
+  bmp: Bitmap,
+  scale: number,
+  y: number,
+  x0: number,
+  x1: number,
+  what: string,
+): Sampled {
   const row = pixelAt(y, scale, bmp.height, what);
   const from = Math.max(0, Math.round(x0 * scale));
   const to = Math.min(bmp.width - 1, Math.round(x1 * scale));
@@ -180,7 +195,14 @@ function sampleRow(bmp: Bitmap, scale: number, y: number, x0: number, x1: number
   return { cover, start: (from + 0.5) / scale, step: 1 / scale };
 }
 
-function sampleCol(bmp: Bitmap, scale: number, x: number, y0: number, y1: number, what: string): Sampled {
+function sampleCol(
+  bmp: Bitmap,
+  scale: number,
+  x: number,
+  y0: number,
+  y1: number,
+  what: string,
+): Sampled {
   const col = pixelAt(x, scale, bmp.width, what);
   const from = Math.max(0, Math.round(y0 * scale));
   const to = Math.min(bmp.height - 1, Math.round(y1 * scale));
@@ -229,7 +251,11 @@ function runsOf(cross: { at: number; rising: boolean }[]): { on: number[]; off: 
 /** Coverage as one byte per sample. */
 function packCover(cover: readonly number[]): string {
   return cover
-    .map((c) => Math.round(Math.max(0, Math.min(1, c)) * 255).toString(16).padStart(2, '0'))
+    .map((c) =>
+      Math.round(Math.max(0, Math.min(1, c)) * 255)
+        .toString(16)
+        .padStart(2, '0'),
+    )
     .join('');
 }
 
@@ -285,8 +311,16 @@ function boxesOf(
             y1: Math.max(b.y1, y1),
           };
   };
-  for (let px = Math.max(0, Math.round(region.x0 * scale)); px <= Math.min(bmp.width - 1, Math.round(region.x1 * scale)); px++) {
-    for (let py = Math.max(0, Math.round(region.y0 * scale)); py <= Math.min(bmp.height - 1, Math.round(region.y1 * scale)); py++) {
+  for (
+    let px = Math.max(0, Math.round(region.x0 * scale));
+    px <= Math.min(bmp.width - 1, Math.round(region.x1 * scale));
+    px++
+  ) {
+    for (
+      let py = Math.max(0, Math.round(region.y0 * scale));
+      py <= Math.min(bmp.height - 1, Math.round(region.y1 * scale));
+      py++
+    ) {
       const [r, g, b] = bmp.pixel(px, py);
       const hue = hueOf(r, g, b);
       if (hue === null) continue;
@@ -295,8 +329,14 @@ function boxesOf(
     }
   }
   const tidy = (b: Box | null): Box | null =>
-    b === null ? null : { x0: round(b.x0, 2), y0: round(b.y0, 2), x1: round(b.x1, 2), y1: round(b.y1, 2) };
-  return { ink: tidy(acc['ink'] ?? null), red: tidy(acc['red'] ?? null), green: tidy(acc['green'] ?? null) };
+    b === null
+      ? null
+      : { x0: round(b.x0, 2), y0: round(b.y0, 2), x1: round(b.x1, 2), y1: round(b.y1, 2) };
+  return {
+    ink: tidy(acc['ink'] ?? null),
+    red: tidy(acc['red'] ?? null),
+    green: tidy(acc['green'] ?? null),
+  };
 }
 
 interface Measured {
@@ -500,32 +540,6 @@ section(
 
 const DASH_W = 12;
 
-/** On/off runs in width multiples, from the middle of a row where the pattern has settled. */
-function dashArray(id: string, width = DASH_W): number[] | null {
-  const m = byId.get(id);
-  if (m === undefined || m.edges.length < 6) return null;
-  const { on, off } = runsOf(m.edges);
-  // Drop the first and last of each: the run at either end of the line is
-  // clipped by the endpoint and is not a whole segment.
-  const trim = (v: number[]): number[] => v.slice(1, -1);
-  const onT = trim(on);
-  const offT = trim(off);
-  if (onT.length === 0 || offT.length === 0) return null;
-  // The pattern repeats, so cluster each list into the distinct lengths present
-  // rather than averaging a dash and a dot together.
-  const cluster = (v: number[]): number[] => {
-    const sorted = [...v].sort((a, b) => a - b);
-    const groups: number[][] = [];
-    for (const value of sorted) {
-      const last = groups[groups.length - 1];
-      if (last !== undefined && value - last[0]! < 0.25 * width) last.push(value);
-      else groups.push([value]);
-    }
-    return groups.map((g) => g.reduce((a, b) => a + b, 0) / g.length / width);
-  };
-  return [...cluster(onT), NaN, ...cluster(offT)];
-}
-
 const dashTable: Record<string, { on: number[]; off: number[]; sequence: number[] }> = {};
 for (const name of PRESET_DASHES) {
   const m = byId.get(`dash-${name}`);
@@ -565,7 +579,11 @@ for (const name of PRESET_DASHES) {
     return values.slice(0, 8);
   };
   const sequence = period(seq);
-  dashTable[name] = { on: trimmed.on.map((v) => round(v / DASH_W, 3)), off: trimmed.off.map((v) => round(v / DASH_W, 3)), sequence };
+  dashTable[name] = {
+    on: trimmed.on.map((v) => round(v / DASH_W, 3)),
+    off: trimmed.off.map((v) => round(v / DASH_W, 3)),
+    sequence,
+  };
   console.log(
     `  ${name.padEnd(14)} period ${JSON.stringify(sequence)}  (x line width, ${String(m.edges.length)} crossings)`,
   );
@@ -581,7 +599,8 @@ section(
     'period means it is not, and the preset row above is the answer.',
 );
 
-const folkloreVerdicts: Record<string, { same: boolean; preset: number[]; folklore: number[] }> = {};
+const folkloreVerdicts: Record<string, { same: boolean; preset: number[]; folklore: number[] }> =
+  {};
 for (const name of Object.keys(FOLKLORE_DASHES)) {
   const preset = byId.get(`dash-${name}`);
   const folk = byId.get(`folk-${name}`);
@@ -690,7 +709,8 @@ section(
     'its total coverage instead.',
 );
 
-const widths: Record<string, { thickness: number; coverage: number; comWeight: number | null }> = {};
+const widths: Record<string, { thickness: number; coverage: number; comWeight: number | null }> =
+  {};
 for (const m of measured.filter((p) => p.group === 'width')) {
   const thickness =
     m.edges.length >= 2 ? round(m.edges[m.edges.length - 1]!.at - m.edges[0]!.at, 3) : 0;
@@ -718,7 +738,10 @@ section(
     'proposes to emulate by clipping and double-stroking.',
 );
 
-const alignment: Record<string, { edgeAt: number; inkFrom: number; inkTo: number; outside: number }> = {};
+const alignment: Record<
+  string,
+  { edgeAt: number; inkFrom: number; inkTo: number; outside: number }
+> = {};
 for (const m of measured.filter((p) => p.group === 'algn')) {
   if (m.edges.length < 2) continue;
   const edge = m.rect.x;
@@ -812,7 +835,10 @@ section(
     'the way up means a very large default; a plateau is the default itself.',
 );
 
-const miterLimits: Record<string, { ratio: number; reach: number; full: number; clipped: boolean }> = {};
+const miterLimits: Record<
+  string,
+  { ratio: number; reach: number; full: number; clipped: boolean }
+> = {};
 for (const m of measured
   .filter((p) => p.id.startsWith('miter-r'))
   .sort((a, b) => Number(a.id.replace('miter-r', '')) - Number(b.id.replace('miter-r', '')))) {
@@ -905,6 +931,11 @@ interface HeadFit {
    * silhouette is actually inked can tell both.
    */
   fillRatio: number;
+  /**
+   * How far in from the head's back edge the un-inked notch reaches, as a
+   * fraction of the head's length. Zero for a head with no notch.
+   */
+  notch: number;
   tipAt: number;
 }
 
@@ -928,7 +959,7 @@ function fitHead(m: Measured): HeadFit | null {
     maxSpan = Math.max(maxSpan, spanP[i]!);
   }
   if (tip === -1 || maxSpan <= shaftPx * 1.05) {
-    return { outline: 'none', length: 0, width: 0, rms: 0, fillRatio: 1, tipAt: 0 };
+    return { outline: 'none', length: 0, width: 0, rms: 0, fillRatio: 1, notch: 0, tipAt: 0 };
   }
   // One fixed window for every candidate, from the tip back to the longest
   // length any candidate could have. The first version of this fit scored only
@@ -960,20 +991,48 @@ function fitHead(m: Measured): HeadFit | null {
           width: round(maxSpan / scale / AH_W, 3),
           rms: round(rms, 3),
           fillRatio: 1,
+          notch: 0,
           tipAt: round(m.columns.x0 + (tip + 1) / scale, 2),
         };
       }
     }
   }
   if (best === null) return null;
-  const from = Math.max(0, tip - Math.round(best.length * AH_W * scale));
+  const lenPx = Math.round(best.length * AH_W * scale);
+  const from = Math.max(0, tip - lenPx);
   const inkSum = inkP.slice(from, tip + 1).reduce((a, b) => a + b, 0);
   const spanSum = spanP.slice(from, tip + 1).reduce((a, b) => a + b, 0);
   best.fillRatio = spanSum > 0 ? round(inkSum / spanSum, 3) : 1;
+  // The notch, if there is one: walk forward from the head's back edge to the
+  // first column whose silhouette is fully inked. A stealth's silhouette is a
+  // triangle's, so this is the only thing that separates them.
+  //
+  // The walk has to start at the head and not at `from`. The fitted length is a
+  // real number and `from` is it rounded, so `from` can land one column short,
+  // in the shaft - where the silhouette *is* fully inked, and the walk stops
+  // before it starts. Every stealth came back with a notch of exactly zero.
+  let back = from;
+  while (back < tip && spanP[back]! <= shaftPx * 1.15) back++;
+  let notchPx = 0;
+  for (let i = back; i <= tip; i++) {
+    if (spanP[i]! - inkP[i]! < 1) break;
+    notchPx = i - back + 1;
+  }
+  best.notch = lenPx > 0 ? round(notchPx / lenPx, 3) : 0;
   return best;
 }
 
 const heads: Record<string, HeadFit> = {};
+/**
+ * Which end of each marker sits on the line's own endpoint.
+ *
+ * Recorded rather than only printed. The table generator reads this: an anchor
+ * inferred from the type name in the generator would be a guess dressed as a
+ * measurement, and the two families that turned out to be centred are not the
+ * ones a name would suggest.
+ */
+const headAnchors: Record<string, string> = {};
+const headAnchorOvershoot: Record<string, number[]> = {};
 for (const type of ARROW_TYPES) {
   for (const len of ARROW_SIZES) {
     for (const wid of ARROW_SIZES) {
@@ -1004,11 +1063,44 @@ for (const type of ARROW_TYPES) {
     ARROW_SIZES.map((wid) => heads[`${type}-l${len}-w${wid}`]?.fillRatio ?? 1),
   );
   const meanRatio = ratios.reduce((a, b) => a + b, 0) / ratios.length;
+  // Where does the head sit? A tip at the line's own endpoint is one
+  // convention and a head centred on it is another, and both are in use here.
+  const anchors = ARROW_SIZES.map((len) => {
+    const id = `ah-${type}-l${len}-wmed`;
+    const m = byId.get(id);
+    const h = heads[`${type}-l${len}-wmed`];
+    if (m === undefined || h === undefined || h.length === 0) return null;
+    return round((h.tipAt - (m.rect.x + m.rect.cx)) / (h.length * AH_W), 2);
+  }).filter((v): v is number => v !== null);
+  headAnchorOvershoot[type] = anchors;
+  headAnchors[type] =
+    anchors.length === 0
+      ? 'none'
+      : anchors.every((v) => Math.abs(v) < 0.05)
+        ? 'tip'
+        : anchors.every((v) => Math.abs(v - 0.5) < 0.05)
+          ? 'centre'
+          : 'other';
+  const anchor =
+    anchors.length === 0
+      ? '-'
+      : anchors.every((v) => Math.abs(v) < 0.05)
+        ? 'tip at the endpoint'
+        : anchors.every((v) => Math.abs(v - 0.5) < 0.05)
+          ? 'centred on the endpoint'
+          : `overshoot ${anchors.map((v) => v.toFixed(2)).join('/')} of its length`;
+  const notches = ARROW_SIZES.flatMap((len) =>
+    ARROW_SIZES.map((wid) => heads[`${type}-l${len}-w${wid}`]?.notch ?? 0),
+  );
+  const meanNotch = notches.reduce((a, b) => a + b, 0) / notches.length;
   console.log(
-    `  ${type.padEnd(9)} ${row.join(' ')}  | outline ${[...shapes].join('/')}, ink/silhouette ${meanRatio.toFixed(2)}, worst rms ${String(round(worst, 2))}pt`,
+    `  ${type.padEnd(9)} ${row.join(' ')}  | ${[...shapes].join('/')}, ink/silhouette ${meanRatio.toFixed(2)},` +
+      ` notch ${meanNotch.toFixed(2)} of its length, ${anchor}, worst rms ${String(round(worst, 2))}pt`,
   );
 }
 findings['arrowheads'] = heads;
+findings['headAnchors'] = headAnchors;
+findings['headAnchorOvershoot'] = headAnchorOvershoot;
 
 function unpackHalf(hex: string): number[] {
   const out: number[] = [];
@@ -1045,7 +1137,13 @@ section(
 
 const shadowDirs: Record<
   string,
-  { visible: Box | null; dx: number | null; dy: number | null; comX: number | null; comY: number | null }
+  {
+    visible: Box | null;
+    dx: number | null;
+    dy: number | null;
+    comX: number | null;
+    comY: number | null;
+  }
 > = {};
 for (const deg of [0, 45, 90, 135, 180, 225, 270, 315]) {
   const m = byId.get(`shdw-dir${String(deg)}`);
@@ -1141,7 +1239,14 @@ function fitBlur(cover: readonly number[], start: number, step: number, falling:
         worst = Math.max(worst, Math.abs(d));
       }
       const rms = Math.sqrt(sum / cover.length);
-      if (rms < best.rms) best = { sigma: round(sigma, 4), edge: round(e, 3), amplitude: round(amp, 4), rms: round(rms, 5), worst: round(worst, 5) };
+      if (rms < best.rms)
+        best = {
+          sigma: round(sigma, 4),
+          edge: round(e, 3),
+          amplitude: round(amp, 4),
+          rms: round(rms, 5),
+          worst: round(worst, 5),
+        };
     }
   }
   return best;
@@ -1382,7 +1487,11 @@ findings['innerShadow'] = innerProfiles;
     // inside the glow's reach, and inside the shadow's.
     const y = stack.rect.y + stack.rect.cy / 2;
     const row: string[] = [];
-    for (let px = Math.round((stack.rect.x + stack.rect.cx) * view.scale); px <= Math.round((stack.rect.x + stack.rect.cx + 24) * view.scale); px++) {
+    for (
+      let px = Math.round((stack.rect.x + stack.rect.cx) * view.scale);
+      px <= Math.round((stack.rect.x + stack.rect.cx + 24) * view.scale);
+      px++
+    ) {
       const [rr, gg, bb] = bmp.pixel(px, Math.floor(y * view.scale));
       row.push(hueOf(rr, gg, bb) ?? 'bg');
     }
@@ -1390,7 +1499,9 @@ findings['innerShadow'] = innerProfiles;
     for (const hue of row) counts[hue] = (counts[hue] ?? 0) + 1;
     console.log(
       `\n  stack-glow-shadow: across the 24pt just right of the shape, where a 16pt glow and a 30pt shadow both fall:` +
-        `\n    ${Object.entries(counts).map(([k, v]) => `${k} ${String(v)}`).join(', ')}` +
+        `\n    ${Object.entries(counts)
+          .map(([k, v]) => `${k} ${String(v)}`)
+          .join(', ')}` +
         `\n    first 12 samples: ${row.slice(0, 12).join(' ')}`,
     );
     findings['stacking'] = { counts, sequence: row.slice(0, 24) };
@@ -1452,7 +1563,8 @@ for (const rot of [0, 1]) {
   if (m === undefined) continue;
   rotWith[m.id] = {
     box: red,
-    centre: red === null ? null : [round((red.x0 + red.x1) / 2, 2), round((red.y0 + red.y1) / 2, 2)],
+    centre:
+      red === null ? null : [round((red.x0 + red.x1) / 2, 2), round((red.y0 + red.y1) / 2, 2)],
   };
   const shapeCentre: [number, number] = [m.rect.x + m.rect.cx / 2, m.rect.y + m.rect.cy / 2];
   console.log(
@@ -1507,7 +1619,10 @@ section(
     'markup and a different one on the user experience.',
 );
 
-const refusals: Record<string, { opened: boolean; repaired: boolean | null; error: string | null }> = {};
+const refusals: Record<
+  string,
+  { opened: boolean; repaired: boolean | null; error: string | null }
+> = {};
 for (const m of measured.filter((p) => p.group === 'hostile')) {
   refusals[m.id] = { opened: m.opened, repaired: m.repaired, error: m.error };
   const verdict = !m.opened ? 'REFUSED' : m.repaired ? 'REPAIRED' : 'accepted';
@@ -1545,7 +1660,7 @@ const pushRule = (element: string, id: string, declared: number, r: number): voi
   const fit =
     element === 'outerShdw'
       ? (blurFits[id] ?? null)
-      : (findings['effectReach'] as Record<string, EffectReach> | undefined)?.[id]?.fit ?? null;
+      : ((findings['effectReach'] as Record<string, EffectReach> | undefined)?.[id]?.fit ?? null);
   const offset =
     element === 'outerShdw'
       ? 0
@@ -1574,7 +1689,9 @@ for (const rule of blurRules) {
 }
 {
   const sigmas = blurRules.map((r) => r.sigmaOverR);
-  const shifted = blurRules.filter((r) => Math.abs(r.offsetOverR) > 0.2).map((r) => Math.abs(r.offsetOverR));
+  const shifted = blurRules
+    .filter((r) => Math.abs(r.offsetOverR) > 0.2)
+    .map((r) => Math.abs(r.offsetOverR));
   const spread = (v: number[]): string =>
     v.length === 0 ? '-' : `${Math.min(...v).toFixed(4)}..${Math.max(...v).toFixed(4)}`;
   console.log(
@@ -1586,7 +1703,8 @@ for (const rule of blurRules) {
   findings['blurRule'] = {
     rules: blurRules,
     sigmaOverR: { min: Math.min(...sigmas), max: Math.max(...sigmas) },
-    offsetOverR: shifted.length === 0 ? null : { min: Math.min(...shifted), max: Math.max(...shifted) },
+    offsetOverR:
+      shifted.length === 0 ? null : { min: Math.min(...shifted), max: Math.max(...shifted) },
   };
 }
 
