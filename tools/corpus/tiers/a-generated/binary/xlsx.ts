@@ -1,5 +1,5 @@
-import { writeZip } from '../../ground-truth/zip.ts';
-import { DECLARATION } from './package.ts';
+import { writeZip } from '../../../../ground-truth/lib/zip.ts';
+import { DECLARATION } from '../markup/chassis.ts';
 
 /**
  * A minimal SpreadsheetML workbook, for the OLE probe's payload.

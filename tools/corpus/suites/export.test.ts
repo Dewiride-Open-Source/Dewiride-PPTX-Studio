@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import { isRelationshipPartName, readZip, REL_TYPE, type PartStore } from '@pptx-studio/opc';
 import { isValidateError } from '@pptx-studio/validate';
 import { exportPackage, openPackage } from '@pptx-studio/writer';
@@ -38,7 +39,6 @@ import { describe, expect, it } from 'vitest';
  * corpus says how much of Phase 1's claim has actually been tested.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const COLLECTIONS = ['decks', 'authored', 'written'];
 
 interface Deck {

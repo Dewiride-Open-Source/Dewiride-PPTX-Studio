@@ -11,7 +11,7 @@ import { PartStore, storedEntry, writeZip } from '@pptx-studio/opc';
  * leak stays invisible under jsdom until a user opens a tab. A browser test has
  * no filesystem, so the fifty-two corpus decks are not reachable from here at
  * all. They are reachable from `tools/`, and that is where the other half of
- * this sub-phase's verification lives: `tools/corpus/validate.test.ts` runs
+ * this sub-phase's verification lives: `tools/corpus/suites/validate.test.ts` runs
  * every committed deck through the validator and asserts no fatal finding, on
  * the strength of the one thing the corpus is: **every deck in it opens in
  * PowerPoint**, so any rule that fires on one is a rule that is wrong.

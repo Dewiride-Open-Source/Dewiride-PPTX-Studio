@@ -1,6 +1,6 @@
 {
   "experiment": "C6 - group transforms, flip order and a:grpFill",
-  "generatedBy": "tools/ground-truth/analyse-transforms.ts",
+  "generatedBy": "tools/ground-truth/render/analyse.ts",
   "slidePoints": {
     "w": 960,
     "h": 540

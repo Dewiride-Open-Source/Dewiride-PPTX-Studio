@@ -2,7 +2,7 @@
  * Experiment C6, step 3 - score the candidate models against the readings.
  *
  * ```
- * node tools/ground-truth/analyse-transforms.ts <dir> [--fixture corpus/ground-truth/transforms.json]
+ * node tools/ground-truth/render/analyse.ts <dir> [--fixture corpus/ground-truth/transforms.json]
  * ```
  *
  * Nothing here asserts a sentence. Four candidate rules for the child
@@ -17,16 +17,17 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { hex, readBmp } from './bmp.ts';
-import { entry, readZip } from './zip.ts';
-import type { Frame, Rect, Sample, TransformProbe } from './transforms.ts';
+import { hex, readBmp } from '../lib/bmp.ts';
+import { entry, readZip } from '../lib/zip.ts';
+import type { Frame, Rect, Sample, TransformProbe } from './probes.ts';
 
 /* -------------------------------------------------------------------------- */
 /* loading                                                                    */
 /* -------------------------------------------------------------------------- */
 
 const dirArg = process.argv[2];
-if (dirArg === undefined) throw new Error('usage: analyse-transforms.ts <dir> [--fixture <path>]');
+if (dirArg === undefined)
+  throw new Error('usage: tools/ground-truth/render/analyse.ts <dir> [--fixture <path>]');
 // Narrowed into its own binding: the closures below are compiled before the
 // check runs, so a `string | undefined` captured from `process.argv` stays one.
 const dir: string = dirArg;
@@ -857,7 +858,7 @@ interface AuthoredXfrm {
 /**
  * Names and `a:xfrm`s out of a slide part, in document order.
  *
- * A lexical scan rather than a parse, for the reason `tools/corpus/lexical.ts`
+ * A lexical scan rather than a parse, for the reason `tools/corpus/lexical/inventory.ts`
  * gives: `tools/` does not link the workspace packages, and this reads two
  * files PowerPoint wrote on this machine ten minutes ago.
  */
@@ -946,7 +947,9 @@ try {
     nestedUngrouped: authoredSlide(ungrouped, 6),
   };
 } catch {
-  console.log('  (no authored decks in the directory - run author-transforms.ps1 for those)');
+  console.log(
+    '  (no authored decks in the directory - run tools/ground-truth/render/author.ps1 for those)',
+  );
 }
 
 /**
@@ -976,7 +979,7 @@ const flipVerdict =
 
 const fixture = {
   experiment: 'C6 - group transforms, flip order and a:grpFill',
-  generatedBy: 'tools/ground-truth/analyse-transforms.ts',
+  generatedBy: 'tools/ground-truth/render/analyse.ts',
   slidePoints: inputs.slidePoints,
   emuPerPoint: inputs.emuPerPoint,
   exportPixels: inputs.exportPixels,

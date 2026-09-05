@@ -6,11 +6,11 @@
  * about a pattern fill that a renderer gets wrong if it guesses.
  */
 
-import { PaintError } from './errors.js';
+import { PaintError } from '../errors.js';
 import { PATTERN_PIXEL_EMU, PATTERN_TILES, isPresetPatternName } from './pattern-tiles.js';
-import { resolveColor, type ColorContext } from './resolve.js';
+import { resolveColor, type ColorContext } from '../colors/resolve.js';
 import type { PatternFill } from './fill.js';
-import type { Rgba } from './types.js';
+import type { Rgba } from '../types.js';
 
 /** Black, the colour PowerPoint paints when `a:fgClr` is missing. */
 const DEFAULT_FG: Rgba = { r: 0, g: 0, b: 0, a: 1 };

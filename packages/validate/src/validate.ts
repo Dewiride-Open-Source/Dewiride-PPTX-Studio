@@ -7,36 +7,42 @@ import {
   v003ArchiveShape,
   v004PartNames,
   v005MainPart,
-} from './package-rules.js';
+} from './rules/package.js';
 import {
   v006ReferencesResolve,
   v007RelationshipIds,
   v008TargetsResolve,
   v009RequiredEdges,
-} from './relationship-rules.js';
-import { v010SchemaOrder, v011ExtLstLast, v012UnexpectedChild } from './order-rules.js';
+} from './rules/relationships.js';
+import { v010SchemaOrder, v011ExtLstLast, v012UnexpectedChild } from './rules/order.js';
 import {
   v013NotesSize,
   v014ColorMap,
   v015ShapeTreePrologue,
   v016TextBody,
   v017GraphicFrame,
-} from './required-rules.js';
-import { v018SlideIds, v019SheetIds, v020ShapeIds, v021PlaceholderIndices } from './id-rules.js';
+} from './rules/required.js';
+import { v018SlideIds, v019SheetIds, v020ShapeIds, v021PlaceholderIndices } from './rules/id.js';
 import {
   v022PlaceholderType,
   v023GeometryGuides,
   v024SeriesText,
   v025Control,
   v026ChartStyleComplete,
-} from './refusal-rules.js';
+} from './rules/refusal.js';
 import {
   v027UneditedPartsUnchanged,
   v028OpaqueContainersUnchanged,
   v029TextAndFieldIdentity,
-} from './preservation-rules.js';
-import { buildReport, findingKey, type Finding, type Report, type SkippedRule } from './report.js';
-import { ruleById, RULE_IDS, type RuleId } from './rules.js';
+} from './rules/preservation.js';
+import {
+  buildReport,
+  findingKey,
+  type Finding,
+  type Report,
+  type SkippedRule,
+} from './report/report.js';
+import { ruleById, RULE_IDS, type RuleId } from './rules/rules.js';
 
 /**
  * The twenty-nine, wired to their implementations.

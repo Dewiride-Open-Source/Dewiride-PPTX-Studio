@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isOpcError } from './errors.js';
+import { isOpcError } from '../errors.js';
 import { escapeAttribute, localName, readFlatXml, XML_DECLARATION } from './flat-xml.js';
 
 const encoder = new TextEncoder();

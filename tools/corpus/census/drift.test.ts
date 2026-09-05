@@ -1,6 +1,6 @@
 import { FEATURE_RULES, PART_FEATURE_RULES } from '@pptx-studio/census';
 import { describe, expect, it } from 'vitest';
-import { CENSUS_FEATURE_KEYS } from './census-keys.gen.ts';
+import { CENSUS_FEATURE_KEYS } from './keys.gen.ts';
 
 /**
  * The committed key list against the census's own table.
@@ -14,7 +14,7 @@ import { CENSUS_FEATURE_KEYS } from './census-keys.gen.ts';
  * This is that something. It runs in the `tools` project, where the census
  * *is* importable, and it is the only reason the generated file is trustworthy.
  * A feature rule added to the census fails here until
- * `node tools/corpus/write-census-keys.ts` is re-run.
+ * `node tools/corpus/census/write-keys.ts` is re-run.
  *
  * Deliberately not a regex over `features.ts`. Every rule there is a one-line
  * `key: 'x'` today, and a future `key: SOME_CONST` would silently under-report

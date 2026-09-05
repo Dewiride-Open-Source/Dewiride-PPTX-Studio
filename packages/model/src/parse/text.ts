@@ -19,9 +19,15 @@ import { parsePercentage } from '@pptx-studio/paint';
 import { attributeValue, childElements, firstChild, textContent } from '@pptx-studio/xml';
 import type { XElement } from '@pptx-studio/xml';
 
-import { ModelError } from './errors.js';
-import { parseColorChild, parseEffects, parseFill, parseLine } from './parse-paint.js';
+import { ModelError } from '../errors.js';
+import { parseBodyPropsChild } from './body.js';
+import { parseColorChild, parseEffects, parseFill, parseLine } from './paint.js';
 import {
+  type BulletAutoNum,
+  type BulletColor,
+  type BulletFont,
+  type BulletKind,
+  type BulletSize,
   LEVELS,
   type Caps,
   type FontAlign,
@@ -37,7 +43,7 @@ import {
   type TextStyles,
   type Typeface,
   type Underline,
-} from './text.js';
+} from '../text.js';
 
 /* -------------------------------------------------------------------------- */
 /* attribute readers                                                          */
@@ -141,12 +147,15 @@ const UNDERLINE: readonly Underline[] = [
  * which is nothing. `@panose` is kept as the twenty hex characters it is,
  * because it is written back verbatim and nothing here interprets it.
  */
-function parseTypeface(parent: XElement, qname: string, partName: string): Typeface | undefined {
-  const element = firstChild(parent, qname);
-  if (element === undefined) return undefined;
+function typefaceOf(element: XElement, partName: string): Typeface {
   const typeface = attributeValue(element, 'typeface');
   if (typeface === undefined) {
-    throw new ModelError('MODEL_TEXT_ATTR', `${qname} has no @typeface`, partName, qname);
+    throw new ModelError(
+      'MODEL_TEXT_ATTR',
+      `${element.qname} has no @typeface`,
+      partName,
+      element.qname,
+    );
   }
   return {
     typeface,
@@ -154,6 +163,19 @@ function parseTypeface(parent: XElement, qname: string, partName: string): Typef
     pitchFamily: intOf(element, 'pitchFamily', partName),
     charset: intOf(element, 'charset', partName),
   };
+}
+
+/**
+ * A named typeface child.
+ *
+ * Split from `typefaceOf` because `a:buFont` carries the same attributes on the
+ * element itself rather than on a child of a known name, and reading it through
+ * a lookup by qname would need the caller to pass its own element as its own
+ * parent.
+ */
+function parseTypeface(parent: XElement, qname: string, partName: string): Typeface | undefined {
+  const element = firstChild(parent, qname);
+  return element === undefined ? undefined : typefaceOf(element, partName);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -253,8 +275,137 @@ export function parseParaProps(element: XElement, partName: string): ParaProps {
     spcBef: parseSpacing(element, 'a:spcBef', partName),
     spcAft: parseSpacing(element, 'a:spcAft', partName),
     defRPr: parseRunPropsChild(element, 'a:defRPr', partName),
+    ...parseBullet(element, partName),
     node: element,
   };
+}
+
+/** The four bullet elements, of which at most one may appear. */
+const BULLET_KINDS: readonly (readonly [string, BulletKind])[] = [
+  ['a:buNone', 'none'],
+  ['a:buChar', 'char'],
+  ['a:buAutoNum', 'autonum'],
+  ['a:buBlip', 'blip'],
+];
+
+/**
+ * The bullet, as four independent slots plus the exclusive kind.
+ *
+ * Four rather than one because T5 measured them to merge separately: a level
+ * that declares only `a:buFont` re-faces an inherited `a:buChar` and keeps
+ * everything else. Folding them into a single value would make that impossible
+ * to express, and the fold is what a reader writes first because the schema puts
+ * the four kinds in one exclusive group.
+ *
+ * `a:buFontTx`, `a:buSzTx` and `a:buClrTx` are parsed as *values* rather than as
+ * absences, because they are: PowerPoint writes nothing at all to mean "follow
+ * the text", so the explicit element only ever appears in order to cancel
+ * something a level above declared.
+ */
+function parseBullet(
+  element: XElement,
+  partName: string,
+): Pick<ParaProps, 'buKind' | 'buChar' | 'buAutoNum' | 'buBlip' | 'buFont' | 'buSize' | 'buColor'> {
+  let buKind: BulletKind | undefined;
+  for (const [name, kind] of BULLET_KINDS) {
+    if (firstChild(element, name) !== undefined) {
+      if (buKind !== undefined) {
+        throw new ModelError(
+          'MODEL_TEXT_BULLET',
+          `a:pPr declares both ${buKind} and ${kind} bullets, which are exclusive`,
+          partName,
+          'a:pPr',
+        );
+      }
+      buKind = kind;
+    }
+  }
+
+  const charElement = firstChild(element, 'a:buChar');
+  const autoNum = firstChild(element, 'a:buAutoNum');
+  const blip = firstChild(element, 'a:buBlip');
+  const font = firstChild(element, 'a:buFont');
+  const szPct = firstChild(element, 'a:buSzPct');
+  const szPts = firstChild(element, 'a:buSzPts');
+  const clr = firstChild(element, 'a:buClr');
+
+  let buAutoNum: BulletAutoNum | undefined;
+  if (autoNum !== undefined) {
+    const type = attributeValue(autoNum, 'type');
+    if (type === undefined) {
+      throw new ModelError(
+        'MODEL_TEXT_BULLET',
+        'a:buAutoNum has no @type, which the schema requires',
+        partName,
+        'a:buAutoNum',
+      );
+    }
+    buAutoNum = { type, startAt: intOf(autoNum, 'startAt', partName) };
+  }
+
+  let buBlip: string | undefined;
+  if (blip !== undefined) {
+    const embed = firstChild(blip, 'a:blip');
+    buBlip = embed === undefined ? undefined : attributeValue(embed, 'r:embed');
+    if (buBlip === undefined) {
+      throw new ModelError(
+        'MODEL_TEXT_BULLET',
+        'a:buBlip has no a:blip/@r:embed to resolve',
+        partName,
+        'a:buBlip',
+      );
+    }
+  }
+
+  let buFont: BulletFont | undefined;
+  if (firstChild(element, 'a:buFontTx') !== undefined) buFont = { kind: 'text' };
+  else if (font !== undefined) buFont = { kind: 'typeface', value: typefaceOf(font, partName) };
+
+  let buSize: BulletSize | undefined;
+  if (firstChild(element, 'a:buSzTx') !== undefined) buSize = { kind: 'text' };
+  else if (szPct !== undefined) {
+    buSize = { kind: 'percent', value: requiredPercentage(szPct, partName, 'a:buSzPct') };
+  } else if (szPts !== undefined) {
+    buSize = { kind: 'points', value: requiredInt(szPts, partName, 'a:buSzPts') };
+  }
+
+  let buColor: BulletColor | undefined;
+  if (firstChild(element, 'a:buClrTx') !== undefined) buColor = { kind: 'text' };
+  else if (clr !== undefined) {
+    const value = parseColorChild(clr);
+    if (value === undefined || value === null) {
+      throw new ModelError('MODEL_TEXT_BULLET', 'a:buClr holds no colour', partName, 'a:buClr');
+    }
+    buColor = { kind: 'color', value };
+  }
+
+  return {
+    buKind,
+    buChar: charElement === undefined ? undefined : (attributeValue(charElement, 'char') ?? ''),
+    buAutoNum,
+    buBlip,
+    buFont,
+    buSize,
+    buColor,
+  };
+}
+
+/** `@val` on a `a:buSzPct`, which the schema makes required. */
+function requiredPercentage(element: XElement, partName: string, what: string): number {
+  const raw = attributeValue(element, 'val');
+  if (raw === undefined) {
+    throw new ModelError('MODEL_TEXT_BULLET', `${what} has no @val`, partName, what);
+  }
+  return parsePercentage(raw);
+}
+
+/** `@val` on a `a:buSzPts`, in hundredths of a point. */
+function requiredInt(element: XElement, partName: string, what: string): number {
+  const value = intOf(element, 'val', partName);
+  if (value === undefined) {
+    throw new ModelError('MODEL_TEXT_BULLET', `${what} has no @val`, partName, what);
+  }
+  return value;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -389,16 +540,10 @@ function parseParagraph(element: XElement, partName: string): Paragraph {
   };
 }
 
-/**
- * A `p:txBody` or an `a:txBody`.
- *
- * `a:bodyPr` is kept as the element it was rather than modelled: anchors,
- * insets, vertical text and autofit are 3.4 and 3.6, and half a typed model of
- * it would be a worse version of the one that arrives then.
- */
+/** A `p:txBody` or an `a:txBody`. */
 export function parseTextBody(element: XElement, partName: string): TextBody {
   return {
-    bodyPr: firstChild(element, 'a:bodyPr'),
+    bodyPr: parseBodyPropsChild(element, partName),
     lstStyle: parseListStyleChild(element, 'a:lstStyle', partName),
     paragraphs: childElements(element)
       .filter((child) => child.qname === 'a:p')

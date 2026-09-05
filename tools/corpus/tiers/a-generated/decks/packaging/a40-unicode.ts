@@ -1,8 +1,16 @@
-import { REL } from '../package.ts';
-import { png } from '../png.ts';
-import { grid, picture, prstGeom, scheme, shape, solidFill, type Cell } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { REL } from '../../markup/chassis.ts';
+import { png } from '../../assets/png.ts';
+import {
+  grid,
+  picture,
+  prstGeom,
+  scheme,
+  shape,
+  solidFill,
+  type Cell,
+} from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Part names and text at the edges of what OPC and XML 1.0 permit.

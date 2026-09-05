@@ -390,6 +390,15 @@ export interface SheetPackage {
    * schema default applies and the deck can ask what that default is.
    */
   readonly strictFirstAndLastChars?: boolean | undefined;
+  /**
+   * Files to drop into `ppt/media/`, for the one bullet kind that is a picture.
+   *
+   * A part with no `Override` needs a `Default` for its extension, and omitting
+   * that one is the canonical "PowerPoint found a problem" bug - so the
+   * extension is derived from the name here rather than taken on trust, and a
+   * name without one throws.
+   */
+  readonly media?: readonly { readonly name: string; readonly bytes: Uint8Array }[];
 }
 
 function relsXml(entries: readonly RelSpec[]): string {
@@ -617,11 +626,31 @@ export function buildSheetPackage(pkg: SheetPackage): Uint8Array {
     type: `${CT}.presentationml.presentation.main+xml`,
   });
 
+  // ---- media --------------------------------------------------------------
+  const mediaTypes = new Map<string, string>();
+  const MEDIA_CONTENT_TYPES: Readonly<Record<string, string>> = {
+    png: 'image/png',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+  };
+  for (const file of pkg.media ?? []) {
+    const dot = file.name.lastIndexOf('.');
+    if (dot <= 0) throw new Error(`media file ${file.name} has no extension to declare`);
+    const ext = file.name.slice(dot + 1).toLowerCase();
+    const type = MEDIA_CONTENT_TYPES[ext];
+    if (type === undefined) throw new Error(`no content type known for media extension .${ext}`);
+    mediaTypes.set(ext, type);
+    entries.push({ name: `ppt/media/${file.name}`, bytes: file.bytes });
+  }
+
   const contentTypes =
     DECLARATION +
     `<Types xmlns="${NS_CT}">` +
     '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
     '<Default Extension="xml" ContentType="application/xml"/>' +
+    [...mediaTypes]
+      .map(([ext, type]) => `<Default Extension="${ext}" ContentType="${type}"/>`)
+      .join('') +
     overrides.map((o) => `<Override PartName="${o.part}" ContentType="${o.type}"/>`).join('') +
     '</Types>';
 

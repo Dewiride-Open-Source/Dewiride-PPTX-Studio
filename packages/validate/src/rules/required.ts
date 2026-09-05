@@ -7,8 +7,8 @@ import {
   NS,
   type XElement,
 } from '@pptx-studio/xml';
-import type { Context } from './context.js';
-import { elementLocation } from './location.js';
+import type { Context } from '../context.js';
+import { elementLocation } from '../report/location.js';
 
 /**
  * `V013` … `V017`: children and attributes that are not optional.

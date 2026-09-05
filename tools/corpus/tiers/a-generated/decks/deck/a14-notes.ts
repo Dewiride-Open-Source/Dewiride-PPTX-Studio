@@ -1,7 +1,7 @@
-import { placeholderXml, type ProbeSheetMaster } from '../package.ts';
-import { shape } from '../shapes.ts';
-import { field, para, textLine } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { placeholderXml, type ProbeSheetMaster } from '../../markup/chassis.ts';
+import { shape } from '../../markup/shapes.ts';
+import { field, para, textLine } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * The notes family: a notes master, three notes slides, and a handout master.

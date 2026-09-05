@@ -2,7 +2,7 @@
  * Experiment C4, step 3 - read the bitmaps and say what PowerPoint did.
  *
  * ```
- * node tools/ground-truth/analyse-lines.ts <work-dir> [--fixture corpus/ground-truth/lines.json]
+ * node tools/ground-truth/paint/lines/analyse.ts <work-dir> [--fixture corpus/ground-truth/lines.json]
  * ```
  *
  * Each section states its hypothesis before it prints its evidence, so a reader
@@ -38,21 +38,22 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readBmp, type Bitmap } from './bmp.ts';
+import { readBmp, type Bitmap } from '../../lib/bmp.ts';
 import {
   ARROW_SIZES,
   ARROW_TYPES,
   FOLKLORE_DASHES,
   PRESET_DASHES,
   type ReadSpec,
-} from './lines.ts';
+} from './probes.ts';
 
 /* -------------------------------------------------------------------------- */
 /* inputs                                                                     */
 /* -------------------------------------------------------------------------- */
 
 const arg = process.argv[2];
-if (arg === undefined) throw new Error('usage: analyse-lines.ts <work-dir> [--fixture <path>]');
+if (arg === undefined)
+  throw new Error('usage: tools/ground-truth/paint/lines/analyse.ts <work-dir> [--fixture <path>]');
 // Narrowed once, here: `bitmap` below is a hoisted declaration and does not see
 // the narrowing a throw established on a module-level `const`.
 const dir: string = arg;
@@ -1714,13 +1715,13 @@ for (const rule of blurRules) {
 
 if (fixturePath != null) {
   const fixture = {
-    generatedBy: 'tools/ground-truth/analyse-lines.ts',
+    generatedBy: 'tools/ground-truth/paint/lines/analyse.ts',
     experiment: 'C4 - strokes and effects',
     sourceNote:
       'Measured against Microsoft PowerPoint 365 by exporting probe decks this repository ' +
       'generated and reading the bitmaps. Positions are sub-pixel crossings of half coverage, ' +
       'in points on a 960x540pt slide. Coverage is 1 - min(r,g,b)/255. Run ' +
-      'tools/ground-truth/build-line-deck.ts, read-lines.ps1 and analyse-lines.ts to regenerate, ' +
+      'tools/ground-truth/paint/lines/build-deck.ts, tools/ground-truth/paint/lines/read.ps1 and tools/ground-truth/paint/lines/analyse.ts to regenerate, ' +
       'then prettier --write this file before committing.',
     slide: inputs.slidePoints,
     strokeWidths: { dash: DASH_W, cap: 24, algn: 20, cmpd: 36, join: 20, arrowhead: AH_W },

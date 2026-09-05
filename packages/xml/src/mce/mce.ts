@@ -35,17 +35,17 @@
  * understand*, and the way to keep it is to have no code here that could.
  */
 
-import { XmlError } from './errors.js';
+import { XmlError } from '../errors.js';
 import { NS } from './namespaces.js';
-import { qualifiedKey } from './schema-order.js';
+import { qualifiedKey } from '../edit/schema-order.js';
 import {
   declaredNamespaces,
   resolvePrefix,
   namespaceOf,
   type XElement,
   type XNode,
-} from './xnode.js';
-import type { XAttribute } from './tokenizer.js';
+} from '../parse/xnode.js';
+import type { XAttribute } from '../parse/tokenizer.js';
 
 /** The three MCE element names, unprefixed. */
 export const MC_ALTERNATE_CONTENT = 'AlternateContent';

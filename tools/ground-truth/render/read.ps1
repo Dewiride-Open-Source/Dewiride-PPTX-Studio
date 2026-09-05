@@ -1,13 +1,13 @@
 # Experiment C6, step 2 - ask PowerPoint where the shapes ended up.
 #
-#   powershell -File tools/ground-truth/read-transforms.ps1 -Dir <work-dir>
+#   powershell -File tools/ground-truth/render/read.ps1 -Dir <work-dir>
 #
 # Reads `transform-inputs.json`, opens each probe deck, and records every shape
 # twice.
 #
 # ## Two passes, because the object model is inconsistent about one field
 #
-# Measured on PowerPoint's own output in `author-transforms.ps1`: for a shape
+# Measured on PowerPoint's own output in `tools/ground-truth/render/author.ps1`: for a shape
 # inside a rotated, mirrored group, `GroupItems(i).Rotation` reports the
 # **composed** rotation while `GroupItems(i).HorizontalFlip` reports the child's
 # **own** attribute. Left/Top/Width/Height are composed - a child of a group
@@ -42,7 +42,7 @@ $msoGroup = 6
 $root = (Resolve-Path -LiteralPath $Dir).Path
 $inputsPath = Join-Path $root 'transform-inputs.json'
 if (-not (Test-Path -LiteralPath $inputsPath)) {
-    throw "no transform-inputs.json in $root - run build-transform-deck.ts first"
+    throw "no transform-inputs.json in $root - run tools/ground-truth/render/build-deck.ts first"
 }
 
 $text = Get-Content -LiteralPath $inputsPath -Raw

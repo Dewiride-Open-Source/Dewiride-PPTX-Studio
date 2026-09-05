@@ -34,7 +34,7 @@
  * point size.
  */
 
-import { TextError } from './errors.js';
+import { TextError } from '../errors.js';
 
 /**
  * The properties of a run that change its width.

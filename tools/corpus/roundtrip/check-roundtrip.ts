@@ -23,16 +23,17 @@
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import {
   badgeText,
   roundTripCorpus,
   summaryFor,
   type CorpusRoundTrip,
   type RoundTrip,
-} from './roundtrip-report.ts';
+} from './report.ts';
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const DIST = resolve(ROOT, 'packages/writer/dist/index.js');
 const BADGE = resolve(ROOT, '.github/badges/roundtrip.json');
 

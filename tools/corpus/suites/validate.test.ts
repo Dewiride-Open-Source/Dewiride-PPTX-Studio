@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import { formatReport, RULES, validatePackage, type Report } from '@pptx-studio/validate';
 import { describe, expect, it } from 'vitest';
 
@@ -35,7 +36,6 @@ import { describe, expect, it } from 'vitest';
  * `census-drift.test.ts` and `lexical.test.ts` already live on.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const COLLECTIONS = ['decks', 'authored', 'written'];
 
 interface Envelope {

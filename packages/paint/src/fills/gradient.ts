@@ -3,16 +3,16 @@
  *
  * Everything here was measured against PowerPoint in experiment C3 - 144 probes
  * across 23 packages, `corpus/ground-truth/fills.json`, written up in
- * `docs/adr/0022-fills.md`. Where a claim is inferred rather than measured it
+ * `docs/adr/phase-2-geometry-and-paint/0022-fills.md`. Where a claim is inferred rather than measured it
  * says so at the point it is made.
  */
 
-import { PaintError } from './errors.js';
+import { PaintError } from '../errors.js';
 import { fromRampSpace, toRampSpace, TWO_STOP_RAMP, twoStopWeight } from './gradient-ramp.js';
-import { resolveColor, type ColorContext } from './resolve.js';
-import { toByte } from './transfer.js';
+import { resolveColor, type ColorContext } from '../colors/resolve.js';
+import { toByte } from '../colors/transfer.js';
 import type { GradientFill, GradientStop, LinearShade, PathShade, RelativeRect } from './fill.js';
-import type { Rgba } from './types.js';
+import type { Rgba } from '../types.js';
 
 const PERCENT = 100000;
 const ANGLE = 60000;

@@ -33,7 +33,7 @@ const DEEP_IMPORT_MESSAGE =
   'they break the moment the internal file layout changes and they hide layering violations ' +
   'from tools/layering.';
 
-/** Directories under packages/ that ship to the browser. Mirrors tools/layering/layers.ts. */
+/** Directories under packages/ that ship to the browser. Mirrors tools/repo/layering/layers.ts. */
 const BROWSER_PACKAGES = [
   'opc',
   'xml',

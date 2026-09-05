@@ -119,7 +119,7 @@ tarball with no `.git`, and decisively it sees **untracked** files, so a local
 `pnpm check` catches the deck before it is ever committed.
 
 The full table is `tools/corpus/README.md`; the enums are
-`tools/corpus/schema.ts`.
+`tools/corpus/manifest/schema.ts`.
 
 ### The gate runs second, before formatting
 
@@ -241,7 +241,7 @@ violations`, and exits 1 with a legible message when a licence is removed, a
   file appears under `corpus/`.
 - All three benchmark decks still rebuild to the SHA-256 pinned in
   `corpus/bench/manifest.json` — `small`, `xml-heavy` and the 188.5 MiB
-  `media-200mb`, byte for byte. `tools/ground-truth/zip.ts` grew a `store`
+  `media-200mb`, byte for byte. `tools/ground-truth/lib/zip.ts` grew a `store`
   option for the corpus and the benchmark generator uses that writer for its
   embedded workbooks, so this is a check on that change and not a formality.
 - 49 tests, one per rule, against synthetic manifests: `checkCorpus` takes the
@@ -299,7 +299,7 @@ violations`, and exits 1 with a legible message when a licence is removed, a
   of it is a list of what **our** writer must not do.
 - `C-CENSUS`: each deck's `features` map is a reviewed literal in its own
   module, and the census reproduces it exactly in both directions.
-- `C-REGEN`: `node tools/corpus/gen/build-probes.ts --check --out corpus/decks`
+- `C-REGEN`: `node tools/corpus/tiers/a-generated/build-probes.ts --check --out corpus/decks`
   reports all forty-one rebuilding byte-for-byte, and a test asserts the same
   against the manifest's `sha256`, `bytes` and `features`. The five decks that
   predate the layout and text work reproduce their **original** committed
@@ -338,7 +338,7 @@ violations`, and exits 1 with a legible message when a licence is removed, a
   `compressOvba`; and the `dir` record walk has to land exactly on the end of
   the stream, which is what catches the records whose four-byte field is a
   reserved constant rather than a size.
-- `tools/corpus/conventions.test.ts`: 21 assertions across all three
+- `tools/corpus/suites/conventions.test.ts`: 21 assertions across all three
   PresentationML builders in the repository, every one of them read out of
   `powerpoint-conventions.json` rather than chosen.
 
@@ -347,7 +347,7 @@ violations`, and exits 1 with a legible message when a licence is removed, a
 ## What the first two probes measured
 
 Recorded as `corpus/ground-truth/powerpoint-conventions.json`, produced by
-`tools/corpus/authored/probe-conventions.ps1` and its analyser. PowerPoint
+`tools/corpus/tiers/b-authored/probe-conventions.ps1` and its analyser. PowerPoint
 16.0.20326.20100, two decks, neither committed.
 
 ### E6 — OLE, and it is not what either report predicted
@@ -449,16 +449,16 @@ built for three hundred slides and two hundred megabytes; its vocabulary is
 cadences, and expressing forty probes in it would have meant roughly sixty more
 `DeckRecipe` fields and a `writeDeck` nobody can read — after which the probes
 could still only say what the loop already knows how to say.
-`tools/ground-truth/pptx.ts` is closer in shape but is a sub-phase 0.7 artifact
+`tools/ground-truth/lib/pptx.ts` is closer in shape but is a sub-phase 0.7 artifact
 whose output two committed measurements were taken from, so changing what it
 emits would make `color-transforms.json` and `eot-headers.json` describe a deck
 that no longer exists.
 
-So `tools/corpus/gen/package.ts` is written fresh and is canonical from here on.
+So `tools/corpus/tiers/a-generated/markup/chassis.ts` is written fresh and is canonical from here on.
 The obvious hazard in three builders is three divergent notions of correct
 markup, and **sharing code is the weak answer to it** — it makes them agree
 without making any of them right, and does nothing about a fourth written next
-year. `tools/corpus/conventions.test.ts` is the strong answer: it reads
+year. `tools/corpus/suites/conventions.test.ts` is the strong answer: it reads
 `powerpoint-conventions.json` and asserts every producer in the repository
 matches what PowerPoint measurably wrote — no BOM, one declaration form followed
 by CRLF, no part broken across lines, no single-quoted attribute, only the three
@@ -515,11 +515,11 @@ of those is an option with a default, and the five decks that predate them
 rebuild to their original hashes unchanged, which is the only evidence worth
 having that a refactor of a fixture generator was safe.
 
-A seventh file, `tools/corpus/gen/text.ts`, holds the paragraph and run builders.
+A seventh file, `tools/corpus/tiers/a-generated/markup/text.ts`, holds the paragraph and run builders.
 It exists for the same reason `shapes.ts` does: six decks needed every child of
 `a:pPr` and `a:rPr`, the order of those children is what PowerPoint refuses
 over, and writing it inline six times is six chances to get it wrong. The orders
-are copied out of `packages/xml/src/schema-order.gen.ts`, so the fixtures and
+are copied out of `packages/xml/src/edit/schema-order.gen.ts`, so the fixtures and
 the runtime's `insertInOrder()` read the same generated table.
 
 ### Two places the plan is wrong, and the decks say so
@@ -880,7 +880,7 @@ and all 54 `ST_PresetPatternVal` values.
 ## Tier B, and the difference a second producer makes
 
 Nine decks written by PowerPoint 16.0.20326 through
-`tools/corpus/authored/build-tier-b.ps1`, in a new `corpus/authored/` collection.
+`tools/corpus/tiers/b-authored/build-tier-b.ps1`, in a new `corpus/authored/` collection.
 They exist because of a sentence written into this ADR before any of them
 existed: with only one producer of foreign-to-us bytes, `C-LEX` rests on nothing
 and the round-trip gate degrades to a proof of idempotence. A generator checked
@@ -1024,7 +1024,7 @@ headers, where our writer and PowerPoint disagree in exactly three places.
 
 Each is legal to drop, none is a bug, and every one is invisible to a reader —
 which is precisely why they are asserted in both directions in
-`tools/corpus/written/decks.test.ts` rather than described in prose and checked
+`tools/corpus/tiers/c-written/decks.test.ts` rather than described in prose and checked
 nowhere. `0x0006` is bits 1 and 2, a compression _level hint_ meaning "super
 fast" that no decompressor reads; we deflate at level 6, whose encoding is
 `0b00`. The growth hint is 512 bytes of padding so an editor can rewrite a part
@@ -1074,7 +1074,7 @@ recorded as a gap rather than folded into the claim.
 The rule sub-phase 1.1 stated and could not enforce until there was a second
 producer: **every lexical convention is exercised by at least two decks from at
 least two distinct serializers, or carries a written gap saying why not.** It is
-`tools/corpus/lexical.test.ts`, against the sixty declared forms in
+`tools/corpus/lexical/lexical.test.ts`, against the sixty declared forms in
 `lexical-forms.ts`.
 
 It matters more than feature coverage ever did. Sub-phase 0.5's gate is "parse,
@@ -1111,7 +1111,7 @@ exactly as `corpus/authored` spells it. The collision is the mechanism: two
 collections sharing a serializer count once, so the caveat is enforced rather
 than written in a paragraph and trusted.
 
-`corpus/decks` names `tools/ground-truth/zip.ts` as its container rather than
+`corpus/decks` names `tools/ground-truth/lib/zip.ts` as its container rather than
 `tools/corpus/gen`, because the chassis hands its entries to `writeZip` and
 decides no header field itself.
 
@@ -1200,7 +1200,7 @@ The last of the four rules, and the shortest to state: **every census feature ke
 is exercised by at least one deck, or a manifest declares it with why nothing
 covers it and what would close it.** The answer is forty-six of forty-seven.
 
-It is `C019` in `tools/corpus/check.ts` rather than a test, which is a
+It is `C019` in `tools/corpus/manifest/check.ts` rather than a test, which is a
 deliberate departure from where the other three live. `C-CENSUS`, `C-REGEN` and
 `C-LEX` each have to build a deck, read a census or unzip an archive, so none of
 them can run in `pnpm corpus`. `C-COV` needs nothing but the manifests and the
@@ -1299,7 +1299,7 @@ refuses the package. Sub-phase 1.2 should raise it, and `a40-unicode` is the
 fixture that says why.
 
 **A `format` that disagrees with its `path` is unguarded.** Nothing in
-`tools/corpus/check.ts` compares the manifest's `format` field against the
+`tools/corpus/manifest/check.ts` compares the manifest's `format` field against the
 extension of its `path`, so the two could claim different things about one file
 and every rule would pass. They cannot today because both derive from
 `ProbeDeck.extension`, which is a property of the generator rather than of the

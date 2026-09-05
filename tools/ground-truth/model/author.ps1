@@ -1,7 +1,7 @@
 # Experiment C5, step 0 - ask PowerPoint to AUTHOR the inheritance, then read
 # what it wrote.
 #
-#   powershell -File tools/ground-truth/author-sheets.ps1 -Dir <out-dir>
+#   powershell -File tools/ground-truth/model/author.ps1 -Dir <out-dir>
 #
 # Writes several .pptx files and author-sheets-log.json. Unzip the slide, layout
 # and master parts from each and read the markup PowerPoint chose.

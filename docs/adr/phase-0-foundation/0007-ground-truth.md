@@ -3,7 +3,7 @@
 Date: 2026-08-27
 Sub-phase: 0.7
 Status: accepted, and it changes the plan
-Amended by: [0021](0021-colour.md), which measured the questions experiment C did not ask and
+Amended by: [0021](../phase-2-geometry-and-paint/0021-colour.md), which measured the questions experiment C did not ask and
 overturned two things recorded here — see "Also confirmed" and "Rounding" below
 
 ---
@@ -112,7 +112,7 @@ requirement. It refuted it instead.
 
 Wrapping a font from this machine would have answered a different question
 badly: the font is installed, so PowerPoint could render it perfectly while
-ignoring our bytes. So the probe font is synthesised — `tools/ground-truth/build-font.ts`,
+ignoring our bytes. So the probe font is synthesised — `tools/ground-truth/fonts/embedding/build-font.ts`,
 1,272 bytes, ten glyphs, family name `ProbeAlpha`. Its eight letters are solid
 bars of increasing height, so `ABCDEFGH` renders as a staircase that no
 substitute font can imitate. It is CC0 by construction, which is the difference
@@ -314,7 +314,7 @@ introducing an error of its own.
 
 Both experiments needed decks PowerPoint's object model cannot express — COM
 cannot set `lumMod` on a fill and certainly cannot embed a font we built — so
-`tools/ground-truth/pptx.ts` writes the package by hand: content types,
+`tools/ground-truth/lib/pptx.ts` writes the package by hand: content types,
 relationships, a theme with all twelve `clrScheme` children and exactly three
 entries in each `fmtScheme` list, a master with all twelve `clrMap` attributes,
 a blank layout, and the slides.

@@ -17,8 +17,8 @@
 
 import { describe, expect, it } from 'vitest';
 
-import fixture from '../../../corpus/ground-truth/text-metrics.json' with { type: 'json' };
-import { TextError } from './errors.js';
+import fixture from '../../../../corpus/ground-truth/text-metrics.json' with { type: 'json' };
+import { TextError } from '../errors.js';
 import {
   NATURAL_LINE_FACTOR,
   blockHeight,

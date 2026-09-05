@@ -1,6 +1,6 @@
-import { CONTENT_TYPE, CONTENT_TYPES_PART, ROOT_RELS_PART } from './constants.js';
+import { CONTENT_TYPE, CONTENT_TYPES_PART, ROOT_RELS_PART } from '../constants.js';
 import { ContentTypes } from './content-types.js';
-import { OpcError } from './errors.js';
+import { OpcError } from '../errors.js';
 import {
   checkPartNameCollisions,
   isContentTypesStreamName,
@@ -14,8 +14,13 @@ import {
   type PartName,
 } from './pack-uri.js';
 import { Relationships, sourcePartNameForRels, type Relationship } from './relationships.js';
-import { readZip, type ReadZipOptions, type ZipArchive, type ZipEntry } from './zip-reader.js';
-import { deflatedEntry, passthroughEntry, writeZip, type ZipEntryInput } from './zip-writer.js';
+import { readZip, type ReadZipOptions, type ZipArchive, type ZipEntry } from '../zip/zip-reader.js';
+import {
+  deflatedEntry,
+  passthroughEntry,
+  writeZip,
+  type ZipEntryInput,
+} from '../zip/zip-writer.js';
 
 /**
  * The package: every part, what each one is, and how they refer to each other.

@@ -1,4 +1,4 @@
-import type { ProbePackage } from './package.ts';
+import type { ProbePackage } from './chassis.ts';
 
 /**
  * One Tier A corpus deck.
@@ -16,7 +16,7 @@ import type { ProbePackage } from './package.ts';
  * updates the map, which is the point.
  *
  * Authoring a deck is therefore: write the map by hand, run
- * `npx vitest run tools/corpus/gen/probes.test.ts -t <id>`, read the diff,
+ * `npx vitest run tools/corpus/tiers/a-generated/probes.test.ts -t <id>`, read the diff,
  * decide whether what moved should have moved, and freeze. There is no
  * `--census` flag on the generator to shortcut it, and there should not be:
  * `build-probes.ts` runs under bare `node`, which cannot resolve

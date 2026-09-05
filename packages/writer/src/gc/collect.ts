@@ -1,5 +1,5 @@
 import { normalizePartName, type PartStore } from '@pptx-studio/opc';
-import { WriterError } from './errors.js';
+import { WriterError } from '../errors.js';
 import { orphanedParts, reachableParts, type Reachability } from './reachability.js';
 
 /**

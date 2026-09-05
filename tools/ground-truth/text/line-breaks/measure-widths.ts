@@ -2,7 +2,7 @@
  * Experiment T3, step 1 - how wide is every prefix of every probe string?
  *
  * ```
- * node tools/ground-truth/measure-break-widths.ts <work-dir>
+ * node tools/ground-truth/text/line-breaks/measure-widths.ts <work-dir>
  * ```
  *
  * The sweep in `line-break.ts` needs a box width that holds exactly `k` code
@@ -13,7 +13,7 @@
  * fraction of a percent has room to be wrong in by a factor of a hundred.
  *
  * The estimate is not trusted on its own. Every probe string also gets a
- * `wrap="none"` control shape in the deck, so `analyse-breaks.ts` can compare
+ * `wrap="none"` control shape in the deck, so `tools/ground-truth/text/line-breaks/analyse.ts` can compare
  * the whole-string width against PowerPoint's own and report the disagreement
  * per face rather than assume it away.
  *
@@ -32,7 +32,7 @@ import { join, resolve } from 'node:path';
 
 import { chromium } from 'playwright';
 
-import { FACES, PROBE_SIZE, allStrings } from './line-break.ts';
+import { FACES, PROBE_SIZE, allStrings } from './probes.ts';
 
 /*
  * The `page.evaluate` body runs in Chromium, not in Node. `tools/` compiles with
@@ -75,7 +75,8 @@ interface Result {
 }
 
 const dir = process.argv[2];
-if (dir === undefined) throw new Error('usage: measure-break-widths.ts <work-dir>');
+if (dir === undefined)
+  throw new Error('usage: tools/ground-truth/text/line-breaks/measure-widths.ts <work-dir>');
 const work = resolve(dir);
 
 const sizePt = PROBE_SIZE / 100;

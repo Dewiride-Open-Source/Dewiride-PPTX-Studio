@@ -45,13 +45,13 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+
+import { REPO_ROOT as ROOT } from '../repo/root.ts';
 import type { PresetBucketName, PresetShape } from '../../packages/geometry/src/types.ts';
 import { encodeBucket } from './encode.ts';
 import { readPresets, ROOT_ELEMENT, type PresetAnomaly } from './read-presets.ts';
 import { BUCKET_NAMES, bucketOf, ST_SHAPE_TYPE } from './shape-types.ts';
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const OUT = 'packages/geometry/src/presets';
 
 interface Options {

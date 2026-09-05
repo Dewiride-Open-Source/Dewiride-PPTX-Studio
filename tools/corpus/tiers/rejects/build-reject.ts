@@ -3,11 +3,11 @@
  * Write `corpus/reject/`, and the manifest that claims it.
  *
  * ```
- * node tools/corpus/reject/build-reject.ts --out corpus/reject --manifest
- * node tools/corpus/reject/build-reject.ts --out corpus/reject --check
+ * node tools/corpus/tiers/rejects/build-reject.ts --out corpus/reject --manifest
+ * node tools/corpus/tiers/rejects/build-reject.ts --out corpus/reject --check
  * ```
  *
- * Same shape as `tools/corpus/gen/build-probes.ts` and for the same reasons.
+ * Same shape as `tools/corpus/tiers/a-generated/build-probes.ts` and for the same reasons.
  * `--out` has no default: `C008-orphan` fails on any file under `corpus/` that
  * no manifest claims, so a generator that wrote there by accident would break
  * the gate for whoever ran it next. `--check` rebuilds every fixture and
@@ -24,11 +24,10 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+
+import { REPO_ROOT as ROOT } from '../../../repo/root.ts';
 import { packageBytes } from './deck.ts';
 import { outputName, REJECT_FIXTURES, type RejectFixture } from './fixtures.ts';
-
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../../..');
 
 interface Options {
   readonly out: string;
@@ -119,8 +118,8 @@ if (options.manifest) {
     manifestVersion: 1,
     collection: 'reject',
     generatedIn: '1.2',
-    adr: 'docs/adr/0010-the-repair-firewall.md',
-    generator: 'tools/corpus/reject/build-reject.ts',
+    adr: 'docs/adr/phase-1-round-trip/0010-the-repair-firewall.md',
+    generator: 'tools/corpus/tiers/rejects/build-reject.ts',
     entries: built.map(({ fixture, bytes }) => ({
       id: fixture.id,
       // Not `deck`. A package PowerPoint refuses is not evidence that any

@@ -1,5 +1,5 @@
 import { deflateSync } from 'fflate';
-import { crc32 } from '../crc32.js';
+import { crc32 } from '../digest/crc32.js';
 
 /**
  * A ZIP writer that can lie.

@@ -16,9 +16,9 @@
  * `corpus/ground-truth/color-bases.json` (2.6, the bases, alpha, the colour map
  * and the percentage grammar), `corpus/ground-truth/fills.json` (2.7, gradients
  * and patterns) and `corpus/ground-truth/lines.json` (2.8, strokes and
- * effects); the reasoning is in `docs/adr/0007-ground-truth.md`,
- * `docs/adr/0021-colour.md`, `docs/adr/0022-fills.md` and
- * `docs/adr/0023-lines.md`.
+ * effects); the reasoning is in `docs/adr/phase-0-foundation/0007-ground-truth.md`,
+ * `docs/adr/phase-2-geometry-and-paint/0021-colour.md`, `docs/adr/phase-2-geometry-and-paint/0022-fills.md` and
+ * `docs/adr/phase-2-geometry-and-paint/0023-lines.md`.
  */
 
 export { PaintError, type PaintErrorCode } from './errors.js';
@@ -36,7 +36,7 @@ export {
   wrapHue,
   type Channel,
   type Hsl,
-} from './transfer.js';
+} from './colors/transfer.js';
 
 export {
   COLOR_TRANSFORM_OPS,
@@ -59,13 +59,19 @@ export {
 
 export { applyTransforms } from './apply.js';
 
-export { mapSchemeName, resolveColor, toCss, toHexColor, type ColorContext } from './resolve.js';
+export {
+  mapSchemeName,
+  resolveColor,
+  toCss,
+  toHexColor,
+  type ColorContext,
+} from './colors/resolve.js';
 
 export { parseAngle, parsePercentage, parseSrgbValue } from './parse.js';
 
-export { PRESET_COLORS, isPresetColorName } from './preset-colors.js';
+export { PRESET_COLORS, isPresetColorName } from './colors/preset-colors.js';
 
-export { SYSTEM_COLORS, isSystemColorName } from './sys-colors.js';
+export { SYSTEM_COLORS, isSystemColorName } from './colors/sys-colors.js';
 
 export {
   WHOLE_RECT,
@@ -82,7 +88,7 @@ export {
   type RelativeRect,
   type SolidFill,
   type TileFlipMode,
-} from './fill.js';
+} from './fills/fill.js';
 
 export {
   RAMP_BLEND_GAMMA,
@@ -90,7 +96,7 @@ export {
   fromRampSpace,
   toRampSpace,
   twoStopWeight,
-} from './gradient-ramp.js';
+} from './fills/gradient-ramp.js';
 
 export {
   gradientColorAt,
@@ -107,7 +113,7 @@ export {
   type ResolvedStop,
   type TwoColorRamp,
   type SvgStop,
-} from './gradient.js';
+} from './fills/gradient.js';
 
 export {
   ANTIALIASED_PATTERNS,
@@ -117,23 +123,23 @@ export {
   PRESET_PATTERN_NAMES,
   isPresetPatternName,
   type PatternTile,
-} from './pattern-tiles.js';
+} from './fills/pattern-tiles.js';
 
-export { patternInk, patternPixel, resolvePattern, type ResolvedPattern } from './pattern.js';
+export { patternInk, patternPixel, resolvePattern, type ResolvedPattern } from './fills/pattern.js';
 
 export {
   COMPOUND_NAMES,
   COMPOUND_RUNS,
   COMPOUND_RUNS_60,
   isCompoundName,
-} from './compound-table.js';
+} from './lines/compound-table.js';
 
 export {
   PRESET_DASHES,
   PRESET_DASH_NAMES,
   isPresetDashName,
   type DashSegment,
-} from './dash-table.js';
+} from './lines/dash-table.js';
 
 export {
   MARKERS,
@@ -144,7 +150,7 @@ export {
   isMarkerTypeName,
   type Marker,
   type MarkerAnchor,
-} from './marker-table.js';
+} from './lines/marker-table.js';
 
 export {
   DEFAULT_LINE_CAP,
@@ -171,7 +177,7 @@ export {
   type ResolvedLine,
   type StrokeRail,
   type SvgStroke,
-} from './line.js';
+} from './lines/line.js';
 
 export {
   BLUR_RADIUS_TO_SIGMA,

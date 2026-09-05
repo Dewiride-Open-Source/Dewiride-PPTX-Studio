@@ -1,6 +1,6 @@
 import { deflateSync } from 'fflate';
-import { crc32 } from './crc32.js';
-import { guard, OpcError } from './errors.js';
+import { crc32 } from '../digest/crc32.js';
+import { guard, OpcError } from '../errors.js';
 import {
   COMPRESSION_DEFLATE,
   COMPRESSION_STORE,
@@ -47,7 +47,7 @@ import {
  * None of the three is guesswork about whether PowerPoint minds:
  * `corpus/written/c01-opc-writer.pptx` is that same deck rewritten by this
  * writer, committed, and opened in PowerPoint 16.0.20326 with no repair prompt.
- * `tools/corpus/written/decks.test.ts` asserts all three in both directions, so
+ * `tools/corpus/tiers/c-written/decks.test.ts` asserts all three in both directions, so
  * neither our drifting nor PowerPoint's can pass unnoticed.
  *
  * The UTF-8 flag is the fourth bit worth a note, and the one place where our

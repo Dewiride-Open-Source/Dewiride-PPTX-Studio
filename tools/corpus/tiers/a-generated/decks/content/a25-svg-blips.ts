@@ -1,8 +1,8 @@
-import { cNvPrXml, type ProbePart } from '../package.ts';
-import { quadrantPng } from '../png.ts';
-import { shape } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { cNvPrXml, type ProbePart } from '../../markup/chassis.ts';
+import { quadrantPng } from '../../assets/png.ts';
+import { shape } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * SVG blips: the form PowerPoint wrote, the form with a fallback, and the SVG

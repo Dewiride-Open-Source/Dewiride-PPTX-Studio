@@ -1,13 +1,14 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { repoPath } from '../../../repo/root.ts';
 import { censusPackage } from '@pptx-studio/census';
 import { describe, expect, it } from 'vitest';
 import { AUTHORED_DECKS } from './decks.ts';
-import { readZip } from '../../ground-truth/zip.ts';
+import { readZip } from '../../../ground-truth/lib/zip.ts';
 
-const CORPUS = resolve(fileURLToPath(import.meta.url), '../../../../corpus/authored');
+const CORPUS = repoPath('corpus/authored');
 
 /**
  * `C-CENSUS` for Tier B, plus the four constraints the roster says are enforced

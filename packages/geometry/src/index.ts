@@ -22,7 +22,7 @@
  */
 export { GeometryError, type GeometryErrorCode } from './errors.js';
 export { PresetBucket, decodeShape } from './decode.js';
-export { builtinGuideNames, builtinGuides } from './builtins.js';
+export { builtinGuideNames, builtinGuides } from './formula/builtins.js';
 export {
   ARC_MAX_SWEEP,
   arcEnd,
@@ -34,7 +34,7 @@ export {
   type ArcGeometry,
   type ArcParameters,
   type ArcSegment,
-} from './arc.js';
+} from './paths/arc.js';
 export {
   ANGLE_UNITS_PER_DEGREE,
   FMLA_ARITY,
@@ -45,7 +45,7 @@ export {
   radiansToAngle,
   type FmlaOperator,
   type FormulaSite,
-} from './formula.js';
+} from './formula/formula.js';
 export {
   evaluateGuides,
   nonFiniteGuides,
@@ -54,7 +54,7 @@ export {
   type AdjustOverrides,
   type EvaluateOptions,
   type ShapeSize,
-} from './evaluate.js';
+} from './formula/evaluate.js';
 export {
   HANDLE_SAMPLES,
   HANDLE_TOLERANCE,
@@ -69,7 +69,7 @@ export {
   type ResolveHandleOptions,
   type ResolvedHandle,
   type ResolvedHandleAxis,
-} from './handles.js';
+} from './paths/handles.js';
 export {
   DEFAULT_PRECISION,
   pathData,
@@ -83,7 +83,7 @@ export {
   type ResolvedGeometry,
   type ResolvedPath,
   type ResolvedRect,
-} from './path.js';
+} from './paths/path.js';
 export {
   BUCKETS,
   BUCKET_MEMBERS,

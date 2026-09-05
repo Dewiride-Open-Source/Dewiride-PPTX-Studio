@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import { roundTripPackage } from '@pptx-studio/writer';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
@@ -11,7 +12,7 @@ import {
   roundTripCorpus,
   summaryFor,
   COLLECTIONS,
-} from './roundtrip-report.ts';
+} from './report.ts';
 
 /**
  * Sub-phase 1.6: the badge says what the corpus does, and keeps saying it.
@@ -28,7 +29,6 @@ import {
  * shows up as two different numbers rather than as one confident wrong one.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const BADGE = join(ROOT, '.github', 'badges', 'roundtrip.json');
 const WORKFLOW = join(ROOT, '.github', 'workflows', 'ci.yml');
 

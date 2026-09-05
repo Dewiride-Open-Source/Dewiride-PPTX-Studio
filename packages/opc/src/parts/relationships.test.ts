@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { REL_TYPE } from './constants.js';
-import { isOpcError } from './errors.js';
+import { REL_TYPE } from '../constants.js';
+import { isOpcError } from '../errors.js';
 import {
   isValidRelationshipId,
   relativeTargetFor,
   Relationships,
   sourcePartNameForRels,
 } from './relationships.js';
-import { relsXml, relXml } from './testing/build-package.js';
+import { relsXml, relXml } from '../testing/build-package.js';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatReport, type Report } from './report.js';
-import type { RuleId } from './rules.js';
+import { formatReport, type Report } from './report/report.js';
+import type { RuleId } from './rules/rules.js';
 import { deck, minimalDeck, relsPart, rel, shape, IDENTITY_CLR_MAP } from './testing/deck.js';
 import { validatePackage, type ValidateOptions } from './validate.js';
 
@@ -336,7 +336,7 @@ describe('V012 children the model has no place for', () => {
 describe('what the corpus taught these three rules', () => {
   // Every case below was a false positive on a deck PowerPoint opens, found by
   // running the validator over the fifty-one committed decks and read off the
-  // failure. They are here rather than only in `tools/corpus/validate.test.ts`
+  // failure. They are here rather than only in `tools/corpus/suites/validate.test.ts`
   // because the corpus check needs a filesystem and these do not, so a
   // regression should fail in the fast suite first.
 

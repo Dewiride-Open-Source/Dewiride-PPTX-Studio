@@ -1,7 +1,7 @@
-import { cNvPrXml } from '../package.ts';
-import { prstGeom, scheme, solidFill } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { cNvPrXml } from '../../markup/chassis.ts';
+import { prstGeom, scheme, solidFill } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Office Math, which a slide has no schema-legal place to put.

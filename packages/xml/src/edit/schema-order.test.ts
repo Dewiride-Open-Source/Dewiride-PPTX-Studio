@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyEdit, insertInOrder, newAttribute, newElement } from './edit.js';
-import { isXmlError } from './errors.js';
+import { isXmlError } from '../errors.js';
 import {
   childRank,
   childRanks,
@@ -10,8 +10,8 @@ import {
   qualifiedKey,
   SCHEMA_SOURCES,
 } from './schema-order.js';
-import { childElements, descendantElements, firstChild, parseXmlString } from './xnode.js';
-import type { XElement } from './xnode.js';
+import { childElements, descendantElements, firstChild, parseXmlString } from '../parse/xnode.js';
+import type { XElement } from '../parse/xnode.js';
 
 const P = 'http://schemas.openxmlformats.org/presentationml/2006/main';
 const A = 'http://schemas.openxmlformats.org/drawingml/2006/main';

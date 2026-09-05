@@ -1,8 +1,8 @@
 {
-  "$comment": "Ground truth for the DrawingML colour bases, alpha, the clrMap and the percentage grammar, measured in Microsoft PowerPoint. The companion to color-transforms.json, which covers the transforms. See docs/adr/0021-colour.md. `expected` is the RGB PowerPoint painted, sampled from its own bitmap export at the centre of each swatch; `transparency` is Shape.Fill.Transparency from the object model.",
+  "$comment": "Ground truth for the DrawingML colour bases, alpha, the clrMap and the percentage grammar, measured in Microsoft PowerPoint. The companion to color-transforms.json, which covers the transforms. See docs/adr/phase-2-geometry-and-paint/0021-colour.md. `expected` is the RGB PowerPoint painted, sampled from its own bitmap export at the centre of each swatch; `transparency` is Shape.Fill.Transparency from the object model.",
   "source": {
     "application": "Microsoft PowerPoint",
-    "generatedBy": "tools/ground-truth/build-swatch-deck2.ts + analyse-swatches2.ts"
+    "generatedBy": "tools/ground-truth/paint/colour/bases/build-deck.ts + tools/ground-truth/paint/colour/bases/analyse.ts"
   },
   "clrScheme": {
     "dk1": "000000",

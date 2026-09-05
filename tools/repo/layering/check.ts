@@ -134,7 +134,7 @@ export function checkLayering({ manifests, catalog }: CheckInput): Violation[] {
         dir,
         'packages/' +
           short +
-          ' has no entry in tools/layering/layers.ts. Add one (with its layer and runtime) before ' +
+          ' has no entry in tools/repo/layering/layers.ts. Add one (with its layer and runtime) before ' +
           'adding code, so the dependency direction is declared rather than discovered.',
       );
       continue;

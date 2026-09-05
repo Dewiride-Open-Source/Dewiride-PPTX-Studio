@@ -1,7 +1,16 @@
-import { quadrantPng } from '../png.ts';
-import type { ProbeSlide } from '../package.ts';
-import { grid, group, line, prstGeom, scheme, shape, solidFill, srgb } from '../shapes.ts';
-import type { ProbeDeck } from '../types.ts';
+import { quadrantPng } from '../../assets/png.ts';
+import type { ProbeSlide } from '../../markup/chassis.ts';
+import {
+  grid,
+  group,
+  line,
+  prstGeom,
+  scheme,
+  shape,
+  solidFill,
+  srgb,
+} from '../../markup/shapes.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Every way DrawingML can fill a shape.

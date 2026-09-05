@@ -158,7 +158,7 @@ established: no hosted runner has Office on it.
 ### The demo's own file is not byte-identical to the corpus deck, and should not be
 
 Same length, 112 differing bytes, every one of them at offset +4 of a header:
-the ZIP **version needed to extract**. `tools/ground-truth/zip.ts` writes 2.0 on
+the ZIP **version needed to extract**. `tools/ground-truth/lib/zip.ts` writes 2.0 on
 every entry; `packages/opc`'s writer writes 1.0 for a stored entry, which is
 what APPNOTE specifies — 2.0 is the floor for DEFLATE.
 

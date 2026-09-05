@@ -2,7 +2,7 @@ import { CONTENT_TYPE, PartStore, REL_TYPE } from '@pptx-studio/opc';
 import { NS } from '@pptx-studio/xml';
 import { describe, expect, it } from 'vitest';
 import { comparePackages, roundTripPackage, summarizeRoundTrip } from './roundtrip.js';
-import { fixtureBytes, MAIN_PART } from './testing/package.js';
+import { fixtureBytes, MAIN_PART } from '../testing/package.js';
 
 /**
  * A comparator is two tests, and only one of them is obvious.

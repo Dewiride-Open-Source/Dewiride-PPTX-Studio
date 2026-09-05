@@ -16,11 +16,10 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+
+import { REPO_ROOT as ROOT } from '../repo/root.ts';
 import { RECIPES, writeDeck, type DeckRecipe } from './deck.ts';
 import { ZipStream } from './zip-stream.ts';
-
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 
 /**
  * The CC0 probe font sub-phase 0.7 authored and committed.

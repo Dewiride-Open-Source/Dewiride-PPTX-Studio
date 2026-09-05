@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CONTENT_TYPE, FONT_DATA_CONTENT_TYPE } from './constants.js';
+import { CONTENT_TYPE, FONT_DATA_CONTENT_TYPE } from '../constants.js';
 import { ContentTypes, isXmlContentType } from './content-types.js';
-import { isOpcError } from './errors.js';
-import { contentTypesXml } from './testing/build-package.js';
+import { isOpcError } from '../errors.js';
+import { contentTypesXml } from '../testing/build-package.js';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();

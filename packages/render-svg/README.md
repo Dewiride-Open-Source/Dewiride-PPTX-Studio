@@ -4,7 +4,7 @@ A slide to SVG: transforms, geometry, fills, strokes and effects, as a string.
 
 Sub-phase 2.10. Everything below was measured against Microsoft PowerPoint rather than argued from
 the standard; the fixture is `corpus/ground-truth/transforms.json`, the experiment is C6 in
-`tools/ground-truth/`, and the reasoning is `docs/adr/0025-renderers-geometry.md`.
+`tools/ground-truth/`, and the reasoning is `docs/adr/phase-2-geometry-and-paint/0025-renderers-geometry.md`.
 
 Almost everything hard about drawing a slide is a transform, and almost every transform rule in
 DrawingML is either unwritten or written misleadingly. This package is where those rules live.

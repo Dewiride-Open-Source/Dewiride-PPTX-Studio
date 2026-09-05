@@ -5,11 +5,11 @@ import {
   CT_CHART_STYLE,
   REL_CHART_COLORS,
   REL_CHART_STYLE,
-} from '../chart-style.ts';
-import { DECLARATION, NS_A, NS_R, relsXml, type ProbePart } from '../package.ts';
-import { quadrantPng } from '../png.ts';
-import { graphicFrame, GRAPHIC_URI, picture } from '../shapes.ts';
-import type { ProbeDeck } from '../types.ts';
+} from '../../markup/chart-style.ts';
+import { DECLARATION, NS_A, NS_R, relsXml, type ProbePart } from '../../markup/chassis.ts';
+import { quadrantPng } from '../../assets/png.ts';
+import { graphicFrame, GRAPHIC_URI, picture } from '../../markup/shapes.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * ChartEx: seven of the eight `layoutId` values, and a different data model.
@@ -80,7 +80,7 @@ import type { ProbeDeck } from '../types.ts';
  *
  * So `cx:chartSpace` requires the pair that `c:chartSpace` merely likes -
  * `a21-charts`'s charts 2, 3 and 4 carry no relationships and open. Both parts
- * come from `tools/corpus/gen/chart-style.ts`, shared across all seven charts
+ * come from `tools/corpus/tiers/a-generated/markup/chart-style.ts`, shared across all seven charts
  * rather than duplicated per chart the way PowerPoint writes them, because what
  * is being probed is the edge and not the palette.
  *

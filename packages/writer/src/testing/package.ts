@@ -13,7 +13,7 @@ import { CONTENT_TYPE, PartStore, REL_TYPE } from '@pptx-studio/opc';
  *
  * So these fixtures are the smallest thing `PartStore.write` accepts, the tests
  * here pass `validate: false`, and the firewall is exercised against the real
- * corpus in `tools/corpus/export.test.ts` - where there are fifty-two decks
+ * corpus in `tools/corpus/suites/export.test.ts` - where there are fifty-two decks
  * that genuinely open, and a filesystem to read them from.
  */
 

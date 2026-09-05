@@ -28,7 +28,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { writeZip as writeMemoryZip } from '../ground-truth/zip.ts';
+import { writeZip as writeMemoryZip } from '../ground-truth/lib/zip.ts';
 import { mulberry32, noisePng, sizeForBytes } from './png.ts';
 import type { ZipStream } from './zip-stream.ts';
 

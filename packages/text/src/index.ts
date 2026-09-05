@@ -19,10 +19,16 @@
  * - `a:rPr/@spc` is an **absolute length in points**, applied after every
  *   character including the last, which is what CSS `letter-spacing` does.
  *
- * The fixture is `corpus/ground-truth/text-metrics.json`; the reasoning, the
- * refuted alternatives, and the one question left open - what the *last* line of
- * a block measures, which needs a per-face term no browser reports - are in
- * `docs/adr/0028-measurement-and-the-line-model.md`.
+ * The fixture is `corpus/ground-truth/text-metrics.json`; the reasoning and the
+ * refuted alternatives are in `docs/adr/phase-3-text/0028-measurement-and-the-line-model.md`.
+ *
+ * Sub-phase 3.3 added line breaking - which turned out not to be a tailoring of
+ * UAX#14 but a much smaller rule that UAX#14 is a superset of - and 3.4 added
+ * autofit, whose fit test forced the one question 3.2 left open: what the
+ * *last* line of a block measures. It is `0.75 x advance + b x size` with `b` a
+ * property of the typeface, floored at the advance while the advance is inside
+ * `C x size`. See `autofit.ts`, `docs/adr/phase-3-text/0029-line-breaking.md` and
+ * `docs/adr/phase-3-text/0030-autofit.md`.
  */
 
 export { TextError, type TextErrorCode } from './errors.js';
@@ -35,14 +41,14 @@ export {
   naturalLineHeight,
   quantisePercent,
   type LineSpacing,
-} from './line-model.js';
+} from './lines/line-model.js';
 
 export {
   BUILT_IN_KINSOKU,
   HANGING_PUNCTUATION,
   kinsokuInForce,
   type KinsokuSets,
-} from './kinsoku.js';
+} from './lines/kinsoku.js';
 
 export {
   breakOpportunities,
@@ -54,7 +60,28 @@ export {
   type LineBox,
   type RangeMeasurer,
   type WrapInput,
-} from './break.js';
+} from './lines/break.js';
+
+export {
+  APPROXIMATE_FACE_METRICS,
+  AUTOFIT_LADDER,
+  MEASURED_FACE_METRICS,
+  SHAPE_AUTOFIT_SLACK,
+  autofitAdvance,
+  effectiveFontSize,
+  faceLineMetrics,
+  fitAutofit,
+  hasFaceLineMetrics,
+  lastLineHeight,
+  requiredShapeHeight,
+  storedScale,
+  textBodyHeight,
+  type AutofitRequest,
+  type AutofitResult,
+  type AutofitScale,
+  type FaceLineMetrics,
+  type ParagraphBox,
+} from './lines/autofit.js';
 
 export {
   createCanvasMeasurer,
@@ -65,4 +92,87 @@ export {
   type Advance,
   type RunFont,
   type TextMeasurer,
-} from './measure.js';
+} from './runs/measure.js';
+
+export {
+  ALPHABETS,
+  AUTONUMBER_SCHEMES,
+  START_AT_MAX,
+  START_AT_MIN,
+  UNMEASURED_SCHEMES,
+  autonumberRule,
+  autonumberTypeface,
+  formatAutonumber,
+  isAutonumberScheme,
+  type Alphabet,
+  type AutonumberRule,
+  type AutonumberScheme,
+} from './bullets/autonumber.js';
+
+export {
+  BLIP_BULLET_HEIGHT,
+  SYMBOL_TYPEFACES,
+  blipBulletWidth,
+  bulletLayout,
+  drawableBullet,
+  isStartAtInRange,
+  isSymbolTypeface,
+  numberParagraphs,
+  symbolBulletChar,
+  type BulletColor,
+  type BulletContext,
+  type BulletFont,
+  type BulletKind,
+  type BulletLayout,
+  type BulletSize,
+  type DrawableBullet,
+  type NumberedParagraph,
+  type ResolvedBullet,
+} from './bullets/bullets.js';
+
+export {
+  RESERVED_FIELD_TYPES,
+  datePatternFor,
+  formatDateTimeField,
+  isReservedFieldType,
+  renderDatePattern,
+  renderField,
+  type FieldRequest,
+  type RenderedField,
+  type ReservedFieldType,
+} from './fields/fields.js';
+
+export { FIELD_DATE_PATTERNS } from './fields/field-formats.gen.js';
+
+export {
+  scriptSlotOf,
+  splitScriptRuns,
+  typefaceFor,
+  type RunTypefaces,
+  type ScriptRun,
+  type ScriptSlot,
+} from './runs/script-runs.js';
+
+export {
+  DEFAULT_INSETS,
+  ELLIPSIS,
+  MAX_COLUMNS,
+  VERTICAL_AXES,
+  anchorFraction,
+  blockOrigin,
+  columnBox,
+  contentBox,
+  drawnLines,
+  emptyParagraphHeight,
+  frameAxes,
+  offsetAlong,
+  type Anchor,
+  type Box,
+  type DrawnLines,
+  type Edge,
+  type FrameAxes,
+  type Insets,
+  type OverflowLine,
+  type VertOverflow,
+  type VerticalText,
+} from './frames/frame.js';

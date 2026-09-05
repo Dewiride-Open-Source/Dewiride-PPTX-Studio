@@ -53,7 +53,7 @@ export {
   type WriterErrorDetail,
 } from './errors.js';
 
-export { reachableParts, orphanedParts, type Reachability } from './reachability.js';
+export { reachableParts, orphanedParts, type Reachability } from './gc/reachability.js';
 
 export {
   collectGarbage,
@@ -63,16 +63,16 @@ export {
   type CollectionPlan,
   type CollectionPolicy,
   type KeptPart,
-} from './collect.js';
+} from './gc/collect.js';
 
 export {
   runPrepare,
   type PrepareContext,
   type PrepareHook,
   type PrepareRecord,
-} from './prepare.js';
+} from './export/prepare.js';
 
-export { assertPreserved, type PreservationCheck } from './preserve.js';
+export { assertPreserved, type PreservationCheck } from './export/preserve.js';
 
 export {
   exportPackage,
@@ -80,7 +80,7 @@ export {
   type ExportOptions,
   type ExportResult,
   type OpenPackage,
-} from './export.js';
+} from './export/export.js';
 
 export {
   bisectPackages,
@@ -98,7 +98,7 @@ export {
   type RunEvent,
   type Span,
   type Verdict,
-} from './bisect.js';
+} from './oracle/bisect.js';
 
 export {
   comparePackages,
@@ -113,4 +113,4 @@ export {
   type RoundTripOptions,
   type RoundTripReport,
   type RoundTripResult,
-} from './roundtrip.js';
+} from './oracle/roundtrip.js';

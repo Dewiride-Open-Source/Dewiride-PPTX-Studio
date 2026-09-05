@@ -1,4 +1,4 @@
-import { DECLARATION, NS_A } from './package.ts';
+import { DECLARATION, NS_A } from './chassis.ts';
 
 /**
  * The two parts every chart in this corpus needs, and one of them has to be

@@ -1,7 +1,7 @@
 # Experiment C4, step 0 - ask PowerPoint to AUTHOR lines and effects, then read
 # what it wrote.
 #
-#   powershell -File tools/ground-truth/author-lines.ps1 -Dir <out-dir>
+#   powershell -File tools/ground-truth/paint/lines/author.ps1 -Dir <out-dir>
 #
 # Writes several .pptx files and author-lines-log.json. Unzip
 # ppt/slides/slide1.xml from each and read the markup PowerPoint chose.

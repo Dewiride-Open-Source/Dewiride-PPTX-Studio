@@ -1,6 +1,6 @@
-import { grid, type Cell } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { grid, type Cell } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * The lexical forms every producer in this repository declines to emit.

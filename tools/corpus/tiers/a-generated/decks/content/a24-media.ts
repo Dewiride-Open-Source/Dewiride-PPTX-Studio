@@ -1,9 +1,9 @@
-import { cNvPrXml, REL, type ProbePart, type ProbeRel } from '../package.ts';
-import { probeMp4, probeWav } from '../media.ts';
-import { quadrantPng } from '../png.ts';
-import { shape } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { cNvPrXml, REL, type ProbePart, type ProbeRel } from '../../markup/chassis.ts';
+import { probeMp4, probeWav } from '../../assets/media.ts';
+import { quadrantPng } from '../../assets/png.ts';
+import { shape } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Media: one part, two relationships, and an `r:id` that points at nothing.
@@ -80,7 +80,7 @@ import type { ProbeDeck } from '../types.ts';
  * ## What is not here, and why
  *
  * The video part is a valid ISO-BMFF container with no tracks - see
- * `tools/corpus/gen/media.ts`. **PowerPoint refuses to insert it**: "PowerPoint
+ * `tools/corpus/tiers/a-generated/assets/media.ts`. **PowerPoint refuses to insert it**: "PowerPoint
  * cannot insert a video from the selected file. Verify that the necessary codec
  * for this media format is installed." That is an insert-time check on content,
  * not a package rule, and the markup here is the markup it writes for a video

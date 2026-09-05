@@ -3,7 +3,7 @@
  * itself wrote.
  *
  * ```
- * node tools/ground-truth/graft-font.ts <powerpoint-deck.pptx> <probe.eot> <typeface> <out.pptx>
+ * node tools/ground-truth/fonts/embedding/graft-font.ts <powerpoint-deck.pptx> <probe.eot> <typeface> <out.pptx>
  * ```
  *
  * The variant matrix showed PowerPoint rendering none of our uncompressed EOTs.
@@ -24,8 +24,8 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { readZip, writeZip, type ZipEntry } from './zip.ts';
-import { readEot } from './eot.ts';
+import { readZip, writeZip, type ZipEntry } from '../../lib/zip.ts';
+import { readEot } from '../format/eot.ts';
 
 const [, , deckPath, eotPath, typeface, outPath] = process.argv;
 if (

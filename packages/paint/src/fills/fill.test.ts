@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import fills from '../../../corpus/ground-truth/fills.json' with { type: 'json' };
-import { PaintError } from './errors.js';
-import { resolveColor } from './resolve.js';
+import fills from '../../../../corpus/ground-truth/fills.json' with { type: 'json' };
+import { PaintError } from '../errors.js';
+import { resolveColor } from '../colors/resolve.js';
 import {
   gradientColorAt,
   linearGradientVector,
@@ -15,9 +15,9 @@ import {
 import { RAMP_BLEND_GAMMA, TWO_STOP_RAMP } from './gradient-ramp.js';
 import { ANTIALIASED_PATTERNS, PATTERN_TILES, PRESET_PATTERN_NAMES } from './pattern-tiles.js';
 import { patternInk, resolvePattern } from './pattern.js';
-import { toByte } from './transfer.js';
+import { toByte } from '../colors/transfer.js';
 import type { GradientFill, GradientStop, PatternFill, RelativeRect } from './fill.js';
-import type { ClrScheme, Color, ColorTransform, Rgba, SchemeSlot } from './types.js';
+import type { ClrScheme, Color, ColorTransform, Rgba, SchemeSlot } from '../types.js';
 
 /* -------------------------------------------------------------------------- */
 /* the fixture                                                                */
@@ -74,7 +74,7 @@ function samples(packed: string): [number, number, number][] {
 }
 
 /**
- * The theme the probe decks were written against, from `tools/ground-truth/pptx.ts`.
+ * The theme the probe decks were written against, from `tools/ground-truth/lib/pptx.ts`.
  * `dk1` and `lt1` are `sysClr` with a `lastClr`, as PowerPoint writes them.
  */
 const SCHEME: ClrScheme = Object.fromEntries(
@@ -179,7 +179,7 @@ function stripPosition(p: Probe, k: number): number {
 /**
  * The shape-space position of grid sample `(row, col)`.
  *
- * Mirrors `sampleGrid` in `tools/ground-truth/analyse-fills.ts` exactly,
+ * Mirrors `sampleGrid` in `tools/ground-truth/paint/fills/analyse.ts` exactly,
  * including its one-pixel inset - a prediction taken at a slightly different
  * point from the measurement is not a prediction of the measurement.
  */
@@ -736,7 +736,7 @@ describe('the theme colours the probes used', () => {
     expect(bytes(gradientColorAt(fill, 0, CTX))).toEqual([...strip[0]!]);
   });
 
-  it('and the slots are the ones tools/ground-truth/pptx.ts writes', () => {
+  it('and the slots are the ones tools/ground-truth/lib/pptx.ts writes', () => {
     expect((SCHEME.accent1 as { hex: string }).hex).toBe('4472C4');
     expect((SCHEME['dk1' as SchemeSlot] as { space: string }).space).toBe('sys');
   });

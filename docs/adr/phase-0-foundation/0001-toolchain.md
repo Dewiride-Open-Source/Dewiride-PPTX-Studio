@@ -153,7 +153,7 @@ Five things that only surfaced by running the thing, recorded so they are not re
    one consequence we chose.
 5. **`verifyDepsBeforeRun: install` makes `pnpm <script>` unusable for negative testing.** Breaking
    a manifest to prove a guard fires means pnpm tries to install the broken manifest first. Invoke
-   the checker as `node tools/layering/check-layering.ts` in those cases.
+   the checker as `node tools/repo/layering/check-layering.ts` in those cases.
 
 ## Deferred
 

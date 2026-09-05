@@ -9,10 +9,15 @@ import {
   unskewAngle,
   type ArcParameters,
 } from './arc.js';
-import { evaluateGuides, resolveOperand, resolvePoint, type ShapeSize } from './evaluate.js';
-import { FULL_CIRCLE, angleToRadians } from './formula.js';
-import { getPreset, presetNames } from './presets/index.js';
-import type { Point, PresetShape } from './types.js';
+import {
+  evaluateGuides,
+  resolveOperand,
+  resolvePoint,
+  type ShapeSize,
+} from '../formula/evaluate.js';
+import { FULL_CIRCLE, angleToRadians } from '../formula/formula.js';
+import { getPreset, presetNames } from '../presets/index.js';
+import type { Point, PresetShape } from '../types.js';
 
 /**
  * The presets check this module, not the other way round.

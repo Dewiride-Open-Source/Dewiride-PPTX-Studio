@@ -12,9 +12,9 @@ import {
   type XAttribute,
   type XElement,
 } from '@pptx-studio/xml';
-import type { Context } from './context.js';
-import { attributeLocation, elementLocation, partLocation } from './location.js';
-import { bySource, readRelsParts, resolveTarget, type RelsPart } from './rels.js';
+import type { Context } from '../context.js';
+import { attributeLocation, elementLocation, partLocation } from '../report/location.js';
+import { bySource, readRelsParts, resolveTarget, type RelsPart } from '../rels.js';
 
 /**
  * `V006` … `V009`: the relationship graph.

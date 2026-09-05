@@ -4,8 +4,8 @@
  * `probe-conventions.ps1` produced.
  *
  * ```
- * powershell -File tools/corpus/authored/probe-conventions.ps1 -Out <dir>
- * node tools/corpus/authored/analyse-conventions.ts <dir> \
+ * powershell -File tools/corpus/tiers/b-authored/probe-conventions.ps1 -Out <dir>
+ * node tools/corpus/tiers/b-authored/analyse-conventions.ts <dir> \
  *   --json corpus/ground-truth/powerpoint-conventions.json
  * ```
  *
@@ -26,7 +26,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 // The repository's own Node-side reader rather than fflate: `tools/` has no
 // node_modules of its own, and this has to run from a bare clone.
-import { readZip } from '../../ground-truth/zip.ts';
+import { readZip } from '../../../ground-truth/lib/zip.ts';
 
 const args = process.argv.slice(2);
 const dir = args[0];

@@ -20,9 +20,9 @@ import {
 } from '@pptx-studio/paint';
 import { attributeValue, childElements, firstChild, type XElement } from '@pptx-studio/xml';
 
-import { parseGeometry } from './parse-geometry.js';
+import { parseGeometry } from './geometry.js';
 
-import { ModelError } from './errors.js';
+import { ModelError } from '../errors.js';
 import {
   parseColorElement,
   parseEffects,
@@ -30,8 +30,8 @@ import {
   parseFillElement,
   parseLine,
   parseLineElement,
-} from './parse-paint.js';
-import { parseTextBodyChild, parseTextStyles } from './parse-text.js';
+} from './paint.js';
+import { parseTextBodyChild, parseTextStyles } from './text.js';
 import {
   PLACEHOLDER_TYPES,
   type Background,
@@ -50,7 +50,7 @@ import {
   type StyleRef,
   type Theme,
   type Xfrm,
-} from './types.js';
+} from '../types.js';
 
 /* -------------------------------------------------------------------------- */
 /* the colour map                                                             */

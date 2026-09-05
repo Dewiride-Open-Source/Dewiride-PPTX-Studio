@@ -121,7 +121,7 @@ The plan also names eight — `r:id`, `r:embed`, `r:link`, `r:pict`, `r:dm`,
 `r:blip` on 46 attributes and no `r:pict` at all. A list of names would already
 have been one entry short, on a corpus we built ourselves, before meeting a
 single deck from outside. That measurement is now an assertion in
-`tools/corpus/roundtrip.test.ts`.
+`tools/corpus/roundtrip/roundtrip.test.ts`.
 
 The mapping is applied to the original side **only**. Applying it to both maps
 the ids twice and cancels out, which is a bug that passes every test where the

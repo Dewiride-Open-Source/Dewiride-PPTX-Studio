@@ -1,7 +1,7 @@
 /**
  * A streaming ZIP32 writer.
  *
- * `tools/ground-truth/zip.ts` already writes archives, and this is deliberately
+ * `tools/ground-truth/lib/zip.ts` already writes archives, and this is deliberately
  * not that one, for two reasons that only appear at this size:
  *
  * - **It never holds the archive.** That writer concatenates every local header

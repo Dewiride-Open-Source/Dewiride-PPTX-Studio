@@ -10,12 +10,11 @@
  * Run: `pnpm layering`  (Node >= 22.18 strips the types; no build step.)
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, relative } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../root.ts';
 import { parse as parseYaml } from 'yaml';
 import { checkLayering, type Manifest, type Violation } from './check.ts';
-
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 
 function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, 'utf8'));
@@ -84,6 +83,8 @@ if (violations.length === 0) {
 console.error('layering: ' + violations.length + ' violation(s) across ' + checked + ' package(s)');
 console.error(format(violations));
 console.error('');
-console.error('  The layer table is tools/layering/layers.ts. If a dependency genuinely belongs');
+console.error(
+  '  The layer table is tools/repo/layering/layers.ts. If a dependency genuinely belongs',
+);
 console.error('  where it is, move the package in the table and say why in the commit message.');
 process.exit(1);

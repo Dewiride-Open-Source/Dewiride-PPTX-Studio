@@ -27,7 +27,7 @@
  * theme swapping are all built on.
  *
  * The measurements are `corpus/ground-truth/sheets.json`; the reasoning is
- * `docs/adr/0024-model-parse-and-resolve.md`.
+ * `docs/adr/phase-2-geometry-and-paint/0024-model-parse-and-resolve.md`.
  */
 
 export { ModelError, MODEL_ERROR_CODES, isModelError, type ModelErrorCode } from './errors.js';
@@ -66,11 +66,11 @@ export {
   parseFillElement,
   parseLine,
   parseLineElement,
-} from './parse-paint.js';
+} from './parse/paint.js';
 
-export { parseGeometry, type ShapeGeometry } from './parse-geometry.js';
+export { parseGeometry, type ShapeGeometry } from './parse/geometry.js';
 
-export { parseClrMap, parseSheet, parseTheme } from './parse-sheet.js';
+export { parseClrMap, parseSheet, parseTheme } from './parse/sheet.js';
 
 export {
   DEFAULT_PLACEHOLDER_IDX,
@@ -83,7 +83,7 @@ export {
   normalizePlaceholder,
   placeholders,
   type ChainLink,
-} from './placeholder.js';
+} from './resolve/placeholder.js';
 
 export {
   colorContextOf,
@@ -94,7 +94,7 @@ export {
   schemeOf,
   sheetChain,
   themeOf,
-} from './resolve.js';
+} from './resolve/resolve.js';
 
 export {
   STYLE_MATRIX_OFFSET,
@@ -115,7 +115,7 @@ export {
   resolveBackground,
   resolveBackgroundColor,
   type ResolvedBackground,
-} from './background.js';
+} from './resolve/background.js';
 
 export { loadDocument, type Document, type DocumentProblem } from './document.js';
 
@@ -134,6 +134,11 @@ export {
   type TextBody,
   type TextBreak,
   type TextContent,
+  type BulletAutoNum,
+  type BulletColor,
+  type BulletFont,
+  type BulletKind,
+  type BulletSize,
   type TextField,
   type TextRun,
   type TextStyleBucket,
@@ -151,13 +156,20 @@ export {
   parseTextBody,
   parseTextBodyChild,
   parseTextStyles,
-} from './parse-text.js';
+} from './parse/text.js';
 
 export { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from './builtin-text-styles.js';
 
 export {
   bucketOf,
   floorOf,
+  resolveBulletAutoNum,
+  resolveBulletBlip,
+  resolveBulletChar,
+  resolveBulletColor,
+  resolveBulletFont,
+  resolveBulletKind,
+  resolveBulletSize,
   resolveIndent,
   resolveMarginLeft,
   resolveParagraph,
@@ -165,4 +177,17 @@ export {
   resolveSize,
   textLevels,
   type TextContext,
-} from './resolve-text.js';
+} from './resolve/text.js';
+
+export {
+  resolveAnchor,
+  resolveAnchorCtr,
+  resolveBody,
+  resolveColumns,
+  resolveInsets,
+  resolveVertical,
+  resolveWrap,
+  type ResolvedInsets,
+} from './resolve/body.js';
+
+export { parseBodyProps, parseBodyPropsChild } from './parse/body.js';

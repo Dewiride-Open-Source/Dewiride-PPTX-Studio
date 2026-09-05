@@ -11,7 +11,7 @@ import { formatRoundTrip, type RoundTripStats } from './roundtrip.js';
  * `pptx-studio roundtrip`, run in-process against the corpus.
  *
  * The comparison itself is `@pptx-studio/writer`'s and is tested there and in
- * `tools/corpus/roundtrip.test.ts`. What this file is for is the part only the
+ * `tools/corpus/roundtrip/roundtrip.test.ts`. What this file is for is the part only the
  * command line decides: **which files make it exit non-zero**, and whether what
  * it prints is any use to the person reading it.
  *

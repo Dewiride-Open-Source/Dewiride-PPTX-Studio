@@ -130,7 +130,7 @@ docs/adr/        architecture decision records
 ```
 
 Further packages arrive with the phases that need them. Every one of them is already declared in
-[`tools/layering/layers.ts`](./tools/layering/layers.ts) with its layer and runtime, because a
+[`tools/repo/layering/layers.ts`](./tools/repo/layering/layers.ts) with its layer and runtime, because a
 guard that arrives after the code it guards has already missed the first violation.
 
 ## The architecture is enforced, not documented
@@ -217,7 +217,7 @@ Requires Node ≥ 24.11 and pnpm ≥ 11.
 ```sh
 pnpm install
 pnpm browsers        # one-off: Chromium for the core test suite
-pnpm check           # layering, format, lint, typecheck, build, test
+pnpm check           # structure, layering, docs, corpus, format, lint, typecheck, build, test
 ```
 
 Individual steps: `pnpm layering`, `pnpm corpus`, `pnpm lint`, `pnpm typecheck`, `pnpm build`,

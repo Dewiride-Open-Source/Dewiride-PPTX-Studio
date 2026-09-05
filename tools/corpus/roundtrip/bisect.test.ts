@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import {
   deflatedEntry,
   passthroughEntry,
@@ -35,7 +36,6 @@ import { describe, expect, it } from 'vitest';
  * asserted here.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const DECK = join(ROOT, 'corpus', 'decks', 'a31-embedded-fonts.pptx');
 
 const dec = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);

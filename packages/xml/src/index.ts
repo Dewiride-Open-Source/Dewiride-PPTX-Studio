@@ -23,7 +23,12 @@
  * Everything here runs in a browser tab and in a Web Worker. There is no Node.
  */
 
-export { NS, XML_SPACE_PRESERVE, type NamespacePrefix, type NamespaceUri } from './namespaces.js';
+export {
+  NS,
+  XML_SPACE_PRESERVE,
+  type NamespacePrefix,
+  type NamespaceUri,
+} from './mce/namespaces.js';
 
 export {
   XmlError,
@@ -43,9 +48,14 @@ export {
   isUnpairedSurrogate,
   normalizeLineEndings,
   isAllWhitespace,
-} from './chars.js';
+} from './parse/chars.js';
 
-export { decodeXmlSource, encodeXmlSource, type XmlEncoding, type XmlSource } from './source.js';
+export {
+  decodeXmlSource,
+  encodeXmlSource,
+  type XmlEncoding,
+  type XmlSource,
+} from './parse/source.js';
 
 export {
   decodeReference,
@@ -54,7 +64,7 @@ export {
   isLiteralRun,
   escapeText,
   escapeAttributeValue,
-} from './references.js';
+} from './mce/references.js';
 
 export {
   XmlTokenizer,
@@ -74,7 +84,7 @@ export {
   type XmlTextToken,
   type XmlCdataToken,
   type SpanGap,
-} from './tokenizer.js';
+} from './parse/tokenizer.js';
 
 export {
   parseXml,
@@ -111,13 +121,18 @@ export {
   type XDeclaration,
   type XmlParseLimits,
   type CoverageGap,
-} from './xnode.js';
+} from './parse/xnode.js';
 
-export { serializeXmlString, serializeXml, serializeNode } from './serialize.js';
+export { serializeXmlString, serializeXml, serializeNode } from './emit/serialize.js';
 
-export { checkRoundTrip, type RoundTripDifference } from './roundtrip.js';
+export { checkRoundTrip, type RoundTripDifference } from './emit/roundtrip.js';
 
-export { canonicalXml, firstDifference, excerpt, type CanonicalXmlOptions } from './canonical.js';
+export {
+  canonicalXml,
+  firstDifference,
+  excerpt,
+  type CanonicalXmlOptions,
+} from './emit/canonical.js';
 
 export {
   qualifiedKey,
@@ -129,7 +144,7 @@ export {
   outOfOrderChildren,
   SCHEMA_NAMESPACES,
   SCHEMA_SOURCES,
-} from './schema-order.js';
+} from './edit/schema-order.js';
 
 export {
   MC_ALTERNATE_CONTENT,
@@ -145,7 +160,7 @@ export {
   checkMarkupCompatibility,
   boundNamespaces,
   type McProblem,
-} from './mce.js';
+} from './mce/mce.js';
 
 export {
   newAttribute,
@@ -162,7 +177,7 @@ export {
   type InsertChildEdit,
   type RemoveChildEdit,
   type SetValueEdit,
-} from './edit.js';
+} from './edit/edit.js';
 
 export {
   extensionList,
@@ -170,4 +185,4 @@ export {
   findExtension,
   planAddExtension,
   planRemoveExtension,
-} from './ext-lst.js';
+} from './mce/ext-lst.js';

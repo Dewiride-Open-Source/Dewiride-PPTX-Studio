@@ -38,12 +38,12 @@
  * end tags ride on it as plain strings.
  */
 
-import { isNameChar, isNameStartChar } from './chars.js';
-import { XmlError } from './errors.js';
-import { escapeAttributeValue, escapeText } from './references.js';
-import { encodeXmlSource } from './source.js';
-import type { XAttribute } from './tokenizer.js';
-import type { XDocument, XElement, XNode } from './xnode.js';
+import { isNameChar, isNameStartChar } from '../parse/chars.js';
+import { XmlError } from '../errors.js';
+import { escapeAttributeValue, escapeText } from '../mce/references.js';
+import { encodeXmlSource } from '../parse/source.js';
+import type { XAttribute } from '../parse/tokenizer.js';
+import type { XDocument, XElement, XNode } from '../parse/xnode.js';
 
 function fail(message: string, offset: number, name?: string): never {
   throw new XmlError('ERR_MALFORMED_XML', message, { offset, name });

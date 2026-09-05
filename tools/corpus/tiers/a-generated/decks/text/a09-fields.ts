@@ -1,7 +1,7 @@
-import { placeholderXml, TITLE_BOX, type ProbeLayout } from '../package.ts';
-import { grid, scheme, shape, solidFill } from '../shapes.ts';
-import { field, para, run, textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { placeholderXml, TITLE_BOX, type ProbeLayout } from '../../markup/chassis.ts';
+import { grid, scheme, shape, solidFill } from '../../markup/shapes.ts';
+import { field, para, run, textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * `a:fld`: every reserved type, its GUID, and its cached text.

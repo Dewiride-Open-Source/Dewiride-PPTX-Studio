@@ -18,7 +18,12 @@ import {
   parseXml,
   type XmlParseLimits,
 } from '@pptx-studio/xml';
-import { exportPackage, openPackage, type ExportOptions, type ExportResult } from './export.js';
+import {
+  exportPackage,
+  openPackage,
+  type ExportOptions,
+  type ExportResult,
+} from '../export/export.js';
 
 /**
  * Is the deck we wrote the deck we read?

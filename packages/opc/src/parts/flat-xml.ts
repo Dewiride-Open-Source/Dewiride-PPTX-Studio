@@ -1,4 +1,4 @@
-import { OpcError } from './errors.js';
+import { OpcError } from '../errors.js';
 
 /**
  * A reader for flat, attribute-only XML.

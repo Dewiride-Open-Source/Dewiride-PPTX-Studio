@@ -1,6 +1,6 @@
-import { grid, scheme, shape, solidFill } from '../shapes.ts';
-import { bodyPr, para, run, textLine, txBody, type RunProps } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { grid, scheme, shape, solidFill } from '../../markup/shapes.ts';
+import { bodyPr, para, run, textLine, txBody, type RunProps } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Right-to-left, East Asian, and the four script slots of a single run.

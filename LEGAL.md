@@ -39,7 +39,7 @@ Nothing here is legal advice, and none of it is a substitute for your own counse
 
 ### The ECMA-376 schemas are read, not redistributed
 
-`packages/xml/src/schema-order.gen.ts` is generated from the Transitional XML schemas published as
+`packages/xml/src/edit/schema-order.gen.ts` is generated from the Transitional XML schemas published as
 an electronic insert to **ECMA-376 Part 4, 5th edition (December 2016)**, distributed by Ecma
 International as `OfficeOpenXML-XMLSchema-Transitional.zip`.
 
@@ -108,7 +108,7 @@ licence. It reads every `corpus/**/manifest.json` and asserts, among other rules
 - `C012` size caps, so that a fixture too large to review is a recipe and a hash rather than bytes.
 - `C015` a redacted derivative names its original's SHA-256, and that hash is not its own.
 
-The full rule table is `tools/corpus/schema.ts`. If that file and this section ever disagree, this
+The full rule table is `tools/corpus/manifest/schema.ts`. If that file and this section ever disagree, this
 section is the one that is wrong, because that file is the one a contributor runs into.
 
 ### Sub-phase 0.7's fixtures, and what was deliberately left out

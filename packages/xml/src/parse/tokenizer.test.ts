@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isXmlError } from './errors.js';
+import { isXmlError } from '../errors.js';
 import {
   checkSpanCoverage,
   DEFAULT_TOKENIZER_LIMITS,

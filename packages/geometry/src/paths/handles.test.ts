@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { evaluateGuides, resolveOperand, type ShapeSize } from './evaluate.js';
-import { FULL_CIRCLE } from './formula.js';
+import { evaluateGuides, resolveOperand, type ShapeSize } from '../formula/evaluate.js';
+import { FULL_CIRCLE } from '../formula/formula.js';
 import {
   HANDLE_SAMPLES,
   dragHandle,
@@ -12,8 +12,8 @@ import {
   type HandleAxisKind,
   type ResolvedHandleAxis,
 } from './handles.js';
-import { getPreset, presetNames } from './presets/index.js';
-import { custGeom, type Geometry, type Point, type PresetShape } from './types.js';
+import { getPreset, presetNames } from '../presets/index.js';
+import { custGeom, type Geometry, type Point, type PresetShape } from '../types.js';
 
 /**
  * Two things are checked here and they are not the same thing.

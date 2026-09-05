@@ -3,7 +3,7 @@
  * it.
  *
  * ```
- * node tools/ground-truth/build-swatch-deck.ts <out-dir>
+ * node tools/ground-truth/paint/colour/transforms/build-deck.ts <out-dir>
  * ```
  *
  * Produces `swatch-deck.pptx` and `swatch-inputs.json`. Each swatch is a
@@ -14,8 +14,8 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPptx, rect, SLIDE_HEIGHT, SLIDE_WIDTH, CLR_SCHEME } from './pptx.ts';
-import { colorXml, describe, swatches } from './swatches.ts';
+import { buildPptx, rect, SLIDE_HEIGHT, SLIDE_WIDTH, CLR_SCHEME } from '../../../lib/pptx.ts';
+import { colorXml, describe, swatches } from './probes.ts';
 
 const COLS = 10;
 const ROWS = 8;
@@ -25,7 +25,8 @@ const CELL_W = Math.floor(SLIDE_WIDTH / COLS);
 const CELL_H = Math.floor(SLIDE_HEIGHT / ROWS);
 
 const outDir = process.argv[2];
-if (outDir === undefined) throw new Error('usage: build-swatch-deck.ts <out-dir>');
+if (outDir === undefined)
+  throw new Error('usage: tools/ground-truth/paint/colour/transforms/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 const all = swatches();

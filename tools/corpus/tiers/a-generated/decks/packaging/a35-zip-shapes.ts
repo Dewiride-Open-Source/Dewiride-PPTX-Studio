@@ -1,8 +1,16 @@
-import { png } from '../png.ts';
-import { grid, picture, prstGeom, scheme, shape, solidFill, type Cell } from '../shapes.ts';
-import { REL } from '../package.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { png } from '../../assets/png.ts';
+import {
+  grid,
+  picture,
+  prstGeom,
+  scheme,
+  shape,
+  solidFill,
+  type Cell,
+} from '../../markup/shapes.ts';
+import { REL } from '../../markup/chassis.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * The archive, rather than the markup: mixed compression methods, the

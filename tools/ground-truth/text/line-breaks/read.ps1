@@ -1,6 +1,6 @@
 # Experiment T3, step 3 - ask PowerPoint where it broke the line.
 #
-#   powershell -File tools/ground-truth/read-breaks.ps1 -Dir <work-dir>
+#   powershell -File tools/ground-truth/text/line-breaks/read.ps1 -Dir <work-dir>
 #
 # Reads `break-inputs.json`, opens each probe deck, and records the *text* of
 # every laid-out line of every shape.
@@ -46,7 +46,7 @@ $msoAutomationSecurityForceDisable = 3
 $root = (Resolve-Path -LiteralPath $Dir).Path
 $inputsPath = Join-Path $root 'break-inputs.json'
 if (-not (Test-Path -LiteralPath $inputsPath)) {
-    throw "no break-inputs.json in $root - run build-break-deck.ts first"
+    throw "no break-inputs.json in $root - run tools/ground-truth/text/line-breaks/build-deck.ts first"
 }
 
 $text = Get-Content -LiteralPath $inputsPath -Raw -Encoding UTF8

@@ -7,7 +7,7 @@
 // alias table, not from Node. So the key list is committed, and
 // census-drift.test.ts asserts it still matches the census's own table.
 //
-// Regenerate: pnpm build && node tools/corpus/write-census-keys.ts
+// Regenerate: pnpm build && node tools/corpus/census/write-keys.ts
 
 export const CENSUS_FEATURE_KEYS: readonly string[] = [
   'alternateContent',

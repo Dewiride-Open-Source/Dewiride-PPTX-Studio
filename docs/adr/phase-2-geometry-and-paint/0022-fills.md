@@ -36,8 +36,8 @@ read. That cost one script and settled three things:
 - PowerPoint writes `a:gsLst` **out of `@pos` order**. Its own from-centre
   variant is `pos="50000"`, `pos="0"`, `pos="100000"`.
 
-**Then C3.** 144 probes in 23 packages: `tools/ground-truth/fills.ts`,
-`build-fill-deck.ts`, `read-fills.ps1`, `analyse-fills.ts`. Ramps sampled at 481
+**Then C3.** 144 probes in 23 packages: `tools/ground-truth/paint/fills/probes.ts`,
+`tools/ground-truth/paint/fills/build-deck.ts`, `tools/ground-truth/paint/fills/read.ps1`, `tools/ground-truth/paint/fills/analyse.ts`. Ramps sampled at 481
 points across a full-width strip; two-dimensional probes on a 13 × 13 lattice;
 pattern tiles read at 1280 × 720, which over a 13.333-inch slide is exactly 96
 DPI and the only resolution at which a tile is 1:1 with its own pixels.
@@ -287,7 +287,7 @@ running the mutations at all rather than trusting a suite that is green.
 
 - `pnpm check` green: layering, corpus, format, lint, typecheck, build,
   round trip 52/52, package QA, 1843 tests across 67 files.
-- `packages/paint/src/fill.test.ts` — 42 tests, every one anchored to the
+- `packages/paint/src/fills/fill.test.ts` — 42 tests, every one anchored to the
   fixture. The load-bearing ones: every ramp in the fixture reproduced to within
   two bytes with two named exceptions; every angle probe predicted from the shape
   and the two attributes; the 54 tiles re-derived from the fixture so the shipped

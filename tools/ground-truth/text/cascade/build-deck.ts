@@ -2,29 +2,23 @@
  * Experiment T1, step 1 - write the probe decks.
  *
  * ```
- * node tools/ground-truth/build-text-deck.ts <out-dir>
+ * node tools/ground-truth/text/cascade/build-deck.ts <out-dir>
  * ```
  *
  * One `.pptx` per deck named in `text-cascade.ts`, plus `text-inputs.json`
  * carrying every probe's question and the size each level of the cascade
- * declares, so `analyse-text.ts` never has to re-derive what was asked.
+ * declares, so `tools/ground-truth/text/cascade/analyse.ts` never has to re-derive what was asked.
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { buildSheetPackage, EMU_PER_POINT } from './sheet-pptx.ts';
-import {
-  BUCKET_PT,
-  LADDER_PT,
-  SOURCES,
-  textDecks,
-  THEME_MAJOR,
-  THEME_MINOR,
-} from './text-cascade.ts';
+import { buildSheetPackage, EMU_PER_POINT } from '../../lib/sheet-pptx.ts';
+import { BUCKET_PT, LADDER_PT, SOURCES, textDecks, THEME_MAJOR, THEME_MINOR } from './probes.ts';
 
 const outDir = process.argv[2];
-if (outDir === undefined) throw new Error('usage: build-text-deck.ts <out-dir>');
+if (outDir === undefined)
+  throw new Error('usage: tools/ground-truth/text/cascade/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 const decks = textDecks();

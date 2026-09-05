@@ -1,15 +1,15 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../../repo/root.ts';
 import { censusPackage } from '@pptx-studio/census';
 import { PartStore } from '@pptx-studio/opc';
 import { describe, expect, it } from 'vitest';
 import { WRITTEN_DECKS, type WrittenDeck } from './decks.ts';
-import { readZip } from '../../ground-truth/zip.ts';
-import { readHeaders } from '../lexical.ts';
+import { readZip } from '../../../ground-truth/lib/zip.ts';
+import { readHeaders } from '../../lexical/inventory.ts';
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../../..');
 const CORPUS = join(ROOT, 'corpus/written');
 
 /**

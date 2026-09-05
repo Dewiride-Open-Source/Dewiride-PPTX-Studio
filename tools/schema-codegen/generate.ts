@@ -1,5 +1,5 @@
 /**
- * Generate `packages/xml/src/schema-order.gen.ts` from the ECMA-376
+ * Generate `packages/xml/src/edit/schema-order.gen.ts` from the ECMA-376
  * Transitional XSDs.
  *
  * ## Getting the input
@@ -38,7 +38,7 @@ import { ambiguities, contextTableOf, flatten, tableOf, universeOf } from './ord
 
 const SCHEMA_FILES = ['pml.xsd', 'dml-main.xsd', 'dml-picture.xsd', 'dml-lockedCanvas.xsd'];
 
-const OUT = 'packages/xml/src/schema-order.gen.ts';
+const OUT = 'packages/xml/src/edit/schema-order.gen.ts';
 
 function parseArgs(argv: readonly string[]): { schemas: string; out: string; write: boolean } {
   let schemas = '';

@@ -129,10 +129,10 @@ reason `C008` walks the filesystem itself.
 ### `gen/` — the Tier A decks
 
 ```bash
-node tools/corpus/gen/build-probes.ts --out corpus/decks --manifest
+node tools/corpus/tiers/a-generated/build-probes.ts --out corpus/decks --manifest
 npx prettier --write corpus/decks/manifest.json
-node tools/corpus/gen/build-probes.ts --check --out corpus/decks
-powershell -File tools/corpus/gen/open-in-powerpoint.ps1 -Dir <dir>
+node tools/corpus/tiers/a-generated/build-probes.ts --check --out corpus/decks
+powershell -File tools/corpus/tiers/a-generated/open-in-powerpoint.ps1 -Dir <dir>
 ```
 
 The Prettier line is not optional. `--manifest` writes `JSON.stringify(…, null, 2)`, which puts
@@ -200,9 +200,9 @@ matters, and holds for a builder written next year.
 ### `authored/` — the Tier B decks
 
 ```bash
-node tools/corpus/authored/make-assets.ts <dir>            # b09's two images, from our own encoders
-powershell -File tools/corpus/authored/build-tier-b.ps1 -Out <dir>
-node tools/corpus/authored/write-manifest.ts               # describes what is committed
+node tools/corpus/tiers/b-authored/make-assets.ts <dir>            # b09's two images, from our own encoders
+powershell -File tools/corpus/tiers/b-authored/build-tier-b.ps1 -Out <dir>
+node tools/corpus/tiers/b-authored/write-manifest.ts               # describes what is committed
 npx prettier --write corpus/authored/manifest.json
 ```
 
@@ -215,7 +215,7 @@ Tier B counterpart and cannot have one.
 What is auditable is the authoring rather than the output, which is the whole reason the script is
 committed. It reads nothing outside its `-Out` directory: every presentation is created in memory,
 `b07`'s workbook is a new empty one made in place, and `b09`'s images come from
-`tools/corpus/gen/png.ts` and `jpeg.ts` — there is no stock imagery in this corpus and no
+`tools/corpus/tiers/a-generated/assets/png.ts` and `jpeg.ts` — there is no stock imagery in this corpus and no
 photograph from the authoring machine.
 
 `decks.test.ts` asserts the two constraints that would otherwise be promises: no `ppt/fonts/` part,
@@ -231,8 +231,8 @@ decks really contain and watching all nine fail.
 
 ```bash
 pnpm build                                                  # this one needs it; see below
-node tools/corpus/written/build-written.ts --out corpus/written --manifest
-node tools/corpus/written/build-written.ts --check --out corpus/written
+node tools/corpus/tiers/c-written/build-written.ts --out corpus/written --manifest
+node tools/corpus/tiers/c-written/build-written.ts --check --out corpus/written
 npx prettier --write corpus/written/manifest.json
 ```
 
@@ -267,7 +267,7 @@ difference — asserted **in both directions**, present in the source and absent
 legal to drop and none is a bug, which is why they need a test: a reader ignores every one of them,
 so nothing else here would notice if our writer started emitting them or if PowerPoint stopped.
 
-`check.ts` is pure for the same reason `tools/layering/check.ts` is: it takes the parsed manifests
+`check.ts` is pure for the same reason `tools/repo/layering/check.ts` is: it takes the parsed manifests
 **and** a pre-computed file table, so `C008` and `C010` are testable against a corpus shape this
 repository does not have yet.
 
@@ -301,7 +301,7 @@ read a census or unzip an archive and this checker deliberately does none of tho
   good decks — every file containing a `p:control`, a `c:strLit` in a series title, a `hdr`
   placeholder or a short `cs:chartStyle` is a file PowerPoint refuses — so without these they
   would be enforced entirely on trust. Arrived with sub-phase 1.2; see
-  `docs/adr/0010-the-repair-firewall.md`.
+  `docs/adr/phase-1-round-trip/0010-the-repair-firewall.md`.
 
 ## What `C-COV` says
 

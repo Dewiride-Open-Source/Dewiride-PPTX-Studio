@@ -2,7 +2,7 @@
  * Experiment T2, step 3 - ask Chromium the same questions PowerPoint answered.
  *
  * ```
- * node tools/ground-truth/measure-in-browser.ts <work-dir>
+ * node tools/ground-truth/text/metrics/measure-in-browser.ts <work-dir>
  * ```
  *
  * Sub-phase 3.2's deliverable is a measurer that runs in a Web Worker over
@@ -36,7 +36,7 @@ import { chromium } from 'playwright';
  * compiled with `types: ["node"]` and no DOM library, deliberately, so declare
  * exactly the surface this file uses - narrow enough that a body which starts
  * using something else fails to compile rather than becoming `any`. Same
- * approach as `verify-render.ts` and `verify-font-in-browser.ts`.
+ * approach as `verify-render.ts` and `tools/ground-truth/fonts/embedding/verify-in-browser.ts`.
  */
 interface BrowserTextMetrics {
   readonly width: number;

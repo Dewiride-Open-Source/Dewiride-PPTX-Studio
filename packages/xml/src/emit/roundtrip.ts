@@ -34,14 +34,14 @@
  */
 
 import { serializeXmlString } from './serialize.js';
-import { isXmlError } from './errors.js';
+import { isXmlError } from '../errors.js';
 import {
   parseXmlString,
   prefixMap,
   type XDocument,
   type XNode,
   type XmlParseLimits,
-} from './xnode.js';
+} from '../parse/xnode.js';
 
 /** One way in which a document and its own serialization disagree. */
 export interface RoundTripDifference {

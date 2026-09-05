@@ -1,6 +1,6 @@
 # Experiment C4, step 2 - ask PowerPoint what it painted.
 #
-#   powershell -File tools/ground-truth/read-lines.ps1 -Dir <work-dir>
+#   powershell -File tools/ground-truth/paint/lines/read.ps1 -Dir <work-dir>
 #
 # Reads `line-inputs.json`, opens each probe deck, exports its slide as a BMP and
 # records what the object model says about every shape's line and effects.
@@ -44,7 +44,7 @@ $msoAutomationSecurityForceDisable = 3
 $root = (Resolve-Path -LiteralPath $Dir).Path
 $inputsPath = Join-Path $root 'line-inputs.json'
 if (-not (Test-Path -LiteralPath $inputsPath)) {
-    throw "no line-inputs.json in $root - run build-line-deck.ts first"
+    throw "no line-inputs.json in $root - run tools/ground-truth/paint/lines/build-deck.ts first"
 }
 
 $text = Get-Content -LiteralPath $inputsPath -Raw

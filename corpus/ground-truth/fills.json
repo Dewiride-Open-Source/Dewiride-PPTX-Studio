@@ -1,6 +1,6 @@
 {
   "experiment": "C3 - gradients and pattern fills",
-  "generator": "tools/ground-truth/analyse-fills.ts",
+  "generator": "tools/ground-truth/paint/fills/analyse.ts",
   "powerPoint": "Microsoft PowerPoint 365, build 16.0.20326, Windows 11",
   "slideSize": {
     "cx": 12192000,

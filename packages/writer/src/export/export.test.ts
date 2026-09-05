@@ -2,10 +2,10 @@ import { PartStore, readZip } from '@pptx-studio/opc';
 import { isValidateError } from '@pptx-studio/validate';
 import { describe, expect, it } from 'vitest';
 import { exportPackage, openPackage } from './export.js';
-import { isWriterError } from './errors.js';
+import { isWriterError } from '../errors.js';
 import type { PrepareHook } from './prepare.js';
 import { assertPreserved } from './preserve.js';
-import { fixture, fixtureBytes, MAIN_PART } from './testing/package.js';
+import { fixture, fixtureBytes, MAIN_PART } from '../testing/package.js';
 
 const NOT_A_PRESENTATION = { validate: false } as const;
 

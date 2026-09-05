@@ -49,7 +49,7 @@
  */
 export const SERIALIZER = {
   GEN: 'tools/corpus/gen',
-  ZIP: 'tools/ground-truth/zip.ts',
+  ZIP: 'tools/ground-truth/lib/zip.ts',
   PPT: 'Microsoft PowerPoint 16.0.20326',
   OPC: 'packages/opc',
 } as const;
@@ -123,8 +123,8 @@ const CONTAINER_FIXTURE_GAP =
   'Recorded here to say where it *is* covered rather than to ask for a deck. ADR 0002 found that ' +
   'Office writes none of the four ZIP features hardest to handle - no data descriptors, no ' +
   'directory entries, no UTF-8-flagged names, no ZIP64 - so a corpus of Office output could never ' +
-  'have exercised them, and all four live in `packages/opc/src/zip-reader.test.ts` instead. ' +
-  '`tools/ground-truth/zip.ts` cannot write the first two either: bit 3 moves the sizes into a ' +
+  'have exercised them, and all four live in `packages/opc/src/zip/zip-reader.test.ts` instead. ' +
+  '`tools/ground-truth/lib/zip.ts` cannot write the first two either: bit 3 moves the sizes into a ' +
   'trailing descriptor it does not emit, so setting it would produce an archive that lies about ' +
   'itself. A committed deck is the wrong home for these.';
 
@@ -531,7 +531,7 @@ export const LEXICAL_FORMS: readonly LexicalForm[] = [
     form: '20',
     what: 'deflate needed',
     wild:
-      'PowerPoint on deflated entries, and both of our writers. `tools/ground-truth/zip.ts` writes ' +
+      'PowerPoint on deflated entries, and both of our writers. `tools/ground-truth/lib/zip.ts` writes ' +
       'it on stored entries too, where PowerPoint writes 10, which is why Tier A contributes ' +
       'nothing to the `10` row. Deliberately not fixed: changing it would re-pin all 41 Tier A ' +
       'hashes for a field no reader consults',

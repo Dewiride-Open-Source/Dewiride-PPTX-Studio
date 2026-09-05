@@ -12,7 +12,7 @@
  * of the eight sources the plan names: **none of them fits** while a placeholder
  * is assumed to read every source, and exactly one order fits once the two it
  * ignores are dropped. `corpus/ground-truth/text-cascade.json`, and
- * `docs/adr/0027-the-text-cascade.md`.
+ * `docs/adr/phase-3-text/0027-the-text-cascade.md`.
  *
  * The walk, nearest first:
  *
@@ -189,6 +189,50 @@ export interface RunProps {
 /* paragraph properties                                                       */
 /* -------------------------------------------------------------------------- */
 
+/* -------------------------------------------------------------------------- */
+/* bullets                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The exclusive group in `CT_TextParagraphProperties`: one of four, or nothing.
+ *
+ * `undefined` on `ParaProps` is the fifth case and the one that matters -
+ * a level that declares no bullet element at all **inherits** one, where
+ * `'none'` suppresses it.
+ */
+export type BulletKind = 'none' | 'char' | 'autonum' | 'blip';
+
+/** `a:buFont` / `a:buFontTx`, which are exclusive of each other. */
+export type BulletFont =
+  | { readonly kind: 'typeface'; readonly value: Typeface }
+  /** `a:buFontTx`: follow the text, and cancel anything inherited. */
+  | { readonly kind: 'text' };
+
+/** `a:buSzPct` / `a:buSzPts` / `a:buSzTx`. */
+export type BulletSize =
+  /** `a:buSzPct/@val`, thousandths of a percent of the first run's size. */
+  | { readonly kind: 'percent'; readonly value: number }
+  /** `a:buSzPts/@val`, hundredths of a point, absolute. */
+  | { readonly kind: 'points'; readonly value: number }
+  | { readonly kind: 'text' };
+
+/** `a:buClr` / `a:buClrTx`. */
+export type BulletColor =
+  { readonly kind: 'color'; readonly value: Color } | { readonly kind: 'text' };
+
+/** `a:buAutoNum`. */
+export interface BulletAutoNum {
+  /** `@type`, one of the 41 `ST_TextAutonumberScheme` values. */
+  readonly type: string;
+  /**
+   * `@startAt`. Absent is measured to behave exactly as `1` - but the two are
+   * kept apart, because a paragraph whose `startAt` differs from its
+   * predecessor's begins a new run, and "absent" has to compare equal to "1"
+   * for that rule rather than to nothing.
+   */
+  readonly startAt: number | undefined;
+}
+
 /**
  * `CT_TextParagraphProperties` - `a:pPr` and every `a:lvlNpPr`.
  *
@@ -217,6 +261,29 @@ export interface ParaProps {
   readonly spcAft: Spacing | undefined;
   /** `a:defRPr`: the run properties every run in this paragraph starts from. */
   readonly defRPr: RunProps | undefined;
+  /**
+   * Which of `a:buNone`, `a:buChar`, `a:buAutoNum` and `a:buBlip` this level
+   * states, or `undefined` where it states none and inherits instead.
+   */
+  readonly buKind: BulletKind | undefined;
+  /** `a:buChar/@char`, exactly as written. The symbol mapping happens at draw time. */
+  readonly buChar: string | undefined;
+  readonly buAutoNum: BulletAutoNum | undefined;
+  /** `a:buBlip/a:blip/@r:embed`. */
+  readonly buBlip: string | undefined;
+  /**
+   * The three decorations, each its own slot.
+   *
+   * They merge independently of the kind and of each other, which is measured
+   * rather than assumed: a level declaring only `a:buFont` re-faces the
+   * character it inherits and keeps its size and colour, and a level declaring
+   * only `a:buSzTx` cancels an inherited `a:buSzPct` and keeps the rest.
+   * Measured on eleven cases twice - once through a shape's own `a:lstStyle`
+   * and once through three hops of the master chain.
+   */
+  readonly buFont: BulletFont | undefined;
+  readonly buSize: BulletSize | undefined;
+  readonly buColor: BulletColor | undefined;
   readonly node: XElement;
 }
 
@@ -299,15 +366,68 @@ export interface Paragraph {
   readonly node: XElement;
 }
 
+/** `ST_TextAnchoringType`. PowerPoint lays `just` and `dist` out as `b`. */
+export type TextAnchor = 't' | 'ctr' | 'b' | 'just' | 'dist';
+
+/** `ST_TextVerticalType`. */
+export type VerticalText =
+  'horz' | 'vert' | 'vert270' | 'wordArtVert' | 'eaVert' | 'mongolianVert' | 'wordArtVertRtl';
+
+/** `ST_TextWrappingType`. */
+export type TextWrap = 'none' | 'square';
+
+/** `ST_TextVertOverflowType`. */
+export type VertOverflow = 'overflow' | 'ellipsis' | 'clip';
+
+/** `ST_TextHorzOverflowType`. */
+export type HorzOverflow = 'overflow' | 'clip';
+
+/** The one autofit child an `a:bodyPr` may carry. */
+export type Autofit =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'shape' }
+  | {
+      readonly kind: 'normal';
+      /** `@fontScale`, thousandths of a percent. */
+      readonly fontScale: number | undefined;
+      /** `@lnSpcReduction`, thousandths of a percent. */
+      readonly lnSpcReduction: number | undefined;
+    };
+
 /**
- * `p:txBody` / `a:txBody`.
+ * `a:bodyPr`, as the file states it.
  *
- * `bodyPr` is kept as the element it was. Anchors, insets, vertical text and
- * autofit are 3.4 and 3.6, and a typed model of half of `a:bodyPr` would be a
- * worse version of the one that arrives then.
+ * Lengths are EMU and `rot` is 60000ths of a degree, both as written. Every
+ * attribute inherits through the placeholder chain on its own - measured in 3.6
+ * at all three levels - so absence has to survive parsing.
  */
+export interface BodyProps {
+  readonly anchor: TextAnchor | undefined;
+  readonly anchorCtr: boolean | undefined;
+  readonly lIns: number | undefined;
+  readonly tIns: number | undefined;
+  readonly rIns: number | undefined;
+  readonly bIns: number | undefined;
+  readonly vert: VerticalText | undefined;
+  readonly wrap: TextWrap | undefined;
+  readonly vertOverflow: VertOverflow | undefined;
+  readonly horzOverflow: HorzOverflow | undefined;
+  readonly rot: number | undefined;
+  readonly upright: boolean | undefined;
+  readonly numCol: number | undefined;
+  readonly spcCol: number | undefined;
+  readonly rtlCol: boolean | undefined;
+  readonly spcFirstLastPara: boolean | undefined;
+  readonly compatLnSpc: boolean | undefined;
+  readonly fromWordArt: boolean | undefined;
+  readonly forceAA: boolean | undefined;
+  readonly autofit: Autofit | undefined;
+  readonly node: XElement;
+}
+
+/** `p:txBody` / `a:txBody`. */
 export interface TextBody {
-  readonly bodyPr: XElement | undefined;
+  readonly bodyPr: BodyProps | undefined;
   readonly lstStyle: ListStyle | undefined;
   readonly paragraphs: readonly Paragraph[];
   readonly node: XElement;

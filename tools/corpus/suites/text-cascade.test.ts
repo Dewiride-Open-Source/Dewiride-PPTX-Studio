@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import { PartStore } from '@pptx-studio/opc';
 import {
   loadDocument,
@@ -39,7 +40,6 @@ import { describe, expect, it } from 'vitest';
  *    is asserted to have been produced by one.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const COLLECTIONS = ['decks', 'authored', 'written'];
 
 interface Deck {

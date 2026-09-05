@@ -21,7 +21,7 @@ import {
 } from '@pptx-studio/paint';
 
 import { ModelError } from './errors.js';
-import { colorContextOf, resolve, themeOf } from './resolve.js';
+import { colorContextOf, resolve, themeOf } from './resolve/resolve.js';
 import type { Origin, Resolved, Shape, Sheet, StyleRef, Theme } from './types.js';
 
 /**

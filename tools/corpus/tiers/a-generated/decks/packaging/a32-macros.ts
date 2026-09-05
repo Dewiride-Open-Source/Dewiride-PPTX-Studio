@@ -1,8 +1,8 @@
-import { storage, stream, writeCfb } from '../cfb.ts';
-import { grid, prstGeom, scheme, shape, solidFill, type Cell } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
-import { vbaProjectNodes } from '../vba.ts';
+import { storage, stream, writeCfb } from '../../binary/cfb.ts';
+import { grid, prstGeom, scheme, shape, solidFill, type Cell } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
+import { vbaProjectNodes } from '../../binary/vba.ts';
 
 /**
  * A macro-enabled package, and the one deck in the corpus that is not a
@@ -44,8 +44,8 @@ import { vbaProjectNodes } from '../vba.ts';
  *
  * ## What is inside the part
  *
- * A real compound file, written by `tools/corpus/gen/cfb.ts`, holding a real
- * MS-OVBA project written by `tools/corpus/gen/vba.ts`:
+ * A real compound file, written by `tools/corpus/tiers/a-generated/binary/cfb.ts`, holding a real
+ * MS-OVBA project written by `tools/corpus/tiers/a-generated/binary/vba.ts`:
  *
  * ```
  * /PROJECT            the project manifest, plain text

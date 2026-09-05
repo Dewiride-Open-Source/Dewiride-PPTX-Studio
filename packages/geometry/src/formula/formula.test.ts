@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { GeometryError } from './errors.js';
+import { GeometryError } from '../errors.js';
 import { evaluateGuides } from './evaluate.js';
-import { getPreset } from './presets/index.js';
+import { getPreset } from '../presets/index.js';
 import {
   ANGLE_UNITS_PER_DEGREE,
   FMLA_ARITY,

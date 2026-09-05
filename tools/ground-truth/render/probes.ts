@@ -7,7 +7,7 @@
  *
  * ## The order question was settled before this file existed
  *
- * `author-transforms.ps1` asked PowerPoint to mirror shapes it had already
+ * `tools/ground-truth/render/author.ps1` asked PowerPoint to mirror shapes it had already
  * rotated, and read back what it wrote. A shape at 30 degrees, mirrored, comes
  * out as `rot="19800000" flipH="1"` - that is **minus** thirty degrees with a
  * flip, on all four of 30, 45, 120 and 200, and on both axes. Since
@@ -57,8 +57,8 @@
  * made twice.
  */
 
-import { groupXml, shapeXml } from './pptx.ts';
-import { buildSheetPackage, SCHEME_ONE, shape as sheetShape } from './sheet-pptx.ts';
+import { groupXml, shapeXml } from '../lib/pptx.ts';
+import { buildSheetPackage, SCHEME_ONE, shape as sheetShape } from '../lib/sheet-pptx.ts';
 
 export const EMU_PER_POINT = 12700;
 export const SLIDE_WIDTH_PT = 960;

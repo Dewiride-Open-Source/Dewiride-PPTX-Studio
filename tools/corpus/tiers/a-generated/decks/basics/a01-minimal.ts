@@ -1,4 +1,4 @@
-import type { ProbeDeck } from '../types.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * The baseline: one slide, one title, nothing else.

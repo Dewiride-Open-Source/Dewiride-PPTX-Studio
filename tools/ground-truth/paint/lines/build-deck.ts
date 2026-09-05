@@ -2,7 +2,7 @@
  * Experiment C4, step 1 - write the probe decks.
  *
  * ```
- * node tools/ground-truth/build-line-deck.ts <out-dir>
+ * node tools/ground-truth/paint/lines/build-deck.ts <out-dir>
  * ```
  *
  * One `.pptx` per deck named in `lines.ts`, plus `line-inputs.json` carrying
@@ -26,11 +26,12 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPptx, shapeXml, CLR_SCHEME, SLIDE_HEIGHT, SLIDE_WIDTH } from './pptx.ts';
-import { EMU_PER_POINT, hostileProbes, lineProbes, type Probe } from './lines.ts';
+import { buildPptx, shapeXml, CLR_SCHEME, SLIDE_HEIGHT, SLIDE_WIDTH } from '../../lib/pptx.ts';
+import { EMU_PER_POINT, hostileProbes, lineProbes, type Probe } from './probes.ts';
 
 const outDir = process.argv[2];
-if (outDir === undefined) throw new Error('usage: build-line-deck.ts <out-dir>');
+if (outDir === undefined)
+  throw new Error('usage: tools/ground-truth/paint/lines/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 const probes = [...lineProbes(), ...hostileProbes()];

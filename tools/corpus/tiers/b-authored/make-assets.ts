@@ -2,7 +2,7 @@
  * The two images `b09-picture` inserts, written from this repository's own
  * encoders.
  *
- *   node tools/corpus/authored/make-assets.ts <dir>
+ *   node tools/corpus/tiers/b-authored/make-assets.ts <dir>
  *
  * `b09` is the only Tier B deck that needs a file to exist before PowerPoint
  * runs, and this is the whole of why it needs one: `Shapes.AddPicture` takes a
@@ -23,12 +23,12 @@
 
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { png } from '../gen/png.ts';
-import { probeJpeg } from '../gen/jpeg.ts';
+import { png } from '../a-generated/assets/png.ts';
+import { probeJpeg } from '../a-generated/assets/jpeg.ts';
 
 const dir = process.argv[2];
 if (dir === undefined) {
-  throw new Error('usage: node tools/corpus/authored/make-assets.ts <dir>');
+  throw new Error('usage: node tools/corpus/tiers/b-authored/make-assets.ts <dir>');
 }
 
 /**

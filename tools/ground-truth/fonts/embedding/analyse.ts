@@ -2,7 +2,7 @@
  * Experiment B, step 3 - did PowerPoint actually render our font?
  *
  * ```
- * node tools/ground-truth/analyse-font-deck.ts <dir>
+ * node tools/ground-truth/fonts/embedding/analyse.ts <dir>
  * ```
  *
  * Reads the bitmap PowerPoint exported and measures the ink. The probe row must
@@ -14,7 +14,7 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readBmp } from './bmp.ts';
+import { readBmp } from '../../lib/bmp.ts';
 
 interface Shape {
   slide: number;
@@ -36,7 +36,8 @@ interface Readback {
 }
 
 const dir = process.argv[2];
-if (dir === undefined) throw new Error('usage: analyse-font-deck.ts <dir>');
+if (dir === undefined)
+  throw new Error('usage: tools/ground-truth/fonts/embedding/analyse.ts <dir>');
 
 // PowerShell writes a byte-order mark; `JSON.parse` will not accept one.
 // Stripped by code point, not by a literal BOM in a regex - that literal is

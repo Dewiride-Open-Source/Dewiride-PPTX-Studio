@@ -17,7 +17,7 @@
  */
 
 import type { ClrMap, ClrScheme, Color, Effect, Fill, Line } from '@pptx-studio/paint';
-import type { ShapeGeometry } from './parse-geometry.js';
+import type { ShapeGeometry } from './parse/geometry.js';
 import type { TextBody, TextStyles } from './text.js';
 import type { XElement } from '@pptx-studio/xml';
 

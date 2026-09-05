@@ -1,6 +1,6 @@
-import { scheme, shape, solidFill } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { scheme, shape, solidFill } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * `p:sldSz type="A4"`, and the proof that `@type` names nothing measurable.

@@ -38,8 +38,8 @@
  * costs one block rather than the whole experiment.
  */
 
-import { CLR_SCHEME } from './pptx.ts';
-import type { Swatch, Transform } from './swatches.ts';
+import { CLR_SCHEME } from '../../../lib/pptx.ts';
+import type { Swatch, Transform } from '../transforms/probes.ts';
 
 /* -------------------------------------------------------------------------- */
 /* the bases C2 adds                                                          */

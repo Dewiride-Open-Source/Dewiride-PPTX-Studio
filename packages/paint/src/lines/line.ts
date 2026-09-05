@@ -4,7 +4,7 @@
  * Everything here is a measurement, and four of the numbers contradict either
  * the standard or the obvious reading of it. They are called out where they are
  * defined; the evidence is `corpus/ground-truth/lines.json` and the reasoning is
- * in `docs/adr/0023-lines.md`.
+ * in `docs/adr/phase-2-geometry-and-paint/0023-lines.md`.
  *
  * The shape of the model follows 2.6's `Color` and 2.7's `Fill`: every property
  * that a file may leave unstated is `null`, and the schema default is applied
@@ -12,11 +12,11 @@
  * resolved value; an editor needs to know whether the file said it.
  */
 
-import { PaintError } from './errors.js';
+import { PaintError } from '../errors.js';
 import { COMPOUND_RUNS_60, isCompoundName } from './compound-table.js';
 import { PRESET_DASHES, type DashSegment } from './dash-table.js';
 import { MARKERS, MARKER_SIZE, isMarkerSizeName, isMarkerTypeName } from './marker-table.js';
-import type { Fill } from './fill.js';
+import type { Fill } from '../fills/fill.js';
 
 /** English Metric Units in one point. A stroke width is always EMU. */
 export const EMU_PER_POINT = 12700;

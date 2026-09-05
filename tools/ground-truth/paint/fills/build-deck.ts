@@ -2,7 +2,7 @@
  * Experiment C3, step 1 - write the probe decks.
  *
  * ```
- * node tools/ground-truth/build-fill-deck.ts <out-dir>
+ * node tools/ground-truth/paint/fills/build-deck.ts <out-dir>
  * ```
  *
  * One `.pptx` per deck named in `fills.ts`, plus `fill-inputs.json` carrying the
@@ -21,14 +21,15 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPptx, shapeXml, CLR_SCHEME, SLIDE_HEIGHT, SLIDE_WIDTH } from './pptx.ts';
-import { DECK_GRID, fillProbes, hostileProbes, type Probe } from './fills.ts';
+import { buildPptx, shapeXml, CLR_SCHEME, SLIDE_HEIGHT, SLIDE_WIDTH } from '../../lib/pptx.ts';
+import { DECK_GRID, fillProbes, hostileProbes, type Probe } from './probes.ts';
 
 /** One point. Every emitted coordinate is a multiple of this. */
 const PT = 12700;
 
 const outDir = process.argv[2];
-if (outDir === undefined) throw new Error('usage: build-fill-deck.ts <out-dir>');
+if (outDir === undefined)
+  throw new Error('usage: tools/ground-truth/paint/fills/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 const probes = [...fillProbes(), ...hostileProbes()];

@@ -5,9 +5,9 @@ import {
   resolvePoint,
   type EvaluateOptions,
   type ShapeSize,
-} from './evaluate.js';
-import type { FormulaSite } from './formula.js';
-import type { Geometry, Point, PresetPath, PresetPathFill } from './types.js';
+} from '../formula/evaluate.js';
+import type { FormulaSite } from '../formula/formula.js';
+import type { Geometry, Point, PresetPath, PresetPathFill } from '../types.js';
 
 /**
  * From a geometry definition to something that can be drawn.

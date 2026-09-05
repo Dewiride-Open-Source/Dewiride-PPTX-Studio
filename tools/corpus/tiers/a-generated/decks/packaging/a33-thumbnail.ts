@@ -1,8 +1,16 @@
-import { REL } from '../package.ts';
-import { probeJpeg } from '../jpeg.ts';
-import { grid, picture, prstGeom, scheme, shape, solidFill, type Cell } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { REL } from '../../markup/chassis.ts';
+import { probeJpeg } from '../../assets/jpeg.ts';
+import {
+  grid,
+  picture,
+  prstGeom,
+  scheme,
+  shape,
+  solidFill,
+  type Cell,
+} from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * `docProps/thumbnail.jpeg` - the one part of a package no part points at.
@@ -66,7 +74,7 @@ import type { ProbeDeck } from '../types.ts';
  * Nothing distinguishes the thumbnail in that table; it is an ordinary image
  * part that happens to be reached from the package root.
  *
- * Both are written by `tools/corpus/gen/jpeg.ts`, whose Huffman tables were
+ * Both are written by `tools/corpus/tiers/a-generated/assets/jpeg.ts`, whose Huffman tables were
  * read out of the `DHT` segments of the thumbnail measured above rather than
  * recalled.
  */
@@ -137,7 +145,7 @@ export const a33Thumbnail: ProbeDeck = {
     'apart, and the case that decides whether a media collector walks package relationships or only ' +
     'part ones. Typed by a Default on the jpeg extension, which a second jpeg part on a slide shares ' +
     'and which a duplicate Default would make PowerPoint refuse. Both images are written by ' +
-    'tools/corpus/gen/jpeg.ts, a baseline greyscale encoder whose Huffman tables were read out of ' +
+    'tools/corpus/tiers/a-generated/assets/jpeg.ts, a baseline greyscale encoder whose Huffman tables were read out of ' +
     'the DHT segments of a thumbnail PowerPoint 16.0.20326 wrote rather than recalled.',
   features: {
     shape: 17,

@@ -1,4 +1,4 @@
-import { writeZip } from '../../ground-truth/zip.ts';
+import { writeZip } from '../../../ground-truth/lib/zip.ts';
 
 /**
  * The smallest package that opens, and the seams to break it.
@@ -11,7 +11,7 @@ import { writeZip } from '../../ground-truth/zip.ts';
  *
  * ## Why it is not built on the Tier A chassis
  *
- * `tools/corpus/gen/package.ts` builds a good deck - a master with placeholders,
+ * `tools/corpus/tiers/a-generated/markup/chassis.ts` builds a good deck - a master with placeholders,
  * a layout, a theme with two gradient fills so `fillRef/@idx` resolves,
  * `docProps`, the lot. That is exactly right for a probe deck, whose job is to
  * carry one feature into PowerPoint surrounded by enough context to be

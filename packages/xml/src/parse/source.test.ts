@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isXmlError } from './errors.js';
+import { isXmlError } from '../errors.js';
 import { decodeXmlSource, encodeXmlSource } from './source.js';
 
 const encoder = new TextEncoder();

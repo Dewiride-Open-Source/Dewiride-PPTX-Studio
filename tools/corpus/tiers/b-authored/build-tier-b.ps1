@@ -1,7 +1,7 @@
 # Tier B of the sub-phase 1.1 corpus: the nine decks Microsoft PowerPoint wrote.
 #
-#   powershell -File tools/corpus/authored/build-tier-b.ps1 -Out <dir>
-#   powershell -File tools/corpus/authored/build-tier-b.ps1 -Out <dir> -Id b05-chart
+#   powershell -File tools/corpus/tiers/b-authored/build-tier-b.ps1 -Out <dir>
+#   powershell -File tools/corpus/tiers/b-authored/build-tier-b.ps1 -Out <dir> -Id b05-chart
 #
 # Why this script is committed
 # ----------------------------
@@ -22,7 +22,7 @@
 # Nothing outside `-Out`. Every presentation is created in memory with
 # `Presentations.Add`; no file on this machine is opened. `b07`'s OLE object is a
 # *new* empty workbook created in place. `b09`'s image is written into `-Out`
-# first by `tools/corpus/authored/make-assets.ts`, from this repository's own
+# first by `tools/corpus/tiers/b-authored/make-assets.ts`, from this repository's own
 # PNG and JPEG encoders - there is no stock imagery anywhere in the corpus.
 #
 # The four constraints, enforced rather than trusted
@@ -402,13 +402,13 @@ try {
     if (Want 'b09-picture') {
         Write-Host 'b09-picture'
         # The image is this repository's own, written by make-assets.ts from
-        # tools/corpus/gen/png.ts and jpeg.ts. There is no stock imagery in this
+        # tools/corpus/tiers/a-generated/assets/png.ts and jpeg.ts. There is no stock imagery in this
         # corpus and no file outside -Out is read to make this deck.
         $pngPath = Join-Path $Out 'b09-source.png'
         $jpgPath = Join-Path $Out 'b09-source.jpeg'
         foreach ($needed in $pngPath, $jpgPath) {
             if (-not (Test-Path $needed)) {
-                throw ('missing ' + $needed + ' - run `node tools/corpus/authored/make-assets.ts ' + $Out + '` first')
+                throw ('missing ' + $needed + ' - run `node tools/corpus/tiers/b-authored/make-assets.ts ' + $Out + '` first')
             }
         }
         $p = $app.Presentations.Add($msoTrue)

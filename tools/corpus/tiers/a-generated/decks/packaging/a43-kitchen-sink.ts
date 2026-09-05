@@ -1,11 +1,11 @@
-import { grid, prstGeom, scheme, shape, solidFill, type Cell } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
-import type { ProbePart, ProbeSlide } from '../package.ts';
-import { cBhvr, clickEffect, mainSequence, makeVisible } from './a17-animations.ts';
-import { a21Charts } from './a21-charts.ts';
-import { a23SmartArt } from './a23-smartart.ts';
-import { a26Ole } from './a26-ole.ts';
+import { grid, prstGeom, scheme, shape, solidFill, type Cell } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
+import type { ProbePart, ProbeSlide } from '../../markup/chassis.ts';
+import { cBhvr, clickEffect, mainSequence, makeVisible } from '../deck/a17-animations.ts';
+import { a21Charts } from '../content/a21-charts.ts';
+import { a23SmartArt } from '../content/a23-smartart.ts';
+import { a26Ole } from '../content/a26-ole.ts';
 import { a32Macros } from './a32-macros.ts';
 
 /**

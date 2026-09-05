@@ -43,7 +43,7 @@ import {
 } from '@pptx-studio/paint';
 import { attributeValue, childElements, firstChild, type XElement } from '@pptx-studio/xml';
 
-import { ModelError } from './errors.js';
+import { ModelError } from '../errors.js';
 
 /* -------------------------------------------------------------------------- */
 /* small readers                                                              */

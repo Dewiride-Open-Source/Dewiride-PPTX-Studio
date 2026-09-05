@@ -125,7 +125,7 @@ after which it catches nothing at all. Those are not symmetric and the second is
 much harder to notice, because a rule that is too strict looks exactly like a
 rule that is working.
 
-So the second half of the verification is `tools/corpus/validate.test.ts`: all
+So the second half of the verification is `tools/corpus/suites/validate.test.ts`: all
 fifty-one committed corpus decks through the validator, zero fatal findings.
 Every deck in that corpus opens in PowerPoint — that is what the corpus _is_,
 established one bisection at a time across 0.7 and 1.1 — so a rule that fires on
@@ -174,12 +174,12 @@ Without fixtures they would be enforced entirely on trust.
 
 Three decisions inside it:
 
-**Minimal packages, not chassis decks.** `tools/corpus/gen/package.ts` builds a
+**Minimal packages, not chassis decks.** `tools/corpus/tiers/a-generated/markup/chassis.ts` builds a
 realistic deck — master, layout, theme with the two gradients `fillRef/@idx`
 needs, `docProps`, twenty-two entries. That is right for a probe. It is wrong
 for a refusal, where the point is _the smallest markup that reproduces it_,
 because that is what `cli bisect` reduces towards and what a person reads when
-deciding whether a rule is still true. So `tools/corpus/reject/deck.ts` builds
+deciding whether a rule is still true. So `tools/corpus/tiers/rejects/deck.ts` builds
 ten parts and no theme, and each fixture changes one thing.
 
 **`kind: "fixture"`, not `kind: "deck"`.** They are `.pptx` files, so the obvious
@@ -194,7 +194,7 @@ is stated in `fixtures.ts` and in each entry's `refusal` field, which records
 what PowerPoint said and where the finding is written down. `C-REJECT` asserts
 only what is checkable here — that our validator refuses each one, by the rule
 its manifest names. Whether PowerPoint agrees with our _reason_ is a separate
-claim that `tools/corpus/gen/open-in-powerpoint.ps1` settles, on a machine with
+claim that `tools/corpus/tiers/a-generated/open-in-powerpoint.ps1` settles, on a machine with
 PowerPoint, by somebody who chooses to run it.
 
 ### `M1.8` is fatal here, and a warning in `opc`

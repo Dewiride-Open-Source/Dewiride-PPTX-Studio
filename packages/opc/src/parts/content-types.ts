@@ -1,5 +1,5 @@
-import { CONTENT_TYPES_PART, OPC_NS } from './constants.js';
-import { OpcError } from './errors.js';
+import { CONTENT_TYPES_PART, OPC_NS } from '../constants.js';
+import { OpcError } from '../errors.js';
 import { escapeAttribute, readFlatXml, XML_DECLARATION } from './flat-xml.js';
 import { normalizePartName, partExtension, toPartName } from './pack-uri.js';
 

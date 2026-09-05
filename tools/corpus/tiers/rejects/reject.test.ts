@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../../repo/root.ts';
 import { formatReport, RULE_IDS, validatePackage } from '@pptx-studio/validate';
 import { describe, expect, it } from 'vitest';
 import { packageBytes } from './deck.ts';
@@ -29,7 +30,6 @@ import { outputName, REJECT_FIXTURES } from './fixtures.ts';
  *    `C-REGEN` for this collection.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../../..');
 const DIR = join(ROOT, 'corpus', 'reject');
 
 function sha256(bytes: Uint8Array): string {
@@ -100,7 +100,7 @@ describe('C-REJECT', () => {
   });
 
   it('covers the four rules no good deck can exercise', () => {
-    // The gap `tools/corpus/validate.test.ts` writes down: `V022`, `V024`,
+    // The gap `tools/corpus/suites/validate.test.ts` writes down: `V022`, `V024`,
     // `V025` and `V026` have no instance anywhere in the fifty-two decks,
     // because every one of them is a file PowerPoint refuses.
     const covered = new Set(REJECT_FIXTURES.map((fixture) => fixture.rule));

@@ -1,6 +1,6 @@
 # Experiment C2, step 2 - ask PowerPoint what it painted.
 #
-#   powershell -File tools/ground-truth/read-swatches2.ps1 -Dir <work-dir>
+#   powershell -File tools/ground-truth/paint/colour/bases/read.ps1 -Dir <work-dir>
 #
 # Reads `swatch2-inputs.json` from the work directory, opens each probe deck,
 # and writes `com-readback2.json` plus one BMP per slide.
@@ -38,7 +38,7 @@ $msoAutomationSecurityForceDisable = 3
 $root = (Resolve-Path -LiteralPath $Dir).Path
 $inputsPath = Join-Path $root 'swatch2-inputs.json'
 if (-not (Test-Path -LiteralPath $inputsPath)) {
-    throw "no swatch2-inputs.json in $root - run build-swatch-deck2.ts first"
+    throw "no swatch2-inputs.json in $root - run tools/ground-truth/paint/colour/bases/build-deck.ts first"
 }
 
 $text = Get-Content -LiteralPath $inputsPath -Raw

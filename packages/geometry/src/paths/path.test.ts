@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { arcEnd, type ArcParameters } from './arc.js';
-import { GeometryError } from './errors.js';
-import { evaluateGuides, type ShapeSize } from './evaluate.js';
+import { GeometryError } from '../errors.js';
+import { evaluateGuides, type ShapeSize } from '../formula/evaluate.js';
 import {
   DEFAULT_PRECISION,
   pathData,
@@ -11,7 +11,7 @@ import {
   type PathSegment,
   type ResolvedPath,
 } from './path.js';
-import { getPreset, presetNames } from './presets/index.js';
+import { getPreset, presetNames } from '../presets/index.js';
 import {
   custGeom,
   type Geometry,
@@ -20,7 +20,7 @@ import {
   type PresetPath,
   type PresetPoint,
   type PresetShape,
-} from './types.js';
+} from '../types.js';
 
 /**
  * Two things are being checked here and they are not the same thing.

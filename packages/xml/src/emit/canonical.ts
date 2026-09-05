@@ -1,8 +1,8 @@
-import { XmlError } from './errors.js';
-import { NS } from './namespaces.js';
-import { escapeAttributeValue, escapeText } from './references.js';
-import type { XAttribute } from './tokenizer.js';
-import type { XDocument, XElement, XNode } from './xnode.js';
+import { XmlError } from '../errors.js';
+import { NS } from '../mce/namespaces.js';
+import { escapeAttributeValue, escapeText } from '../mce/references.js';
+import type { XAttribute } from '../parse/tokenizer.js';
+import type { XDocument, XElement, XNode } from '../parse/xnode.js';
 
 /**
  * One document, one string, and two documents that mean the same thing produce

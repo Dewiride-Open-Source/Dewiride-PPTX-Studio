@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RULES, RULE_IDS, BASELINE_RULES, ruleById } from './rules.js';
-import { validatePackage } from './validate.js';
-import { deck } from './testing/deck.js';
+import { validatePackage } from '../validate.js';
+import { deck } from '../testing/deck.js';
 
 /**
  * The table itself.

@@ -15,7 +15,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import fixture from '../../../corpus/ground-truth/line-breaks.json' with { type: 'json' };
+import fixture from '../../../../corpus/ground-truth/line-breaks.json' with { type: 'json' };
 
 import {
   breakOpportunities,
@@ -24,7 +24,7 @@ import {
   wrapText,
   type BreakTailoring,
 } from './break.js';
-import { TextError } from './errors.js';
+import { TextError } from '../errors.js';
 import {
   BUILT_IN_KINSOKU,
   HANGING_PUNCTUATION,

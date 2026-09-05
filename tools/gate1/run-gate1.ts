@@ -23,10 +23,10 @@
  */
 
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+
+import { REPO_ROOT as ROOT } from '../repo/root.ts';
 import { formatGate1, runGate1, GATE_DECK, type GateOptions } from './gate1.ts';
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const SCRATCH = resolve(ROOT, 'node_modules/.gate1');
 
 function parse(argv: readonly string[]): GateOptions {

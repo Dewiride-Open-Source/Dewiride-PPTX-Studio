@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { isXmlError } from './errors.js';
-import { checkRoundTrip } from './roundtrip.js';
-import { serializeXmlString } from './serialize.js';
-import { applyEdits, insertInOrder, newElement, type XmlEdit } from './edit.js';
+import { checkRoundTrip } from './emit/roundtrip.js';
+import { serializeXmlString } from './emit/serialize.js';
+import { applyEdits, insertInOrder, newElement, type XmlEdit } from './edit/edit.js';
 import {
   checkTreeCoverage,
   descendantElements,
   parseXmlString,
   type XDocument,
   type XNode,
-} from './xnode.js';
+} from './parse/xnode.js';
 
 /**
  * Structured mutation of realistic markup.

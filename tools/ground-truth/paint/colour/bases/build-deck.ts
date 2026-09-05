@@ -2,7 +2,7 @@
  * Experiment C2, step 1 - write the probe decks.
  *
  * ```
- * node tools/ground-truth/build-swatch-deck2.ts <out-dir>
+ * node tools/ground-truth/paint/colour/bases/build-deck.ts <out-dir>
  * ```
  *
  * One `.pptx` per deck named in `swatches2.ts`, plus `swatch2-inputs.json`. The
@@ -13,8 +13,8 @@
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildPptx, rect, CLR_SCHEME, SLIDE_HEIGHT, SLIDE_WIDTH } from './pptx.ts';
-import { colorXml2, CROSSED_CLR_MAP, describe2, swatches2, type Swatch2 } from './swatches2.ts';
+import { buildPptx, rect, CLR_SCHEME, SLIDE_HEIGHT, SLIDE_WIDTH } from '../../../lib/pptx.ts';
+import { colorXml2, CROSSED_CLR_MAP, describe2, swatches2, type Swatch2 } from './probes.ts';
 
 const COLS = 10;
 const ROWS = 8;
@@ -24,7 +24,8 @@ const CELL_W = Math.floor(SLIDE_WIDTH / COLS);
 const CELL_H = Math.floor(SLIDE_HEIGHT / ROWS);
 
 const outDir = process.argv[2];
-if (outDir === undefined) throw new Error('usage: build-swatch-deck2.ts <out-dir>');
+if (outDir === undefined)
+  throw new Error('usage: tools/ground-truth/paint/colour/bases/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 const all = swatches2();

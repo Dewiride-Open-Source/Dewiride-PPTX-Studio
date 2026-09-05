@@ -2,7 +2,7 @@
  * Experiment C5, step 1 - write the probe decks.
  *
  * ```
- * node tools/ground-truth/build-sheet-deck.ts <out-dir>
+ * node tools/ground-truth/model/build-deck.ts <out-dir>
  * ```
  *
  * One `.pptx` per deck named in `sheets.ts`, plus `sheet-inputs.json` carrying
@@ -29,11 +29,12 @@ import {
   SCHEME_TWO,
   SLIDE_HEIGHT_PT,
   SLIDE_WIDTH_PT,
-} from './sheet-pptx.ts';
-import { ALL_BOXES, sheetDecks } from './sheets.ts';
+} from '../lib/sheet-pptx.ts';
+import { ALL_BOXES, sheetDecks } from './probes.ts';
 
 const outDir = process.argv[2];
-if (outDir === undefined) throw new Error('usage: build-sheet-deck.ts <out-dir>');
+if (outDir === undefined)
+  throw new Error('usage: tools/ground-truth/model/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 const decks = sheetDecks();

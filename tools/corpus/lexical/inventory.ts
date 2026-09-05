@@ -22,7 +22,7 @@
  *
  * | collection | `xml`                          | `container`                 |
  * | ---------- | ------------------------------ | --------------------------- |
- * | `decks`    | `tools/corpus/gen`             | `tools/ground-truth/zip.ts` |
+ * | `decks`    | `tools/corpus/gen`             | `tools/ground-truth/lib/zip.ts` |
  * | `authored` | `Microsoft PowerPoint 16.0…`   | `Microsoft PowerPoint 16.0…` |
  * | `written`  | `Microsoft PowerPoint 16.0…`   | `packages/opc`              |
  *
@@ -31,7 +31,7 @@
  * once, so the caveat is enforced rather than written in a paragraph and
  * trusted.
  *
- * `tools/corpus/gen` delegates its container to `tools/ground-truth/zip.ts` and
+ * `tools/corpus/gen` delegates its container to `tools/ground-truth/lib/zip.ts` and
  * the envelope says so, because a ZIP header written by `writeZip` is the same
  * evidence whichever generator called it.
  *
@@ -56,7 +56,7 @@ import { inflateRawSync } from 'node:zlib';
 /**
  * One ZIP entry, with every central-directory field `C-LEX` reads.
  *
- * `tools/ground-truth/zip.ts` surfaces `flags` and the local extra field and
+ * `tools/ground-truth/lib/zip.ts` surfaces `flags` and the local extra field and
  * stops there, which is right for a reader: `versionMadeBy` and the DOS
  * timestamp are fields nothing acts on. They are exactly the fields a
  * divergence hides in, so this reads the central directory itself.

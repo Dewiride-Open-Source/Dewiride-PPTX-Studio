@@ -8,9 +8,9 @@ import {
   type ZipArchive,
 } from '@pptx-studio/opc';
 import { parseXml, type XDocument } from '@pptx-studio/xml';
-import type { Location } from './location.js';
-import type { Finding, ReadProblem } from './report.js';
-import { ruleById, type RuleId } from './rules.js';
+import type { Location } from './report/location.js';
+import type { Finding, ReadProblem } from './report/report.js';
+import { ruleById, type RuleId } from './rules/rules.js';
 
 /**
  * The state a rule reads, and the one method it writes.

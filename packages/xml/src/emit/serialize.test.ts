@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { isXmlError } from './errors.js';
-import { escapeAttributeValue, escapeText } from './references.js';
-import { encodeXmlSource } from './source.js';
+import { isXmlError } from '../errors.js';
+import { escapeAttributeValue, escapeText } from '../mce/references.js';
+import { encodeXmlSource } from '../parse/source.js';
 import { serializeNode, serializeXml, serializeXmlString } from './serialize.js';
 import { checkRoundTrip } from './roundtrip.js';
-import type { XAttribute } from './tokenizer.js';
+import type { XAttribute } from '../parse/tokenizer.js';
 import {
   checkDirtyInvariant,
   checkTreeCoverage,
@@ -17,7 +17,7 @@ import {
   type XDocument,
   type XElement,
   type XNode,
-} from './xnode.js';
+} from '../parse/xnode.js';
 
 function codeOf(fn: () => unknown): string {
   try {

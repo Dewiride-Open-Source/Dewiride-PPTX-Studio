@@ -86,7 +86,7 @@ jobs:
   # Phase 1's whole claim, on its own, in about a minute.
   #
   # `check` already runs this - `pnpm roundtrip` is one of its steps, and
-  # `tools/corpus/roundtrip.test.ts` asserts it again from source. So this job
+  # `tools/corpus/roundtrip/roundtrip.test.ts` asserts it again from source. So this job
   # gates nothing that was not gated already, and it is still worth its minute:
   # it is the number the README carries, and putting it behind a Chromium
   # install means the one result anybody wants from a pull request arrives last.

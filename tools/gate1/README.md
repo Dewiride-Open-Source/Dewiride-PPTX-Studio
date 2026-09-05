@@ -51,5 +51,5 @@ _development_ workload and not one Office application. The browser half is in CI
 [`apps/studio/src/export.test.ts`](../../apps/studio/src/export.test.ts) runs the same export in
 Chromium on every `pnpm test`, against the same committed deck.
 
-See [ADR 0015](../../docs/adr/0015-gate-1-the-browser-round-trip.md) for what was measured and what
+See [ADR 0015](../../docs/adr/phase-1-round-trip/0015-gate-1-the-browser-round-trip.md) for what was measured and what
 is still not claimed.

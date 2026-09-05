@@ -3,7 +3,7 @@
  * Regenerate `census-keys.gen.ts` from the census's own feature table.
  *
  * ```
- * pnpm build && node tools/corpus/write-census-keys.ts
+ * pnpm build && node tools/corpus/census/write-keys.ts
  * ```
  *
  * Needs the build, which is why the output is committed rather than computed:
@@ -16,11 +16,12 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
+
 const DIST = resolve(ROOT, 'packages/census/dist/index.js');
-const OUT = resolve(ROOT, 'tools/corpus/census-keys.gen.ts');
+const OUT = resolve(ROOT, 'tools/corpus/census/keys.gen.ts');
 
 interface Rule {
   readonly key: string;
@@ -43,7 +44,7 @@ const text =
 // alias table, not from Node. So the key list is committed, and
 // census-drift.test.ts asserts it still matches the census's own table.
 //
-// Regenerate: pnpm build && node tools/corpus/write-census-keys.ts
+// Regenerate: pnpm build && node tools/corpus/census/write-keys.ts
 
 export const CENSUS_FEATURE_KEYS: readonly string[] = [
 ` +

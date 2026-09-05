@@ -24,7 +24,7 @@ import type {
  * library whose whole job is drawing shapes.
  *
  * So each bucket is one string in the encoding below, and this module reads it.
- * `packages/xml/src/schema-order.gen.ts` made the same trade for the same
+ * `packages/xml/src/edit/schema-order.gen.ts` made the same trade for the same
  * reason; the difference is that this data is an order of magnitude larger, so
  * the saving is the difference between shipping preset geometry and making it
  * something a consumer has to opt into.

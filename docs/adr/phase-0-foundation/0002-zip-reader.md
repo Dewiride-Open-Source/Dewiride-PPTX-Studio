@@ -1,6 +1,6 @@
 # ADR 0002 — Reading a ZIP we did not write
 
-- **Status:** Accepted, with one decision corrected by [ADR 0003](0003-the-package.md)
+- **Status:** Accepted, with one decision corrected by [ADR 0003](./0003-the-package.md)
 - **Date:** 2026-08-26
 - **Sub-phase:** 0.2
 

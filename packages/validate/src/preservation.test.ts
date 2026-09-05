@@ -1,7 +1,7 @@
 import { PartStore } from '@pptx-studio/opc';
 import { describe, expect, it } from 'vitest';
-import type { Report } from './report.js';
-import type { RuleId } from './rules.js';
+import type { Report } from './report/report.js';
+import type { RuleId } from './rules/rules.js';
 import { deck, deckBytes, minimalDeck } from './testing/deck.js';
 import { validatePackage } from './validate.js';
 

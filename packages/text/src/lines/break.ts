@@ -6,7 +6,7 @@
  * code points and reading back the *text* of line 1 through the object model.
  * Line 1 is the break position, so nothing had to be inferred from a width.
  * The fixture is `corpus/ground-truth/line-breaks.json`; the reasoning and the
- * refuted alternatives are in `docs/adr/0029-line-breaking.md`.
+ * refuted alternatives are in `docs/adr/phase-3-text/0029-line-breaking.md`.
  *
  * ## This is not UAX#14, and that is the finding
  *
@@ -52,7 +52,7 @@
  * does not stop it.
  */
 
-import { TextError } from './errors.js';
+import { TextError } from '../errors.js';
 import { BUILT_IN_KINSOKU, HANGING_PUNCTUATION, type KinsokuSets } from './kinsoku.js';
 
 /**

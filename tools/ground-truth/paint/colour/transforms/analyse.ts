@@ -3,7 +3,7 @@
  * PowerPoint implements, and write the fixture.
  *
  * ```
- * node tools/ground-truth/analyse-swatches.ts <work-dir> [--fixture <path>]
+ * node tools/ground-truth/paint/colour/transforms/analyse.ts <work-dir> [--fixture <path>]
  * ```
  *
  * Reads `swatch-inputs.json`, `com-readback.json` and `slideN.bmp` from the work
@@ -18,7 +18,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { hex, readBmp } from './bmp.ts';
+import { hex, readBmp } from '../../../lib/bmp.ts';
 import {
   BLEND_MODELS,
   HSL_MODELS,
@@ -27,7 +27,7 @@ import {
   toHex,
   type Channel,
   type HslOp,
-} from './color-models.ts';
+} from './models.ts';
 
 interface InputSwatch {
   id: string;
@@ -62,7 +62,10 @@ interface ComReadback {
 }
 
 const dir = process.argv[2];
-if (dir === undefined) throw new Error('usage: analyse-swatches.ts <work-dir> [--fixture <path>]');
+if (dir === undefined)
+  throw new Error(
+    'usage: tools/ground-truth/paint/colour/transforms/analyse.ts <work-dir> [--fixture <path>]',
+  );
 const fixtureAt = process.argv.indexOf('--fixture');
 const fixturePath = fixtureAt > 0 ? process.argv[fixtureAt + 1] : undefined;
 
@@ -496,11 +499,12 @@ if (fixturePath !== undefined) {
   const fixture = {
     $comment:
       'Ground truth for DrawingML colour transforms, measured in Microsoft PowerPoint. ' +
-      'See docs/adr/0007-ground-truth.md. `expected` is the RGB PowerPoint painted, ' +
+      'See docs/adr/phase-0-foundation/0007-ground-truth.md. `expected` is the RGB PowerPoint painted, ' +
       'sampled from its own bitmap export at the centre of each swatch.',
     source: {
       application: 'Microsoft PowerPoint',
-      generatedBy: 'tools/ground-truth/build-swatch-deck.ts + analyse-swatches.ts',
+      generatedBy:
+        'tools/ground-truth/paint/colour/transforms/build-deck.ts + tools/ground-truth/paint/colour/transforms/analyse.ts',
     },
     clrScheme: inputs.clrScheme,
     swatches: measured.map((m) => ({

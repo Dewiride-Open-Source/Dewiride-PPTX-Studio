@@ -1,7 +1,7 @@
 import { CONTENT_TYPE, PartStore, REL_TYPE } from '@pptx-studio/opc';
 import { describe, expect, it } from 'vitest';
 import { orphanedParts, reachableParts } from './reachability.js';
-import { fixture, fixtureBytes, MAIN_PART } from './testing/package.js';
+import { fixture, fixtureBytes, MAIN_PART } from '../testing/package.js';
 
 describe('the walk', () => {
   it('reaches the main part and everything it relates to', () => {

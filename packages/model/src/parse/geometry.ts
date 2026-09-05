@@ -38,7 +38,7 @@ import {
 } from '@pptx-studio/geometry';
 import { attributeValue, childElements, firstChild, type XElement } from '@pptx-studio/xml';
 
-import { ModelError } from './errors.js';
+import { ModelError } from '../errors.js';
 
 /**
  * What a shape says it is.

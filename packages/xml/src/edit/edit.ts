@@ -40,10 +40,10 @@
  *     not defined, and neither is any history stack that would ask for it.
  */
 
-import { isAllWhitespace } from './chars.js';
-import { XmlError } from './errors.js';
+import { isAllWhitespace } from '../parse/chars.js';
+import { XmlError } from '../errors.js';
 import { elementKey, insertionIndex } from './schema-order.js';
-import { splitQName, type XAttribute } from './tokenizer.js';
+import { splitQName, type XAttribute } from '../parse/tokenizer.js';
 import {
   declaredNamespaces,
   markDirty,
@@ -53,7 +53,7 @@ import {
   type XElement,
   type XNode,
   type XText,
-} from './xnode.js';
+} from '../parse/xnode.js';
 
 function fail(
   code: 'ERR_INVALID_EDIT' | 'ERR_SCHEMA_ORDER',

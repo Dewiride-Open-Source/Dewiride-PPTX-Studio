@@ -20,7 +20,7 @@ closed: forty-six of forty-seven keys covered, one declared.
 | **C** | `packages/opc`'s own writer           | 1       | **1**  |
 
 **All three tiers are complete**, and so are all four named rules. `C-LEX` was waiting on the
-second and third producers (`tools/corpus/lexical.test.ts`), so the round-trip gate is no longer a
+second and third producers (`tools/corpus/lexical/lexical.test.ts`), so the round-trip gate is no longer a
 proof of idempotence; `C-COV` was waiting on `a28-model3d`, which is **cut**. E4 is blocked on a
 download nobody has approved, and the roster's own instruction for that case was to declare the key
 rather than drop it quietly, so `model3d` is now the single entry in `corpus/decks/manifest.json`'s
@@ -69,7 +69,7 @@ file cannot go on apologising for a hole that was filled.
 ## Tier A — the generated probes
 
 Every deck is one to three slides, committed as bytes, and reproduced by
-`node tools/corpus/gen/build-probes.ts --out corpus/decks --id <id>`.
+`node tools/corpus/tiers/a-generated/build-probes.ts --out corpus/decks --id <id>`.
 
 `a01-minimal` is the **subtrahend**: its census is the chassis alone — a master with two
 placeholders, one layout with a third, and the two `a:gradFill` entries in the theme's
@@ -401,7 +401,7 @@ is the baseline; everything below is on top of it.
   `vbaProject.bin` at all**. The content type and the part are independent signals.
 - **`docProps/thumbnail.jpeg` is 256 x 144, baseline, JFIF 1.1 at 96 dpi, 4:2:0**, with the four
   **standard ITU-T T.81 Annex K Huffman tables** and two quantization tables of PowerPoint's own.
-  `tools/corpus/gen/jpeg.ts`'s tables were read out of its `DHT` segments rather than recalled.
+  `tools/corpus/tiers/a-generated/assets/jpeg.ts`'s tables were read out of its `DHT` segments rather than recalled.
 - **`_rels/.rels` is written out of rId order** — `rId3`, `rId2`, `rId1`, `rId4`.
   `CT_Relationships` is a sequence, so a writer that regenerates the part sorted by id changes bytes
   it was not asked to change. `a33` records it and does not reproduce it; it closes with a Tier B
@@ -440,7 +440,7 @@ needs. `chartEx1.xml` is uniformly spaced and cannot tell the two apart.
 
 ## Tier B — PowerPoint-authored — built
 
-Nine decks, authored by `tools/corpus/authored/build-tier-b.ps1` so the provenance is auditable
+Nine decks, authored by `tools/corpus/tiers/b-authored/build-tier-b.ps1` so the provenance is auditable
 line by line, and carrying **no recipe**: PowerPoint stamps `dcterms:created` into
 `docProps/core.xml` on every save, so two runs one second apart differ, and the monthly build
 changes the markup underneath. A recipe claiming to reproduce these bytes would be a lie with a
@@ -614,8 +614,8 @@ processing instructions are discarded, a CDATA section is rewritten as plain tex
 to `H`, a single-quoted attribute is rewritten double, a byte order mark is stripped. For those
 forms our second producer is not silent but incapable. Three container forms — ZIP64, data
 descriptors, directory entries — are in the same class for a different reason: ADR 0002 found Office
-writes none of them, `tools/ground-truth/zip.ts` cannot write two of them, and all four live in
-`packages/opc/src/zip-reader.test.ts` where they belong.
+writes none of them, `tools/ground-truth/lib/zip.ts` cannot write two of them, and all four live in
+`packages/opc/src/zip/zip-reader.test.ts` where they belong.
 
 ### Two things it found that nothing else had
 
@@ -731,7 +731,7 @@ needs a setting, a device or a network, only a decision to author a tenth deck.
   this is a gap in the corpus's coverage of the census itself, which is why it is declared in a
   manifest and not only here. See `a28-model3d` above for why guessing the four undocumented
   strings would be worse than the hole.
-- **An EMF with text and raster blits.** `tools/corpus/gen/emf.ts` writes a five-record metafile
+- **An EMF with text and raster blits.** `tools/corpus/tiers/a-generated/assets/emf.ts` writes a five-record metafile
   that genuinely draws, which is enough to be an OLE preview and nothing like enough for sub-phase
   10.6: the hard part is the ~70 record types `rtf.js` routes into a no-op, and a real Visio or
   Excel metafile is tens of kilobytes of exactly those.

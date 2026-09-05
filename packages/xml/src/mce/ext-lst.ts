@@ -30,10 +30,10 @@
  *     asserted here, which is the point of having generated it.
  */
 
-import { XmlError } from './errors.js';
-import { insertInOrder, newAttribute, newElement, type XmlEdit } from './edit.js';
-import { childRanks } from './schema-order.js';
-import { attributeValue, childElements, prefixFor, type XElement } from './xnode.js';
+import { XmlError } from '../errors.js';
+import { insertInOrder, newAttribute, newElement, type XmlEdit } from '../edit/edit.js';
+import { childRanks } from '../edit/schema-order.js';
+import { attributeValue, childElements, prefixFor, type XElement } from '../parse/xnode.js';
 
 /** The local name of both `p:extLst` and `a:extLst`, and of their entries. */
 const EXT_LST = 'extLst';

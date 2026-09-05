@@ -1,6 +1,11 @@
-import { IDENTITY_CLR_MAP, placeholderXml, TITLE_BOX, type ProbeMaster } from '../package.ts';
-import { grid, scheme, shape, solidFill } from '../shapes.ts';
-import type { ProbeDeck } from '../types.ts';
+import {
+  IDENTITY_CLR_MAP,
+  placeholderXml,
+  TITLE_BOX,
+  type ProbeMaster,
+} from '../../markup/chassis.ts';
+import { grid, scheme, shape, solidFill } from '../../markup/shapes.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Three masters, three themes, three colour maps.

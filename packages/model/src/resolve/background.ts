@@ -27,8 +27,8 @@
 import { resolveColor, type Fill, type Rgba } from '@pptx-studio/paint';
 
 import { colorContextOf, sheetChain, themeOf } from './resolve.js';
-import { phClrOf, styleMatrixFill } from './style.js';
-import type { Background, Sheet } from './types.js';
+import { phClrOf, styleMatrixFill } from '../style.js';
+import type { Background, Sheet } from '../types.js';
 
 /** A background, with the sheet that declared it and how it was expressed. */
 export interface ResolvedBackground {

@@ -1,7 +1,17 @@
-import { placeholderXml, TITLE_BOX, type ProbeLayout } from '../package.ts';
-import { grid, scheme, shape, solidFill } from '../shapes.ts';
-import { lstStyle, para, pPr, rPr, run, spcPct, spcPts, textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { placeholderXml, TITLE_BOX, type ProbeLayout } from '../../markup/chassis.ts';
+import { grid, scheme, shape, solidFill } from '../../markup/shapes.ts';
+import {
+  lstStyle,
+  para,
+  pPr,
+  rPr,
+  run,
+  spcPct,
+  spcPts,
+  textLine,
+  txBody,
+} from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * The ten-source text cascade, one visible property per source.

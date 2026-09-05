@@ -9,9 +9,9 @@ import {
   validatePartName,
 } from '@pptx-studio/opc';
 import { attributeValue, childElements } from '@pptx-studio/xml';
-import type { Context } from './context.js';
-import { elementLocation, PACKAGE_LOCATION, partLocation } from './location.js';
-import { readRelsParts, resolveTarget } from './rels.js';
+import type { Context } from '../context.js';
+import { elementLocation, PACKAGE_LOCATION, partLocation } from '../report/location.js';
+import { readRelsParts, resolveTarget } from '../rels.js';
 
 /**
  * `V001` … `V005`: the container.

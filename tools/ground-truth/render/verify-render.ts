@@ -3,7 +3,7 @@
  *
  * ```
  * pnpm build
- * node tools/ground-truth/verify-render.ts <dir>
+ * node tools/ground-truth/render/verify-render.ts <dir>
  * ```
  *
  * The other sub-phases end by exporting a file and opening it in the real
@@ -32,7 +32,9 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 
 import { chromium } from 'playwright';
 
@@ -40,7 +42,7 @@ import { chromium } from 'playwright';
  * The body of `page.evaluate` runs in Chromium, not in Node, so the browser
  * globals it uses are not in scope for the type checker - `tools/` is compiled
  * with `types: ["node"]` and no DOM library, deliberately. As in
- * `verify-font-in-browser.ts`, declare exactly the surface this one file uses
+ * `tools/ground-truth/fonts/embedding/verify-in-browser.ts`, declare exactly the surface this one file uses
  * rather than widening the project's lib: narrow enough that a body which
  * starts using something else fails to compile instead of becoming `any`.
  */
@@ -65,8 +67,6 @@ declare const document: {
 };
 declare const Image: new () => BrowserImage;
 declare const XMLSerializer: new () => { serializeToString(node: unknown): string };
-
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 
 const dirArg = process.argv[2];
 if (dirArg === undefined) throw new Error('usage: verify-render.ts <dir>');

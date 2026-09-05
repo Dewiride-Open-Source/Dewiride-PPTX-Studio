@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import lines from '../../../corpus/ground-truth/lines.json' with { type: 'json' };
-import { PaintError } from './errors.js';
+import lines from '../../../../corpus/ground-truth/lines.json' with { type: 'json' };
+import { PaintError } from '../errors.js';
 import { COMPOUND_RUNS } from './compound-table.js';
 import { PRESET_DASHES, PRESET_DASH_NAMES, isPresetDashName } from './dash-table.js';
 import { MARKERS, MARKER_SIZE } from './marker-table.js';
@@ -35,8 +35,8 @@ import {
   type Box,
   type Effect,
   type OuterShadow,
-} from './effect.js';
-import type { Color } from './types.js';
+} from '../effect.js';
+import type { Color } from '../types.js';
 
 /* -------------------------------------------------------------------------- */
 /* the fixture                                                                */

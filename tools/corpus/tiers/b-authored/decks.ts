@@ -250,7 +250,7 @@ export const AUTHORED_DECKS: readonly AuthoredDeck[] = [
       'carrying shadow, reflection, glow and soft edge together. Slide 2 fills the pic placeholder ' +
       'of the Picture with Caption layout instead, which arrives as a blipFill on a placeholder and ' +
       'not as a bare p:pic; the two inherit differently and only one survives a layout change. Both ' +
-      "images are this repository's own, written by make-assets.ts from tools/corpus/gen/png.ts " +
+      "images are this repository's own, written by make-assets.ts from tools/corpus/tiers/a-generated/assets/png.ts " +
       'and jpeg.ts - there is no stock imagery in this corpus and no photograph from the authoring ' +
       'machine.',
     features: {

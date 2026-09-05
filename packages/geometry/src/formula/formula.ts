@@ -1,4 +1,4 @@
-import { GeometryError } from './errors.js';
+import { GeometryError } from '../errors.js';
 
 /**
  * The seventeen `a:gd/@fmla` operators, as pure arithmetic.

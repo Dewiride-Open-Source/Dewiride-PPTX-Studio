@@ -1,5 +1,5 @@
-import { png } from '../png.ts';
-import { grid, scheme, shape, solidFill, srgb } from '../shapes.ts';
+import { png } from '../../assets/png.ts';
+import { grid, scheme, shape, solidFill, srgb } from '../../markup/shapes.ts';
 import {
   buAutoNum,
   buBlip,
@@ -13,8 +13,8 @@ import {
   textLine,
   txBody,
   type ParaProps,
-} from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+} from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Bullets: every scheme, every source of the glyph, and the PUA trap.

@@ -4,7 +4,7 @@
  * it will render.
  *
  * ```
- * node tools/ground-truth/build-font-deck.ts <out-dir>
+ * node tools/ground-truth/fonts/embedding/build-deck.ts <out-dir>
  * ```
  *
  * The first pass of this experiment used one variant - an uncompressed EOT
@@ -28,12 +28,13 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildProbeFont } from './build-font.ts';
-import { readEot, writeEot, EOT_VERSION_1, EOT_VERSION_2_2 } from './eot.ts';
-import { readZip } from './zip.ts';
-import { buildPptx, escapeText, textBox, SLIDE_WIDTH, type EmbeddedFont } from './pptx.ts';
+import { readEot, writeEot, EOT_VERSION_1, EOT_VERSION_2_2 } from '../format/eot.ts';
+import { readZip } from '../../lib/zip.ts';
+import { buildPptx, escapeText, textBox, SLIDE_WIDTH, type EmbeddedFont } from '../../lib/pptx.ts';
 
 const outDir = process.argv[2];
-if (outDir === undefined) throw new Error('usage: build-font-deck.ts <out-dir>');
+if (outDir === undefined)
+  throw new Error('usage: tools/ground-truth/fonts/embedding/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 interface Variant {

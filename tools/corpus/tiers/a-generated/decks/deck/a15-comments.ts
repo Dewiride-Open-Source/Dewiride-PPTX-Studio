@@ -1,7 +1,14 @@
-import { DECLARATION, NS_A, NS_P, NS_R, type ProbePart, type ProbeRel } from '../package.ts';
-import { grid, shape } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import {
+  DECLARATION,
+  NS_A,
+  NS_P,
+  NS_R,
+  type ProbePart,
+  type ProbeRel,
+} from '../../markup/chassis.ts';
+import { grid, shape } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Comments, in both of the two formats a deck can carry - because PowerPoint

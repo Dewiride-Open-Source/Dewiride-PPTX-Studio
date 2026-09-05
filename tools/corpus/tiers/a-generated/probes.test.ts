@@ -1,15 +1,16 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { repoPath } from '../../../repo/root.ts';
 import { censusPackage } from '@pptx-studio/census';
 import { describe, expect, it } from 'vitest';
-import { buildProbePackage } from './package.ts';
+import { buildProbePackage } from './markup/chassis.ts';
 import { PROBE_DECKS } from './decks/index.ts';
-import { outputName } from './types.ts';
-import { readZip } from '../../ground-truth/zip.ts';
+import { outputName } from './markup/types.ts';
+import { readZip } from '../../../ground-truth/lib/zip.ts';
 
-const CORPUS = resolve(fileURLToPath(import.meta.url), '../../../../corpus/decks');
+const CORPUS = repoPath('corpus/decks');
 
 /**
  * `C-CENSUS` and `C-REGEN`, for the decks that exist.

@@ -2,7 +2,7 @@
  * Experiment C2, step 3 - join the readbacks and answer each question.
  *
  * ```
- * node tools/ground-truth/analyse-swatches2.ts <work-dir> [--fixture <path>]
+ * node tools/ground-truth/paint/colour/bases/analyse.ts <work-dir> [--fixture <path>]
  * ```
  *
  * Reads `swatch2-inputs.json`, `com-readback2.json` and the exported bitmaps.
@@ -13,9 +13,9 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { hex, readBmp } from './bmp.ts';
-import { CLR_SCHEME } from './pptx.ts';
-import { CROSSED_CLR_MAP, type Base2 } from './swatches2.ts';
+import { hex, readBmp } from '../../../lib/bmp.ts';
+import { CLR_SCHEME } from '../../../lib/pptx.ts';
+import { CROSSED_CLR_MAP, type Base2 } from './probes.ts';
 
 interface InputSwatch {
   id: string;
@@ -62,7 +62,10 @@ interface ComReadback {
 }
 
 const dir = process.argv[2];
-if (dir === undefined) throw new Error('usage: analyse-swatches2.ts <work-dir> [--fixture <path>]');
+if (dir === undefined)
+  throw new Error(
+    'usage: tools/ground-truth/paint/colour/bases/analyse.ts <work-dir> [--fixture <path>]',
+  );
 const fixtureAt = process.argv.indexOf('--fixture');
 const fixturePath = fixtureAt > 0 ? process.argv[fixtureAt + 1] : undefined;
 
@@ -334,12 +337,13 @@ if (fixturePath !== undefined) {
     $comment:
       'Ground truth for the DrawingML colour bases, alpha, the clrMap and the percentage ' +
       'grammar, measured in Microsoft PowerPoint. The companion to color-transforms.json, ' +
-      'which covers the transforms. See docs/adr/0021-colour.md. `expected` is the RGB ' +
+      'which covers the transforms. See docs/adr/phase-2-geometry-and-paint/0021-colour.md. `expected` is the RGB ' +
       'PowerPoint painted, sampled from its own bitmap export at the centre of each swatch; ' +
       '`transparency` is Shape.Fill.Transparency from the object model.',
     source: {
       application: 'Microsoft PowerPoint',
-      generatedBy: 'tools/ground-truth/build-swatch-deck2.ts + analyse-swatches2.ts',
+      generatedBy:
+        'tools/ground-truth/paint/colour/bases/build-deck.ts + tools/ground-truth/paint/colour/bases/analyse.ts',
     },
     clrScheme: inputs.clrScheme,
     crossedClrMap: CROSSED_CLR_MAP,

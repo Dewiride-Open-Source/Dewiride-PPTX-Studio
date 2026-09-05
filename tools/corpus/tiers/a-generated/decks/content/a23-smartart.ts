@@ -1,6 +1,13 @@
-import { DECLARATION, NS_A, NS_R, REL, type ProbePart, type ProbeRel } from '../package.ts';
-import { graphicFrame, GRAPHIC_URI } from '../shapes.ts';
-import type { ProbeDeck } from '../types.ts';
+import {
+  DECLARATION,
+  NS_A,
+  NS_R,
+  REL,
+  type ProbePart,
+  type ProbeRel,
+} from '../../markup/chassis.ts';
+import { graphicFrame, GRAPHIC_URI } from '../../markup/shapes.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * SmartArt: four parts, a fifth that is the only one anybody renders, and two

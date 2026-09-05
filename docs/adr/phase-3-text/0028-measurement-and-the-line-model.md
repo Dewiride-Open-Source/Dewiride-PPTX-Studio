@@ -6,7 +6,7 @@ changes the line count of any deck whose line spacing is not a whole percent.
 
 Code: `packages/text/src/{line-model.ts, measure.ts, errors.ts}`.
 Measurement: `corpus/ground-truth/text-metrics.json`, from
-`tools/ground-truth/{text-metrics.ts, build-metrics-deck.ts, read-metrics.ps1, measure-in-browser.ts, analyse-metrics.ts}`.
+`tools/ground-truth/{text-metrics.ts, tools/ground-truth/text/metrics/build-deck.ts, tools/ground-truth/text/metrics/read.ps1, measure-in-browser.ts, tools/ground-truth/text/metrics/analyse.ts}`.
 
 ---
 
@@ -212,6 +212,15 @@ So it is committed as a **measured table with its score and every probe it misse
 separated from the fitted rules, and `blockHeight` takes it as an argument rather than guessing. A
 plausible guess here is exactly the silent wrong answer the engineering standards forbid. Anchoring
 (3.6) is where it has to be finished.
+
+> **Closed in 3.4, two sub-phases early.** Autofit's fit test is a comparison against this number,
+> so [0030](./0030-autofit.md) had to measure it: `0.75 × advance + b × size`, floored at the advance
+> while the advance is inside `C × size`, with the 0.75 identical across six faces and `b` and `C`
+> properties of the typeface. Arial's `b` is 0.227619, which is the 0.2279 em estimated above. The
+> conclusion that no `TextMetrics` quantity supplies it stands and is now measured at 4096px rather
+> than inferred from quantised readings: Arial and Verdana report `fontBoundingBoxDescent` 0.0026
+> apart while their coefficients differ by 0.0203. `blockHeight` still takes the term as an
+> argument, for the reason given above.
 
 ---
 

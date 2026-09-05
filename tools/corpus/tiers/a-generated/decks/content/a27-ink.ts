@@ -1,8 +1,8 @@
-import { DECLARATION, REL, type ProbePart, type ProbeRel } from '../package.ts';
-import { quadrantPng } from '../png.ts';
-import { picture, shape } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { DECLARATION, REL, type ProbePart, type ProbeRel } from '../../markup/chassis.ts';
+import { quadrantPng } from '../../assets/png.ts';
+import { picture, shape } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Ink: `p:contentPart`, which in the Transitional schema has no children at all.

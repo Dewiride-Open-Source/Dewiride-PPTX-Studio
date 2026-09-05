@@ -6,7 +6,7 @@
  * Writing that inline in six files would be six chances to get the sequence
  * wrong, and the sequence is the part PowerPoint refuses over.
  *
- * So the orders below are copied out of `packages/xml/src/schema-order.gen.ts`,
+ * So the orders below are copied out of `packages/xml/src/edit/schema-order.gen.ts`,
  * which is generated from the ECMA-376 Transitional XSDs, and every builder
  * here emits its children in that order and no other:
  *
@@ -28,7 +28,7 @@
  * the opposite of the containment order everywhere else in DrawingML.
  */
 
-import { escapeAttribute, escapeXml, NS_R } from './package.ts';
+import { escapeAttribute, escapeXml, NS_R } from './chassis.ts';
 
 // ------------------------------------------------------------ run properties
 

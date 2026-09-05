@@ -39,7 +39,7 @@
  * different answer on exactly this case.
  */
 
-import type { NormalPlaceholder, Placeholder, PlaceholderType, Shape, Sheet } from './types.js';
+import type { NormalPlaceholder, Placeholder, PlaceholderType, Shape, Sheet } from '../types.js';
 
 /**
  * The type of a `p:ph` that has none.

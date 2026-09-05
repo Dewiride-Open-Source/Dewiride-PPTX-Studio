@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { builtinGuideNames, builtinGuides } from './builtins.js';
 import { FULL_CIRCLE } from './formula.js';
-import { getPreset, presetNames } from './presets/index.js';
+import { getPreset, presetNames } from '../presets/index.js';
 
 /**
  * The built-in table is derived from the naming rule. This suite checks it

@@ -24,7 +24,7 @@
  * vertical one to **0/255** over 75 samples.
  *
  * The evidence is `corpus/ground-truth/lines.json`; the reasoning is in
- * `docs/adr/0023-lines.md`.
+ * `docs/adr/phase-2-geometry-and-paint/0023-lines.md`.
  */
 
 import { PaintError } from './errors.js';

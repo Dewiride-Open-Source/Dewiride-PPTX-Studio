@@ -1,8 +1,8 @@
-import { relsXml, REL, type ProbePart, type ProbeRel } from '../package.ts';
-import { probeEmf } from '../emf.ts';
-import { graphicFrame, GRAPHIC_URI, picture, shape } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { relsXml, REL, type ProbePart, type ProbeRel } from '../../markup/chassis.ts';
+import { probeEmf } from '../../assets/emf.ts';
+import { graphicFrame, GRAPHIC_URI, picture, shape } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * VML: the 1998 drawing language that is still load-bearing in 2026.

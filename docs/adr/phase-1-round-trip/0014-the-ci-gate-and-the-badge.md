@@ -13,7 +13,7 @@ The plan gives 1.6 one line:
 > **1.6 — CI gate.** Round-trip job on every PR; badge. _Verify:_ badge reads 50/50.
 
 By the time this was reached the round trip was already gated three times over:
-`tools/corpus/roundtrip.test.ts` asserts 51/51 from source, `pnpm test` runs it,
+`tools/corpus/roundtrip/roundtrip.test.ts` asserts 51/51 from source, `pnpm test` runs it,
 and `pnpm check` runs `pnpm test`. So the sub-phase adds no coverage. What it
 adds is a **number in public**, and that turns out to be a different problem
 with its own failure mode: a badge is a claim made to people who will never run
@@ -65,7 +65,7 @@ links `@pptx-studio/*` into `tools/`, so the script loads the writer from
 
 ### Two routes to the same number, on purpose
 
-`pnpm roundtrip` reaches the round trip through `dist`. `tools/corpus/badge.test.ts`
+`pnpm roundtrip` reaches the round trip through `dist`. `tools/corpus/roundtrip/badge.test.ts`
 reaches it through Vitest's alias to **source**, and asserts the committed badge
 against what that produces. A build that does not match the sources it came from
 therefore shows up as two different numbers rather than as one confident wrong

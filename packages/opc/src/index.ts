@@ -34,9 +34,9 @@ export {
   type OpcErrorDetail,
 } from './errors.js';
 
-export { crc32 } from './crc32.js';
+export { crc32 } from './digest/crc32.js';
 
-export { sha256, sha256Hex, sha256HexOfText } from './sha256.js';
+export { sha256, sha256Hex, sha256HexOfText } from './digest/sha256.js';
 
 export { DEFAULT_ZIP_LIMITS, InflationBudget, type ZipLimits } from './limits.js';
 
@@ -47,7 +47,7 @@ export {
   COMPRESSION_DEFLATE,
   type ZipEntry,
   type ReadZipOptions,
-} from './zip-reader.js';
+} from './zip/zip-reader.js';
 
 export {
   MAX_PART_NAME_LENGTH,
@@ -69,7 +69,7 @@ export {
   type PartNameSeverity,
   type PartNameViolation,
   type PartNameCollision,
-} from './pack-uri.js';
+} from './parts/pack-uri.js';
 
 export {
   readFlatXml,
@@ -79,7 +79,7 @@ export {
   DEFAULT_FLAT_XML_LIMITS,
   type FlatElement,
   type FlatXmlLimits,
-} from './flat-xml.js';
+} from './parts/flat-xml.js';
 
 export {
   ContentTypes,
@@ -88,7 +88,7 @@ export {
   type DefaultEntry,
   type OverrideEntry,
   type ResolvedContentType,
-} from './content-types.js';
+} from './parts/content-types.js';
 
 export {
   Relationships,
@@ -98,7 +98,7 @@ export {
   type Relationship,
   type RelationshipOrigin,
   type TargetMode,
-} from './relationships.js';
+} from './parts/relationships.js';
 
 export {
   writeZip,
@@ -108,6 +108,6 @@ export {
   entryOverhead,
   EMPTY_ARCHIVE_SIZE,
   type ZipEntryInput,
-} from './zip-writer.js';
+} from './zip/zip-writer.js';
 
-export { PartStore, type PartInfo, type WritePackageOptions } from './part-store.js';
+export { PartStore, type PartInfo, type WritePackageOptions } from './parts/part-store.js';

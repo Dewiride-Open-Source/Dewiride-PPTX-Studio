@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import { describe, expect, it } from 'vitest';
-import { CENSUS_FEATURE_KEYS } from './census-keys.gen.ts';
-import type { UncoveredFeature } from './schema.ts';
+import { CENSUS_FEATURE_KEYS } from '../census/keys.gen.ts';
+import type { UncoveredFeature } from '../manifest/schema.ts';
 
 /**
  * `C-COV`, as a number rather than as a rule.
@@ -22,7 +23,6 @@ import type { UncoveredFeature } from './schema.ts';
  * without anybody noticing.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const COLLECTIONS = ['decks', 'authored', 'written', 'reject', 'bench', 'ground-truth'];
 
 interface Envelope {

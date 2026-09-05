@@ -11,7 +11,7 @@
  * ## What PowerPoint already told us, in writing
  *
  * Before any of this existed, PowerPoint was asked to *author* strokes and
- * effects through its own object model (`author-lines.ps1`), and reading the
+ * effects through its own object model (`tools/ground-truth/paint/lines/author.ps1`), and reading the
  * files it saved settled several things for free:
  *
  *   - `Line.DashStyle` reaches all eleven `ST_PresetLineDashVal` names. Two of

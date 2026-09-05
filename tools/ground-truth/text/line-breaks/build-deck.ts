@@ -2,7 +2,7 @@
  * Experiment T3, step 2 - write the probe decks.
  *
  * ```
- * node tools/ground-truth/build-break-deck.ts <work-dir>
+ * node tools/ground-truth/text/line-breaks/build-deck.ts <work-dir>
  * ```
  *
  * Reads `break-widths.json` from step 1, sizes every box, and writes seven
@@ -48,7 +48,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { buildSheetPackage, SCHEME_ONE, shape, type SlideSpec } from './sheet-pptx.ts';
+import { buildSheetPackage, SCHEME_ONE, shape, type SlideSpec } from '../../lib/sheet-pptx.ts';
 import {
   FACES,
   PROBE_SIZE,
@@ -60,10 +60,11 @@ import {
   type FaceKey,
   type PrefixWidths,
   type Probe,
-} from './line-break.ts';
+} from './probes.ts';
 
 const outDir = process.argv[2];
-if (outDir === undefined) throw new Error('usage: build-break-deck.ts <out-dir>');
+if (outDir === undefined)
+  throw new Error('usage: tools/ground-truth/text/line-breaks/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 interface Widths {
@@ -190,7 +191,7 @@ function kinsokuXml(k: KinsokuSpec): string {
  *
  * Stated here so the decks that override the built-in list have something real
  * to override it with. Note that this list is *not* the measured one: the sweep
- * in `analyse-breaks.ts` found four characters it gets wrong, which is exactly
+ * in `tools/ground-truth/text/line-breaks/analyse.ts` found four characters it gets wrong, which is exactly
  * why the built-in table is measured rather than copied from here.
  *
  * The ASCII apostrophe and double quote are in PowerPoint's own sets and are

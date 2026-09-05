@@ -1,6 +1,6 @@
-import { scheme, shape, solidFill } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { scheme, shape, solidFill } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * A deck that is not 16:9, and a notes page that is not the slide.

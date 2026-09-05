@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GeometryError } from './errors.js';
+import { GeometryError } from '../errors.js';
 import {
   evaluateGuides,
   nonFiniteGuides,
@@ -7,8 +7,8 @@ import {
   resolvePoint,
   type ShapeSize,
 } from './evaluate.js';
-import { getPreset, presetNames } from './presets/index.js';
-import type { PresetShape } from './types.js';
+import { getPreset, presetNames } from '../presets/index.js';
+import type { PresetShape } from '../types.js';
 
 /**
  * Where the independent checking happens.

@@ -7,8 +7,8 @@
  * refused with `0x80070570`.
  */
 
-import { isUnpairedSurrogate, isXmlChar, isXmlCodePoint } from './chars.js';
-import { XmlError } from './errors.js';
+import { isUnpairedSurrogate, isXmlChar, isXmlCodePoint } from '../parse/chars.js';
+import { XmlError } from '../errors.js';
 
 /** XML 1.0 §4.6. The complete list, because there is no DTD to extend it. */
 const PREDEFINED = new Map<string, string>([

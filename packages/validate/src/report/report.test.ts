@@ -1,11 +1,11 @@
 import { PartStore } from '@pptx-studio/opc';
 import { parseXmlString } from '@pptx-studio/xml';
 import { describe, expect, it } from 'vitest';
-import { isValidateError } from './errors.js';
+import { isValidateError } from '../errors.js';
 import { attributeLocation, elementLocation, lineColumn, xpathOf } from './location.js';
 import { formatReport, isReport } from './report.js';
-import { deck, deckBytes, minimalDeck } from './testing/deck.js';
-import { assertValid, validatePackage } from './validate.js';
+import { deck, deckBytes, minimalDeck } from '../testing/deck.js';
+import { assertValid, validatePackage } from '../validate.js';
 
 const encoder = new TextEncoder();
 

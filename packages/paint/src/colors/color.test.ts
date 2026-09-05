@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import bases from '../../../corpus/ground-truth/color-bases.json' with { type: 'json' };
-import fixture from '../../../corpus/ground-truth/color-transforms.json' with { type: 'json' };
-import { applyTransforms } from './apply.js';
-import { PaintError } from './errors.js';
-import { parseAngle, parsePercentage, parseSrgbValue } from './parse.js';
+import bases from '../../../../corpus/ground-truth/color-bases.json' with { type: 'json' };
+import fixture from '../../../../corpus/ground-truth/color-transforms.json' with { type: 'json' };
+import { applyTransforms } from '../apply.js';
+import { PaintError } from '../errors.js';
+import { parseAngle, parsePercentage, parseSrgbValue } from '../parse.js';
 import { PRESET_COLORS } from './preset-colors.js';
 import { mapSchemeName, resolveColor, toCss, toHexColor, type ColorContext } from './resolve.js';
 import { SYSTEM_COLORS } from './sys-colors.js';
 import { fromLinear, hslToRgb, parseHex, rgbToHsl, toByte, toHex, toLinear } from './transfer.js';
-import type { ClrMap, ClrScheme, Color, ColorTransform, SchemeSlot } from './types.js';
+import type { ClrMap, ClrScheme, Color, ColorTransform, SchemeSlot } from '../types.js';
 
 /**
  * Two fixtures, 473 swatches, one question: does this package paint what

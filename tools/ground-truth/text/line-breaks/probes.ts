@@ -1,8 +1,8 @@
 /**
  * Experiment T3 - where does PowerPoint break a line?
  *
- * The probe table. `build-break-deck.ts` turns it into packages,
- * `read-breaks.ps1` reads what PowerPoint laid out, and `analyse-breaks.ts`
+ * The probe table. `tools/ground-truth/text/line-breaks/build-deck.ts` turns it into packages,
+ * `tools/ground-truth/text/line-breaks/read.ps1` reads what PowerPoint laid out, and `tools/ground-truth/text/line-breaks/analyse.ts`
  * scores the candidate models against the result.
  *
  * ## The method
@@ -36,7 +36,7 @@
  *
  * ## Where the box widths come from
  *
- * `measure-break-widths.ts` measures every prefix of every probe string in
+ * `tools/ground-truth/text/line-breaks/measure-widths.ts` measures every prefix of every probe string in
  * Chromium, and each cut probe's box is placed at the **midpoint** between the
  * prefix of length `i` and the prefix of length `i + 1`. T2 put Chromium and
  * PowerPoint a median of 0.15% apart (p95 0.70%), and half a character advance

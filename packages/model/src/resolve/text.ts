@@ -46,18 +46,23 @@
  * that is only struck through.
  */
 
-import { ModelError } from './errors.js';
+import { ModelError } from '../errors.js';
 import { inheritanceChain, normalizePlaceholder } from './placeholder.js';
-import { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from './builtin-text-styles.js';
+import { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from '../builtin-text-styles.js';
 import {
+  type BulletAutoNum,
+  type BulletColor,
+  type BulletFont,
+  type BulletKind,
+  type BulletSize,
   LEVELS,
   type ListStyle,
   type Paragraph,
   type ParaProps,
   type RunProps,
   type TextContent,
-} from './text.js';
-import type { Origin, Resolved, Shape, Sheet } from './types.js';
+} from '../text.js';
+import type { Origin, Resolved, Shape, Sheet } from '../types.js';
 
 /* -------------------------------------------------------------------------- */
 /* the bucket                                                                 */
@@ -322,6 +327,90 @@ export function resolveIndent(context: TextContext, paragraph: Paragraph): Resol
   const found = resolveParagraph(context, paragraph, (props) => props.indent);
   if (found !== undefined) return found;
   return floorResolved(context, paragraph, (level) => level.indent);
+}
+
+/* -------------------------------------------------------------------------- */
+/* bullets                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The bullet, merged the way T5 measured it: five slots, each on its own.
+ *
+ * The kind is one slot because the schema makes the four elements exclusive, and
+ * the three decorations are three more because PowerPoint merges them
+ * separately - a level declaring only `a:buFont` re-faces the character it
+ * inherits and keeps its size and colour. Measured on eleven cases twice over,
+ * once through a shape's own `a:lstStyle` and once through three hops of the
+ * master chain, and the two agree.
+ *
+ * Every one of these returns `undefined` when nothing in the chain declares the
+ * slot, which for the kind is the difference between "no bullet" and "nobody
+ * said" - `a:buNone` resolves to `'none'` and an empty chain to `undefined`.
+ * Nothing here supplies a default, because a paragraph with no bullet anywhere
+ * in its chain genuinely has none.
+ */
+export function resolveBulletKind(
+  context: TextContext,
+  paragraph: Paragraph,
+): Resolved<BulletKind> | undefined {
+  return resolveParagraph(context, paragraph, (props) => props.buKind);
+}
+
+/** `a:buChar/@char`, as written. The symbol mapping belongs to the renderer. */
+export function resolveBulletChar(
+  context: TextContext,
+  paragraph: Paragraph,
+): Resolved<string> | undefined {
+  return resolveParagraph(context, paragraph, (props) => props.buChar);
+}
+
+/** `a:buAutoNum`, type and start value together, since one is meaningless alone. */
+export function resolveBulletAutoNum(
+  context: TextContext,
+  paragraph: Paragraph,
+): Resolved<BulletAutoNum> | undefined {
+  return resolveParagraph(context, paragraph, (props) => props.buAutoNum);
+}
+
+/** `a:buBlip/a:blip/@r:embed`, which the caller resolves against the part's rels. */
+export function resolveBulletBlip(
+  context: TextContext,
+  paragraph: Paragraph,
+): Resolved<string> | undefined {
+  return resolveParagraph(context, paragraph, (props) => props.buBlip);
+}
+
+/**
+ * `a:buFont` or `a:buFontTx`.
+ *
+ * Worth knowing before using it: this is **inert for an autonumber**. PowerPoint
+ * draws a number in the first run's face whatever `a:buFont` says - measured on
+ * twenty probes, including one where `buFont` named Wingdings and the run named
+ * Courier New - and its own UI writes `buFont="+mj-lt"` on every list it
+ * numbers. The resolver still reports it, because the file says it and 1.3 has
+ * to write it back; the renderer is where it is ignored.
+ */
+export function resolveBulletFont(
+  context: TextContext,
+  paragraph: Paragraph,
+): Resolved<BulletFont> | undefined {
+  return resolveParagraph(context, paragraph, (props) => props.buFont);
+}
+
+/** `a:buSzPct`, `a:buSzPts` or `a:buSzTx`; a percentage is of the first run's size. */
+export function resolveBulletSize(
+  context: TextContext,
+  paragraph: Paragraph,
+): Resolved<BulletSize> | undefined {
+  return resolveParagraph(context, paragraph, (props) => props.buSize);
+}
+
+/** `a:buClr` or `a:buClrTx`. Unlike the font, this one *does* reach an autonumber. */
+export function resolveBulletColor(
+  context: TextContext,
+  paragraph: Paragraph,
+): Resolved<BulletColor> | undefined {
+  return resolveParagraph(context, paragraph, (props) => props.buColor);
 }
 
 function floorResolved(

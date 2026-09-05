@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { crc32 } from './crc32.js';
-import { isOpcError } from './errors.js';
+import { crc32 } from '../digest/crc32.js';
+import { isOpcError } from '../errors.js';
 import { readZip } from './zip-reader.js';
 import { deflatedEntry, passthroughEntry, storedEntry, writeZip } from './zip-writer.js';
 

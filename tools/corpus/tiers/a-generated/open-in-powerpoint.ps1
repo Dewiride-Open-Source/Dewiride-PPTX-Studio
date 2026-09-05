@@ -1,6 +1,6 @@
 # Open every .pptx in a directory with PowerPoint and report what it found.
 #
-#   powershell -File tools/corpus/gen/open-in-powerpoint.ps1 -Dir <dir>
+#   powershell -File tools/corpus/tiers/a-generated/open-in-powerpoint.ps1 -Dir <dir>
 #
 # The gate a corpus deck has to pass is "opens in real PowerPoint with no repair
 # prompt", and no amount of schema conformance substitutes for it: PowerPoint

@@ -1,5 +1,5 @@
-import { FULL_CIRCLE, angleToRadians } from './formula.js';
-import type { Point } from './types.js';
+import { FULL_CIRCLE, angleToRadians } from '../formula/formula.js';
+import type { Point } from '../types.js';
 
 /**
  * `a:arcTo`, the one drawing command that is not what it looks like.

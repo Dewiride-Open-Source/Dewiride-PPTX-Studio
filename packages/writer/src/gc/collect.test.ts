@@ -1,8 +1,8 @@
 import { CONTENT_TYPE, isOpcError, PartStore, REL_TYPE } from '@pptx-studio/opc';
 import { describe, expect, it } from 'vitest';
 import { collectGarbage, isMediaPart, planCollection } from './collect.js';
-import { isWriterError } from './errors.js';
-import { fixture, fixtureBytes, MAIN_PART } from './testing/package.js';
+import { isWriterError } from '../errors.js';
+import { fixture, fixtureBytes, MAIN_PART } from '../testing/package.js';
 
 /** Drop the one relationship from `/doc.xml` to `target`. */
 function unlink(store: PartStore, target: string): void {

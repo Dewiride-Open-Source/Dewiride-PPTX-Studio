@@ -5,10 +5,10 @@ import {
   CT_CHART_STYLE,
   REL_CHART_COLORS,
   REL_CHART_STYLE,
-} from '../chart-style.ts';
-import { DECLARATION, NS_A, NS_R, relsXml, REL, type ProbePart } from '../package.ts';
-import { graphicFrame, GRAPHIC_URI } from '../shapes.ts';
-import type { ProbeDeck } from '../types.ts';
+} from '../../markup/chart-style.ts';
+import { DECLARATION, NS_A, NS_R, relsXml, REL, type ProbePart } from '../../markup/chassis.ts';
+import { graphicFrame, GRAPHIC_URI } from '../../markup/shapes.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Charts: four of them, and not one embedded workbook between them.
@@ -45,7 +45,7 @@ import type { ProbeDeck } from '../types.ts';
  * `c:ser/c:spPr` and falls back to a palette of its own gets every chart wrong
  * while looking correct on the one chart it was tested against.
  *
- * Chart 1 carries both parts, from `tools/corpus/gen/chart-style.ts`. Charts 2,
+ * Chart 1 carries both parts, from `tools/corpus/tiers/a-generated/markup/chart-style.ts`. Charts 2,
  * 3 and 4 carry neither, which is just as real a case - it is what every
  * pre-2011 producer emits - so the two configurations cover both branches.
  *

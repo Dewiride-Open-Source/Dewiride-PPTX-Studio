@@ -8,7 +8,7 @@
  * hypothetical concern - `fflate`'s inflate throws a bare
  * `RangeError: offset is out of bounds` when a DEFLATE stored block overruns a
  * caller-supplied output buffer, which is precisely the situation a malicious
- * archive engineers. See `docs/adr/0002-zip-reader.md`.
+ * archive engineers. See `docs/adr/phase-0-foundation/0002-zip-reader.md`.
  *
  * Untrusted input arrives here first, so the error surface is a security
  * boundary rather than developer ergonomics.

@@ -1,6 +1,6 @@
-import type { ProbeSlide } from '../package.ts';
-import { grid, line, prstGeom, scheme, shape, solidFill } from '../shapes.ts';
-import type { ProbeDeck } from '../types.ts';
+import type { ProbeSlide } from '../../markup/chassis.ts';
+import { grid, line, prstGeom, scheme, shape, solidFill } from '../../markup/shapes.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * `a:custGeom`, and preset geometry with its adjust values moved off default.

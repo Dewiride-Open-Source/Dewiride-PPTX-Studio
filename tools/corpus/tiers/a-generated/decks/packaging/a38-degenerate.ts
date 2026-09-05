@@ -1,6 +1,6 @@
-import { grid, group, prstGeom, scheme, shape, solidFill, type Cell } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { grid, group, prstGeom, scheme, shape, solidFill, type Cell } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * The empty cases: zero extents, a zero child space, an empty group and an

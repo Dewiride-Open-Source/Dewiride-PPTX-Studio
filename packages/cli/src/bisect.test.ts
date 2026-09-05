@@ -18,7 +18,7 @@ import { main, type Streams } from './main.js';
  * `pptx-studio bisect`, run in-process.
  *
  * The search is `@pptx-studio/writer`'s and is tested there and in
- * `tools/corpus/bisect.test.ts`. What is left for this file is the part only the
+ * `tools/corpus/roundtrip/bisect.test.ts`. What is left for this file is the part only the
  * command line owns: which files make it exit non-zero, how an oracle's exit
  * code becomes a verdict, and whether what it prints is any use.
  *

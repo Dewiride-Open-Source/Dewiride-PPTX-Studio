@@ -330,5 +330,5 @@ is a shape. That is why all 34 numbers in the dash table came out within 0.02 of
 `line.test.ts` re-derives all three shipped tables from those crossings, so a measured constant
 cannot quietly become somebody's memory of one.
 
-See `docs/adr/0007-ground-truth.md`, `docs/adr/0021-colour.md`,
-`docs/adr/0022-fills.md` and `docs/adr/0023-lines.md`.
+See `docs/adr/phase-0-foundation/0007-ground-truth.md`, `docs/adr/phase-2-geometry-and-paint/0021-colour.md`,
+`docs/adr/phase-2-geometry-and-paint/0022-fills.md` and `docs/adr/phase-2-geometry-and-paint/0023-lines.md`.

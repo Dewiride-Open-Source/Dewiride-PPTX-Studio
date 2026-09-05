@@ -2,7 +2,7 @@
  * Experiment C3, step 3 - read the bitmaps and say what PowerPoint did.
  *
  * ```
- * node tools/ground-truth/analyse-fills.ts <work-dir> [--fixture corpus/ground-truth/fills.json]
+ * node tools/ground-truth/paint/fills/analyse.ts <work-dir> [--fixture corpus/ground-truth/fills.json]
  * ```
  *
  * Each section states its hypothesis before it prints its evidence, so a reader
@@ -13,14 +13,15 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { hex, readBmp, type Bitmap } from './bmp.ts';
+import { hex, readBmp, type Bitmap } from '../../lib/bmp.ts';
 
 /* -------------------------------------------------------------------------- */
 /* inputs                                                                     */
 /* -------------------------------------------------------------------------- */
 
 const arg = process.argv[2];
-if (arg === undefined) throw new Error('usage: analyse-fills.ts <work-dir> [--fixture <path>]');
+if (arg === undefined)
+  throw new Error('usage: tools/ground-truth/paint/fills/analyse.ts <work-dir> [--fixture <path>]');
 // Narrowed once, here: `bitmap` below is a hoisted function declaration and does
 // not see the narrowing of a module-level `const` that a throw established.
 const dir: string = arg;
@@ -653,7 +654,7 @@ console.log(`   tiles containing an antialiased pixel: ${String(impure.length)}`
 if (fixturePath !== null && fixturePath !== undefined) {
   const fixture = {
     experiment: 'C3 - gradients and pattern fills',
-    generator: 'tools/ground-truth/analyse-fills.ts',
+    generator: 'tools/ground-truth/paint/fills/analyse.ts',
     powerPoint: 'Microsoft PowerPoint 365, build 16.0.20326, Windows 11',
     slideSize: inputs.slideSize,
     exportWidth: 1920,

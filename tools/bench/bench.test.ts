@@ -2,14 +2,15 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { inflateSync } from 'node:zlib';
+
+import { REPO_ROOT as ROOT } from '../repo/root.ts';
 import { censusPackage, FEATURE_RULES, PART_FEATURE_RULES } from '@pptx-studio/census';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { RECIPES, writeDeck, type DeckRecipe, type DeckSummary } from './deck.ts';
 import { mulberry32, noisePng, sizeForBytes } from './png.ts';
 import { ZipStream } from './zip-stream.ts';
-import { readZip } from '../ground-truth/zip.ts';
+import { readZip } from '../ground-truth/lib/zip.ts';
 
 /**
  * The benchmark deck generator, checked against the census.
@@ -24,7 +25,6 @@ import { readZip } from '../ground-truth/zip.ts';
  * browser; a test suite is the wrong place for either.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const PROBE_FONT = resolve(ROOT, 'corpus/ground-truth/fonts/probe-v2_2.eot');
 
 let directory: string;

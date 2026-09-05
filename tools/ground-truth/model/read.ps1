@@ -1,6 +1,6 @@
 # Experiment C5, step 2 - ask PowerPoint what it resolved.
 #
-#   powershell -File tools/ground-truth/read-sheets.ps1 -Dir <work-dir>
+#   powershell -File tools/ground-truth/model/read.ps1 -Dir <work-dir>
 #
 # Reads `sheet-inputs.json`, opens each probe deck, and for every shape on every
 # slide records the position, size and resolved colours the object model reports.
@@ -49,7 +49,7 @@ $ppShapeFormatBMP = 3
 $root = (Resolve-Path -LiteralPath $Dir).Path
 $inputsPath = Join-Path $root 'sheet-inputs.json'
 if (-not (Test-Path -LiteralPath $inputsPath)) {
-    throw "no sheet-inputs.json in $root - run build-sheet-deck.ts first"
+    throw "no sheet-inputs.json in $root - run tools/ground-truth/model/build-deck.ts first"
 }
 
 $text = Get-Content -LiteralPath $inputsPath -Raw

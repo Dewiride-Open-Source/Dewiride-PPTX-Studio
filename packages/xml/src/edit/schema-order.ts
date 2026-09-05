@@ -51,7 +51,7 @@
  */
 
 import { CONTEXT_DATA, NAMESPACES, ORDER_DATA, SCHEMA_SOURCES } from './schema-order.gen.js';
-import { namespaceOf, type XElement } from './xnode.js';
+import { namespaceOf, type XElement } from '../parse/xnode.js';
 
 export { SCHEMA_SOURCES };
 

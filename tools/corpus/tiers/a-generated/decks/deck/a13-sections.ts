@@ -1,6 +1,6 @@
-import { grid, shape } from '../shapes.ts';
-import { txBody, textLine } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { grid, shape } from '../../markup/shapes.ts';
+import { txBody, textLine } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Sections and custom shows: two ways of grouping slides, neither of which is

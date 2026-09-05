@@ -1,5 +1,5 @@
 import type { PartStore } from '@pptx-studio/opc';
-import { WriterError } from './errors.js';
+import { WriterError } from '../errors.js';
 
 /**
  * Work that has to happen at save time, contributed by whoever owns it.

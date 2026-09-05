@@ -7,8 +7,8 @@ import {
   type XDocument,
   type XElement,
 } from '@pptx-studio/xml';
-import type { Context } from './context.js';
-import { elementLocation, partLocation, xpathOf } from './location.js';
+import type { Context } from '../context.js';
+import { elementLocation, partLocation, xpathOf } from '../report/location.js';
 
 /**
  * `V027` … `V029`: what has to come back out unchanged.

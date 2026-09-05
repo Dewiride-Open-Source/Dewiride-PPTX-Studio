@@ -1,4 +1,4 @@
-import { OpcError } from './errors.js';
+import { OpcError } from '../errors.js';
 
 /**
  * OPC part names - the grammar from ECMA-376 Part 2 / ISO 29500-2 §9.1.1.

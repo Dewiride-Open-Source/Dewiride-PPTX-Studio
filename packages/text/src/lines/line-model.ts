@@ -14,10 +14,10 @@
  *
  * The fixture is `corpus/ground-truth/text-metrics.json`; the reasoning, the
  * refuted alternatives and the one thing still open are in
- * `docs/adr/0028-measurement-and-the-line-model.md`.
+ * `docs/adr/phase-3-text/0028-measurement-and-the-line-model.md`.
  */
 
-import { TextError } from './errors.js';
+import { TextError } from '../errors.js';
 
 /**
  * `a:lnSpc`, as the file states it.
@@ -141,14 +141,23 @@ export function lineTop(index: number, advance: number): number {
  * The height of a block of `lineCount` lines, in points.
  *
  * `(n - 1) * advance + lastLineHeight`, scored 463/463. Every line box except
- * the last measures exactly the advance; the last one does not, and what it
- * does measure needs a per-face term no browser reports - see
- * `corpus/ground-truth/text-metrics.json` under `lastLine`, and sub-phase 3.6.
- * The caller supplies it rather than this function guessing, because a plausible
- * guess here is exactly the silent wrong answer the repository forbids.
+ * the last measures exactly the advance; the last one does not.
+ *
+ * `lastLineHeight(advance, effectiveSize, metrics)` in `autofit.ts` computes the
+ * term. It stays a parameter because this module is arithmetic over what a file
+ * states and knows nothing about typefaces, and that term does.
+ *
+ * `a:bodyPr/@spcFirstLastPara` replaces it with a full advance - 60 of 60 in T6,
+ * across five line spacings.
  */
-export function blockHeight(lineCount: number, advance: number, lastLineHeight: number): number {
+export function blockHeight(
+  lineCount: number,
+  advance: number,
+  lastLineHeight: number,
+  spcFirstLastPara = false,
+): number {
   checkCount(lineCount, 'line count');
   if (lineCount === 0) return 0;
+  if (spcFirstLastPara) return lineCount * advance;
   return (lineCount - 1) * advance + lastLineHeight;
 }

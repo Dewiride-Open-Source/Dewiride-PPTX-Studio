@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isXmlError } from './errors.js';
+import { isXmlError } from '../errors.js';
 import {
   boundNamespaces,
   checkMarkupCompatibility,
@@ -12,9 +12,9 @@ import {
   selectAlternateContent,
 } from './mce.js';
 import { NS } from './namespaces.js';
-import { qualifiedKey } from './schema-order.js';
-import { descendantElements, firstChild, parseXmlString } from './xnode.js';
-import type { XElement } from './xnode.js';
+import { qualifiedKey } from '../edit/schema-order.js';
+import { descendantElements, firstChild, parseXmlString } from '../parse/xnode.js';
+import type { XElement } from '../parse/xnode.js';
 
 const P = 'http://schemas.openxmlformats.org/presentationml/2006/main';
 const A14 = 'http://schemas.microsoft.com/office/drawing/2010/main';

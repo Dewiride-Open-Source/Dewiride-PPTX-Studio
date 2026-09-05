@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { canonicalXml, excerpt, firstDifference } from './canonical.js';
-import { NS } from './namespaces.js';
-import { parseXmlString } from './xnode.js';
+import { NS } from '../mce/namespaces.js';
+import { parseXmlString } from '../parse/xnode.js';
 
 /**
  * The two halves of a normal form, and both have to be tested.

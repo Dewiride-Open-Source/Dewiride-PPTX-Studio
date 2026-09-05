@@ -1,6 +1,6 @@
-import { grid, scheme, shape, solidFill, srgb } from '../shapes.ts';
-import { bodyPr, normAutofit, para, run, spcPts, textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { grid, scheme, shape, solidFill, srgb } from '../../markup/shapes.ts';
+import { bodyPr, normAutofit, para, run, spcPts, textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Autofit, overflow, and the two things that decide a box's height when it

@@ -1,6 +1,6 @@
-import { graphicFrame, GRAPHIC_URI, scheme, solidFill, srgb } from '../shapes.ts';
-import { aTxBody, textLine } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { graphicFrame, GRAPHIC_URI, scheme, solidFill, srgb } from '../../markup/shapes.ts';
+import { aTxBody, textLine } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Tables: the occupancy grid, `a:tcPr`, and both sources of a table style.

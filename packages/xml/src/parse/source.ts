@@ -14,10 +14,10 @@
  *
  * The consequence is the central design decision of this package: **the
  * tokenizer works in string space, and a span is a pair of UTF-16 code-unit
- * indices into the decoded source.** See `docs/adr/0004-the-xml-layer.md`.
+ * indices into the decoded source.** See `docs/adr/phase-0-foundation/0004-the-xml-layer.md`.
  */
 
-import { XmlError } from './errors.js';
+import { XmlError } from '../errors.js';
 
 /** Encodings this package can decode losslessly. */
 export type XmlEncoding = 'utf-8';

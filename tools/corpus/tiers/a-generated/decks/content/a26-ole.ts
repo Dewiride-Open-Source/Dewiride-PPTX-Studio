@@ -1,9 +1,9 @@
-import { relsXml, REL, type ProbePart, type ProbeRel } from '../package.ts';
-import { probeEmf } from '../emf.ts';
-import { graphicFrame, GRAPHIC_URI, picture, shape } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import { probeXlsx } from '../xlsx.ts';
-import type { ProbeDeck } from '../types.ts';
+import { relsXml, REL, type ProbePart, type ProbeRel } from '../../markup/chassis.ts';
+import { probeEmf } from '../../assets/emf.ts';
+import { graphicFrame, GRAPHIC_URI, picture, shape } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import { probeXlsx } from '../../binary/xlsx.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * OLE objects, in the shape experiment E6 measured rather than the one the
@@ -55,7 +55,7 @@ import type { ProbeDeck } from '../types.ts';
  * `ppt/embeddings/…xlsx` through a `…/relationships/package` relationship, with
  * a `Default Extension="xlsx"`. That is what made this deck writable at all:
  * an OPC package is something this repository can author byte for byte, and a
- * CFB compound file is not. `tools/corpus/gen/xlsx.ts` writes it - five parts,
+ * CFB compound file is not. `tools/corpus/tiers/a-generated/binary/xlsx.ts` writes it - five parts,
  * inline strings, no shared string table.
  *
  * The must-not-break rule stands unchanged and is about the other direction:

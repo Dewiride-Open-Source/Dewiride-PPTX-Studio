@@ -2,7 +2,7 @@
  * Experiment T2, step 1 - write the probe decks.
  *
  * ```
- * node tools/ground-truth/build-metrics-deck.ts <out-dir>
+ * node tools/ground-truth/text/metrics/build-deck.ts <out-dir>
  * ```
  *
  * One shape per probe, named with the probe id so the COM reader can match by
@@ -25,7 +25,7 @@ import {
   SCHEME_ONE,
   shape,
   type SlideSpec,
-} from './sheet-pptx.ts';
+} from '../../lib/sheet-pptx.ts';
 import {
   ABSENT_FONT,
   FONTS,
@@ -34,10 +34,11 @@ import {
   STRINGS,
   type LnSpc,
   type Probe,
-} from './text-metrics.ts';
+} from './probes.ts';
 
 const outDir = process.argv[2];
-if (outDir === undefined) throw new Error('usage: build-metrics-deck.ts <out-dir>');
+if (outDir === undefined)
+  throw new Error('usage: tools/ground-truth/text/metrics/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 function escapeXml(text: string): string {

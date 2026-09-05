@@ -67,7 +67,7 @@ export {
   type RuleCategory,
   type RuleId,
   type Severity,
-} from './rules.js';
+} from './rules/rules.js';
 
 export {
   buildReport,
@@ -80,7 +80,7 @@ export {
   type ReadProblem,
   type Report,
   type SkippedRule,
-} from './report.js';
+} from './report/report.js';
 
 export {
   attributeLocation,
@@ -93,7 +93,7 @@ export {
   xpathOf,
   xpathOfAttribute,
   type Location,
-} from './location.js';
+} from './report/location.js';
 
 export { createContext, type Context, type ContextInput } from './context.js';
 

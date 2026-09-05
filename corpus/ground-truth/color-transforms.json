@@ -1,8 +1,8 @@
 {
-  "$comment": "Ground truth for DrawingML colour transforms, measured in Microsoft PowerPoint. See docs/adr/0007-ground-truth.md. `expected` is the RGB PowerPoint painted, sampled from its own bitmap export at the centre of each swatch.",
+  "$comment": "Ground truth for DrawingML colour transforms, measured in Microsoft PowerPoint. See docs/adr/phase-0-foundation/0007-ground-truth.md. `expected` is the RGB PowerPoint painted, sampled from its own bitmap export at the centre of each swatch.",
   "source": {
     "application": "Microsoft PowerPoint",
-    "generatedBy": "tools/ground-truth/build-swatch-deck.ts + analyse-swatches.ts"
+    "generatedBy": "tools/ground-truth/paint/colour/transforms/build-deck.ts + tools/ground-truth/paint/colour/transforms/analyse.ts"
   },
   "clrScheme": {
     "dk1": "000000",

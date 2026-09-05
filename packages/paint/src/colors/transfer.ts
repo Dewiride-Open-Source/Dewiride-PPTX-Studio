@@ -7,7 +7,7 @@
  * disagree, and they disagree by up to 73 units out of 255 on colours that
  * appear in every corporate template. Sub-phase 0.7-C put 214 swatches in front
  * of Microsoft PowerPoint and read back what it painted. See
- * `docs/adr/0007-ground-truth.md` and `corpus/ground-truth/color-transforms.json`.
+ * `docs/adr/phase-0-foundation/0007-ground-truth.md` and `corpus/ground-truth/color-transforms.json`.
  *
  * The three spaces, and which transforms live in each:
  *

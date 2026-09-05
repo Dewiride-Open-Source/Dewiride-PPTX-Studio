@@ -31,7 +31,7 @@ import {
   type Rect,
   type SheetPackage,
   type SlideSpec,
-} from './sheet-pptx.ts';
+} from '../lib/sheet-pptx.ts';
 
 /* -------------------------------------------------------------------------- */
 /* the grid                                                                   */

@@ -1,6 +1,6 @@
 # Experiment C3, step 0 - ask PowerPoint to AUTHOR fills, then read what it wrote.
 #
-#   powershell -File tools/ground-truth/author-fills.ps1 -Dir <out-dir>
+#   powershell -File tools/ground-truth/paint/fills/author.ps1 -Dir <out-dir>
 #
 # Writes three .pptx files and author-log.json. Unzip ppt/slides/slide1.xml from
 # each and read the markup PowerPoint chose.

@@ -22,8 +22,8 @@ import fixture from '../../../corpus/ground-truth/text-cascade.json' with { type
 
 import { BUILTIN_TEXT_STYLES, TEXT_FLOOR } from './builtin-text-styles.js';
 import { ModelError } from './errors.js';
-import { parseSheet, parseTheme } from './parse-sheet.js';
-import { parseListStyle } from './parse-text.js';
+import { parseSheet, parseTheme } from './parse/sheet.js';
+import { parseListStyle } from './parse/text.js';
 import {
   bucketOf,
   floorOf,
@@ -34,7 +34,7 @@ import {
   resolveSize,
   textLevels,
   type TextContext,
-} from './resolve-text.js';
+} from './resolve/text.js';
 import { themeFontRef } from './text.js';
 import type { Paragraph, Sheet, TextContent } from './index.js';
 

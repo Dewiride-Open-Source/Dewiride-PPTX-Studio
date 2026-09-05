@@ -17,9 +17,9 @@
 
 import type { ClrMap, ClrScheme, ColorContext, Rgba } from '@pptx-studio/paint';
 
-import { ModelError } from './errors.js';
+import { ModelError } from '../errors.js';
 import { inheritanceChain } from './placeholder.js';
-import type { Resolved, Shape, Sheet, Theme, Xfrm } from './types.js';
+import type { Resolved, Shape, Sheet, Theme, Xfrm } from '../types.js';
 
 /**
  * The first level of the chain that declared something.

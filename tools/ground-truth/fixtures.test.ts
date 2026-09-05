@@ -14,15 +14,29 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+
+import { REPO_ROOT } from '../repo/root.ts';
 import { describe, expect, it } from 'vitest';
 
-import { buildProbeFont } from './build-font.ts';
-import { BLEND_MODELS, HSL_MODELS, parseHex, type Channel, type HslOp } from './color-models.ts';
-import { eotFontData, flagNames, readEot, writeEot, EOT_FLAG, EOT_VERSION_2_2 } from './eot.ts';
-import { NAME_ID, readNames, readOs2, readSfnt } from './sfnt.ts';
+import { buildProbeFont } from './fonts/embedding/build-font.ts';
+import {
+  BLEND_MODELS,
+  HSL_MODELS,
+  parseHex,
+  type Channel,
+  type HslOp,
+} from './paint/colour/transforms/models.ts';
+import {
+  eotFontData,
+  flagNames,
+  readEot,
+  writeEot,
+  EOT_FLAG,
+  EOT_VERSION_2_2,
+} from './fonts/format/eot.ts';
+import { NAME_ID, readNames, readOs2, readSfnt } from './fonts/format/sfnt.ts';
 
-const root = fileURLToPath(new URL('../..', import.meta.url));
+const root = REPO_ROOT;
 const corpus = join(root, 'corpus', 'ground-truth');
 
 const read = (...parts: string[]): Uint8Array =>
@@ -50,7 +64,7 @@ interface ColorFixture {
 /**
  * PowerPoint takes the lower value when a channel lands exactly on x.5.
  * Measured: half-down fits 171 of 171, `Math.round` fits 168. See
- * docs/adr/0007-ground-truth.md §C.
+ * docs/adr/phase-0-foundation/0007-ground-truth.md §C.
  */
 const toByte = (c: Channel): number =>
   Math.max(0, Math.min(255, Math.ceil(Math.max(0, Math.min(1, c)) * 255 - 0.5)));

@@ -2,7 +2,7 @@
  * Experiment B, step 2 - is the probe font valid, independently of PowerPoint?
  *
  * ```
- * node tools/ground-truth/verify-font-in-browser.ts <dir-with-probe.ttf>
+ * node tools/ground-truth/fonts/embedding/verify-in-browser.ts <dir-with-probe.ttf>
  * ```
  *
  * Experiment B has two variables in it: a font we built and an EOT wrapper we
@@ -59,7 +59,8 @@ interface BrowserFontFace {
 }
 
 const dir = process.argv[2];
-if (dir === undefined) throw new Error('usage: verify-font-in-browser.ts <dir>');
+if (dir === undefined)
+  throw new Error('usage: tools/ground-truth/fonts/embedding/verify-in-browser.ts <dir>');
 
 const bytes = [...new Uint8Array(readFileSync(join(dir, 'probe.ttf')))];
 const SAMPLE = 'ABCDEFGH';

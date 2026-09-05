@@ -45,7 +45,7 @@ exports map. The core test suite runs in real Chromium precisely so that a leak 
 of passing under jsdom and breaking for a user.
 
 **2. Dependencies run one way only.** The layer table is
-[`tools/layering/layers.ts`](./tools/layering/layers.ts) and `pnpm layering` enforces it. If your
+[`tools/repo/layering/layers.ts`](./tools/repo/layering/layers.ts) and `pnpm layering` enforces it. If your
 change needs an upward edge, the design is wrong somewhere — open an issue rather than moving a
 package in the table quietly.
 

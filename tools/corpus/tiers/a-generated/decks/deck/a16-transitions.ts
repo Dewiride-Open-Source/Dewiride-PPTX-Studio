@@ -1,7 +1,7 @@
-import { placeholderXml, TITLE_BOX, type ProbeLayout } from '../package.ts';
-import { grid, shape } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { placeholderXml, TITLE_BOX, type ProbeLayout } from '../../markup/chassis.ts';
+import { grid, shape } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Every `p:transition` variant ECMA-376 defines, on the three sheets that may
@@ -11,7 +11,7 @@ import type { ProbeDeck } from '../types.ts';
  *
  * `sub-phase 1.1`'s roster said twenty-two variants. `CT_SlideTransition`'s
  * choice group holds twenty-one child elements and the table says so, both in
- * `packages/xml/src/schema-order.gen.ts` - generated from the Transitional XSDs
+ * `packages/xml/src/edit/schema-order.gen.ts` - generated from the Transitional XSDs
  * - and in ISO/IEC 29500-1's own list: blinds, checker, circle, comb, cover,
  * cut, diamond, dissolve, fade, newsflash, plus, pull, push, random, randomBar,
  * split, strips, wedge, wheel, wipe, zoom. The other two children of the

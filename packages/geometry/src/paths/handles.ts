@@ -3,9 +3,9 @@ import {
   resolveOperand,
   type EvaluateOptions,
   type ShapeSize,
-} from './evaluate.js';
-import { FULL_CIRCLE, type FormulaSite } from './formula.js';
-import type { Geometry, Point, PresetAdjustHandle, PresetGuide } from './types.js';
+} from '../formula/evaluate.js';
+import { FULL_CIRCLE, type FormulaSite } from '../formula/formula.js';
+import type { Geometry, Point, PresetAdjustHandle, PresetGuide } from '../types.js';
 
 /**
  * The yellow handles, and what happens when one is dragged.

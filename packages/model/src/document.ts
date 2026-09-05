@@ -34,8 +34,8 @@ import { REL_TYPE, type PartStore } from '@pptx-studio/opc';
 import { parseXml, type XElement } from '@pptx-studio/xml';
 
 import { ModelError } from './errors.js';
-import { parseSheet, parseTheme } from './parse-sheet.js';
-import { parseDefaultTextStyle } from './parse-text.js';
+import { parseSheet, parseTheme } from './parse/sheet.js';
+import { parseDefaultTextStyle } from './parse/text.js';
 import type { ListStyle } from './text.js';
 import type { Sheet, Theme } from './types.js';
 

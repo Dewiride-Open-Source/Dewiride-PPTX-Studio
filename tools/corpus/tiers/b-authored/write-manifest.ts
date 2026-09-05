@@ -2,7 +2,7 @@
 /**
  * Write `corpus/authored/manifest.json` from the committed Tier B bytes.
  *
- *   node tools/corpus/authored/write-manifest.ts
+ *   node tools/corpus/tiers/b-authored/write-manifest.ts
  *   npx prettier --write corpus/authored/manifest.json
  *
  * The Prettier line is not optional, for the same reason it is not optional for
@@ -23,11 +23,12 @@
 
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { repoPath } from '../../../repo/root.ts';
 import { AUTHORED_DECKS } from './decks.ts';
 
-const CORPUS = resolve(fileURLToPath(import.meta.url), '../../../../corpus/authored');
+const CORPUS = repoPath('corpus/authored');
 
 /**
  * The machine and build every one of these came off. Recorded per manifest
@@ -70,7 +71,7 @@ const entries = AUTHORED_DECKS.map((deck) => {
     features: deck.features,
     description: deck.description,
     sourceNote:
-      'Authored by tools/corpus/authored/build-tier-b.ps1 against the producer above. No recipe: ' +
+      'Authored by tools/corpus/tiers/b-authored/build-tier-b.ps1 against the producer above. No recipe: ' +
       'PowerPoint stamps dcterms:created into docProps/core.xml on every save, so re-running the ' +
       'script produces different bytes within the same second, and the monthly build changes the ' +
       'markup underneath. Personal information was removed at author time with ' +
@@ -85,13 +86,13 @@ const manifest = {
   $comment:
     'Tier B of the sub-phase 1.1 corpus: decks Microsoft PowerPoint wrote, committed as bytes and ' +
     'NOT reproducible. The authoring is auditable instead of the output being reproducible - ' +
-    'tools/corpus/authored/build-tier-b.ps1 is the provenance, line by line. This collection is ' +
+    'tools/corpus/tiers/b-authored/build-tier-b.ps1 is the provenance, line by line. This collection is ' +
     'separate from corpus/decks because build-probes.ts --manifest rewrites that one in full.',
   manifestVersion: 1,
   collection: 'authored',
   generatedIn: '1.1',
-  adr: 'docs/adr/0009-the-corpus.md',
-  generator: 'tools/corpus/authored/write-manifest.ts',
+  adr: 'docs/adr/phase-1-round-trip/0009-the-corpus.md',
+  generator: 'tools/corpus/tiers/b-authored/write-manifest.ts',
   // C018. Both layers are PowerPoint here, and the string must match the one
   // corpus/written declares for its XML: Tier C's parts are these parts, so
   // C-LEX has to count them once.

@@ -5,7 +5,7 @@ type 2.9 declared in advance, and refutes four claims the plan makes.
 
 Code: `packages/model/src/{text.ts, parse-text.ts, resolve-text.ts, builtin-text-styles.ts}`.
 Measurement: `corpus/ground-truth/text-cascade.json`, from
-`tools/ground-truth/{text-cascade.ts, build-text-deck.ts, read-text.ps1, analyse-text.ts}`.
+`tools/ground-truth/{text-cascade.ts, tools/ground-truth/text/cascade/build-deck.ts, tools/ground-truth/text/cascade/read.ps1, tools/ground-truth/text/cascade/analyse.ts}`.
 
 ---
 
@@ -212,7 +212,7 @@ resolves it.
   of XML and runs it through this package's own resolver.
 - **The honest check is the corpus, not the unit suite.** The probe packages ask one question each
   and contain none of the markup nobody designed - a `p:txBody` with no paragraphs, an `a:rPr`
-  carrying a gradient, a master declaring seven of nine levels. So `tools/corpus/text-cascade.test.ts`
+  carrying a gradient, a master declaring seven of nine levels. So `tools/corpus/suites/text-cascade.test.ts`
   sweeps every paragraph and every run of every sheet of all 52 committed decks: 4 assertions over
   4209 resolutions, none throwing, every size, margin and indent inside a range a slide could hold.
   Its origin histogram is pinned as a set with floors, because a corpus that stopped exercising a

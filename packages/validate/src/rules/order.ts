@@ -10,8 +10,8 @@ import {
   outOfOrderChildren,
   type XElement,
 } from '@pptx-studio/xml';
-import type { Context } from './context.js';
-import { elementLocation, xpathOf } from './location.js';
+import type { Context } from '../context.js';
+import { elementLocation, xpathOf } from '../report/location.js';
 
 /**
  * `V010` … `V012`: where children are allowed to be.

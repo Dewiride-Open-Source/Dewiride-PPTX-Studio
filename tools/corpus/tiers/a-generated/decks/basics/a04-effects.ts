@@ -1,6 +1,6 @@
-import type { ProbeSlide } from '../package.ts';
-import { grid, line, prstGeom, scheme, shape, solidFill, srgb } from '../shapes.ts';
-import type { ProbeDeck } from '../types.ts';
+import type { ProbeSlide } from '../../markup/chassis.ts';
+import { grid, line, prstGeom, scheme, shape, solidFill, srgb } from '../../markup/shapes.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * The effect vocabulary, and the 3-D scene that is preserved but never rendered.

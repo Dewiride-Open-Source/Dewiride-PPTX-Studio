@@ -1,7 +1,7 @@
 import { builtinGuides } from './builtins.js';
-import { GeometryError } from './errors.js';
+import { GeometryError } from '../errors.js';
 import { applyOperator, siteLabel, type FormulaSite } from './formula.js';
-import type { Geometry, Point, PresetGuide, PresetPoint } from './types.js';
+import type { Geometry, Point, PresetGuide, PresetPoint } from '../types.js';
 
 /**
  * Turning a geometry definition into numbers.

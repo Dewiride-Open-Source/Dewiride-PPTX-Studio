@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import { describe, expect, it } from 'vitest';
-import { inventory, type FormEvidence, type LexicalDeck } from './lexical.ts';
-import { LEXICAL_FORMS, SERIALIZER, type LexicalForm } from './lexical-forms.ts';
+import { inventory, type FormEvidence, type LexicalDeck } from './inventory.ts';
+import { LEXICAL_FORMS, SERIALIZER, type LexicalForm } from './forms.ts';
 
 /**
  * `C-LEX`, the last of the four named corpus rules.
@@ -33,8 +34,6 @@ import { LEXICAL_FORMS, SERIALIZER, type LexicalForm } from './lexical-forms.ts'
  * `producers: []`, so if a deck ever grows one the assertion fails and somebody
  * gets to delete a gap.
  */
-
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 
 interface Envelope {
   readonly collection: string;

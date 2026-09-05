@@ -4,7 +4,7 @@
   "manifestVersion": 1,
   "collection": "bench",
   "generatedIn": "0.8",
-  "adr": "docs/adr/0008-inspect-worker-and-the-benchmark.md",
+  "adr": "docs/adr/phase-0-foundation/0008-inspect-worker-and-the-benchmark.md",
   "generator": "tools/bench/make-deck.ts",
   "entries": [
     {

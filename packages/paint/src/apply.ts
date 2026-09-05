@@ -8,7 +8,7 @@ import {
   toLinear,
   wrapHue,
   type Channel,
-} from './transfer.js';
+} from './colors/transfer.js';
 import type { ColorTransform, Rgba } from './types.js';
 
 /**
@@ -35,7 +35,7 @@ import type { ColorTransform, Rgba } from './types.js';
  * off *white* is mid-grey, not the colour you started with. A model that carries
  * the un-clamped lightness across the boundary returns the original and is 94
  * units out of 255 wrong. This package shipped that model for an afternoon;
- * `docs/adr/0021-colour.md` records why the earlier measurement did not catch
+ * `docs/adr/phase-2-geometry-and-paint/0021-colour.md` records why the earlier measurement did not catch
  * it.
  *
  * Two things that could have made the boundary invisible were checked and do

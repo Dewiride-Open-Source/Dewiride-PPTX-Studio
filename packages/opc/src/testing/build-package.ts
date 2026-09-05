@@ -1,6 +1,6 @@
 import { CONTENT_TYPE, CONTENT_TYPES_PART, REL_TYPE } from '../constants.js';
-import { XML_DECLARATION } from '../flat-xml.js';
-import { deflatedEntry, writeZip, type ZipEntryInput } from '../zip-writer.js';
+import { XML_DECLARATION } from '../parts/flat-xml.js';
+import { deflatedEntry, writeZip, type ZipEntryInput } from '../zip/zip-writer.js';
 
 /**
  * A minimal OPC package, and every way of breaking one.

@@ -5,7 +5,7 @@ import {
   type ReadZipOptions,
 } from '@pptx-studio/opc';
 import { assertValid, type Report, type RuleId } from '@pptx-studio/validate';
-import { planCollection, type CollectionPlan, type CollectionPolicy } from './collect.js';
+import { planCollection, type CollectionPlan, type CollectionPolicy } from '../gc/collect.js';
 import { assertPreserved, type PreservationCheck } from './preserve.js';
 import { runPrepare, type PrepareHook, type PrepareRecord } from './prepare.js';
 

@@ -1,7 +1,9 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { basename, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
+
+import { REPO_ROOT as ROOT } from '../repo/root.ts';
 import { chromium, type Browser } from 'playwright';
 import { startServer } from '../bench/serve.ts';
 
@@ -48,7 +50,6 @@ import { startServer } from '../bench/serve.ts';
  * given.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const ORACLE = resolve(ROOT, 'packages/cli/scripts/powerpoint-oracle.ps1');
 const BUILT = resolve(ROOT, 'apps/studio/dist/main.js');
 

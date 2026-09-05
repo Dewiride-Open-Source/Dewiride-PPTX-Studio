@@ -1,5 +1,5 @@
-import { buildProbeFont } from '../../../ground-truth/build-font.ts';
-import { writeEot, EOT_VERSION_2_2 } from '../../../ground-truth/eot.ts';
+import { buildProbeFont } from '../../../../../ground-truth/fonts/embedding/build-font.ts';
+import { writeEot, EOT_VERSION_2_2 } from '../../../../../ground-truth/fonts/format/eot.ts';
 import {
   placeholderXml,
   REL,
@@ -7,10 +7,10 @@ import {
   type ProbeMaster,
   type ProbePart,
   type ProbeRel,
-} from '../package.ts';
-import { shape } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+} from '../../markup/chassis.ts';
+import { shape } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Embedded fonts: six artifacts, and five of them are silent when missing.
@@ -36,7 +36,7 @@ import type { ProbeDeck } from '../types.ts';
  *
  * ## The font is ours
  *
- * `tools/ground-truth/build-font.ts` writes an SFNT from scratch - `head`,
+ * `tools/ground-truth/fonts/embedding/build-font.ts` writes an SFNT from scratch - `head`,
  * `hhea`, `maxp`, `OS/2`, `hmtx`, `cmap`, `loca`, `glyf`, `name`, `post` - for
  * sub-phase 0.7's experiments A and B, and `eot.ts` wraps it. Both are reused
  * here rather than copied, so this deck embeds a font nobody else has any claim

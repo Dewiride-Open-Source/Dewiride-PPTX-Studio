@@ -32,13 +32,13 @@
 
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { CENSUS_FEATURE_KEYS } from './census-keys.gen.ts';
+import { join, relative } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
+import { CENSUS_FEATURE_KEYS } from '../census/keys.gen.ts';
 import { checkCorpus, humanBytes, type CorpusFile, type ManifestFile } from './check.ts';
 import type { Violation } from './schema.ts';
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const CORPUS = join(ROOT, 'corpus');
 
 /** Workspace-relative, forward slashes, so a message is the same on every OS. */
@@ -214,7 +214,9 @@ console.error(
 );
 console.error(format(violations));
 console.error('');
-console.error('  The enums are tools/corpus/schema.ts. The policy they encode is LEGAL.md,');
+console.error(
+  '  The enums are tools/corpus/manifest/schema.ts. The policy they encode is LEGAL.md,',
+);
 console.error('  "Corpus licensing". An entry with no licence is not a to-do: establish the');
 console.error('  provenance or remove the file. Do not guess a licence to make this pass.');
 process.exit(1);

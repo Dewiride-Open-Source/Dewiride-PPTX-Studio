@@ -1,6 +1,6 @@
-import { placeholderXml, TITLE_BOX, type ProbeLayout } from '../package.ts';
-import { textLine } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { placeholderXml, TITLE_BOX, type ProbeLayout } from '../../markup/chassis.ts';
+import { textLine } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * Placeholders: every type, and every branch of the five-tier matcher.

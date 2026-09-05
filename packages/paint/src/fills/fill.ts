@@ -11,7 +11,7 @@
  * sixtieths of a degree for an angle - for the reason set out in `types.ts`.
  */
 
-import type { Color } from './types.js';
+import type { Color } from '../types.js';
 
 /* -------------------------------------------------------------------------- */
 /* shared shapes                                                              */

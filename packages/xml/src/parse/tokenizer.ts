@@ -32,8 +32,8 @@ import {
   isXmlChar,
   isXmlWhitespace,
 } from './chars.js';
-import { XmlError } from './errors.js';
-import { decodeCharacterData, isLiteralRun, normalizeAttributeValue } from './references.js';
+import { XmlError } from '../errors.js';
+import { decodeCharacterData, isLiteralRun, normalizeAttributeValue } from '../mce/references.js';
 
 const LT = 0x3c;
 const GT = 0x3e;

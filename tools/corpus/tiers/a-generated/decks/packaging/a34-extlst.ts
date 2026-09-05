@@ -1,6 +1,6 @@
-import { grid, prstGeom, scheme, shape, solidFill } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { grid, prstGeom, scheme, shape, solidFill } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * `a:extLst` and `p:extLst` as what they are: an ordered, opaque list.

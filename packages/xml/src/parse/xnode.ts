@@ -33,7 +33,7 @@
  * and opening them. So scope resolution is a walk up the tree.
  */
 
-import { XmlError } from './errors.js';
+import { XmlError } from '../errors.js';
 import { decodeXmlSource, type XmlEncoding } from './source.js';
 import {
   DEFAULT_TOKENIZER_LIMITS,

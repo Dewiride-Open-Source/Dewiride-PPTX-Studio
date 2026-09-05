@@ -16,7 +16,7 @@ import { describe, expect, it } from 'vitest';
 
 import fixture from '../../../corpus/ground-truth/sheets.json' with { type: 'json' };
 
-import { resolveBackground, resolveBackgroundColor } from './background.js';
+import { resolveBackground, resolveBackgroundColor } from './resolve/background.js';
 import { loadDocument } from './document.js';
 import { ModelError } from './errors.js';
 import {
@@ -27,9 +27,9 @@ import {
   matchInLayout,
   matchInMaster,
   normalizePlaceholder,
-} from './placeholder.js';
-import { parseSheet, parseTheme } from './parse-sheet.js';
-import { colorMapOf, resolve, resolveXfrm, sheetChain, themeOf } from './resolve.js';
+} from './resolve/placeholder.js';
+import { parseSheet, parseTheme } from './parse/sheet.js';
+import { colorMapOf, resolve, resolveXfrm, sheetChain, themeOf } from './resolve/resolve.js';
 import {
   STYLE_MATRIX_OFFSET,
   resolveAppearance,

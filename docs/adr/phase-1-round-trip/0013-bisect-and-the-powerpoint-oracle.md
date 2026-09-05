@@ -57,7 +57,7 @@ script in this repository would have reported.
 
 ### What that says about `corpus/reject`
 
-`tools/corpus/reject/fixtures.ts` carried a standing caveat: the seventeen
+`tools/corpus/tiers/rejects/fixtures.ts` carried a standing caveat: the seventeen
 minimal packages had never been opened in PowerPoint, only the larger probe
 packages their markup came from. They have now been, and the answer is worth
 recording because it corrects a word:

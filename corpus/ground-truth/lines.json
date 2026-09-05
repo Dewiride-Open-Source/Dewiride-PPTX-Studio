@@ -1,7 +1,7 @@
 {
-  "generatedBy": "tools/ground-truth/analyse-lines.ts",
+  "generatedBy": "tools/ground-truth/paint/lines/analyse.ts",
   "experiment": "C4 - strokes and effects",
-  "sourceNote": "Measured against Microsoft PowerPoint 365 by exporting probe decks this repository generated and reading the bitmaps. Positions are sub-pixel crossings of half coverage, in points on a 960x540pt slide. Coverage is 1 - min(r,g,b)/255. Run tools/ground-truth/build-line-deck.ts, read-lines.ps1 and analyse-lines.ts to regenerate, then prettier --write this file before committing.",
+  "sourceNote": "Measured against Microsoft PowerPoint 365 by exporting probe decks this repository generated and reading the bitmaps. Positions are sub-pixel crossings of half coverage, in points on a 960x540pt slide. Coverage is 1 - min(r,g,b)/255. Run tools/ground-truth/paint/lines/build-deck.ts, tools/ground-truth/paint/lines/read.ps1 and tools/ground-truth/paint/lines/analyse.ts to regenerate, then prettier --write this file before committing.",
   "slide": {
     "w": 960,
     "h": 540

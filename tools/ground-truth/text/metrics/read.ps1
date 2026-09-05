@@ -1,6 +1,6 @@
 # Experiment T2, step 2 - ask PowerPoint how wide and how tall.
 #
-#   powershell -File tools/ground-truth/read-metrics.ps1 -Dir <work-dir>
+#   powershell -File tools/ground-truth/text/metrics/read.ps1 -Dir <work-dir>
 #
 # Reads `metric-inputs.json`, opens each probe deck, and for every shape records
 # what the object model says the laid-out text measures.
@@ -42,7 +42,7 @@ $msoAutomationSecurityForceDisable = 3
 $root = (Resolve-Path -LiteralPath $Dir).Path
 $inputsPath = Join-Path $root 'metric-inputs.json'
 if (-not (Test-Path -LiteralPath $inputsPath)) {
-    throw "no metric-inputs.json in $root - run build-metrics-deck.ts first"
+    throw "no metric-inputs.json in $root - run tools/ground-truth/text/metrics/build-deck.ts first"
 }
 
 $text = Get-Content -LiteralPath $inputsPath -Raw

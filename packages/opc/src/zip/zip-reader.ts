@@ -1,7 +1,7 @@
 import { inflateSync } from 'fflate';
-import { crc32 } from './crc32.js';
-import { guard, OpcError } from './errors.js';
-import { DEFAULT_ZIP_LIMITS, InflationBudget, type ZipLimits } from './limits.js';
+import { crc32 } from '../digest/crc32.js';
+import { guard, OpcError } from '../errors.js';
+import { DEFAULT_ZIP_LIMITS, InflationBudget, type ZipLimits } from '../limits.js';
 
 /**
  * A ZIP reader for untrusted archives.

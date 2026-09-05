@@ -1,5 +1,5 @@
-import { applyTransforms } from './apply.js';
-import { PaintError } from './errors.js';
+import { applyTransforms } from '../apply.js';
+import { PaintError } from '../errors.js';
 import { PRESET_COLORS } from './preset-colors.js';
 import { SYSTEM_COLORS } from './sys-colors.js';
 import { clamp01, fromLinear, hslToRgb, parseHex, toByte, toHex } from './transfer.js';
@@ -12,7 +12,7 @@ import {
   type Rgba,
   type SchemeColorName,
   type SchemeSlot,
-} from './types.js';
+} from '../types.js';
 
 /**
  * From a `Color` to a number, and the four things that have to be supplied

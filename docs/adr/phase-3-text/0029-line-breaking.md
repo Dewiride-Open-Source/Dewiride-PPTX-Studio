@@ -3,8 +3,8 @@
 - **Status** accepted
 - **Sub-phase** 3.3
 - **Experiment** T3 — 2221 probes across twelve packages, PowerPoint via `TextRange2` over COM
-- **Fixture** [`corpus/ground-truth/line-breaks.json`](../../corpus/ground-truth/line-breaks.json)
-- **Code** `packages/text/src/break.ts`, `packages/text/src/kinsoku.ts` (generated)
+- **Fixture** [`corpus/ground-truth/line-breaks.json`](../../../corpus/ground-truth/line-breaks.json)
+- **Code** `packages/text/src/lines/break.ts`, `packages/text/src/lines/kinsoku.ts` (generated)
 - **Supersedes, in part** the plan's 3.3, which specified UAX#14 via the `linebreak` package
 
 ## Context
@@ -143,8 +143,8 @@ The widely repeated version of these sets, including the comment in this reposit
 the fullwidth `￡` (U+FFE1) and `￥` (U+FFE5) that the list omits. Halfwidth and fullwidth currency
 signs were confused for each other.
 
-The table is generated into `packages/text/src/kinsoku.ts` by
-`tools/ground-truth/write-break-tables.ts`, and `break.test.ts` re-derives it from the fixture, so it
+The table is generated into `packages/text/src/lines/kinsoku.ts` by
+`tools/ground-truth/text/line-breaks/write-tables.ts`, and `break.test.ts` re-derives it from the fixture, so it
 cannot drift from the measurement.
 
 ### 5. The fit test has three rules, not one

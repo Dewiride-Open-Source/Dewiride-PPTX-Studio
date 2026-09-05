@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isOpcError, OpcError } from './errors.js';
+import { isOpcError, OpcError } from '../errors.js';
 import {
   checkPartNameCollisions,
   isContentTypesStreamName,

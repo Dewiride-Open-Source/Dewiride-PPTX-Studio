@@ -8,10 +8,15 @@ import {
   newText,
   type XmlEdit,
 } from './edit.js';
-import { isXmlError } from './errors.js';
-import { extensions, findExtension, planAddExtension, planRemoveExtension } from './ext-lst.js';
-import { checkRoundTrip } from './roundtrip.js';
-import { serializeXmlString } from './serialize.js';
+import { isXmlError } from '../errors.js';
+import {
+  extensions,
+  findExtension,
+  planAddExtension,
+  planRemoveExtension,
+} from '../mce/ext-lst.js';
+import { checkRoundTrip } from '../emit/roundtrip.js';
+import { serializeXmlString } from '../emit/serialize.js';
 import {
   checkDirtyInvariant,
   childElements,
@@ -21,7 +26,7 @@ import {
   type XDocument,
   type XElement,
   type XText,
-} from './xnode.js';
+} from '../parse/xnode.js';
 
 const P = 'http://schemas.openxmlformats.org/presentationml/2006/main';
 const A = 'http://schemas.openxmlformats.org/drawingml/2006/main';

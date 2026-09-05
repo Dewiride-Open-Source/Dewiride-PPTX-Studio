@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CONTENT_TYPE, CONTENT_TYPES_PART, REL_TYPE } from './constants.js';
-import { isOpcError } from './errors.js';
+import { CONTENT_TYPE, CONTENT_TYPES_PART, REL_TYPE } from '../constants.js';
+import { isOpcError } from '../errors.js';
 import { PartStore } from './part-store.js';
 import {
   buildPackage,
@@ -8,10 +8,10 @@ import {
   MINIMAL_PRESENTATION,
   relsXml,
   relXml,
-} from './testing/build-package.js';
-import { buildZip } from './testing/build-zip.js';
-import { readZip } from './zip-reader.js';
-import { deflatedEntry, passthroughEntry, writeZip } from './zip-writer.js';
+} from '../testing/build-package.js';
+import { buildZip } from '../testing/build-zip.js';
+import { readZip } from '../zip/zip-reader.js';
+import { deflatedEntry, passthroughEntry, writeZip } from '../zip/zip-writer.js';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();

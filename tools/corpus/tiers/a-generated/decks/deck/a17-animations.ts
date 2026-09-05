@@ -1,6 +1,6 @@
-import { grid, scheme, shape, solidFill } from '../shapes.ts';
-import { textLine, txBody } from '../text.ts';
-import type { ProbeDeck } from '../types.ts';
+import { grid, scheme, shape, solidFill } from '../../markup/shapes.ts';
+import { textLine, txBody } from '../../markup/text.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * `p:timing`: the deepest tree in PresentationML, and the one this project

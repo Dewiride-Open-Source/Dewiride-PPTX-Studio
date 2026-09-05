@@ -1,12 +1,12 @@
 # Sub-phase 1.1, experiments E6 and E8.
 #
-# Produces two decks with PowerPoint 365 so that `analyse-conventions.mjs` can
+# Produces two decks with PowerPoint 365 so that `analyse-conventions.ts` can
 # measure what Microsoft's own serializer writes. Nothing here is committed:
 # the decks go to a directory the caller names, and what lands in the
 # repository is the measurement, the same posture as `eot-headers.json`.
 #
-#   powershell -File tools/corpus/authored/probe-conventions.ps1 -Out <dir>
-#   node tools/corpus/authored/analyse-conventions.mjs <dir>
+#   powershell -File tools/corpus/tiers/b-authored/probe-conventions.ps1 -Out <dir>
+#   node tools/corpus/tiers/b-authored/analyse-conventions.ts <dir>
 #
 # E6 asks what a modern build writes for an embedded OLE object. Microsoft
 # stopped emitting the VML fallback at build 2205 while continuing to read it,

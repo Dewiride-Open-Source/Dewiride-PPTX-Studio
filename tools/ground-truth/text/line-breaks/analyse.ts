@@ -2,7 +2,7 @@
  * Experiment T3, step 4 - score the candidate models and emit the fixture.
  *
  * ```
- * node tools/ground-truth/analyse-breaks.ts <work-dir>
+ * node tools/ground-truth/text/line-breaks/analyse.ts <work-dir>
  * ```
  *
  * Reads `break-inputs.json` and `break-readings.json`, scores every candidate
@@ -41,10 +41,11 @@ import {
   codePoints,
   type BreakFlags,
   type Probe,
-} from './line-break.ts';
+} from './probes.ts';
 
 const dir = process.argv[2];
-if (dir === undefined) throw new Error('usage: analyse-breaks.ts <work-dir>');
+if (dir === undefined)
+  throw new Error('usage: tools/ground-truth/text/line-breaks/analyse.ts <work-dir>');
 const work = resolve(dir);
 
 // ------------------------------------------------------------------- inputs

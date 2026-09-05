@@ -1,6 +1,6 @@
 # Experiment T1, step 2 - ask PowerPoint what it resolved.
 #
-#   powershell -File tools/ground-truth/read-text.ps1 -Dir <work-dir>
+#   powershell -File tools/ground-truth/text/cascade/read.ps1 -Dir <work-dir>
 #
 # Reads `text-inputs.json`, opens each probe deck, and for every paragraph of
 # every shape on every slide records what the object model says the *resolved*
@@ -43,7 +43,7 @@ $msoAutomationSecurityForceDisable = 3
 $root = (Resolve-Path -LiteralPath $Dir).Path
 $inputsPath = Join-Path $root 'text-inputs.json'
 if (-not (Test-Path -LiteralPath $inputsPath)) {
-    throw "no text-inputs.json in $root - run build-text-deck.ts first"
+    throw "no text-inputs.json in $root - run tools/ground-truth/text/cascade/build-deck.ts first"
 }
 
 $text = Get-Content -LiteralPath $inputsPath -Raw

@@ -2,8 +2,8 @@
   "manifestVersion": 1,
   "collection": "reject",
   "generatedIn": "1.2",
-  "adr": "docs/adr/0010-the-repair-firewall.md",
-  "generator": "tools/corpus/reject/build-reject.ts",
+  "adr": "docs/adr/phase-1-round-trip/0010-the-repair-firewall.md",
+  "generator": "tools/corpus/tiers/rejects/build-reject.ts",
   "entries": [
     {
       "id": "r01-ph-hdr",

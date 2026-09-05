@@ -1,6 +1,6 @@
 # Ask the real PowerPoint whether it will open one file, and say so in an exit code.
 #
-#   powershell -File tools/corpus/gen/powerpoint-oracle.ps1 -File <path>
+#   powershell -File packages/cli/scripts/powerpoint-oracle.ps1 -File <path>
 #
 #   exit 0  opened, with no repair
 #   exit 1  PowerPoint would not open it as it stands

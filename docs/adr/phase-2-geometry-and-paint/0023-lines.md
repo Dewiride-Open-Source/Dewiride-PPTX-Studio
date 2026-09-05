@@ -31,7 +31,7 @@ anyway: what a renderer needs is what PowerPoint paints.
 
 **PowerPoint authored first.** The move that made 2.7 cheap, repeated. Before any
 probe existed, PowerPoint was asked to _make_ strokes and effects through its own
-object model (`tools/ground-truth/author-lines.ps1`) and the files it saved were
+object model (`tools/ground-truth/paint/lines/author.ps1`) and the files it saved were
 read. That cost one script and settled six things:
 
 - `Line.DashStyle` reaches all **eleven** `ST_PresetLineDashVal` names. Two of the
@@ -50,8 +50,8 @@ read. That cost one script and settled six things:
 - `a:reflection` has thirteen attributes and PowerPoint's nine presets name all of
   them, so none has to be guessed.
 
-**Then C4.** 213 probes across 47 packages: `tools/ground-truth/lines.ts`,
-`build-line-deck.ts`, `read-lines.ps1`, `analyse-lines.ts`. The dash and
+**Then C4.** 213 probes across 47 packages: `tools/ground-truth/paint/lines/probes.ts`,
+`tools/ground-truth/paint/lines/build-deck.ts`, `tools/ground-truth/paint/lines/read.ps1`, `tools/ground-truth/paint/lines/analyse.ts`. The dash and
 arrowhead packages are exported at 3840 × 2160 — four pixels to the point — and
 the rest at 1920 × 1080.
 
@@ -321,7 +321,7 @@ against a suite that is already green.
 - `effectFilter` returns a typed primitive list rather than markup, for the same
   reason `svgStops` does in 2.7: this package has no DOM, and the two renderers in
   2.10 build their nodes differently.
-- `tools/ground-truth/author-lines.ps1` joins `author-fills.ps1` as a committed
+- `tools/ground-truth/paint/lines/author.ps1` joins `tools/ground-truth/paint/fills/author.ps1` as a committed
   experiment. Two sub-phases running, asking the format's author in writing has
   been the highest-yield step in both.
 

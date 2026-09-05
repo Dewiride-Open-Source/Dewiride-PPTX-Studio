@@ -2,7 +2,7 @@
  * Shape markup for the Tier A probes.
  *
  * Every builder here writes `a:spPr`'s children in the one order the schema
- * allows, taken from `packages/xml/src/schema-order.gen.ts` rather than from
+ * allows, taken from `packages/xml/src/edit/schema-order.gen.ts` rather than from
  * memory:
  *
  * ```
@@ -19,7 +19,7 @@
  * `features` map, and those maps are the thing a reviewer reads.
  */
 
-import { cNvPrXml, escapeXml, NS_A, NS_R, type DrawingProps } from './package.ts';
+import { cNvPrXml, escapeXml, NS_A, NS_R, type DrawingProps } from './chassis.ts';
 
 /** The content area under the title: everything below y, across the full width. */
 const CONTENT = { x: 457200, y: 1188720, width: 11277600, height: 5181600 } as const;

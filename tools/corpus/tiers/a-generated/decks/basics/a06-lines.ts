@@ -1,6 +1,15 @@
-import type { ProbeSlide } from '../package.ts';
-import { connector, grid, line, prstGeom, scheme, shape, solidFill, srgb } from '../shapes.ts';
-import type { ProbeDeck } from '../types.ts';
+import type { ProbeSlide } from '../../markup/chassis.ts';
+import {
+  connector,
+  grid,
+  line,
+  prstGeom,
+  scheme,
+  shape,
+  solidFill,
+  srgb,
+} from '../../markup/shapes.ts';
+import type { ProbeDeck } from '../../markup/types.ts';
 
 /**
  * `a:ln` in every shape it takes, and `p:cxnSp`.

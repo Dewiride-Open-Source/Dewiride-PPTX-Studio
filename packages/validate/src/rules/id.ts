@@ -11,9 +11,9 @@ import {
   NS,
   type XElement,
 } from '@pptx-studio/xml';
-import type { Context } from './context.js';
-import { attributeLocation, elementLocation } from './location.js';
-import { bySource, readRelsParts, resolveTarget } from './rels.js';
+import type { Context } from '../context.js';
+import { attributeLocation, elementLocation } from '../report/location.js';
+import { bySource, readRelsParts, resolveTarget } from '../rels.js';
 
 /**
  * `V018` … `V021`: four identifier spaces, and never one allocator.

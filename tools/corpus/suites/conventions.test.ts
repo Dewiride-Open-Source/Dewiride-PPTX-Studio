@@ -1,14 +1,15 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import { afterAll, describe, expect, it } from 'vitest';
-import { readZip, type ZipEntry } from '../ground-truth/zip.ts';
-import { buildPptx } from '../ground-truth/pptx.ts';
-import { RECIPES, writeDeck, type DeckRecipe } from '../bench/deck.ts';
-import { ZipStream } from '../bench/zip-stream.ts';
-import { buildProbePackage } from './gen/package.ts';
-import { PROBE_DECKS } from './gen/decks/index.ts';
+import { readZip, type ZipEntry } from '../../ground-truth/lib/zip.ts';
+import { buildPptx } from '../../ground-truth/lib/pptx.ts';
+import { RECIPES, writeDeck, type DeckRecipe } from '../../bench/deck.ts';
+import { ZipStream } from '../../bench/zip-stream.ts';
+import { buildProbePackage } from '../tiers/a-generated/markup/chassis.ts';
+import { PROBE_DECKS } from '../tiers/a-generated/decks/index.ts';
 
 /**
  * Every producer in this repository writes the bytes PowerPoint writes.
@@ -40,7 +41,6 @@ import { PROBE_DECKS } from './gen/decks/index.ts';
  * than a rule anything here can satisfy.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../..');
 const MEASURED = JSON.parse(
   readFileSync(join(ROOT, 'corpus/ground-truth/powerpoint-conventions.json'), 'utf8'),
 ) as {
@@ -87,7 +87,7 @@ function producers(): { name: string; entries: ZipEntry[] }[] {
       entries: readZip(buildProbePackage(PROBE_DECKS[1]!.build()).bytes),
     },
     {
-      name: 'tools/ground-truth/pptx.ts (sub-phase 0.7)',
+      name: 'tools/ground-truth/lib/pptx.ts (sub-phase 0.7)',
       entries: readZip(
         buildPptx({
           slides: [

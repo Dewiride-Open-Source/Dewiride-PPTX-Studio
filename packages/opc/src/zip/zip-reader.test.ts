@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { crc32 } from './crc32.js';
-import { isOpcError } from './errors.js';
-import { partNameFromZipEntry } from './pack-uri.js';
-import { buildZip, incompressible, type FixtureEntry } from './testing/build-zip.js';
+import { crc32 } from '../digest/crc32.js';
+import { isOpcError } from '../errors.js';
+import { partNameFromZipEntry } from '../parts/pack-uri.js';
+import { buildZip, incompressible, type FixtureEntry } from '../testing/build-zip.js';
 import { readZip, type ReadZipOptions } from './zip-reader.js';
 
 const encoder = new TextEncoder();

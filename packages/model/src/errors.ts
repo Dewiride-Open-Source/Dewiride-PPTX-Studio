@@ -53,6 +53,14 @@ export type ModelErrorCode =
   | 'MODEL_TEXT_ATTR'
   /** An `a:fld` with no `@id`, which is a required `ST_Guid`. */
   | 'MODEL_TEXT_FIELD'
+  /**
+   * A bullet that contradicts itself or omits what the schema requires.
+   *
+   * The four kinds are an exclusive group, `a:buAutoNum` must carry a @type and
+   * `a:buBlip` must resolve to a relationship. A file that breaks one of those is
+   * one PowerPoint would repair, and repairing it here quietly would hide which.
+   */
+  | 'MODEL_TEXT_BULLET'
   /** A paragraph level that is not an integer. */
   | 'MODEL_TEXT_LEVEL';
 

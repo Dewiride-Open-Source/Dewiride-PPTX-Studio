@@ -13,7 +13,7 @@
  *   probes as recipe fields would add roughly sixty booleans to `DeckRecipe`
  *   and a `writeDeck` nobody can read, and the probes could still only say what
  *   the loop already knows how to say.
- * - `tools/ground-truth/pptx.ts` is closer in shape but is a sub-phase 0.7
+ * - `tools/ground-truth/lib/pptx.ts` is closer in shape but is a sub-phase 0.7
  *   artifact, and two committed measurements - `color-transforms.json` and
  *   `eot-headers.json` - were taken from decks it built. Changing what it emits
  *   would make those measurements describe a deck that no longer exists.
@@ -48,7 +48,7 @@
  * bytes depend on zlib.
  */
 
-import { growthHint, writeZip, type ZipEntry } from '../../ground-truth/zip.ts';
+import { growthHint, writeZip, type ZipEntry } from '../../../../ground-truth/lib/zip.ts';
 
 // ---------------------------------------------------------------- namespaces
 

@@ -6,7 +6,7 @@ import {
   type ReadZipOptions,
   type ZipEntry,
 } from '@pptx-studio/opc';
-import { WriterError } from './errors.js';
+import { WriterError } from '../errors.js';
 
 /**
  * The one assertion the writer makes about its own output.

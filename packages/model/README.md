@@ -9,7 +9,7 @@ undocumented, and different from what every implementation this project has read
 
 Sub-phase 2.9. Everything below was measured against Microsoft PowerPoint rather than argued from
 the standard; the fixture is `corpus/ground-truth/sheets.json` and the reasoning is
-`docs/adr/0024-model-parse-and-resolve.md`.
+`docs/adr/phase-2-geometry-and-paint/0024-model-parse-and-resolve.md`.
 
 ## `undefined` means the file did not say
 
@@ -179,5 +179,5 @@ parent it matched — one number, no fitting, no error bars.
 `model.test.ts` re-derives the matcher from the fixture's 34 recorded cases rather than comparing
 against a summary of them, so a rule that drifts fails on the measurements.
 
-See `docs/adr/0007-ground-truth.md`, `docs/adr/0021-colour.md`, `docs/adr/0022-fills.md`,
-`docs/adr/0023-lines.md` and `docs/adr/0024-model-parse-and-resolve.md`.
+See `docs/adr/phase-0-foundation/0007-ground-truth.md`, `docs/adr/phase-2-geometry-and-paint/0021-colour.md`, `docs/adr/phase-2-geometry-and-paint/0022-fills.md`,
+`docs/adr/phase-2-geometry-and-paint/0023-lines.md` and `docs/adr/phase-2-geometry-and-paint/0024-model-parse-and-resolve.md`.

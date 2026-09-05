@@ -8,9 +8,9 @@ import {
   NS,
   type XElement,
 } from '@pptx-studio/xml';
-import type { Context } from './context.js';
-import { attributeLocation, elementLocation } from './location.js';
-import { forEachElement } from './required-rules.js';
+import type { Context } from '../context.js';
+import { attributeLocation, elementLocation } from '../report/location.js';
+import { forEachElement } from './required.js';
 
 /**
  * `V022` … `V026`: schema-legal markup PowerPoint refuses.

@@ -1,6 +1,6 @@
 # Experiment C3, step 2 - ask PowerPoint what it painted.
 #
-#   powershell -File tools/ground-truth/read-fills.ps1 -Dir <work-dir>
+#   powershell -File tools/ground-truth/paint/fills/read.ps1 -Dir <work-dir>
 #
 # Reads `fill-inputs.json`, opens each probe deck, exports every slide as a BMP
 # and records what the object model says about every shape's fill.
@@ -48,7 +48,7 @@ $msoAutomationSecurityForceDisable = 3
 $root = (Resolve-Path -LiteralPath $Dir).Path
 $inputsPath = Join-Path $root 'fill-inputs.json'
 if (-not (Test-Path -LiteralPath $inputsPath)) {
-    throw "no fill-inputs.json in $root - run build-fill-deck.ts first"
+    throw "no fill-inputs.json in $root - run tools/ground-truth/paint/fills/build-deck.ts first"
 }
 
 $text = Get-Content -LiteralPath $inputsPath -Raw
