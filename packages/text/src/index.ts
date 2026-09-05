@@ -38,6 +38,25 @@ export {
 } from './line-model.js';
 
 export {
+  BUILT_IN_KINSOKU,
+  HANGING_PUNCTUATION,
+  kinsokuInForce,
+  type KinsokuSets,
+} from './kinsoku.js';
+
+export {
+  breakOpportunities,
+  isEastAsian,
+  toCodePoints,
+  wrapText,
+  type BreakOptions,
+  type BreakTailoring,
+  type LineBox,
+  type RangeMeasurer,
+  type WrapInput,
+} from './break.js';
+
+export {
   createCanvasMeasurer,
   cssFamily,
   cssFont,

@@ -1,0 +1,4536 @@
+{
+  "$schema": "https://pptx-studio.dev/ground-truth/line-breaks.schema.json",
+  "experiment": "T3",
+  "subPhase": "3.3",
+  "description": "Where PowerPoint breaks a line. Measured by sizing a box to hold exactly n code points and reading back the text of line 1, which is the break position itself rather than a number a rule has to be inferred from.",
+  "measuredWith": {
+    "application": "Microsoft PowerPoint, via TextRange2 over COM",
+    "chromium": "151.0.7922.34",
+    "fontSizePt": 24,
+    "faces": {
+      "latin": "Arial",
+      "mono": "Courier New",
+      "ea": "Yu Gothic",
+      "thai": "Leelawadee UI",
+      "arabic": "Arial"
+    },
+    "probeSizeHundredths": 2400
+  },
+  "decks": [
+    {
+      "deck": "latin",
+      "statesKinsoku": false,
+      "invalStChars": null,
+      "invalEndChars": null,
+      "strictFirstAndLastChars": null,
+      "flagOverride": null,
+      "opened": true
+    },
+    {
+      "deck": "kinsoku",
+      "statesKinsoku": false,
+      "invalStChars": null,
+      "invalEndChars": null,
+      "strictFirstAndLastChars": null,
+      "flagOverride": null,
+      "opened": true
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "statesKinsoku": false,
+      "invalStChars": null,
+      "invalEndChars": null,
+      "strictFirstAndLastChars": null,
+      "flagOverride": {
+        "hangingPunct": false
+      },
+      "opened": true
+    },
+    {
+      "deck": "ea-kinsoku",
+      "statesKinsoku": true,
+      "invalStChars": "!%),.:;?]}¢’”‰′″℃、。々〉》」』】〕ぁぃぅぇぉっゃゅょゎ゛゜ゝゞァィゥェォッャュョヮヵヶ・ーヽヾ！％），．：；？］｝｡｣､･ﾞﾟ",
+      "invalEndChars": "$([\\{£¥‘“〈《「『【〔＃＄（［｛￡￥",
+      "strictFirstAndLastChars": null,
+      "flagOverride": null,
+      "opened": true
+    },
+    {
+      "deck": "ea-nokinsoku",
+      "statesKinsoku": false,
+      "invalStChars": null,
+      "invalEndChars": null,
+      "strictFirstAndLastChars": null,
+      "flagOverride": null,
+      "opened": true
+    },
+    {
+      "deck": "ea-strict0",
+      "statesKinsoku": true,
+      "invalStChars": "!%),.:;?]}¢’”‰′″℃、。々〉》」』】〕ぁぃぅぇぉっゃゅょゎ゛゜ゝゞァィゥェォッャュョヮヵヶ・ーヽヾ！％），．：；？］｝｡｣､･ﾞﾟ",
+      "invalEndChars": "$([\\{£¥‘“〈《「『【〔＃＄（［｛￡￥",
+      "strictFirstAndLastChars": false,
+      "flagOverride": null,
+      "opened": true
+    },
+    {
+      "deck": "ea-custom",
+      "statesKinsoku": true,
+      "invalStChars": "ス",
+      "invalEndChars": "日",
+      "strictFirstAndLastChars": false,
+      "flagOverride": null,
+      "opened": true
+    },
+    {
+      "deck": "latin-kinsoku",
+      "statesKinsoku": true,
+      "invalStChars": "b",
+      "invalEndChars": "a",
+      "strictFirstAndLastChars": null,
+      "flagOverride": null,
+      "opened": true
+    },
+    {
+      "deck": "ea-empty",
+      "statesKinsoku": true,
+      "invalStChars": "",
+      "invalEndChars": "",
+      "strictFirstAndLastChars": false,
+      "flagOverride": null,
+      "opened": true
+    },
+    {
+      "deck": "ea-empty-nohang",
+      "statesKinsoku": true,
+      "invalStChars": "",
+      "invalEndChars": "",
+      "strictFirstAndLastChars": false,
+      "flagOverride": {
+        "hangingPunct": false
+      },
+      "opened": true
+    },
+    {
+      "deck": "latin-custom",
+      "statesKinsoku": true,
+      "invalStChars": "b",
+      "invalEndChars": "a",
+      "strictFirstAndLastChars": false,
+      "flagOverride": null,
+      "opened": true
+    },
+    {
+      "deck": "latin-custom-lang",
+      "statesKinsoku": true,
+      "invalStChars": "b",
+      "invalEndChars": "a",
+      "strictFirstAndLastChars": false,
+      "flagOverride": null,
+      "opened": false
+    }
+  ],
+  "strings": [
+    {
+      "id": "sp-words",
+      "category": "space",
+      "face": "latin",
+      "text": "alpha beta gamma delta",
+      "note": "The base case. If the opportunity set is not exactly the three positions after the three spaces, nothing below is worth reading.",
+      "widths": [
+        0, 13.348, 18.68, 32.027, 45.375, 58.723, 65.391, 78.738, 92.086, 98.754, 112.102, 118.77,
+        132.117, 145.465, 165.457, 185.449, 198.797, 205.465, 218.813, 232.16, 237.492, 244.16,
+        257.508
+      ]
+    },
+    {
+      "id": "sp-trail",
+      "category": "space",
+      "face": "latin",
+      "text": "aaaa bbbb",
+      "note": "The trailing-space discriminator. If the space is excluded from the fit test, line 1 comes back as five code points at a box that only fits four.",
+      "widths": [0, 13.348, 26.695, 40.043, 53.391, 60.059, 73.406, 86.754, 100.102, 113.449]
+    },
+    {
+      "id": "sp-double",
+      "category": "space",
+      "face": "latin",
+      "text": "aaaa  bbbb  cccc",
+      "note": "Two spaces. A break between them would split the run; the opportunity should be after the second, with both hanging.",
+      "widths": [
+        0, 13.348, 26.695, 40.043, 53.391, 60.059, 66.727, 80.074, 93.422, 106.77, 120.117, 126.785,
+        133.453, 145.453, 157.453, 169.453, 181.453
+      ]
+    },
+    {
+      "id": "sp-triple",
+      "category": "space",
+      "face": "latin",
+      "text": "aa   bb   cc",
+      "note": "Three spaces, to show that whatever happens with two is a rule about runs and not a special case for pairs.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 40.031, 46.699, 60.047, 73.395, 80.063, 86.73, 93.398, 105.398,
+        117.398
+      ]
+    },
+    {
+      "id": "sp-lead",
+      "category": "space",
+      "face": "latin",
+      "text": " aaaa bbbb",
+      "note": "A leading space. Whether it is measured at all decides where every line of a centred paragraph sits.",
+      "widths": [0, 6.668, 20.016, 33.363, 46.711, 60.059, 66.727, 80.074, 93.422, 106.77, 120.117]
+    },
+    {
+      "id": "sp-mono",
+      "category": "space",
+      "face": "mono",
+      "text": "alpha beta gamma",
+      "note": "The same question in a monospaced face, where every prefix width is exact by construction and a mis-sized box cannot hide inside proportional advances.",
+      "widths": [
+        0, 14.402, 28.805, 43.207, 57.609, 72.012, 86.414, 100.816, 115.219, 129.621, 144.023,
+        158.426, 172.828, 187.23, 201.633, 216.035, 230.438
+      ]
+    },
+    {
+      "id": "hy-hyphen",
+      "category": "hyphen",
+      "face": "latin",
+      "text": "aa well-known-thing",
+      "note": "HY: break after the hyphen, never before it.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 50.695, 64.043, 69.375, 74.707, 82.699, 94.699, 108.047, 121.395,
+        138.727, 152.074, 160.066, 166.734, 180.082, 185.414, 198.762, 212.109
+      ]
+    },
+    {
+      "id": "hy-nobreak",
+      "category": "hyphen",
+      "face": "latin",
+      "text": "aa well‑known",
+      "note": "U+2011 NON-BREAKING HYPHEN. Looks identical to U+002D on screen and must produce no opportunity at all - and must go on suppressing one when latinLnBrk turns character breaking on.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 50.695, 64.043, 69.375, 74.707, 82.699, 94.699, 108.047, 121.395,
+        138.727, 152.074
+      ]
+    },
+    {
+      "id": "hy-endash",
+      "category": "hyphen",
+      "face": "latin",
+      "text": "aa alpha–beta",
+      "note": "EN DASH: break after, not before.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 52.043, 65.391, 78.738, 92.086, 105.434, 118.781,
+        132.129, 138.797, 152.145
+      ]
+    },
+    {
+      "id": "hy-emdash",
+      "category": "hyphen",
+      "face": "latin",
+      "text": "aa alpha—beta",
+      "note": "EM DASH is the one class UAX#14 lets a line break on *both* sides of, so the position before it and the position after it are two separate questions and this string asks both.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 52.043, 65.391, 78.738, 92.086, 116.086, 129.434,
+        142.781, 149.449, 162.797
+      ]
+    },
+    {
+      "id": "hy-slash",
+      "category": "hyphen",
+      "face": "latin",
+      "text": "aa alpha/beta",
+      "note": "SOLIDUS: no break before it is uncontroversial; whether one is permitted after it is where implementations differ.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 52.043, 65.391, 78.738, 92.086, 98.754, 112.102, 125.449,
+        132.117, 145.465
+      ]
+    },
+    {
+      "id": "hy-datenum",
+      "category": "hyphen",
+      "face": "latin",
+      "text": "aa 2026-09-04",
+      "note": "A hyphen between digits. The number rules fold some punctuation into the number and forbid the break that hy-hyphen permits - the same character, two answers, decided by its neighbours.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 73.406, 86.754, 94.746, 108.094, 121.441,
+        129.434, 142.781, 156.129
+      ]
+    },
+    {
+      "id": "nu-thousands",
+      "category": "number",
+      "face": "latin",
+      "text": "aa 1,234,567",
+      "note": "A comma between digits. A breaker that treats it as ordinary punctuation splits every large number in every financial deck.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 53.379, 66.727, 80.074, 93.422, 100.09, 113.438, 126.785,
+        140.133
+      ]
+    },
+    {
+      "id": "nu-decimal",
+      "category": "number",
+      "face": "latin",
+      "text": "aa 3.14159",
+      "note": "The same for a decimal point.",
+      "widths": [0, 13.348, 26.695, 33.363, 46.711, 53.379, 66.727, 80.074, 93.422, 106.77, 120.117]
+    },
+    {
+      "id": "nu-currency",
+      "category": "number",
+      "face": "latin",
+      "text": "aa $1,000.00",
+      "note": "A currency sign before a number: no break after it.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 66.727, 80.074, 93.422, 106.77, 113.438, 126.785,
+        140.133
+      ]
+    },
+    {
+      "id": "nu-percent",
+      "category": "number",
+      "face": "latin",
+      "text": "aa 1,000%",
+      "note": "A percent sign after a number: no break before it.",
+      "widths": [0, 13.348, 26.695, 33.363, 46.711, 53.379, 66.727, 80.074, 93.422, 114.762]
+    },
+    {
+      "id": "nu-spaced",
+      "category": "number",
+      "face": "latin",
+      "text": "aa 1 000 000",
+      "note": "The control for the three above: spaces inside a number are ordinary opportunities, so the number rule is about the characters and not about digits generally.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 53.379, 66.727, 80.074, 93.422, 100.09, 113.438, 126.785,
+        140.133
+      ]
+    },
+    {
+      "id": "pu-paren",
+      "category": "punct",
+      "face": "latin",
+      "text": "aa (bbb) cc",
+      "note": "No break after an opening bracket, none before a closing one.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 41.355, 54.703, 68.051, 81.398, 89.391, 96.059, 108.059, 120.059
+      ]
+    },
+    {
+      "id": "pu-bracket",
+      "category": "punct",
+      "face": "latin",
+      "text": "aa [bbb] cc",
+      "note": "The same for square brackets, which some tables class differently.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 40.031, 53.379, 66.727, 80.074, 86.742, 93.41, 105.41, 117.41
+      ]
+    },
+    {
+      "id": "pu-comma",
+      "category": "punct",
+      "face": "latin",
+      "text": "aa bbb, ccc",
+      "note": "No break before the comma; the opportunity is after the space that follows it. Repeated across hangingPunct so a Latin comma can be compared with an ideographic one.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 73.406, 80.074, 86.742, 98.742, 110.742, 122.742
+      ]
+    },
+    {
+      "id": "pu-stop",
+      "category": "punct",
+      "face": "latin",
+      "text": "aa bbb. ccc",
+      "note": "The same for a full stop, which is one character with two jobs - sentence and decimal point.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 73.406, 80.074, 86.742, 98.742, 110.742, 122.742
+      ]
+    },
+    {
+      "id": "pu-excl",
+      "category": "punct",
+      "face": "latin",
+      "text": "aa bbb! ccc",
+      "note": "No break before an exclamation mark.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 73.406, 80.074, 86.742, 98.742, 110.742, 122.742
+      ]
+    },
+    {
+      "id": "pu-colon",
+      "category": "punct",
+      "face": "latin",
+      "text": "aa bbb: ccc",
+      "note": "The two characters most often mis-classed as ordinary punctuation.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 73.406, 80.074, 86.742, 98.742, 110.742, 122.742
+      ]
+    },
+    {
+      "id": "pu-quote",
+      "category": "punct",
+      "face": "latin",
+      "text": "aa ‘bbb’ cc",
+      "note": "Quotation marks are ambiguous by design - the same character opens and closes - so a table that resolves them by position and one that forbids both sides disagree here.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 38.695, 52.043, 65.391, 78.738, 84.07, 90.738, 102.738, 114.738
+      ]
+    },
+    {
+      "id": "pu-dquote",
+      "category": "punct",
+      "face": "latin",
+      "text": "aa “bbb” cc",
+      "note": "The double-quote form of the same question.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 41.355, 54.703, 68.051, 81.398, 89.391, 96.059, 108.059, 120.059
+      ]
+    },
+    {
+      "id": "iv-zwsp",
+      "category": "invisible",
+      "face": "latin",
+      "text": "aa bbbb​cccc",
+      "note": "ZERO WIDTH SPACE: the canonical \"break here, invisibly\". An opportunity with no advance, so the break position and the width are independent - and the space at 3 is what makes its absence provable.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 73.406, 86.754, 86.754, 98.754, 110.754, 122.754,
+        134.754
+      ]
+    },
+    {
+      "id": "iv-wj",
+      "category": "invisible",
+      "face": "latin",
+      "text": "aa bbbb⁠cccc",
+      "note": "WORD JOINER: must suppress an opportunity where there is one to suppress, and must go on suppressing the character-level break when latinLnBrk turns it on.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 73.406, 86.754, 86.754, 98.754, 110.754, 122.754,
+        134.754
+      ]
+    },
+    {
+      "id": "iv-nbsp",
+      "category": "invisible",
+      "face": "latin",
+      "text": "aa bbbb cccc",
+      "note": "NO-BREAK SPACE: indistinguishable from a space on screen, and must produce no opportunity. The classic silently-wrong wrap. The latinLnBrk variant asks the harder half - whether it also suppresses the character-level break, the way the non-breaking hyphen does - which the first pass left as an unmeasured generalisation and a surviving mutant.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 73.406, 86.754, 93.422, 105.422, 117.422,
+        129.422, 141.422
+      ]
+    },
+    {
+      "id": "iv-shy",
+      "category": "invisible",
+      "face": "latin",
+      "text": "aa bbbb­cccc",
+      "note": "SOFT HYPHEN: an opportunity that costs a visible hyphen when taken and nothing when not. Whether PowerPoint takes it at all is measured, not assumed.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 73.406, 86.754, 86.754, 98.754, 110.754, 122.754,
+        134.754
+      ]
+    },
+    {
+      "id": "ea-plain",
+      "category": "ea",
+      "face": "ea",
+      "text": "日本語のテストです",
+      "note": "Ideographs break between any two. Repeated across eaLnBrk, which is supposed to be the attribute that stops them.",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168, 192, 216]
+    },
+    {
+      "id": "ea-kinsoku-start",
+      "category": "ea",
+      "face": "ea",
+      "text": "日本語、テスト。です",
+      "note": "The comma and the full stop may not start a line, so the opportunity before each must be absent while every other position remains. Repeated across hangingPunct, which decides whether the forbidden character hangs outside the measure or forces a fallback.",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168, 192, 216, 240]
+    },
+    {
+      "id": "ea-kinsoku-end",
+      "category": "ea",
+      "face": "ea",
+      "text": "日本語「テスト」です",
+      "note": "The opening bracket may not end a line and the closing one may not start one - the two directions of the filter, in one string, across hangingPunct.",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168, 192, 216, 240]
+    },
+    {
+      "id": "ea-small-kana",
+      "category": "ea",
+      "face": "ea",
+      "text": "こんにちはっとゃん",
+      "note": "Small kana are in the strict start-of-line set and in no Unicode class that would exclude them, so they separate a kinsoku filter from UAX#14 alone.",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168, 192, 216]
+    },
+    {
+      "id": "ea-prolong",
+      "category": "ea",
+      "face": "ea",
+      "text": "データーベース",
+      "note": "The prolonged sound mark is class CJ in Unicode and in the strict start set in Japanese practice - the two disagree, and this says which PowerPoint follows.",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "sc-mixed",
+      "category": "script",
+      "face": "ea",
+      "text": "日本語abcdefです",
+      "note": "A Latin word inside Japanese: an opportunity at each transition and none inside the Latin word. Also the probe that proves an ideograph boundary is a real opportunity rather than a forced break, because positions after it fall back to it.",
+      "widths": [
+        0, 24, 48, 72, 85.395, 99.316, 111.703, 125.578, 138.973, 147.258, 171.258, 195.258
+      ]
+    },
+    {
+      "id": "sc-cjk-punct",
+      "category": "script",
+      "face": "ea",
+      "text": "aa 、bb。cc",
+      "note": "An ideographic comma and full stop with no ideograph anywhere near them. Every other East Asian probe has one as a neighbour, so the classifier has only ever been asked about these characters in company - and a mutation that stopped classifying CJK punctuation as East Asian survived the whole suite.",
+      "widths": [0, 13.395, 26.789, 33.633, 57.633, 71.555, 85.477, 109.477, 121.863, 134.25]
+    },
+    {
+      "id": "sc-fullwidth",
+      "category": "script",
+      "face": "ea",
+      "text": "aa ＡＢＣbb",
+      "note": "FULLWIDTH LATIN CAPITAL A, B, C. Unicode calls them Script=Latin, so nothing but an explicit range makes them East Asian - and whether they break between themselves is the question that range is answering.",
+      "widths": [0, 13.395, 26.789, 33.633, 57.633, 81.633, 105.633, 119.555, 133.477]
+    },
+    {
+      "id": "sc-halfwidth-kana",
+      "category": "script",
+      "face": "ea",
+      "text": "aa ｱｲｳbb",
+      "note": "HALFWIDTH KATAKANA A, I, U. Script=Katakana, so the script test alone should reach them; this is the control that says whether the explicit range is doing the work or the script property is.",
+      "widths": [0, 13.395, 26.789, 33.633, 45.633, 57.633, 69.633, 83.555, 97.477]
+    },
+    {
+      "id": "sc-thai",
+      "category": "script",
+      "face": "thai",
+      "text": "สวัสดีชาวโลก",
+      "note": "Thai has no spaces and needs dictionary segmentation. Whatever PowerPoint does here is the honest scope boundary, and the plan already says we may over-run.",
+      "widths": [
+        0, 12.938, 23.859, 23.859, 36.797, 50.59, 50.59, 65.016, 75.938, 86.859, 96.68, 109.617,
+        123.387
+      ]
+    },
+    {
+      "id": "sc-arabic",
+      "category": "script",
+      "face": "arabic",
+      "text": "مرحبا بالعالم",
+      "note": "Right-to-left with a space. Reading line text back in visual order is its own hazard, so this is recorded and reported rather than scored blind.",
+      "widths": [
+        0, 8.109, 21.188, 34.699, 51.023, 45.27, 51.938, 69.059, 63.305, 75.457, 79.078, 83.238,
+        95.391, 96.316
+      ]
+    },
+    {
+      "id": "uri-http",
+      "category": "uri",
+      "face": "latin",
+      "text": "aa http://a.example/b",
+      "note": "The shape every deck contains. Breaking a URL in the wrong place is visible to any reader who tries to type it back in.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 53.379, 60.047, 73.395, 80.063, 86.73, 93.398, 106.746,
+        113.414, 126.762, 138.762, 152.109, 172.102, 185.449, 190.781, 204.129, 210.797, 224.145
+      ]
+    },
+    {
+      "id": "uri-path",
+      "category": "uri",
+      "face": "latin",
+      "text": "aa C:\\dir\\file.txt",
+      "note": "A Windows path: backslash, colon and dot in one string, none of them in the class a reader would guess.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 50.695, 57.363, 64.031, 77.379, 82.711, 90.703, 97.371, 104.039,
+        109.371, 114.703, 128.051, 134.719, 141.387, 153.387, 160.055
+      ]
+    },
+    {
+      "id": "un-long",
+      "category": "unbreakable",
+      "face": "latin",
+      "text": "antidisestablishmentarian",
+      "note": "One word with no opportunity anywhere and nothing before it. This is the control for what PowerPoint does when the line would otherwise be empty - and the only string here that is deliberately left without an early space.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 38.695, 52.043, 57.375, 69.375, 82.723, 94.723, 101.391, 114.738,
+        128.086, 133.418, 138.75, 150.75, 164.098, 184.09, 197.438, 210.785, 217.453, 230.801,
+        238.793, 244.125, 257.473, 270.82
+      ]
+    },
+    {
+      "id": "un-longpair",
+      "category": "unbreakable",
+      "face": "latin",
+      "text": "ab antidisestablishmentarian",
+      "note": "The same word with a real opportunity in front of it, so a forced break inside the word is distinguishable from the break after the space. The variant with latinLnBrk absent is what settles ECMA against Office.",
+      "widths": [
+        0, 13.348, 26.695, 33.363, 46.711, 60.059, 66.727, 72.059, 85.406, 90.738, 102.738, 116.086,
+        128.086, 134.754, 148.102, 161.449, 166.781, 172.113, 184.113, 197.461, 217.453, 230.801,
+        244.148, 250.816, 264.164, 272.156, 277.488, 290.836, 304.184
+      ]
+    },
+    {
+      "id": "kn-0021",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語!テスト",
+      "note": "Whether U+0021 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 79.969, 103.969, 127.969, 151.969]
+    },
+    {
+      "id": "kn-0025",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語%テスト",
+      "note": "Whether U+0025 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 91.242, 115.242, 139.242, 163.242]
+    },
+    {
+      "id": "kn-0029",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語)テスト",
+      "note": "Whether U+0029 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 81.27, 105.27, 129.27, 153.27]
+    },
+    {
+      "id": "kn-002c",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語,テスト",
+      "note": "Whether U+002C may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 78.188, 102.188, 126.188, 150.188]
+    },
+    {
+      "id": "kn-002e",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語.テスト",
+      "note": "Whether U+002E may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 78.188, 102.188, 126.188, 150.188]
+    },
+    {
+      "id": "kn-003a",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語:テスト",
+      "note": "Whether U+003A may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 78.82, 102.82, 126.82, 150.82]
+    },
+    {
+      "id": "kn-003b",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語;テスト",
+      "note": "Whether U+003B may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 78.82, 102.82, 126.82, 150.82]
+    },
+    {
+      "id": "kn-003f",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語?テスト",
+      "note": "Whether U+003F may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 84.48, 108.48, 132.48, 156.48]
+    },
+    {
+      "id": "kn-005d",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語]テスト",
+      "note": "Whether U+005D may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 81.27, 105.27, 129.27, 153.27]
+    },
+    {
+      "id": "kn-007d",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語}テスト",
+      "note": "Whether U+007D may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 81.27, 105.27, 129.27, 153.27]
+    },
+    {
+      "id": "kn-00a2",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語¢テスト",
+      "note": "Whether U+00A2 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 85.324, 109.324, 133.324, 157.324]
+    },
+    {
+      "id": "kn-2019",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語’テスト",
+      "note": "Whether U+2019 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 78.188, 102.188, 126.188, 150.188]
+    },
+    {
+      "id": "kn-201d",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語”テスト",
+      "note": "Whether U+201D may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 82.102, 106.102, 130.102, 154.102]
+    },
+    {
+      "id": "kn-2030",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語‰テスト",
+      "note": "Whether U+2030 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-2032",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語′テスト",
+      "note": "Whether U+2032 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-2033",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語″テスト",
+      "note": "Whether U+2033 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-2103",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語℃テスト",
+      "note": "Whether U+2103 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3001",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語、テスト",
+      "note": "Whether U+3001 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3002",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語。テスト",
+      "note": "Whether U+3002 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3005",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語々テスト",
+      "note": "Whether U+3005 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3009",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語〉テスト",
+      "note": "Whether U+3009 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-300b",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語》テスト",
+      "note": "Whether U+300B may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-300d",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語」テスト",
+      "note": "Whether U+300D may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-300f",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語』テスト",
+      "note": "Whether U+300F may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3011",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語】テスト",
+      "note": "Whether U+3011 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3015",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語〕テスト",
+      "note": "Whether U+3015 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3041",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ぁテスト",
+      "note": "Whether U+3041 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3043",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ぃテスト",
+      "note": "Whether U+3043 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3045",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ぅテスト",
+      "note": "Whether U+3045 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3047",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ぇテスト",
+      "note": "Whether U+3047 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3049",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ぉテスト",
+      "note": "Whether U+3049 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3063",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語っテスト",
+      "note": "Whether U+3063 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3083",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ゃテスト",
+      "note": "Whether U+3083 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3085",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ゅテスト",
+      "note": "Whether U+3085 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3087",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ょテスト",
+      "note": "Whether U+3087 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-308e",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ゎテスト",
+      "note": "Whether U+308E may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-309b",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語゛テスト",
+      "note": "Whether U+309B may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-309c",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語゜テスト",
+      "note": "Whether U+309C may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-309d",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ゝテスト",
+      "note": "Whether U+309D may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-309e",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ゞテスト",
+      "note": "Whether U+309E may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30a1",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ァテスト",
+      "note": "Whether U+30A1 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30a3",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ィテスト",
+      "note": "Whether U+30A3 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30a5",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ゥテスト",
+      "note": "Whether U+30A5 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30a7",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ェテスト",
+      "note": "Whether U+30A7 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30a9",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ォテスト",
+      "note": "Whether U+30A9 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30c3",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ッテスト",
+      "note": "Whether U+30C3 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30e3",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ャテスト",
+      "note": "Whether U+30E3 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30e5",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ュテスト",
+      "note": "Whether U+30E5 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30e7",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ョテスト",
+      "note": "Whether U+30E7 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30ee",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ヮテスト",
+      "note": "Whether U+30EE may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30f5",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ヵテスト",
+      "note": "Whether U+30F5 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30f6",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ヶテスト",
+      "note": "Whether U+30F6 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30fb",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語・テスト",
+      "note": "Whether U+30FB may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30fc",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ーテスト",
+      "note": "Whether U+30FC may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30fd",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ヽテスト",
+      "note": "Whether U+30FD may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30fe",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ヾテスト",
+      "note": "Whether U+30FE may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff01",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語！テスト",
+      "note": "Whether U+FF01 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff05",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語％テスト",
+      "note": "Whether U+FF05 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff09",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語）テスト",
+      "note": "Whether U+FF09 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff0c",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語，テスト",
+      "note": "Whether U+FF0C may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff0e",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語．テスト",
+      "note": "Whether U+FF0E may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff1a",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語：テスト",
+      "note": "Whether U+FF1A may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff1b",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語；テスト",
+      "note": "Whether U+FF1B may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff1f",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語？テスト",
+      "note": "Whether U+FF1F may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff3d",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語］テスト",
+      "note": "Whether U+FF3D may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff5d",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語｝テスト",
+      "note": "Whether U+FF5D may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff61",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語｡テスト",
+      "note": "Whether U+FF61 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 84, 108, 132, 156]
+    },
+    {
+      "id": "kn-ff63",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語｣テスト",
+      "note": "Whether U+FF63 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 84, 108, 132, 156]
+    },
+    {
+      "id": "kn-ff64",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語､テスト",
+      "note": "Whether U+FF64 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 84, 108, 132, 156]
+    },
+    {
+      "id": "kn-ff65",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語･テスト",
+      "note": "Whether U+FF65 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 84, 108, 132, 156]
+    },
+    {
+      "id": "kn-ff9e",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ﾞテスト",
+      "note": "Whether U+FF9E may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 84, 108, 132, 156]
+    },
+    {
+      "id": "kn-ff9f",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語ﾟテスト",
+      "note": "Whether U+FF9F may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 84, 108, 132, 156]
+    },
+    {
+      "id": "kn-0024",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語$テスト",
+      "note": "Whether U+0024 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 85.875, 109.875, 133.875, 157.875]
+    },
+    {
+      "id": "kn-0028",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語(テスト",
+      "note": "Whether U+0028 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 81.27, 105.27, 129.27, 153.27]
+    },
+    {
+      "id": "kn-005b",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語[テスト",
+      "note": "Whether U+005B may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 81.27, 105.27, 129.27, 153.27]
+    },
+    {
+      "id": "kn-005c",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語\\テスト",
+      "note": "Whether U+005C may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 85.699, 109.699, 133.699, 157.699]
+    },
+    {
+      "id": "kn-007b",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語{テスト",
+      "note": "Whether U+007B may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 81.27, 105.27, 129.27, 153.27]
+    },
+    {
+      "id": "kn-00a3",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語£テスト",
+      "note": "Whether U+00A3 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 85.898, 109.898, 133.898, 157.898]
+    },
+    {
+      "id": "kn-00a5",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語¥テスト",
+      "note": "Whether U+00A5 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 85.699, 109.699, 133.699, 157.699]
+    },
+    {
+      "id": "kn-2018",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語‘テスト",
+      "note": "Whether U+2018 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 78.188, 102.188, 126.188, 150.188]
+    },
+    {
+      "id": "kn-201c",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語“テスト",
+      "note": "Whether U+201C may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 82.102, 106.102, 130.102, 154.102]
+    },
+    {
+      "id": "kn-3008",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語〈テスト",
+      "note": "Whether U+3008 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-300a",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語《テスト",
+      "note": "Whether U+300A may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-300c",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語「テスト",
+      "note": "Whether U+300C may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-300e",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語『テスト",
+      "note": "Whether U+300E may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3010",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語【テスト",
+      "note": "Whether U+3010 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3014",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語〔テスト",
+      "note": "Whether U+3014 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff03",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語＃テスト",
+      "note": "Whether U+FF03 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff04",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語＄テスト",
+      "note": "Whether U+FF04 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff08",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語（テスト",
+      "note": "Whether U+FF08 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff3b",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語［テスト",
+      "note": "Whether U+FF3B may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ff5b",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語｛テスト",
+      "note": "Whether U+FF5B may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ffe1",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語￡テスト",
+      "note": "Whether U+FFE1 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-ffe5",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語￥テスト",
+      "note": "Whether U+FFE5 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-3042",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語あテスト",
+      "note": "Whether U+3042 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-30a2",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語アテスト",
+      "note": "Whether U+30A2 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-6f22",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語漢テスト",
+      "note": "Whether U+6F22 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-5b57",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語字テスト",
+      "note": "Whether U+5B57 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 96, 120, 144, 168]
+    },
+    {
+      "id": "kn-0041",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語Aテスト",
+      "note": "Whether U+0041 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 87.574, 111.574, 135.574, 159.574]
+    },
+    {
+      "id": "kn-0031",
+      "category": "kinsoku",
+      "face": "ea",
+      "text": "日本語1テスト",
+      "note": "Whether U+0031 may begin a line (opportunity 3) or end one (opportunity 4).",
+      "widths": [0, 24, 48, 72, 85.348, 109.348, 133.348, 157.348]
+    }
+  ],
+  "faceMetrics": {
+    "latin": {
+      "family": "Arial",
+      "hyphenPt": 7.9921875,
+      "spacePt": 6.66796875
+    },
+    "mono": {
+      "family": "Courier New",
+      "hyphenPt": 14.40234375,
+      "spacePt": 14.40234375
+    },
+    "ea": {
+      "family": "Yu Gothic",
+      "hyphenPt": 10.44140625,
+      "spacePt": 6.84375
+    },
+    "thai": {
+      "family": "Leelawadee UI",
+      "hyphenPt": 9.59765625,
+      "spacePt": 6.57421875
+    },
+    "arabic": {
+      "family": "Arial",
+      "hyphenPt": 7.9921875,
+      "spacePt": 6.66796875
+    }
+  },
+  "rules": {
+    "kinsokuLangRefused": {
+      "deck": "latin-custom-lang",
+      "differsFrom": "latin-custom",
+      "inOneAttribute": "p:kinsoku/@lang",
+      "value": "en-US",
+      "error": "latin-custom-lang: The file or directory is corrupted and unreadable. (Exception from HRESULT: 0x80070570)"
+    },
+    "ruleScores": [
+      {
+        "model": "measured",
+        "fits": 2212,
+        "total": 2212
+      },
+      {
+        "model": "uax14-ish",
+        "fits": 1878,
+        "total": 2212
+      },
+      {
+        "model": "no-hanging",
+        "fits": 2157,
+        "total": 2212
+      },
+      {
+        "model": "no-emergency",
+        "fits": 2085,
+        "total": 2212
+      },
+      {
+        "model": "spaces-only",
+        "fits": 1898,
+        "total": 2212
+      },
+      {
+        "model": "no-kinsoku",
+        "fits": 2010,
+        "total": 2212
+      },
+      {
+        "model": "kinsoku-ungated",
+        "fits": 2200,
+        "total": 2212
+      }
+    ],
+    "flagDefaults": {
+      "latinLnBrk": "false",
+      "hangingPunct": "true",
+      "eaLnBrk": "inert",
+      "hangingPunctOnLatinComma": "inert"
+    },
+    "kinsokuSource": {
+      "ea-kinsoku vs ea-nokinsoku": 0,
+      "ea-kinsoku vs ea-strict0": 0,
+      "ea-kinsoku vs ea-custom": 10,
+      "ea-kinsoku vs ea-empty-nohang": 8,
+      "latin vs latin-kinsoku": 0,
+      "latin vs latin-custom": 0
+    },
+    "thai": {
+      "text": "สวัสดีชาวโลก",
+      "fits": 4,
+      "total": 9,
+      "observedLineOneLengths": [1, 3, 4, 6],
+      "note": "PowerPoint breaks Thai at dictionary word boundaries. The rule has no dictionary and produces no opportunity inside a Thai run, so a Thai line over-runs its box. Tracked, not fixed: the count is pinned so the gap fails the suite if it grows."
+    },
+    "browserAgreement": {
+      "comparisons": 292,
+      "medianPct": 0.018624968772983242,
+      "p95Pct": 0.12136550805560285,
+      "maxPct": 0.2021100632976525,
+      "worst": [
+        {
+          "id": "hy-nobreak-v0-nat",
+          "face": "latin",
+          "pct": 0.16924378798369105
+        },
+        {
+          "id": "hy-nobreak-v1-nat",
+          "face": "latin",
+          "pct": 0.16924378798369105
+        },
+        {
+          "id": "sp-mono-nat",
+          "face": "mono",
+          "pct": 0.2021100632976525
+        }
+      ]
+    }
+  },
+  "kinsoku": {
+    "note": "PowerPoint's built-in sets, measured one character at a time. Used unless the file both states its own sets and sets strictFirstAndLastChars=\"0\", in which case the file's sets replace these entirely - nothing survives replacement.",
+    "mayNotBeginLine": [
+      "!",
+      "%",
+      ")",
+      ",",
+      ".",
+      ":",
+      ";",
+      "?",
+      "]",
+      "}",
+      "’",
+      "”",
+      "‰",
+      "′",
+      "″",
+      "℃",
+      "、",
+      "。",
+      "々",
+      "〉",
+      "》",
+      "」",
+      "』",
+      "】",
+      "〕",
+      "ぁ",
+      "ぃ",
+      "ぅ",
+      "ぇ",
+      "ぉ",
+      "っ",
+      "ゃ",
+      "ゅ",
+      "ょ",
+      "ゎ",
+      "゛",
+      "゜",
+      "ゝ",
+      "ゞ",
+      "ァ",
+      "ィ",
+      "ゥ",
+      "ェ",
+      "ォ",
+      "ッ",
+      "ャ",
+      "ュ",
+      "ョ",
+      "ヮ",
+      "ヵ",
+      "ヶ",
+      "・",
+      "ー",
+      "ヽ",
+      "ヾ",
+      "！",
+      "％",
+      "）",
+      "，",
+      "．",
+      "：",
+      "；",
+      "？",
+      "］",
+      "｝",
+      "｡",
+      "｣",
+      "､",
+      "･",
+      "ﾞ",
+      "ﾟ"
+    ],
+    "mayNotEndLine": [
+      "$",
+      "(",
+      "[",
+      "\\",
+      "{",
+      "‘",
+      "“",
+      "〈",
+      "《",
+      "「",
+      "『",
+      "【",
+      "〔",
+      "＄",
+      "（",
+      "［",
+      "｛",
+      "￡",
+      "￥"
+    ],
+    "hangOutsideTheMeasure": [",", ".", "、", "。", "，", "．"],
+    "unrestrictedControls": ["¢", "£", "¥", "＃", "あ", "ア", "漢", "字", "A", "1"],
+    "disagreesWithA10Comment": ["¢", "£", "¥", "＃"]
+  },
+  "readings": [
+    {
+      "deck": "latin",
+      "string": "sp-words",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        16, 25.25, 38.75, 52, 62, 72, 85.5, 95.5, 105.5, 115.5, 125.5, 138.75, 155.5, 175.5, 192,
+        202.25, 212.25, 225.5, 234.75, 240.75, 250.75
+      ],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+      "lineOne": [1, 2, 3, 4, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 17, 17, 17, 17, 17, 17]
+    },
+    {
+      "deck": "latin",
+      "string": "sp-trail",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 33.25, 46.75, 56.75, 66.75, 80, 93.5, 106.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 5, 5, 5, 5, 5]
+    },
+    {
+      "deck": "latin",
+      "string": "sp-double",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        20, 33.25, 46.75, 56.75, 63.5, 73.5, 86.75, 100, 113.5, 123.5, 130, 139.5, 151.5, 163.5,
+        175.5
+      ],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+      "lineOne": [1, 2, 3, 6, 6, 6, 6, 6, 6, 12, 12, 12, 12, 12, 12]
+    },
+    {
+      "deck": "latin",
+      "string": "sp-triple",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 36.75, 43.25, 53.25, 66.75, 76.75, 83.5, 90, 99.5, 111.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "lineOne": [1, 5, 5, 5, 5, 5, 10, 10, 10, 10, 10]
+    },
+    {
+      "deck": "latin",
+      "string": "sp-lead",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [13.25, 26.75, 40, 53.5, 63.5, 73.5, 86.75, 100, 113.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 1, 1, 1, 6, 6, 6, 6, 6]
+    },
+    {
+      "deck": "latin",
+      "string": "sp-mono",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        21.5, 36, 50.5, 64.75, 79.25, 93.5, 108, 122.5, 136.75, 151.25, 165.75, 180, 194.5, 208.75,
+        223.25
+      ],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+      "lineOne": [1, 2, 3, 4, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11]
+    },
+    {
+      "deck": "latin",
+      "string": "hy-hyphen",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        20, 30, 42, 57.25, 66.75, 72, 78.75, 88.75, 101.25, 114.75, 130, 145.5, 156, 163.5, 173.5,
+        182.75, 192, 205.5
+      ],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 8, 8, 8, 8, 8, 8, 14, 14, 14, 14, 14]
+    },
+    {
+      "deck": "latin",
+      "string": "hy-nobreak",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 42, 57.25, 66.75, 72, 78.75, 88.75, 101.25, 114.75, 130, 145.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "hy-nobreak",
+      "variant": 1,
+      "flags": {
+        "latinLnBrk": true
+      },
+      "boxPt": [20, 30, 42, 57.25, 66.75, 72, 78.75, 88.75, 101.25, 114.75, 130, 145.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "lineOne": [1, 3, 3, 4, 5, 6, 6, 6, 9, 10, 11, 12]
+    },
+    {
+      "deck": "latin",
+      "string": "hy-endash",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 49.5, 58.75, 72, 85.5, 98.75, 112, 125.5, 135.5, 145.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 9, 9, 9, 9]
+    },
+    {
+      "deck": "latin",
+      "string": "hy-emdash",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 49.5, 58.75, 72, 85.5, 104, 122.75, 136, 146, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 9, 9, 9, 9]
+    },
+    {
+      "deck": "latin",
+      "string": "hy-slash",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 49.5, 58.75, 72, 85.5, 95.5, 105.5, 118.75, 128.75, 138.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "hy-datenum",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 80, 90.75, 101.5, 114.75, 125.5, 136, 149.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 8, 8, 8, 11, 11]
+    },
+    {
+      "deck": "latin",
+      "string": "nu-thousands",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 50, 60, 73.5, 86.75, 96.75, 106.75, 120, 133.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "nu-decimal",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 50, 60, 73.5, 86.75, 100, 113.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "nu-currency",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 63.5, 73.5, 86.75, 100, 110, 120, 133.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "nu-percent",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 50, 60, 73.5, 86.75, 104],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "nu-spaced",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 50, 60, 73.5, 86.75, 96.75, 106.75, 120, 133.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "lineOne": [1, 3, 3, 5, 5, 5, 5, 9, 9, 9, 9]
+    },
+    {
+      "deck": "latin",
+      "string": "pu-paren",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 37.25, 48, 61.5, 74.75, 85.5, 92.75, 102, 114],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 9, 9, 9]
+    },
+    {
+      "deck": "latin",
+      "string": "pu-bracket",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 36.75, 46.75, 60, 73.5, 83.5, 90, 99.5, 111.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 9, 9, 9]
+    },
+    {
+      "deck": "latin",
+      "string": "pu-comma",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 76.75, 83.5, 92.75, 104.75, 116.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 8, 8, 8, 8]
+    },
+    {
+      "deck": "latin",
+      "string": "pu-comma",
+      "variant": 1,
+      "flags": {
+        "hangingPunct": true
+      },
+      "boxPt": [20, 30, 40, 53.5, 66.75, 76.75, 83.5, 92.75, 104.75, 116.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 8, 8, 8, 8]
+    },
+    {
+      "deck": "latin",
+      "string": "pu-comma",
+      "variant": 2,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [20, 30, 40, 53.5, 66.75, 76.75, 83.5, 92.75, 104.75, 116.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 8, 8, 8, 8]
+    },
+    {
+      "deck": "latin",
+      "string": "pu-stop",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 76.75, 83.5, 92.75, 104.75, 116.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 8, 8, 8, 8]
+    },
+    {
+      "deck": "latin",
+      "string": "pu-excl",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 76.75, 83.5, 92.75, 104.75, 116.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 8, 8, 8, 8]
+    },
+    {
+      "deck": "latin",
+      "string": "pu-colon",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 76.75, 83.5, 92.75, 104.75, 116.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 8, 8, 8, 8]
+    },
+    {
+      "deck": "latin",
+      "string": "pu-quote",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 36, 45.25, 58.75, 72, 81.5, 87.5, 96.75, 108.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 9, 9, 9]
+    },
+    {
+      "deck": "latin",
+      "string": "pu-dquote",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 37.25, 48, 61.5, 74.75, 85.5, 92.75, 102, 114],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 9, 9, 9]
+    },
+    {
+      "deck": "latin",
+      "string": "iv-zwsp",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 80, 92.75, 104.75, 116.75, 128.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "iv-wj",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 80, 92.75, 104.75, 116.75, 128.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "iv-wj",
+      "variant": 1,
+      "flags": {
+        "latinLnBrk": true
+      },
+      "boxPt": [20, 30, 40, 53.5, 66.75, 80, 92.75, 104.75, 116.75, 128.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11],
+      "lineOne": [1, 3, 3, 4, 5, 6, 8, 9, 10, 11]
+    },
+    {
+      "deck": "latin",
+      "string": "iv-nbsp",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 80, 90, 99.5, 111.5, 123.5, 135.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "iv-nbsp",
+      "variant": 1,
+      "flags": {
+        "latinLnBrk": true
+      },
+      "boxPt": [20, 30, 40, 53.5, 66.75, 80, 90, 99.5, 111.5, 123.5, 135.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "lineOne": [1, 3, 3, 4, 5, 6, 6, 6, 9, 10, 11]
+    },
+    {
+      "deck": "latin",
+      "string": "iv-shy",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 80, 92.75, 104.75, 116.75, 128.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 8, 8, 8]
+    },
+    {
+      "deck": "latin",
+      "string": "uri-http",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        20, 30, 40, 50, 56.75, 66.75, 76.75, 83.5, 90, 100, 110, 120, 132.75, 145.5, 162, 178.75,
+        188, 197.5, 207.5, 217.5
+      ],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "uri-path",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        20, 30, 42, 54, 60.75, 70.75, 80, 86.75, 94, 100.75, 106.75, 112, 121.5, 131.5, 138, 147.5,
+        156.75
+      ],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "un-long",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        20, 30, 36, 45.25, 54.75, 63.5, 76, 88.75, 98, 108, 121.5, 130.75, 136, 144.75, 157.5, 174,
+        190.75, 204, 214, 224.25, 234.75, 241.5, 250.75, 264.25
+      ],
+      "fitMax": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
+      ],
+      "lineOne": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
+      ]
+    },
+    {
+      "deck": "latin",
+      "string": "un-long",
+      "variant": 1,
+      "flags": {
+        "latinLnBrk": true
+      },
+      "boxPt": [
+        20, 30, 36, 45.25, 54.75, 63.5, 76, 88.75, 98, 108, 121.5, 130.75, 136, 144.75, 157.5, 174,
+        190.75, 204, 214, 224.25, 234.75, 241.5, 250.75, 264.25
+      ],
+      "fitMax": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
+      ],
+      "lineOne": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
+      ]
+    },
+    {
+      "deck": "latin",
+      "string": "un-long",
+      "variant": 2,
+      "flags": {
+        "latinLnBrk": false
+      },
+      "boxPt": [
+        20, 30, 36, 45.25, 54.75, 63.5, 76, 88.75, 98, 108, 121.5, 130.75, 136, 144.75, 157.5, 174,
+        190.75, 204, 214, 224.25, 234.75, 241.5, 250.75, 264.25
+      ],
+      "fitMax": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
+      ],
+      "lineOne": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24
+      ]
+    },
+    {
+      "deck": "latin",
+      "string": "un-longpair",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        20, 30, 40, 53.5, 63.5, 69.5, 78.75, 88, 96.75, 109.5, 122, 131.5, 141.5, 154.75, 164,
+        169.5, 178, 190.75, 207.5, 224.25, 237.5, 247.5, 257.5, 268.25, 274.75, 284.25, 297.5
+      ],
+      "fitMax": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        26, 27
+      ],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "latin",
+      "string": "un-longpair",
+      "variant": 1,
+      "flags": {
+        "latinLnBrk": true
+      },
+      "boxPt": [
+        20, 30, 40, 53.5, 63.5, 69.5, 78.75, 88, 96.75, 109.5, 122, 131.5, 141.5, 154.75, 164,
+        169.5, 178, 190.75, 207.5, 224.25, 237.5, 247.5, 257.5, 268.25, 274.75, 284.25, 297.5
+      ],
+      "fitMax": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        26, 27
+      ],
+      "lineOne": [
+        1, 3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        26, 27
+      ]
+    },
+    {
+      "deck": "latin",
+      "string": "un-longpair",
+      "variant": 2,
+      "flags": {
+        "latinLnBrk": false
+      },
+      "boxPt": [
+        20, 30, 40, 53.5, 63.5, 69.5, 78.75, 88, 96.75, 109.5, 122, 131.5, 141.5, 154.75, 164,
+        169.5, 178, 190.75, 207.5, 224.25, 237.5, 247.5, 257.5, 268.25, 274.75, 284.25, 297.5
+      ],
+      "fitMax": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        26, 27
+      ],
+      "lineOne": [1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-0021",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 76, 92, 116, 140],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-0025",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 81.5, 103.25, 127.25, 151.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-0029",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-002c",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 75, 90.25, 114.25, 138.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 4, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-002e",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 75, 90.25, 114.25, 138.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 4, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-003a",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 75.5, 90.75, 114.75, 138.75],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-003b",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 75.5, 90.75, 114.75, 138.75],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-003f",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78.25, 96.5, 120.5, 144.5],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-005d",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-007d",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-00a2",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78.75, 97.25, 121.25, 145.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-2019",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 75, 90.25, 114.25, 138.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-201d",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 77, 94, 118, 142],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-2030",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-2032",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-2033",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-2103",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3001",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 4, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3002",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 4, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3005",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3009",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-300b",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-300d",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-300f",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3011",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3015",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3041",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3043",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3045",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3047",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3049",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3063",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3083",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3085",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3087",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-308e",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-309b",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-309c",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-309d",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-309e",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30a1",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30a3",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30a5",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30a7",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30a9",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30c3",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30e3",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30e5",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30e7",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30ee",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30f5",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30f6",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30fb",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30fc",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30fd",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30fe",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff01",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff05",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff09",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff0c",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 4, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff0e",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 4, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff1a",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff1b",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff1f",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff3d",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff5d",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff61",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff63",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff64",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff65",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff9e",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff9f",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-0024",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 79, 98, 122, 146],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-0028",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-005b",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-005c",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78.75, 97.75, 121.75, 145.75],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-007b",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-00a3",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 79, 98, 122, 146],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-00a5",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78.75, 97.75, 121.75, 145.75],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-2018",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 75, 90.25, 114.25, 138.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-201c",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 77, 94, 118, 142],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3008",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-300a",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-300c",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-300e",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3010",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3014",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff03",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff04",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff08",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff3b",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ff5b",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ffe1",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-ffe5",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-3042",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-30a2",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-6f22",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-5b57",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-0041",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 79.75, 99.5, 123.5, 147.5],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku",
+      "string": "kn-0031",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78.75, 97.25, 121.25, 145.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-0021",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 76, 92, 116, 140],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-0025",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 81.5, 103.25, 127.25, 151.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-0029",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-002c",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 75, 90.25, 114.25, 138.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-002e",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 75, 90.25, 114.25, 138.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-003a",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 75.5, 90.75, 114.75, 138.75],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-003b",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 75.5, 90.75, 114.75, 138.75],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-003f",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78.25, 96.5, 120.5, 144.5],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-005d",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-007d",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-00a2",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78.75, 97.25, 121.25, 145.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-2019",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 75, 90.25, 114.25, 138.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-201d",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 77, 94, 118, 142],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-2030",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-2032",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-2033",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-2103",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3001",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3002",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3005",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3009",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-300b",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-300d",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-300f",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3011",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3015",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3041",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3043",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3045",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3047",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3049",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3063",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3083",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3085",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3087",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-308e",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-309b",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-309c",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-309d",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-309e",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30a1",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30a3",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30a5",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30a7",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30a9",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30c3",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30e3",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30e5",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30e7",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30ee",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30f5",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30f6",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30fb",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30fc",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30fd",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30fe",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff01",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff05",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff09",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff0c",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff0e",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff1a",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff1b",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff1f",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff3d",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff5d",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff61",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff63",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff64",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff65",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff9e",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff9f",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78, 96, 120, 144],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-0024",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 79, 98, 122, 146],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-0028",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-005b",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-005c",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78.75, 97.75, 121.75, 145.75],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-007b",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 76.75, 93.25, 117.25, 141.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-00a3",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 79, 98, 122, 146],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-00a5",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78.75, 97.75, 121.75, 145.75],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-2018",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 75, 90.25, 114.25, 138.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-201c",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 77, 94, 118, 142],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3008",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-300a",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-300c",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-300e",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3010",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3014",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff03",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff04",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff08",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff3b",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ff5b",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ffe1",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-ffe5",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 3, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-3042",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-30a2",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-6f22",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-5b57",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-0041",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 79.75, 99.5, 123.5, 147.5],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "kinsoku-nohang",
+      "string": "kn-0031",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 78.75, 97.25, 121.25, 145.25],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-plain",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-plain",
+      "variant": 1,
+      "flags": {
+        "eaLnBrk": true
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-plain",
+      "variant": 2,
+      "flags": {
+        "eaLnBrk": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-kinsoku-start",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 4, 4, 5, 6, 8, 8, 9]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-kinsoku-start",
+      "variant": 1,
+      "flags": {
+        "hangingPunct": true
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 4, 4, 5, 6, 8, 8, 9]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-kinsoku-start",
+      "variant": 2,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 2, 4, 5, 6, 6, 8, 9]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-kinsoku-end",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 3, 3, 5, 6, 6, 8, 9]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-kinsoku-end",
+      "variant": 1,
+      "flags": {
+        "hangingPunct": true
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 3, 3, 5, 6, 6, 8, 9]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-kinsoku-end",
+      "variant": 2,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 3, 3, 5, 6, 6, 8, 9]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-small-kana",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 4, 6, 6, 8]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "ea-prolong",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 4, 6]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "sc-mixed",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 78.75, 92.25, 105.5, 118.75, 132.25, 143, 159.25, 183.25],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 2, 3, 3, 3, 3, 3, 3, 9, 10]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "sc-cjk-punct",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30.25, 45.75, 64.5, 78.5, 97.5, 115.75, 128],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 3, 4, 4, 4, 7, 7, 7]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "sc-fullwidth",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30.25, 45.75, 69.75, 93.75, 112.5, 126.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7],
+      "lineOne": [1, 3, 3, 4, 5, 6, 6]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "sc-halfwidth-kana",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30.25, 39.75, 51.75, 63.75, 76.5, 90.5],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7],
+      "lineOne": [1, 3, 3, 4, 5, 6, 6]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "sc-thai",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [18.5, 30.25, 43.75, 57.75, 70.5, 81.5, 91.75, 103.25, 116.5],
+      "fitMax": [1, 3, 4, 6, 7, 8, 9, 10, 11],
+      "lineOne": [1, 3, 4, 6, 6, 6, 6, 6, 6]
+    },
+    {
+      "deck": "ea-kinsoku",
+      "string": "sc-arabic",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [14.75, 28, 42.75, 60, 48.5, 72.25, 77.25, 81.25, 89.25],
+      "fitMax": [1, 2, 3, 6, 5, 8, 9, 10, 11],
+      "lineOne": [1, 2, 3, 6, 6, 6, 6, 6, 6]
+    },
+    {
+      "deck": "ea-nokinsoku",
+      "string": "ea-plain",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "deck": "ea-nokinsoku",
+      "string": "ea-kinsoku-start",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 4, 4, 5, 6, 8, 8, 9]
+    },
+    {
+      "deck": "ea-nokinsoku",
+      "string": "ea-kinsoku-end",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 3, 3, 5, 6, 6, 8, 9]
+    },
+    {
+      "deck": "ea-nokinsoku",
+      "string": "ea-small-kana",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 4, 6, 6, 8]
+    },
+    {
+      "deck": "ea-nokinsoku",
+      "string": "ea-prolong",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 4, 6]
+    },
+    {
+      "deck": "ea-strict0",
+      "string": "ea-plain",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "deck": "ea-strict0",
+      "string": "ea-kinsoku-start",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 4, 4, 5, 6, 8, 8, 9]
+    },
+    {
+      "deck": "ea-strict0",
+      "string": "ea-kinsoku-end",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 3, 3, 5, 6, 6, 8, 9]
+    },
+    {
+      "deck": "ea-strict0",
+      "string": "ea-small-kana",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 4, 6, 6, 8]
+    },
+    {
+      "deck": "ea-strict0",
+      "string": "ea-prolong",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 2, 4, 4, 6]
+    },
+    {
+      "deck": "ea-custom",
+      "string": "ea-plain",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 4, 6, 7, 8]
+    },
+    {
+      "deck": "ea-custom",
+      "string": "ea-kinsoku-start",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 4, 4, 4, 6, 8, 8, 9]
+    },
+    {
+      "deck": "ea-custom",
+      "string": "ea-kinsoku-end",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 3, 4, 4, 6, 7, 8, 9]
+    },
+    {
+      "deck": "ea-custom",
+      "string": "ea-small-kana",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "deck": "ea-custom",
+      "string": "ea-prolong",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 5]
+    },
+    {
+      "deck": "latin-kinsoku",
+      "string": "sp-words",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        16, 25.25, 38.75, 52, 62, 72, 85.5, 95.5, 105.5, 115.5, 125.5, 138.75, 155.5, 175.5, 192,
+        202.25, 212.25, 225.5, 234.75, 240.75, 250.75
+      ],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+      "lineOne": [1, 2, 3, 4, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 17, 17, 17, 17, 17, 17]
+    },
+    {
+      "deck": "latin-kinsoku",
+      "string": "sp-trail",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 33.25, 46.75, 56.75, 66.75, 80, 93.5, 106.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 5, 5, 5, 5, 5]
+    },
+    {
+      "deck": "latin-kinsoku",
+      "string": "sp-double",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        20, 33.25, 46.75, 56.75, 63.5, 73.5, 86.75, 100, 113.5, 123.5, 130, 139.5, 151.5, 163.5,
+        175.5
+      ],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+      "lineOne": [1, 2, 3, 6, 6, 6, 6, 6, 6, 12, 12, 12, 12, 12, 12]
+    },
+    {
+      "deck": "latin-kinsoku",
+      "string": "pu-comma",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 76.75, 83.5, 92.75, 104.75, 116.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 8, 8, 8, 8]
+    },
+    {
+      "deck": "ea-empty",
+      "string": "ea-plain",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "deck": "ea-empty",
+      "string": "ea-kinsoku-start",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 4, 4, 5, 6, 8, 8, 9]
+    },
+    {
+      "deck": "ea-empty",
+      "string": "ea-kinsoku-end",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    },
+    {
+      "deck": "ea-empty",
+      "string": "ea-small-kana",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "deck": "ea-empty",
+      "string": "ea-prolong",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "ea-empty-nohang",
+      "string": "ea-plain",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "deck": "ea-empty-nohang",
+      "string": "ea-kinsoku-start",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    },
+    {
+      "deck": "ea-empty-nohang",
+      "string": "ea-kinsoku-end",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204, 228],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    },
+    {
+      "deck": "ea-empty-nohang",
+      "string": "ea-small-kana",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156, 180, 204],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "deck": "ea-empty-nohang",
+      "string": "ea-prolong",
+      "variant": 0,
+      "flags": {
+        "hangingPunct": false
+      },
+      "boxPt": [36, 60, 84, 108, 132, 156],
+      "fitMax": [1, 2, 3, 4, 5, 6],
+      "lineOne": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "deck": "latin-custom",
+      "string": "sp-words",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        16, 25.25, 38.75, 52, 62, 72, 85.5, 95.5, 105.5, 115.5, 125.5, 138.75, 155.5, 175.5, 192,
+        202.25, 212.25, 225.5, 234.75, 240.75, 250.75
+      ],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+      "lineOne": [1, 2, 3, 4, 6, 6, 6, 6, 6, 11, 11, 11, 11, 11, 11, 17, 17, 17, 17, 17, 17]
+    },
+    {
+      "deck": "latin-custom",
+      "string": "sp-trail",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 33.25, 46.75, 56.75, 66.75, 80, 93.5, 106.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8],
+      "lineOne": [1, 2, 3, 5, 5, 5, 5, 5]
+    },
+    {
+      "deck": "latin-custom",
+      "string": "sp-double",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [
+        20, 33.25, 46.75, 56.75, 63.5, 73.5, 86.75, 100, 113.5, 123.5, 130, 139.5, 151.5, 163.5,
+        175.5
+      ],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+      "lineOne": [1, 2, 3, 6, 6, 6, 6, 6, 6, 12, 12, 12, 12, 12, 12]
+    },
+    {
+      "deck": "latin-custom",
+      "string": "pu-comma",
+      "variant": 0,
+      "flags": {},
+      "boxPt": [20, 30, 40, 53.5, 66.75, 76.75, 83.5, 92.75, 104.75, 116.75],
+      "fitMax": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "lineOne": [1, 3, 3, 3, 3, 3, 8, 8, 8, 8]
+    }
+  ]
+}

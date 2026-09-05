@@ -375,6 +375,21 @@ export interface SheetPackage {
    * claims a placeholder never reaches.
    */
   readonly defaultTextStyle?: string | undefined;
+  /**
+   * A whole `<p:kinsoku/>` element, written between `p:notesSz` and
+   * `p:defaultTextStyle` - the position `CT_Presentation` gives it, after
+   * `custDataLst` and before `defaultTextStyle`.
+   *
+   * Absent is a distinct case from present-and-empty: T3 needs a package that
+   * states no kinsoku at all, to find out whether PowerPoint falls back to a
+   * built-in list or does no filtering.
+   */
+  readonly kinsoku?: string | undefined;
+  /**
+   * `p:presentation/@strictFirstAndLastChars`. Omitted when undefined, so the
+   * schema default applies and the deck can ask what that default is.
+   */
+  readonly strictFirstAndLastChars?: boolean | undefined;
 }
 
 function relsXml(entries: readonly RelSpec[]): string {
@@ -576,7 +591,11 @@ export function buildSheetPackage(pkg: SheetPackage): Uint8Array {
 
   const presentation =
     DECLARATION +
-    `<p:presentation ${NS_DECLS} saveSubsetFonts="0">` +
+    `<p:presentation ${NS_DECLS} saveSubsetFonts="0"` +
+    (pkg.strictFirstAndLastChars === undefined
+      ? ''
+      : ` strictFirstAndLastChars="${pkg.strictFirstAndLastChars ? '1' : '0'}"`) +
+    `>` +
     '<p:sldMasterIdLst>' +
     masterRids
       .map((id, m) => `<p:sldMasterId id="${String(masterIds[m] ?? 0)}" r:id="${id}"/>`)
@@ -587,6 +606,7 @@ export function buildSheetPackage(pkg: SheetPackage): Uint8Array {
     '</p:sldIdLst>' +
     `<p:sldSz cx="${String(emu(SLIDE_WIDTH_PT, 'slide'))}" cy="${String(emu(SLIDE_HEIGHT_PT, 'slide'))}"/>` +
     '<p:notesSz cx="6858000" cy="9144000"/>' +
+    (pkg.kinsoku ?? '') +
     (pkg.defaultTextStyle ?? '') +
     '</p:presentation>';
 

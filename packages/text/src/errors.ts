@@ -21,6 +21,8 @@ export type TextErrorCode =
   | 'TEXT_LINE_COUNT'
   /** A typeface name that cannot be written into a CSS font shorthand. */
   | 'TEXT_FONT_FAMILY'
+  /** A wrap width or hyphen advance that is not a usable length. */
+  | 'TEXT_BREAK_WIDTH'
   /**
    * No `OffscreenCanvas`, or no 2d context on one.
    *
