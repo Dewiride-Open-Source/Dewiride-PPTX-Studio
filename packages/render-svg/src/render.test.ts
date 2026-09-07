@@ -19,6 +19,7 @@ import { parseXmlString } from '@pptx-studio/xml';
 import { describe, expect, it } from 'vitest';
 
 import fixture from '../../../corpus/ground-truth/transforms.json' with { type: 'json' };
+import pictures from '../../../corpus/ground-truth/pictures.json' with { type: 'json' };
 
 import { layoutSheet, layoutSlide, inheritedSheets, flatten, type Placed } from './layout.js';
 import { RenderError } from './errors.js';
@@ -930,5 +931,87 @@ describe('strokes', () => {
     expect(markup).toContain('stroke-linejoin="round"');
     expect(markup).toContain('stroke-miterlimit="8"');
     expect(markup).toContain('stroke-linecap="butt"');
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A picture's outline sits wholly outside its box - 12pt out and none in, of a
+ * 12pt line - where a shape's default band straddles the geometry at 6 and 6.
+ * Both numbers are read off `corpus/ground-truth/pictures.json`, so the two
+ * constructions below are asserted against PowerPoint rather than each other.
+ */
+describe('the outline band, re-derived', () => {
+  const WIDTH = 152400;
+  const LINE = `<a:ln w="${String(WIDTH)}"><a:solidFill><a:srgbClr val="FF00FF"/></a:solidFill></a:ln>`;
+  const RECT = { x: 0, y: 0, cx: 1371600, cy: 1371600 };
+
+  function pic(): string {
+    const id = nextId++;
+    return (
+      `<p:pic><p:nvPicPr><p:cNvPr id="${String(id)}" name="picture"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>` +
+      '<p:blipFill><a:blip r:embed="rId9"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
+      `<p:spPr><a:xfrm><a:off x="${String(RECT.x)}" y="${String(RECT.y)}"/>` +
+      `<a:ext cx="${String(RECT.cx)}" cy="${String(RECT.cy)}"/></a:xfrm>` +
+      `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${LINE}</p:spPr></p:pic>`
+    );
+  }
+
+  const band = pictures.outlineBands;
+
+  it('draws a one-sided band at double width, so half of it survives the clip', () => {
+    expect(band.picture.outsidePt + band.picture.insidePt).toBe(pictures.outlinePt);
+    const markup = renderSlide(buildChain({ shapes: [pic()] }).slide, SIZE, { idPrefix: 'o' });
+    expect(markup).toContain(`stroke-width="${String(WIDTH * 2)}"`);
+  });
+
+  it('clips a picture band to the complement of its outline', () => {
+    const markup = renderSlide(buildChain({ shapes: [pic()] }).slide, SIZE, { idPrefix: 'o' });
+    // Nothing of the band falls inside the picture, so the clip is everything
+    // the outline does not cover: one path, two subpaths, evenodd.
+    expect(band.picture.insidePt).toBe(0);
+    expect(markup).toContain('clip-rule="evenodd"');
+    expect(markup).toContain('clipPath');
+  });
+
+  it('leaves a shape band centred, with no clip at all', () => {
+    expect(band.shape.insidePt).toBe(pictures.outlinePt / 2);
+    expect(band.shape.outsidePt).toBe(pictures.outlinePt / 2);
+    const markup = renderSlide(
+      buildChain({
+        shapes: [
+          sp({
+            rect: RECT,
+            fill: '<a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill>',
+            line: LINE,
+          }),
+        ],
+      }).slide,
+      SIZE,
+      { idPrefix: 'c' },
+    );
+    expect(markup).toContain(`stroke-width="${String(WIDTH)}"`);
+    expect(markup).not.toContain('clip-rule="evenodd"');
+  });
+
+  it('still clips an algn="in" shape band to the outline itself', () => {
+    const inset = `<a:ln w="${String(WIDTH)}" algn="in"><a:solidFill><a:srgbClr val="FF00FF"/></a:solidFill></a:ln>`;
+    const markup = renderSlide(
+      buildChain({
+        shapes: [
+          sp({
+            rect: RECT,
+            fill: '<a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill>',
+            line: inset,
+          }),
+        ],
+      }).slide,
+      SIZE,
+      { idPrefix: 'i' },
+    );
+    expect(markup).toContain(`stroke-width="${String(WIDTH * 2)}"`);
+    expect(markup).toContain('clipPath');
+    expect(markup).not.toContain('clip-rule="evenodd"');
   });
 });

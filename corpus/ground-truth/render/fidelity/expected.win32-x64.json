@@ -262,8 +262,8 @@
       "svgSha256": "6d5d8079afc1353ae5ae23ffab7a629c590722006ecff2adc9a4d9d6b04f50e8"
     },
     "a19-decorative-02": {
-      "rasterSha256": "2ab006fba06e5401c264c1ef0a11aed1891afc3d917b299a12a38276876906e6",
-      "svgSha256": "84d544512b9e03575f85af9303dc76b3c36e249ad8206b27e42c3281bafa8db8"
+      "rasterSha256": "68f2369af1fe8cb818de852d86e54bc6d053c99ddfa6863dcb2e0f67b10f14c4",
+      "svgSha256": "cd570d4d131ad440451377ae855b85582a81ecce729f2914d626fed7125e8561"
     },
     "a19-decorative-03": {
       "rasterSha256": "5c4ea48b5d86e353a1a2a872278c632310bafe1cabf97a9b61b15443fbaf89fe",
@@ -318,20 +318,20 @@
       "svgSha256": "8215265ab7954ca2aee752ea278a13b639f53830b6d38a172d32814f25cc8c44"
     },
     "a24-media-01": {
-      "rasterSha256": "17f54181a3b196ded8cbbb916c4cb66f46c40254e89b299f35c43544cf5832b1",
-      "svgSha256": "92b7b9b90e4a13be4b8fab6de8ce210750108c8b5b744284d471667ee24f1571"
+      "rasterSha256": "dee2e2e8f8f616d438858377c7569fa984e443e9dbd1c64e391c021c9af2fcbd",
+      "svgSha256": "965a7f1c3e692a7a98ef406dadec4c834c799923b6bccd83df095ed5f4af33a0"
     },
     "a24-media-02": {
-      "rasterSha256": "86771c939094ca44f6e036b6286662468e2a7ebb31420b2bc7a04663cf51d33d",
-      "svgSha256": "f7980b4635cb8b93099f5b6ff61732861e1231323ab0b16525df55314279b20a"
+      "rasterSha256": "4c6032cf651dcc99bf97987cccd4f7d9b62398e7d7cd30fad98f1d97c1104fb1",
+      "svgSha256": "2d144121d7bd59b82589f28ccbe57adba1894613382251194fcab7870bff8c4d"
     },
     "a24-media-03": {
       "rasterSha256": "0204b0cc7039de2e047ed9bb6b77be6ff2cb28b2d88c094b890b827bf31a5847",
       "svgSha256": "935d4b2f4a89ef28ff37731bf663b0a271e491a47d353792ee8964c24b509efe"
     },
     "a25-svg-blips-01": {
-      "rasterSha256": "5a7e8bb8f2374d5def9598cab189d8124311e76e015e04afdb92d46f126e19ae",
-      "svgSha256": "df9ebb627f87112bd80099bdc0dd04e9cdf54c753763d4a9d087efc433bad31d"
+      "rasterSha256": "1fef6b3041583ce2657f9f75d3a193f40be71a0858179bea3e19a5c617f739b8",
+      "svgSha256": "5f650480c5ca9fada26c95a32f9833628c29285919a7f7076b1002d56f06882a"
     },
     "a25-svg-blips-02": {
       "rasterSha256": "925c75af472927ce0c4c293fa65e96fd05eb94a3f2cde9e3c71f535cd7bc2d79",
@@ -406,8 +406,8 @@
       "svgSha256": "18a95047d9c7e10936173e3afbe8f0c62dd3cf185b169f10df6ae881d5bc35d5"
     },
     "a33-thumbnail-02": {
-      "rasterSha256": "e68b288b4e3455d5f3b706202b892a74d223dbd40d6b513a560d83a902eb8bd2",
-      "svgSha256": "157402a34ea386b0a10bc2391aeffd1d41f91707225918f012db59fb7911cc4a"
+      "rasterSha256": "90d4a8e8c1fb0db7148b2d9ddd89134a27d9d87770a30dae7d105d9df4f4e025",
+      "svgSha256": "5a5192919f23d2c725f1bf117bf70376100663ebb501408430490f64cd3b3f20"
     },
     "a33-thumbnail-03": {
       "rasterSha256": "7b59ba78e43c16dcea3e33ba5cecc07bcbd4c1186995c1d5391ddd6b798e716e",
@@ -426,8 +426,8 @@
       "svgSha256": "66b29231bf1b4a860de8f6724f6d51dff7543731135cb669702c782eaa9d5d3f"
     },
     "a35-zip-shapes-01": {
-      "rasterSha256": "e8f76f7354613508a47eeb3244c0d8d74a66ad0edb5bd23e591f78f21ae19f00",
-      "svgSha256": "04108635f84203a8ba0a7d609f97a152d6afa1f661688ff001e36f1ea47d5e21"
+      "rasterSha256": "67cfa0807f4fd25b63d666c34ee655ff5f7f263fda6cb714fb6710dc5767f32c",
+      "svgSha256": "32fa944505a7d106e97536cf4c70dc61c223527a6069b86ac6aa48135b32792a"
     },
     "a35-zip-shapes-02": {
       "rasterSha256": "cdfc740cb335c9ea028d06658b59024be6b17a901bc7834cb66025ec7a8ea5e5",
@@ -486,8 +486,8 @@
       "svgSha256": "897af4f0ae568026f6b657c3ca52875c13c3b102c74234e694ecc5956ded5e74"
     },
     "a40-unicode-01": {
-      "rasterSha256": "33ff82300fece11cf589e0afd7dca468252669a1cc8a318f47eb1389c2b7a4bb",
-      "svgSha256": "5feb1fe56f5edb24e71e6a9eb14cf7f3be56ec4c12de23b627bb80f07de242f5"
+      "rasterSha256": "7cbbd90e4f7726b0c98a33e763df243e10adaecb70cc441c62791d6b94d1a334",
+      "svgSha256": "6e14880b421dba0dee09514f64a4c535eca2012441a06e60da9416f9a4b590a8"
     },
     "a40-unicode-02": {
       "rasterSha256": "f995a183c3905ef3400dd2766d2e0475c16426f57b39d172cd9dca24219cf236",
@@ -622,8 +622,8 @@
       "svgSha256": "18f15cda1ff59595bdf017d7fd39836c5040ba8d6e086691a29bd6eaa6dad6ed"
     },
     "b09-picture-01": {
-      "rasterSha256": "7f473aff4bbbb9cead11cb2aebc0a94a3dd2f7a241ba2c0430c61065ebdd7c49",
-      "svgSha256": "85ebb836799db53755a4c1a4bdd5379453e12ca5ca52922b207ac1fd323ac02f"
+      "rasterSha256": "892686a536b61b7ba0e3a3d4e0312e0a2403a6f22624213751ff7d2e2da92f5f",
+      "svgSha256": "e9bd03fcfd31134b388fbd251b2ed43290989f0ef1cb27f11cc9474c02372538"
     },
     "b09-picture-02": {
       "rasterSha256": "a21b6e2418ef19efd4f1ff9a23174b836851f93b51d474a8e43b179d29c4b13c",

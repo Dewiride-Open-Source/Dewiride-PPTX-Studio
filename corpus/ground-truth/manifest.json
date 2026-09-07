@@ -1053,7 +1053,7 @@
       "license": "CC0-1.0",
       "source": "self-authored",
       "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
-      "sha256": "ca6db896589005c8008f6ffd2bb5cd4b767898956bfe986fc749991067b15f50",
+      "sha256": "2809ad9f8729cf894889cfd8aa0ab9a685cfb9fa26326228a57a214791fc9524",
       "bytes": 32028,
       "tags": ["fidelity", "baseline", "render"],
       "description": "The digest of our own raster for every slide on win32-x64, and the font environment it was recorded in. This is the gate: a slide that rasterises differently here has changed, and no tolerance is involved in saying so.",
@@ -1222,6 +1222,24 @@
         "args": ["<dir>"]
       },
       "addedIn": "2.8"
+    },
+    {
+      "id": "pictures",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "pictures.json",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "tools/ground-truth/render/pictures/build-deck.ts wrote the deck and its four-quadrant image, PowerPoint 365 exported the slide as a BMP through tools/ground-truth/render/pictures/read.ps1, and tools/ground-truth/render/pictures/write-tables.ts reduced it to the colours below. The deck and the image are ours and CC0-1.0.",
+      "sha256": "3651a99fa78616edb0cc8eb87c31e401af78505a04d4202b79a4861df23850f0",
+      "bytes": 3775,
+      "tags": ["p:pic", "picture", "blipFill", "stroke-alignment", "flip", "clip"],
+      "description": "54 samples over 9 probes answering what the p:pic container does, added in sub-phase 2.13. Exactly one of twenty-four readings survives and all twenty-three rivals are refuted at a full channel: a non-rect prstGeom CLIPS the image rather than merely bounding it, p:blipFill BEATS a fill written beside it in p:spPr, flipH and flipV mirror the IMAGE and not only the outline, and a:ln on a picture is drawn WHOLLY OUTSIDE the box - 12pt out and none in, of a 12pt line, where the same line on a p:sp straddles the geometry at 6 and 6. The corpus could not have answered any of this: all 26 of its pictures are an unrotated, unflipped, unoutlined prst=rect with no competing fill.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/pictures/write-tables.ts",
+        "args": ["<dir>"]
+      },
+      "addedIn": "2.13"
     },
     {
       "id": "powerpoint-conventions",

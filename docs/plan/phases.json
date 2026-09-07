@@ -157,12 +157,18 @@
           "title": "Image fills (`a:blipFill`)",
           "adr": "phase-2-geometry-and-paint/0036-image-fills.md",
           "result": "63 probes, 14 refuted readings; a03-fills-02 8199 to 9378 bp"
+        },
+        {
+          "id": "2.13",
+          "title": "Picture shapes (`p:pic`)",
+          "adr": "phase-2-geometry-and-paint/0037-picture-shapes.md",
+          "result": "23 of 24 readings refuted at a full channel; a picture's border is drawn wholly outside it; b09-picture-01 8642 to 9776 bp"
         }
       ],
       "gate": {
         "title": "A real deck rendered silent: fills, strokes, effects, nested rotated groups",
         "adr": "phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md",
-        "note": "Closed with one shortfall on the record: no LibreOffice side-by-side. Cropped image fills arrived in 2.12."
+        "note": "Closed with one shortfall on the record: no LibreOffice side-by-side. Cropped image fills arrived in 2.12, picture shapes in 2.13."
       }
     },
     {
@@ -606,11 +612,6 @@
       "title": "The `@pptx-studio` npm scope and GitHub org are unclaimed",
       "detail": "The plan names this the first action on approval. Every package is version 0.0.0 and publishable, so 3.10 is now blocked on it.",
       "raisedIn": ["the plan"]
-    },
-    {
-      "title": "`p:pic` picture shapes are still not drawn",
-      "detail": "2.12 built image FILLS. A picture is a shape kind rather than a fill, so b09-picture-01 still scores 8642 bp and is the largest single gap the fidelity score can see. It belongs with 2.10 pic.",
-      "raisedIn": ["ADR 0036"]
     }
   ]
 }

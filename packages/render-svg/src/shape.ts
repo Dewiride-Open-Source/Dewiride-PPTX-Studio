@@ -34,7 +34,7 @@ import {
   strokeAttributes,
   type Attrs,
 } from './paint.js';
-import { element, type SvgElement, type SvgNode } from './node.js';
+import { element, num, type SvgElement, type SvgNode } from './node.js';
 import type { Placed } from './layout.js';
 import { shapeTextNodes, type TextEngine } from './text/draw.js';
 import { frameTransform, type Box } from './transform.js';
@@ -63,6 +63,21 @@ function drawablePaths(placed: Placed): readonly ResolvedPath[] {
   // a `d` holding a NaN is not merely wrong - a browser drops the whole element
   // and says nothing. `geometry` already refuses to emit one; this drops it.
   return placed.geometry?.paths.filter((path) => path.finite && path.d !== '') ?? [];
+}
+
+/**
+ * A rectangle that contains the shape and every band drawn outside it.
+ *
+ * Paired with the shape's own paths under `clip-rule="evenodd"`, it clips to
+ * everything outside the outline, which is where a picture's border lives.
+ */
+function outside(box: Box, width: number): string {
+  const margin = width * 2;
+  const left = num(-margin);
+  const top = num(-margin);
+  const right = num(box.cx + margin);
+  const bottom = num(box.cy + margin);
+  return `M${left} ${top}H${right}V${bottom}H${left}Z`;
 }
 
 /**
@@ -96,25 +111,31 @@ export function shapeNodes(
   const box: Box = { x: 0, y: 0, cx: placed.frame.cx, cy: placed.frame.cy };
   const fillBox = localFillBox(placed);
   const fill = fillAttributes(placed.fill, placed.colorContext, fillBox, defs);
+  // A picture's outline is drawn wholly outside its box, where a shape's default
+  // band straddles the geometry: 12pt out and none in, of a 12pt line. ADR 0037.
   const stroke = strokeAttributes(
     placed.appearance.line === null ? null : resolveLine(placed.appearance.line),
     placed.colorContext,
     fillBox,
     defs,
+    placed.shape.kind === 'pic' ? 'out' : undefined,
   );
 
-  // `algn="in"` puts the whole stroke band inside the shape. Doubling the width
-  // and clipping to the shape's own outline leaves exactly the inner half.
+  // A one-sided band is drawn at double width and clipped to the side it belongs
+  // on - the shape's own outline for `in`, its complement for `out`.
   let clip: string | null = null;
-  if (stroke !== null && stroke.inset) {
+  if (stroke !== null && stroke.band !== 'centre') {
     const id = defs.id();
-    defs.add(
-      element(
-        'clipPath',
-        { id, clipPathUnits: 'userSpaceOnUse' },
-        paths.map((path) => element('path', { d: path.d })),
-      ),
-    );
+    const region =
+      stroke.band === 'in'
+        ? paths.map((path) => element('path', { d: path.d }))
+        : [
+            element('path', {
+              d: `${outside(box, stroke.line.width)} ${paths.map((path) => path.d).join(' ')}`,
+              'clip-rule': 'evenodd',
+            }),
+          ];
+    defs.add(element('clipPath', { id, clipPathUnits: 'userSpaceOnUse' }, region));
     clip = `url(#${id})`;
   }
 

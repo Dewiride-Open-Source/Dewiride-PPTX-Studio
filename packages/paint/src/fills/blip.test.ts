@@ -26,6 +26,7 @@ function stretchFill(
   return {
     type: 'blip',
     embed: 'rId2',
+    svgEmbed: null,
     part: '/ppt/slides/slide1.xml',
     srcRect,
     mode: { kind: 'stretch', fillRect },
@@ -49,6 +50,7 @@ function tileFill(
   return {
     type: 'blip',
     embed: 'rId2',
+    svgEmbed: null,
     part: '/ppt/slides/slide1.xml',
     srcRect,
     mode: {

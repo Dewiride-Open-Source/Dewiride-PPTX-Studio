@@ -272,10 +272,17 @@ export function fillAttributes(fill: Fill | null, ctx: ColorContext, box: Box, d
 /* strokes                                                                    */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Which side of the geometry the stroke band falls on.
+ *
+ * `in` and `out` are both drawn double-width and clipped to one side; only the
+ * side differs. ADR 0037 measured `out` on a picture at 12pt of a 12pt line.
+ */
+export type StrokeBand = 'centre' | 'in' | 'out';
+
 export interface StrokePaint {
   readonly attrs: Attrs;
-  /** `algn="in"`: the stroke is drawn double-width and clipped to the shape. */
-  readonly inset: boolean;
+  readonly band: StrokeBand;
   readonly line: ResolvedLine;
 }
 
@@ -293,21 +300,22 @@ export function strokeAttributes(
   ctx: ColorContext,
   box: Box,
   defs: Defs,
+  forced?: StrokeBand,
 ): StrokePaint | null {
   if (line === null || line.fill.type === 'none' || line.width <= 0) return null;
 
+  const band: StrokeBand = forced ?? (line.algn === 'in' ? 'in' : 'centre');
   const svg = svgStroke(line);
   const attrs: Attrs = {
     'stroke-linecap': svg['stroke-linecap'],
     'stroke-linejoin': svg['stroke-linejoin'],
     'stroke-miterlimit': svg['stroke-miterlimit'],
   };
-  // Inset alignment puts the whole band inside the shape. Drawing it at double
-  // width and clipping to the shape's own path leaves exactly the inner half,
-  // which is the standard construction and the one the plan names.
-  attrs['stroke-width'] = line.algn === 'in' ? line.width * 2 : line.width;
+  // A one-sided band is drawn at double width and clipped to that side, which
+  // leaves exactly the half that was asked for.
+  attrs['stroke-width'] = band === 'centre' ? line.width : line.width * 2;
   if (svg['stroke-dasharray'] !== null) {
-    const array = line.algn === 'in' ? svgStroke(line, line.width * 2) : svg;
+    const array = band === 'centre' ? svg : svgStroke(line, line.width * 2);
     attrs['stroke-dasharray'] = (array['stroke-dasharray'] ?? [])
       .map((value) => num(value))
       .join(' ');
@@ -323,7 +331,7 @@ export function strokeAttributes(
     if (paint['fill-opacity'] !== undefined) attrs['stroke-opacity'] = paint['fill-opacity'];
   }
 
-  return { attrs, inset: line.algn === 'in', line };
+  return { attrs, band, line };
 }
 
 /* -------------------------------------------------------------------------- */

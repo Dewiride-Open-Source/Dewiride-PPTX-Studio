@@ -182,8 +182,13 @@ export interface BlipFill {
   /**
    * `a:blip/@r:embed`, which the caller resolves against the part's own rels -
    * the same contract `buBlip` uses.
+   *
+   * `null` when the blip names no raster at all, which is what PowerPoint
+   * writes for a picture that is only an SVG. ADR 0037.
    */
-  readonly embed: string;
+  readonly embed: string | null;
+  /** `asvg:svgBlip/@r:embed`: the vector original, drawn from 10.7. */
+  readonly svgEmbed: string | null;
   /** The part whose rels `embed` is scoped to; rIds are per-part, never global. */
   readonly part: string;
   /** `a:srcRect`: insets of the SOURCE, as fractions of the image. */

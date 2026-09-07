@@ -206,9 +206,10 @@ export function blipPaint(
   size: (bytes: Uint8Array) => ImageSize,
   uri: (bytes: Uint8Array, contentType: string) => string,
 ): Attrs {
-  const found = media?.(fill.embed, fill.part);
   // A fill whose image the caller cannot resolve paints nothing, exactly as a
-  // shape whose blip is missing does in PowerPoint.
+  // shape whose blip is missing does in PowerPoint - and so does one whose only
+  // image is the SVG original, until 10.7 draws it.
+  const found = fill.embed === null ? undefined : media?.(fill.embed, fill.part);
   if (found === undefined) return { fill: 'none' };
 
   const image = size(found.bytes);

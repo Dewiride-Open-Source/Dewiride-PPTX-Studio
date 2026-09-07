@@ -15,6 +15,7 @@ import { parseXmlString } from '@pptx-studio/xml';
 import { describe, expect, it } from 'vitest';
 
 import fixture from '../../../corpus/ground-truth/sheets.json' with { type: 'json' };
+import pictures from '../../../corpus/ground-truth/pictures.json' with { type: 'json' };
 
 import { resolveBackground, resolveBackgroundColor } from './resolve/background.js';
 import { loadDocument } from './document.js';
@@ -1122,5 +1123,146 @@ describe('the resolver reports where it looked', () => {
     );
     expect(inheritanceChain(onlyShape(slide), slide)).toHaveLength(1);
     expect(resolveXfrm(onlyShape(slide), slide)).toBeUndefined();
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* picture shapes                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * `CT_Picture` is `nvPicPr, blipFill, spPr`, so a picture's image is a sibling of
+ * its shape properties and in PresentationML. Every rule here is re-derived from
+ * `corpus/ground-truth/pictures.json`, where 23 of 24 readings were refuted at a
+ * full channel. ADR 0037.
+ */
+describe('a picture shape', () => {
+  const STRETCH = '<a:stretch><a:fillRect/></a:stretch>';
+
+  function pic(blipFill: string, spPrExtra = ''): string {
+    return (
+      '<p:pic><p:nvPicPr><p:cNvPr id="7" name="picture"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>' +
+      blipFill +
+      '<p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm>' +
+      `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${spPrExtra}</p:spPr></p:pic>`
+    );
+  }
+
+  function probe(id: string) {
+    const found = pictures.samples.find((sample) => sample.id === id);
+    if (found === undefined) throw new Error(`no probe called ${id} in the fixture`);
+    return found;
+  }
+
+  it('takes its fill from p:blipFill, which p:spPr does not contain', () => {
+    const sheet = parse('slide', {
+      shapes: [pic(`<p:blipFill><a:blip r:embed="rId9"/>${STRETCH}</p:blipFill>`)],
+    });
+    const fill = sheet.shapes[0]!.fill;
+    if (fill?.type !== 'blip') throw new Error('expected a blip fill');
+    expect(fill.embed).toBe('rId9');
+    expect(fill.svgEmbed).toBeNull();
+  });
+
+  /**
+   * PowerPoint painted the image on `precedence-solid`, not the cyan `a:solidFill`
+   * beside it - so a reading that lets `p:spPr` win is 255 out on every quadrant.
+   */
+  it('paints the image rather than a competing p:spPr fill', () => {
+    const measured = probe('precedence-solid');
+    expect(measured.at.tl).toBe('FF0000');
+    expect(measured.at.tl).not.toBe('00FFFF');
+
+    const sheet = parse('slide', {
+      shapes: [
+        pic(
+          `<p:blipFill><a:blip r:embed="rId9"/>${STRETCH}</p:blipFill>`,
+          '<a:solidFill><a:srgbClr val="00FFFF"/></a:solidFill>',
+        ),
+      ],
+    });
+    expect(sheet.shapes[0]!.fill?.type).toBe('blip');
+  });
+
+  /** An SVG-only picture: PowerPoint writes an `a:blip` with no `@r:embed` at all. */
+  it('reads an SVG-only blip as naming no raster', () => {
+    const svg =
+      '<a:blip><a:extLst><a:ext uri="{96DAC541-7B7A-43D3-8B79-37D633B846F1}">' +
+      '<asvg:svgBlip xmlns:asvg="http://schemas.microsoft.com/office/drawing/2016/SVG/main" ' +
+      'r:embed="rId4"/></a:ext></a:extLst></a:blip>';
+    const sheet = parse('slide', { shapes: [pic(`<p:blipFill>${svg}${STRETCH}</p:blipFill>`)] });
+    const fill = sheet.shapes[0]!.fill;
+    if (fill?.type !== 'blip') throw new Error('expected a blip fill');
+    expect(fill.embed).toBeNull();
+    expect(fill.svgEmbed).toBe('rId4');
+  });
+
+  it('keeps both images when a blip names a raster and an SVG', () => {
+    const both =
+      '<a:blip r:embed="rId3"><a:extLst><a:ext uri="{96DAC541-7B7A-43D3-8B79-37D633B846F1}">' +
+      '<asvg:svgBlip xmlns:asvg="http://schemas.microsoft.com/office/drawing/2016/SVG/main" ' +
+      'r:embed="rId2"/></a:ext></a:extLst></a:blip>';
+    const sheet = parse('slide', { shapes: [pic(`<p:blipFill>${both}${STRETCH}</p:blipFill>`)] });
+    const fill = sheet.shapes[0]!.fill;
+    if (fill?.type !== 'blip') throw new Error('expected a blip fill');
+    expect(fill.embed).toBe('rId3');
+    expect(fill.svgEmbed).toBe('rId2');
+  });
+
+  /**
+   * An extension is identified by its `@uri`, never by what it contains: a blip
+   * routinely carries `{28A0092B-...}` useLocalDpi beside the SVG one.
+   */
+  it('ignores an svgBlip under an extension that is not the SVG one', () => {
+    const decoy =
+      '<a:blip r:embed="rId3"><a:extLst><a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}">' +
+      '<asvg:svgBlip xmlns:asvg="http://schemas.microsoft.com/office/drawing/2016/SVG/main" ' +
+      'r:embed="rId7"/></a:ext></a:extLst></a:blip>';
+    const sheet = parse('slide', { shapes: [pic(`<p:blipFill>${decoy}${STRETCH}</p:blipFill>`)] });
+    const fill = sheet.shapes[0]!.fill;
+    if (fill?.type !== 'blip') throw new Error('expected a blip fill');
+    expect(fill.embed).toBe('rId3');
+    expect(fill.svgEmbed).toBeNull();
+  });
+
+  it('refuses a blip that names no image at all', () => {
+    expect(() =>
+      parse('slide', { shapes: [pic(`<p:blipFill><a:blip/>${STRETCH}</p:blipFill>`)] }),
+    ).toThrow(ModelError);
+  });
+
+  /**
+   * The rule the fixture settled, so a later edit that quietly re-reads one of
+   * the four questions fails here rather than only in a rendered pixel.
+   */
+  it('is the reading the experiment left standing', () => {
+    expect(pictures.rule).toEqual({
+      clip: 'geometry',
+      precedence: 'blip',
+      outline: 'outside',
+      mirror: 'image',
+    });
+    expect(pictures.outlineBands.picture).toEqual({ outsidePt: 12, insidePt: 0 });
+    expect(pictures.outlineBands.shape).toEqual({ outsidePt: 6, insidePt: 6 });
+  });
+
+  /** A flip mirrors the image itself: the quadrants swap, they do not stay put. */
+  it.each([
+    ['mirror-h', 'tl', '00FF00'],
+    ['mirror-h', 'tr', 'FF0000'],
+    ['mirror-v', 'tl', '0000FF'],
+    ['mirror-hv', 'tl', 'FFFF00'],
+  ])('%s puts %s at %s', (id, sample, expected) => {
+    expect(probe(id).at[sample as 'tl']).toBe(expected);
+    expect(probe('control-rect').at[sample as 'tl']).not.toBe(expected);
+  });
+
+  /** A non-rect geometry clips the image; the bounding box does not survive. */
+  it.each([
+    ['clip-ellipse', 'corner', '000000'],
+    ['clip-triangle', 'tl', '000000'],
+  ])('%s paints the background at %s', (id, sample, expected) => {
+    expect(probe(id).at[sample as 'tl']).toBe(expected);
+    expect(probe('control-rect').at[sample as 'tl']).not.toBe(expected);
   });
 });

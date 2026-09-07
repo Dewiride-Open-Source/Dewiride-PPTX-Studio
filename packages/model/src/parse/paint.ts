@@ -221,6 +221,24 @@ const TILE_ALIGNS = new Set<string>(['tl', 't', 'tr', 'l', 'ctr', 'r', 'bl', 'b'
 const TILE_FLIPS = new Set<string>(['none', 'x', 'y', 'xy']);
 
 /** `a:blip`'s colour effects, in document order, which is the order they apply. */
+/** The `{96DAC541-...}` extension PowerPoint writes on a blip with an SVG original. */
+const SVG_BLIP_EXT = '{96DAC541-7B7A-43D3-8B79-37D633B846F1}';
+
+/** `a:blip/a:extLst/a:ext[@uri=SVG_BLIP_EXT]/asvg:svgBlip/@r:embed`, or `null`. */
+function svgBlipEmbed(blip: XElement): string | null {
+  const extLst = firstChild(blip, 'a:extLst');
+  if (extLst === undefined) return null;
+  for (const ext of childElements(extLst)) {
+    if (ext.qname !== 'a:ext' || attributeValue(ext, 'uri') !== SVG_BLIP_EXT) continue;
+    for (const child of childElements(ext)) {
+      // The prefix is the writer's to choose; only the local name is fixed.
+      if (child.qname.split(':').pop() !== 'svgBlip') continue;
+      const embed = attributeValue(child, 'r:embed');
+      if (embed !== undefined) return embed;
+    }
+  }
+  return null;
+}
 function parseBlipEffects(blip: XElement): BlipEffect[] {
   const effects: BlipEffect[] = [];
   for (const child of childElements(blip)) {
@@ -277,13 +295,15 @@ function parseBlipEffects(blip: XElement): BlipEffect[] {
  */
 function parseBlipFill(element: XElement, partName: string): Fill {
   const blip = firstChild(element, 'a:blip');
-  const embed = blip === undefined ? undefined : attributeValue(blip, 'r:embed');
-  if (blip === undefined || embed === undefined) {
-    throw new ModelError(
-      'BLIP_NO_EMBED',
-      'a:blipFill has no a:blip/@r:embed to resolve',
-      'a:blipFill',
-    );
+  if (blip === undefined) {
+    throw new ModelError('BLIP_NO_EMBED', 'a:blipFill has no a:blip', 'a:blipFill');
+  }
+  const embed = attributeValue(blip, 'r:embed') ?? null;
+  const svgEmbed = svgBlipEmbed(blip);
+  // A blip naming neither a raster nor an SVG resolves to no image at all,
+  // which is markup PowerPoint does not write.
+  if (embed === null && svgEmbed === null) {
+    throw new ModelError('BLIP_NO_EMBED', 'a:blip names no image to resolve', 'a:blip');
   }
 
   const tile = firstChild(element, 'a:tile');
@@ -320,6 +340,7 @@ function parseBlipFill(element: XElement, partName: string): Fill {
   return {
     type: 'blip',
     embed,
+    svgEmbed,
     part: partName,
     srcRect: parseRelativeRect(firstChild(element, 'a:srcRect')),
     mode,
@@ -327,6 +348,17 @@ function parseBlipFill(element: XElement, partName: string): Fill {
     dpi: intAttr(element, 'dpi', 0, 'a:blipFill'),
     rotWithShape: boolAttr(element, 'rotWithShape', true),
   };
+}
+
+/**
+ * `p:pic/p:blipFill` - the image a picture shape draws.
+ *
+ * `CT_Picture` is `nvPicPr, blipFill, spPr`, so the image sits *beside*
+ * `p:spPr` rather than inside it, and in PresentationML. ADR 0037.
+ */
+export function parsePictureFill(pic: XElement, partName: string): Fill | undefined {
+  const blipFill = firstChild(pic, 'p:blipFill');
+  return blipFill === undefined ? undefined : parseBlipFill(blipFill, partName);
 }
 
 /** One member of `EG_FillProperties`. */

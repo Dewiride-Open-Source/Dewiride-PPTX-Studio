@@ -639,3 +639,60 @@ export function groupXml(o: GroupOptions): string {
     '</p:grpSp>'
   );
 }
+
+/** A `p:pic`. The image is a `p:blipFill` beside `p:spPr`, never inside it. */
+export interface PictureOptions {
+  readonly id: number;
+  readonly name: string;
+  readonly x: number;
+  readonly y: number;
+  readonly cx: number;
+  readonly cy: number;
+  /** The image's `r:embed`; `buildPptx` hands out rId2 upwards in `media` order. */
+  readonly embed: string;
+  /** A whole `a:srcRect`. Defaults to none, so the whole image is drawn. */
+  readonly srcRect?: string | undefined;
+  /** `ST_ShapeType` on the `p:spPr` geometry. Defaults to `rect`. */
+  readonly prst?: string | undefined;
+  /** Sixtieths of a degree, on `a:xfrm/@rot`. */
+  readonly rot?: number | undefined;
+  readonly flipH?: boolean | undefined;
+  readonly flipV?: boolean | undefined;
+  /**
+   * A whole fill element written into `p:spPr`, beside the image rather than
+   * instead of it - which is the only way to ask which of the two PowerPoint
+   * paints.
+   */
+  readonly spPrFill?: string | undefined;
+  /** A whole `a:ln`. Defaults to no outline, which keeps edges clean to sample. */
+  readonly line?: string | undefined;
+}
+
+/**
+ * A picture shape.
+ *
+ * `CT_Picture` is `nvPicPr, blipFill, spPr`, so the image is a sibling of the
+ * shape properties; `CT_ShapeProperties` is a sequence, which fixes the fill
+ * before the outline.
+ */
+export function picXml(options: PictureOptions): string {
+  const { id, name, x, y, cx, cy, embed } = options;
+  const flip =
+    (options.flipH === true ? ' flipH="1"' : '') + (options.flipV === true ? ' flipV="1"' : '');
+  const rot = options.rot === undefined || options.rot === 0 ? '' : ` rot="${String(options.rot)}"`;
+  return (
+    '<p:pic><p:nvPicPr>' +
+    `<p:cNvPr id="${String(id)}" name="${name}"/><p:cNvPicPr><a:picLocks/></p:cNvPicPr><p:nvPr/>` +
+    '</p:nvPicPr>' +
+    `<p:blipFill><a:blip r:embed="${embed}"/>${options.srcRect ?? ''}` +
+    '<a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
+    '<p:spPr>' +
+    `<a:xfrm${rot}${flip}>` +
+    `<a:off x="${String(x)}" y="${String(y)}"/><a:ext cx="${String(cx)}" cy="${String(cy)}"/>` +
+    '</a:xfrm>' +
+    `<a:prstGeom prst="${options.prst ?? 'rect'}"><a:avLst/></a:prstGeom>` +
+    (options.spPrFill ?? '') +
+    (options.line ?? '<a:ln><a:noFill/></a:ln>') +
+    '</p:spPr></p:pic>'
+  );
+}

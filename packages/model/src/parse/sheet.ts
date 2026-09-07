@@ -28,6 +28,7 @@ import {
   parseEffects,
   parseFill,
   parseFillElement,
+  parsePictureFill,
   parseLine,
   parseLineElement,
 } from './paint.js';
@@ -297,6 +298,9 @@ function parseShape(element: XElement, kind: ShapeKind, partName: string): Shape
     }
   }
 
+  // A `p:pic` draws the image in its `p:blipFill`, which sits beside `p:spPr`
+  // rather than in it, so reading only `spPr` leaves every picture blank.
+  const picture = kind === 'pic' ? parsePictureFill(element, partName) : undefined;
   const rawId = cNvPr === undefined ? undefined : attributeValue(cNvPr, 'id');
   return {
     kind,
@@ -312,7 +316,7 @@ function parseShape(element: XElement, kind: ShapeKind, partName: string): Shape
       geometryHost === undefined
         ? undefined
         : parseXfrm(geometryHost, partName, kind === 'graphicFrame' ? 'p:xfrm' : 'a:xfrm'),
-    fill: spPr === undefined ? undefined : parseFill(spPr, partName),
+    fill: picture ?? (spPr === undefined ? undefined : parseFill(spPr, partName)),
     line: spPr === undefined ? undefined : parseLine(spPr, partName),
     effects: spPr === undefined ? undefined : parseEffects(spPr),
     style: parseStyle(element, partName),
