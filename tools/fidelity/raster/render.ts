@@ -111,7 +111,15 @@ export async function renderSlide(
   const result = await page.evaluate(
     async ({ url, index, cell, width }) => {
       const api = (globalThis as unknown as { pptx: Record<string, never> }).pptx as unknown as {
-        opc: { PartStore: { open: (bytes: Uint8Array) => unknown } };
+        opc: {
+          PartStore: {
+            open: (bytes: Uint8Array) => {
+              relationships: (part: string) => { targetOf: (id: string) => string | undefined };
+              read: (part: string) => Uint8Array;
+              contentTypeOf: (part: string) => string | undefined;
+            };
+          };
+        };
         model: {
           loadDocument: (store: unknown) => {
             slides: readonly unknown[];
@@ -124,7 +132,8 @@ export async function renderSlide(
       const reduce = (globalThis as unknown as { reduce: (input: unknown) => unknown }).reduce;
 
       const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer());
-      const document_ = api.model.loadDocument(api.opc.PartStore.open(bytes));
+      const store = api.opc.PartStore.open(bytes);
+      const document_ = api.model.loadDocument(store);
       const size = document_.slideSize;
       const drawHeight = Math.round((width * size.cy) / size.cx);
       const padWidth = Math.ceil(width / cell) * cell;
@@ -136,6 +145,13 @@ export async function renderSlide(
         width,
         height: drawHeight,
         idPrefix: `s${String(index)}`,
+        media: (embed: string, part: string) => {
+          const target = store.relationships(part).targetOf(embed);
+          if (target === undefined) return undefined;
+          const contentType = store.contentTypeOf(target);
+          if (contentType === undefined) return undefined;
+          return { bytes: store.read(target), contentType };
+        },
         text: { defaultTextStyle: document_.defaultTextStyle },
       });
 

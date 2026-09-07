@@ -77,14 +77,25 @@ $app.AutomationSecurity = $msoAutomationSecurityForceDisable
 # twelve pixels and every diagonal picks up an antialiased edge. 640 and 2560 are
 # exact halves and doubles of 96 DPI, and are there to confirm the tile is
 # physical rather than either device-fixed or shape-relative.
-$defaultSizes = @(@(1920, 1080))
-$patternSizes = @(@(640, 360), @(1280, 720), @(1920, 1080), @(2560, 1440))
+#
+# A size is an object rather than a pair. A one-element array of arrays unrolls
+# to its two scalars on the way out of the `if` below, and the loop then exports
+# every deck a second time at width 1080.
+function New-Size([int]$w, [int]$h) { [pscustomobject]@{ w = $w; h = $h } }
+
+$defaultSizes = @((New-Size 1920 1080))
+$patternSizes = @((New-Size 640 360), (New-Size 1280 720), (New-Size 1920 1080), (New-Size 2560 1440))
+# The corner-softening deck: if the rounding is a fixed count of device pixels
+# it is the same width at both, and if it is a share of the ramp it doubles.
+$softenSizes = @((New-Size 1920 1080), (New-Size 3840 2160))
 
 $decks = @()
 
 foreach ($deck in $inputs.decks) {
     $file = Join-Path $root $deck.file
-    $sizes = if ($deck.deck -eq 'pattern' -or $deck.deck -eq 'patsize') { $patternSizes } else { $defaultSizes }
+    $sizes = if ($deck.deck -eq 'pattern' -or $deck.deck -eq 'patsize') { $patternSizes }
+    elseif ($deck.deck -eq 'soften') { $softenSizes }
+    else { $defaultSizes }
 
     $record = [ordered]@{
         deck     = $deck.deck
@@ -180,8 +191,8 @@ foreach ($deck in $inputs.decks) {
                 }
 
                 foreach ($size in $sizes) {
-                    $w = $size[0]
-                    $h = $size[1]
+                    $w = $size.w
+                    $h = $size.h
                     $name = "{0}-slide{1}-{2}.bmp" -f $deck.deck, $i, $w
                     $slide.Export((Join-Path $root $name), 'BMP', $w, $h)
                     $record.bitmaps += [ordered]@{ file = $name; slide = $i; width = $w; height = $h }

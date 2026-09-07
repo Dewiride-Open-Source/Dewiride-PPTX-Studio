@@ -61,7 +61,15 @@ export type PaintErrorCode =
    * PowerPoint refuses a package carrying a negative one, so this is a caller
    * mistake rather than a file it will ever have to cope with.
    */
-  | 'EFFECT_NEGATIVE_RADIUS';
+  | 'EFFECT_NEGATIVE_RADIUS'
+  /** An image fill whose resolution is unknown, so a tile has no natural size. */
+  | 'FILL_BLIP_RESOLUTION'
+  /** An `a:srcRect` that crops the whole image away. */
+  | 'FILL_BLIP_CROP'
+  /** A blip with no pixels in it. */
+  | 'FILL_BLIP_SIZE'
+  /** An `a:tile` scaled to zero. */
+  | 'FILL_BLIP_SCALE';
 
 export class PaintError extends Error {
   readonly code: PaintErrorCode;

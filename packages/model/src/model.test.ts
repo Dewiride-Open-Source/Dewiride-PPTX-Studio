@@ -971,6 +971,37 @@ describe('parsing', () => {
     expect(sheet.shapes[0]!.xfrm).toBeUndefined();
   });
 
+  /**
+   * Both halves of `a:path` are optional and both absences carry a meaning that
+   * a default would destroy: no `@path` paints the box ramp, and no
+   * `a:fillToRect` puts the focus at the centre - which four zero insets do not.
+   * Measured in ADR 0022; the parser is the only place that can keep them apart.
+   */
+  it.each([
+    ['<a:path><a:fillToRect l="50000" t="50000" r="50000" b="50000"/></a:path>', 'rect', 'rect'],
+    ['<a:path path="circle"/>', 'circle', null],
+    ['<a:path path="rect"/>', 'rect', null],
+    ['<a:path/>', 'rect', null],
+    ['<a:path path="circle"><a:fillToRect/></a:path>', 'circle', 'rect'],
+  ])('parses %s as path=%s', (shade, kind, rect) => {
+    const sheet = parse('slide', {
+      shapes: [
+        '<p:sp><p:nvSpPr><p:cNvPr id="9" name="g"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
+          '<p:spPr><a:gradFill><a:gsLst>' +
+          '<a:gs pos="0"><a:srgbClr val="000000"/></a:gs>' +
+          '<a:gs pos="100000"><a:srgbClr val="FFFFFF"/></a:gs>' +
+          `</a:gsLst>${shade}</a:gradFill></p:spPr></p:sp>`,
+      ],
+    });
+    const fill = sheet.shapes[0]!.fill;
+    if (fill?.type !== 'gradient') throw new Error('expected a gradient fill');
+    const found = fill.shade;
+    if (found?.kind !== 'path') throw new Error('expected a path shade');
+    expect(found.path).toBe(kind);
+    if (rect === null) expect(found.fillToRect).toBeNull();
+    else expect(found.fillToRect).not.toBeNull();
+  });
+
   it('reads a graphicFrame geometry from p:xfrm, not from p:spPr', () => {
     const sheet = parse('slide', {
       shapes: [

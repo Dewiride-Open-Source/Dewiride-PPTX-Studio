@@ -70,8 +70,11 @@ export interface LinearShade {
 export interface PathShade {
   readonly kind: 'path';
   readonly path: 'shape' | 'circle' | 'rect';
-  /** `a:fillToRect`. The ramp starts here and reaches its last stop at the edge. */
-  readonly fillToRect: RelativeRect;
+  /**
+   * `a:fillToRect`, or `null` when the element was absent - which is a different
+   * focus from four zero insets, measured. ADR 0022.
+   */
+  readonly fillToRect: RelativeRect | null;
 }
 
 export type GradientShade = LinearShade | PathShade;
@@ -129,14 +132,67 @@ export interface GroupFill {
   readonly type: 'group';
 }
 
+/** Where `a:tile` puts one whole tile against the shape box. ADR 0036. */
+export type TileAlign = 'tl' | 't' | 'tr' | 'l' | 'ctr' | 'r' | 'bl' | 'b' | 'br';
+
 /**
- * `a:blipFill` - an image fill, carried opaquely.
+ * One `a:blip` colour effect, in document order.
  *
- * The image pipeline is not this sub-phase and not this package. Modelled for
- * the same two reasons as `GroupFill`.
+ * Every curve here is measured against real PowerPoint in
+ * `corpus/ground-truth/blips.json`; the weights are BT.709 and the alpha is an
+ * opacity. ADR 0036.
  */
+export type BlipEffect =
+  | { readonly kind: 'grayscale' }
+  | { readonly kind: 'biLevel'; readonly thresh: number }
+  | { readonly kind: 'lum'; readonly bright: number; readonly contrast: number }
+  | { readonly kind: 'duotone'; readonly from: Color; readonly to: Color }
+  | { readonly kind: 'alphaModFix'; readonly amt: number }
+  | {
+      readonly kind: 'clrChange';
+      readonly from: Color;
+      readonly to: Color;
+      readonly useAlpha: boolean;
+    };
+
+/** `a:stretch` - one copy of the source, mapped onto the shape box. */
+export interface BlipStretch {
+  readonly kind: 'stretch';
+  /** `a:fillRect`: insets of the destination, and they may be negative. */
+  readonly fillRect: RelativeRect;
+}
+
+/** `a:tile` - the source repeated on a lattice. */
+export interface BlipTile {
+  readonly kind: 'tile';
+  /** `@tx`/`@ty` in EMU, positive right and down, from the `@algn` anchor. */
+  readonly tx: number;
+  readonly ty: number;
+  /** `@sx`/`@sy` in hundred-thousandths of the natural tile size. */
+  readonly sx: number;
+  readonly sy: number;
+  /** `@flip`. Mirrors ALTERNATE tiles, so the visible period doubles. */
+  readonly flip: TileFlipMode;
+  readonly algn: TileAlign;
+}
+
+/** `a:blipFill` - an image fill. */
 export interface BlipFill {
   readonly type: 'blip';
+  /**
+   * `a:blip/@r:embed`, which the caller resolves against the part's own rels -
+   * the same contract `buBlip` uses.
+   */
+  readonly embed: string;
+  /** The part whose rels `embed` is scoped to; rIds are per-part, never global. */
+  readonly part: string;
+  /** `a:srcRect`: insets of the SOURCE, as fractions of the image. */
+  readonly srcRect: RelativeRect;
+  readonly mode: BlipStretch | BlipTile;
+  readonly effects: readonly BlipEffect[];
+  /** `@dpi`. Zero, which is what PowerPoint writes, means the image's own. */
+  readonly dpi: number;
+  readonly rotWithShape: boolean;
 }
 
 export type Fill = NoFill | SolidFill | GradientFill | PatternFill | GroupFill | BlipFill;

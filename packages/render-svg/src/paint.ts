@@ -30,6 +30,8 @@ import {
   type Rgba,
 } from '@pptx-studio/paint';
 
+import { blipPaint, type MediaResolver } from './image/blip.js';
+import { dataUri, imageSize } from './image/header.js';
 import { element, num, type AttributeValue, type SvgElement } from './node.js';
 import type { Box } from './transform.js';
 
@@ -41,11 +43,14 @@ export class Defs {
   private next = 0;
   /** A per-slide prefix, so two slides in one document cannot collide. */
   private readonly prefix: string;
+  /** How an image fill reaches its picture; absent means none can be drawn. */
+  readonly media: MediaResolver | undefined;
 
   // Written out rather than declared as a parameter property: the repository
   // lints for `erasableSyntaxOnly`, so nothing here may need a runtime shim.
-  constructor(prefix: string) {
+  constructor(prefix: string, media?: MediaResolver) {
     this.prefix = prefix;
+    this.media = media;
   }
 
   id(): string {
@@ -128,10 +133,11 @@ function gradientPaint(
   }
 
   const geometry = pathGeometry(fill.shade, box.cx, box.cy);
-  const cx = box.x + geometry.fx * box.cx;
-  const cy = box.y + geometry.fy * box.cy;
+  const fx = box.x + geometry.fx;
+  const fy = box.y + geometry.fy;
 
-  // A `path="circle"` really is a circle in shape units, so it goes out as one.
+  // `path="circle"` maps onto SVG exactly: the outer circle is the shape's own
+  // and the focus is `fx`/`fy`, which is the construction ADR 0022 measured.
   // `rect` and `shape` are a Chebyshev distance - concentric rectangles - which
   // SVG has no primitive for; an ellipse inscribed in the shape is the closest
   // single element and is visibly nearer than a circle on anything but a square.
@@ -140,7 +146,15 @@ function gradientPaint(
     defs.add(
       element(
         'radialGradient',
-        { id, gradientUnits: 'userSpaceOnUse', cx, cy, r: geometry.radius, fx: cx, fy: cy },
+        {
+          id,
+          gradientUnits: 'userSpaceOnUse',
+          cx: box.x + geometry.cx,
+          cy: box.y + geometry.cy,
+          r: geometry.radius,
+          fx,
+          fy,
+        },
         stops,
       ),
     );
@@ -156,7 +170,7 @@ function gradientPaint(
           cx: 0,
           cy: 0,
           r: 1,
-          gradientTransform: `translate(${num(cx)} ${num(cy)}) scale(${num(rx)} ${num(ry)})`,
+          gradientTransform: `translate(${num(fx)} ${num(fy)}) scale(${num(rx)} ${num(ry)})`,
         },
         stops,
       ),
@@ -243,10 +257,7 @@ export function fillAttributes(fill: Fill | null, ctx: ColorContext, box: Box, d
     case 'pattern':
       return patternPaint(fill, ctx, box, defs);
     case 'blip':
-      // 2.10 draws geometry. The image pipeline is Phase 4's, and a shape whose
-      // picture has not been decoded paints nothing rather than a grey box -
-      // which is also what happens to one whose blip is missing.
-      return { fill: 'none' };
+      return blipPaint(fill, ctx, box, defs, defs.media, imageSize, dataUri);
     case 'group':
       // A `grpFill` that reached no enclosing group paints nothing. Measured on
       // a top-level shape and on a group whose own fill is `a:noFill`.

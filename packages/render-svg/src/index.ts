@@ -159,3 +159,6 @@ export {
   type Frame,
   type Vec,
 } from './transform.js';
+
+export { blipPaint, type MediaImage, type MediaResolver } from './image/blip.js';
+export { dataUri, imageSize } from './image/header.js';

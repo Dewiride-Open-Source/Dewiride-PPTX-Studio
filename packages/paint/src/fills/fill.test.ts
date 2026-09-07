@@ -129,7 +129,12 @@ function readGradient(xml: string): GradientFill {
     stops.push({ pos: Number(m[1]), color: readColor(m[2]!) });
   }
   const linear = /<a:lin ang="(-?\d+)" scaled="(\d)"\/>/.exec(xml);
-  const path = /<a:path path="(shape|circle|rect)"><a:fillToRect ([^/]*)\/><\/a:path>/.exec(xml);
+  // Both halves optional, and both absences mean something: no `@path` is the
+  // box ramp and no `a:fillToRect` is the centre.
+  const path =
+    /<a:path(?: path="(shape|circle|rect)")?(?:\/>|>(?:<a:fillToRect ([^/]*)\/>)?<\/a:path>)/.exec(
+      xml,
+    );
   const tile = /<a:tileRect ([^/]*)\/>/.exec(xml);
   return {
     type: 'gradient',
@@ -137,7 +142,11 @@ function readGradient(xml: string): GradientFill {
     shade: linear
       ? { kind: 'linear', ang: Number(linear[1]), scaled: linear[2] === '1' }
       : path
-        ? { kind: 'path', path: path[1] as 'circle', fillToRect: readRect(path[2]!) }
+        ? {
+            kind: 'path',
+            path: (path[1] ?? 'rect') as 'circle',
+            fillToRect: path[2] === undefined ? null : readRect(path[2]),
+          }
         : null,
     tileRect: tile ? readRect(tile[1]!) : null,
     flip: (/flip="(none|x|y|xy)"/.exec(xml)?.[1] ?? 'none') as 'none',
@@ -199,9 +208,12 @@ function gridPoint(p: Probe, row: number, col: number): { x: number; y: number }
 
 describe('the C3 fixture', () => {
   it('holds every probe the experiment ran', () => {
-    expect(PROBES).toHaveLength(144);
-    expect(new Set(PROBES.map((p) => p.deck)).size).toBe(23);
+    expect(PROBES).toHaveLength(182);
+    expect(new Set(PROBES.map((p) => p.deck)).size).toBe(34);
     expect(PROBES.filter((p) => p.group === 'pattern')).toHaveLength(54);
+    // The second pass, which closed ADR 0022's open questions.
+    expect(PROBES.filter((p) => p.group === 'focus')).toHaveLength(14);
+    expect(PROBES.filter((p) => p.group === 'background')).toHaveLength(8);
   });
 
   it('records which packages PowerPoint refused', () => {
@@ -527,11 +539,10 @@ describe('path gradients', () => {
       p.cx,
       p.cy,
     );
-    expect(geo.centred).toBe(true);
     // The top edge's midpoint is much closer to the centre than the left edge's,
     // in shape units. An ellipse would put both at 1.
-    const top = pathPositionAt(geo, p.cx / 2, 0, p.cx, p.cy);
-    const left = pathPositionAt(geo, 0, p.cy / 2, p.cx, p.cy);
+    const top = pathPositionAt(geo, p.cx / 2, 0);
+    const left = pathPositionAt(geo, 0, p.cy / 2);
     expect(top).toBeCloseTo(0.315, 2);
     expect(left).toBeCloseTo(0.949, 2);
   });
@@ -542,9 +553,9 @@ describe('path gradients', () => {
       100,
       100,
     );
-    expect(pathPositionAt(geo, 50, 50, 100, 100)).toBeCloseTo(0, 6);
-    expect(pathPositionAt(geo, 100, 50, 100, 100)).toBeCloseTo(1, 6);
-    expect(pathPositionAt(geo, 75, 60, 100, 100)).toBeCloseTo(0.5, 6);
+    expect(pathPositionAt(geo, 50, 50)).toBeCloseTo(0, 6);
+    expect(pathPositionAt(geo, 100, 50)).toBeCloseTo(1, 6);
+    expect(pathPositionAt(geo, 75, 60)).toBeCloseTo(0.5, 6);
   });
 
   it('reads an all-zero fillToRect as the top-left corner, not as the whole box', () => {
@@ -555,28 +566,90 @@ describe('path gradients', () => {
     );
     expect(geo.fx).toBe(0);
     expect(geo.fy).toBe(0);
-    expect(geo.centred).toBe(false);
-    expect(pathPositionAt(geo, 0, 0, 100, 100)).toBe(0);
-    expect(pathPositionAt(geo, 100, 100, 100, 100)).toBe(1);
+    expect(pathPositionAt(geo, 0, 0)).toBe(0);
+    expect(pathPositionAt(geo, 100, 100)).toBe(1);
   });
 
-  it('predicts the corner fill PowerPoint writes for itself', () => {
-    const p = probe('path-rect-corner-pp');
+  it('reads an ABSENT fillToRect as the centre, which four zero insets are not', () => {
+    // `pathdef-norect-rect` fits the centre at rms 0.45 and the corner at 72.6.
+    // The two spellings are a different picture, so the field cannot be defaulted.
+    const absent = pathGeometry({ kind: 'path', path: 'rect', fillToRect: null }, 100, 100);
+    expect([absent.fx, absent.fy]).toEqual([50, 50]);
+    const zeroes = pathGeometry(
+      { kind: 'path', path: 'rect', fillToRect: { l: 0, t: 0, r: 0, b: 0 } },
+      100,
+      100,
+    );
+    expect([zeroes.fx, zeroes.fy]).not.toEqual([absent.fx, absent.fy]);
+  });
+
+  it('puts the outer circle on the shape, not on the focus', () => {
+    // The refuted reading: concentric circles about the focus, scaled to the
+    // farthest corner, which is what the first pass shipped. It is out by up to
+    // 49 bytes on the eight off-centre probes.
+    const geo = pathGeometry(
+      { kind: 'path', path: 'circle', fillToRect: { l: 10000, t: 10000, r: 90000, b: 90000 } },
+      100,
+      100,
+    );
+    expect([geo.fx, geo.fy]).toEqual([10, 10]);
+    expect([geo.cx, geo.cy]).toEqual([50, 50]);
+    expect(geo.radius).toBeCloseTo(Math.hypot(100, 100) / 2, 9);
+    // A point on the far side reaches the last stop at the shape's own circle,
+    // not at a circle centred on the focus.
+    expect(pathPositionAt(geo, 100, 100)).toBeCloseTo(1, 6);
+    expect(pathPositionAt(geo, 10, 10)).toBeCloseTo(0, 6);
+  });
+
+  /**
+   * The whole path measurement, re-derived.
+   *
+   * Twenty-seven probes over eight foci, three aspect ratios and every spelling
+   * of `a:path`. This is the test that fails if the focal construction is wrong,
+   * and the reason the individual cases above can stay short.
+   */
+  it.each(
+    PROBES.filter(
+      (p) =>
+        (p.group === 'focus' || p.group === 'path' || p.group === 'pathdef') &&
+        p.grid !== undefined &&
+        // `shape` on an ellipse follows the outline, which needs the geometry
+        // package; `@pptx-studio/paint` has only the box.
+        !p.id.includes('ellipse'),
+    ).map((p) => [p.id, p] as const),
+  )('predicts every sample of %s', (_id, p) => {
     const fill = readGradient(p.fill);
     const shade = fill.shade;
     if (shade?.kind !== 'path') throw new Error('expected a path shade');
     const geo = pathGeometry(shade, p.cx, p.cy);
     const grid = samples(p.grid!);
     let worst = 0;
+    let sum = 0;
+    let n = 0;
     for (let r = 0; r < GRID_N; r++) {
       for (let c = 0; c < GRID_N; c++) {
         const { x, y } = gridPoint(p, r, c);
-        const t = pathPositionAt(geo, x, y, p.cx, p.cy);
+        const t = pathPositionAt(geo, x, y);
         const got = bytes(gradientColorAt(fill, t, CTX));
-        worst = Math.max(worst, Math.abs(got[0] - grid[r * GRID_N + c]![0]));
+        const want = grid[r * GRID_N + c]!;
+        for (let ch = 0; ch < 3; ch++) {
+          const e = Math.abs(got[ch]! - want[ch]!);
+          // Every probe's worst sample sits on the focus, where the two-colour
+          // curve climbs eight bytes in a hundredth of the ramp - so a lattice
+          // point half a pixel off reads several bytes out. That is a limit of
+          // sampling a near-vertical curve, and it is excluded by position
+          // rather than by raising the tolerance for everyone.
+          if (t > 0.05) worst = Math.max(worst, e);
+          sum += e * e;
+          n++;
+        }
       }
     }
-    expect(worst).toBeLessThan(5);
+    expect(Math.sqrt(sum / n)).toBeLessThan(2);
+    // Against the raw measurement the geometry is worst by 2.0 bytes on a circle
+    // and 4.0 on a box. This path adds the shipped fifteen-knot ramp on top,
+    // which the ramp tests bound at 1.9.
+    expect(worst).toBeLessThan(7);
   });
 
   it('all but ignores a tileRect on a path gradient', () => {
@@ -593,6 +666,93 @@ describe('path gradients', () => {
     }
     expect(worst).toBeLessThanOrEqual(1);
   });
+});
+
+describe('@flip', () => {
+  /**
+   * The first pass could not answer this: its four flip probes were a *centred*
+   * path tile, which is its own mirror image on both axes, so agreement between
+   * them said nothing. These tiles have an off-centre focus and a 30-degree
+   * ramp, and they still agree - so the attribute really is inert.
+   */
+  it.each(['path', 'lin'] as const)('changes nothing on an asymmetric %s tile', (kind) => {
+    const base = samples(probe(`flipasym-${kind}-none`).grid!);
+    for (const flip of ['x', 'y', 'xy'] as const) {
+      const other = samples(probe(`flipasym-${kind}-${flip}`).grid!);
+      let worst = 0;
+      for (let i = 0; i < base.length; i++) {
+        for (let ch = 0; ch < 3; ch++) {
+          worst = Math.max(worst, Math.abs(base[i]![ch]! - other[i]![ch]!));
+        }
+      }
+      expect(worst, `${kind} flip="${flip}"`).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('is asymmetric enough for that to mean something', () => {
+    // The guard on the test above: if the tile were symmetric, agreement would
+    // be free. A mirrored copy of it has to disagree with the original.
+    const base = samples(probe('flipasym-lin-none').grid!);
+    let worst = 0;
+    for (let r = 0; r < GRID_N; r++) {
+      for (let c = 0; c < GRID_N; c++) {
+        const there = base[r * GRID_N + c]![0];
+        const mirrored = base[r * GRID_N + (GRID_N - 1 - c)]![0];
+        worst = Math.max(worst, Math.abs(there - mirrored));
+      }
+    }
+    expect(worst).toBeGreaterThan(60);
+  });
+});
+
+describe('a gradient on the slide background', () => {
+  /**
+   * A background has no shape box, so its ramp needs a rectangle from somewhere.
+   * It is the slide: each deck carries the same fill on its background and on a
+   * shape in one quadrant, and predicting the background over the slide's own
+   * rectangle lands within a byte of what PowerPoint painted.
+   */
+  it.each(['bg-lin', 'bg-lin-vert', 'bg-path', 'bg-path-off'])(
+    'runs %s over the slide, not over some smaller box',
+    (deck) => {
+      const slide = probe(`${deck}-slide`);
+      const shape = probe(`${deck}-shape`);
+      const fill = readGradient(shape.fill);
+      const shade = fill.shade;
+      if (shade === null) throw new Error('expected a shade');
+      const geo = shade.kind === 'path' ? pathGeometry(shade, slide.cx, slide.cy) : null;
+      const vector =
+        shade.kind === 'linear' ? linearGradientVector(shade, slide.cx, slide.cy) : null;
+      const grid = samples(slide.grid!);
+      let worst = 0;
+      for (let r = 0; r < GRID_N; r++) {
+        for (let c = 0; c < GRID_N; c++) {
+          const { x, y } = gridPoint(slide, r, c);
+          // The comparison shape sits on top of the background in one quadrant.
+          if (
+            x >= shape.x - slide.x &&
+            x < shape.x - slide.x + shape.cx &&
+            y >= shape.y - slide.y &&
+            y < shape.y - slide.y + shape.cy
+          ) {
+            continue;
+          }
+          let t: number;
+          if (geo !== null) {
+            t = pathPositionAt(geo, x, y);
+          } else {
+            const dx = vector!.x2 - vector!.x1;
+            const dy = vector!.y2 - vector!.y1;
+            t = ((x - vector!.x1) * dx + (y - vector!.y1) * dy) / (dx * dx + dy * dy);
+          }
+          const got = bytes(gradientColorAt(fill, Math.min(1, Math.max(0, t)), CTX));
+          const want = grid[r * GRID_N + c]!;
+          for (let ch = 0; ch < 3; ch++) worst = Math.max(worst, Math.abs(got[ch]! - want[ch]!));
+        }
+      }
+      expect(worst).toBeLessThan(7);
+    },
+  );
 });
 
 describe('rotWithShape', () => {

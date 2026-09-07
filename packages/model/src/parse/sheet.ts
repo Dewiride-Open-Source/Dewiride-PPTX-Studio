@@ -312,8 +312,8 @@ function parseShape(element: XElement, kind: ShapeKind, partName: string): Shape
       geometryHost === undefined
         ? undefined
         : parseXfrm(geometryHost, partName, kind === 'graphicFrame' ? 'p:xfrm' : 'a:xfrm'),
-    fill: spPr === undefined ? undefined : parseFill(spPr),
-    line: spPr === undefined ? undefined : parseLine(spPr),
+    fill: spPr === undefined ? undefined : parseFill(spPr, partName),
+    line: spPr === undefined ? undefined : parseLine(spPr, partName),
     effects: spPr === undefined ? undefined : parseEffects(spPr),
     style: parseStyle(element, partName),
     prstGeom: prstGeom === undefined ? undefined : (attributeValue(prstGeom, 'prst') ?? ''),
@@ -348,7 +348,7 @@ function parseBackground(cSld: XElement, partName: string): Background | undefin
 
   const pr = firstChild(bg, 'p:bgPr');
   if (pr === undefined) return undefined;
-  const fill = parseFill(pr);
+  const fill = parseFill(pr, partName);
   // `p:bgPr` requires a fill. An `a:noFill` inside one is honoured rather than
   // treated as absent: measured in 2.9, a slide declaring it paints nothing and
   // does not fall through to its layout.
@@ -403,12 +403,12 @@ function parseFontScheme(element: XElement | undefined): FontScheme {
   };
 }
 
-function parseFormatScheme(element: XElement | undefined): FormatScheme | null {
+function parseFormatScheme(element: XElement | undefined, partName: string): FormatScheme | null {
   if (element === undefined) return null;
   const fills = (name: string): Fill[] => {
     const list = firstChild(element, name);
     if (list === undefined) return [];
-    return childElements(list).map((child) => parseFillElement(child));
+    return childElements(list).map((child) => parseFillElement(child, partName));
   };
   const lineList = firstChild(element, 'a:lnStyleLst');
   const lines: Line[] =
@@ -416,7 +416,7 @@ function parseFormatScheme(element: XElement | undefined): FormatScheme | null {
       ? []
       : childElements(lineList)
           .filter((child) => child.qname === 'a:ln')
-          .map((child) => parseLineElement(child));
+          .map((child) => parseLineElement(child, partName));
   const effectList = firstChild(element, 'a:effectStyleLst');
   const effects: (readonly Effect[])[] =
     effectList === undefined
@@ -445,7 +445,7 @@ export function parseTheme(root: XElement, partName: string): Theme {
     name: attributeValue(root, 'name') ?? null,
     scheme: parseScheme(scheme, partName),
     fonts: parseFontScheme(firstChild(elements, 'a:fontScheme')),
-    format: parseFormatScheme(firstChild(elements, 'a:fmtScheme')),
+    format: parseFormatScheme(firstChild(elements, 'a:fmtScheme'), partName),
     node: root,
   };
 }

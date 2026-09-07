@@ -35,7 +35,7 @@ interface ProbeInput {
   index: number;
   group: string;
   question: string;
-  sample: 'strip' | 'grid' | 'tile';
+  sample: 'strip' | 'grid' | 'tile' | 'corner';
   fill: string;
   prst: string;
   rot: number;
@@ -150,6 +150,8 @@ const fromBlend = (c: number): number => Math.pow(Math.min(1, Math.max(0, c)), 1
 const STRIP_N = 481;
 /** A 13 x 13 lattice over the interior. Enough to fit a direction or read a path. */
 const GRID_N = 13;
+/** Pixels either side of a profile corner, at 1:1. Odd, so one lands on it. */
+const CORNER_N = 257;
 
 function sampleStrip(bmp: Bitmap, probe: ProbeInput): string {
   const { x0, y0, x1, y1 } = pixelRect(probe, bmp.width, bmp.height);
@@ -158,6 +160,19 @@ function sampleStrip(bmp: Bitmap, probe: ProbeInput): string {
   for (let k = 0; k < STRIP_N; k++) {
     const x = Math.min(x1 - 1, x0 + Math.round((k / (STRIP_N - 1)) * (x1 - x0 - 1)));
     out.push(hex(bmp.pixel(x, ym)));
+  }
+  return out.join('');
+}
+
+/** `CORNER_N` pixels at 1:1, centred on the shape's horizontal midpoint. */
+function sampleCorner(bmp: Bitmap, probe: ProbeInput): string {
+  const { x0, y0, x1, y1 } = pixelRect(probe, bmp.width, bmp.height);
+  const ym = Math.floor((y0 + y1) / 2);
+  const xm = Math.floor((x0 + x1) / 2);
+  const half = (CORNER_N - 1) / 2;
+  const out: string[] = [];
+  for (let k = -half; k <= half; k++) {
+    out.push(hex(bmp.pixel(Math.min(x1 - 1, Math.max(x0, xm + k)), ym)));
   }
   return out.join('');
 }
@@ -318,6 +333,8 @@ interface FixtureProbe extends ProbeInput {
   strip?: string;
   /** `GRID_N * GRID_N` samples in row-major order, six hex digits each. */
   grid?: string;
+  /** Export width to `CORNER_N` samples across the profile corner. */
+  corner?: Record<string, string>;
   tile?: Tile;
   tileByWidth?: Record<string, [number, number] | null>;
   com?: {
@@ -371,7 +388,11 @@ for (const probe of inputs.probes) {
   if (main) {
     const bmp = bitmap(main.file);
     if (probe.sample === 'strip') entry.strip = sampleStrip(bmp, probe);
-    else if (probe.sample === 'grid') entry.grid = sampleGrid(bmp, probe);
+    else if (probe.sample === 'corner') {
+      entry.corner = {};
+      for (const shot of shots)
+        entry.corner[String(shot.width)] = sampleCorner(bitmap(shot.file), probe);
+    } else if (probe.sample === 'grid') entry.grid = sampleGrid(bmp, probe);
     else if (forTile) {
       entry.tile = sampleTile(bitmap(forTile.file), probe);
       if (shots.length > 1) {
@@ -605,6 +626,356 @@ for (const p of fixtureProbes.filter((q) => q.group === 'path')) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* 6b - where an off-centre focus puts the ramp                               */
+/* -------------------------------------------------------------------------- */
+
+/** The measured two-stop weight at ramp position `t`, between strip samples. */
+function weightAt(t: number): number {
+  const u = Math.min(1, Math.max(0, t)) * (STRIP_N - 1);
+  const i = Math.min(STRIP_N - 2, Math.floor(u));
+  return WEIGHT[i]! + (WEIGHT[i + 1]! - WEIGHT[i]!) * (u - i);
+}
+
+const SRGB_STOP = /<a:gs pos="(\d+)"><a:srgbClr val="([0-9A-F]{6})"\/><\/a:gs>/g;
+
+/** The two end colours of a plain two-stop `srgbClr` gradient, by `@pos`. */
+function endStops(fill: string): [[number, number, number], [number, number, number]] | null {
+  const found: { pos: number; rgb: [number, number, number] }[] = [];
+  for (const m of fill.matchAll(SRGB_STOP)) {
+    const v = m[2]!;
+    found.push({
+      pos: Number(m[1]),
+      rgb: [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)],
+    });
+  }
+  if (found.length !== 2) return null;
+  found.sort((a, b) => a.pos - b.pos);
+  if (found[0]!.pos !== 0 || found[1]!.pos !== PERCENT) return null;
+  return [found[0]!.rgb, found[1]!.rgb];
+}
+
+/** What a two-stop probe paints at ramp position `t`, per channel, 0 to 255. */
+function colorAt(
+  stops: [[number, number, number], [number, number, number]],
+  t: number,
+): [number, number, number] {
+  const w = weightAt(t);
+  return [0, 1, 2].map((i) => {
+    const a = toBlend(stops[0][i]! / 255);
+    const b = toBlend(stops[1][i]! / 255);
+    return 255 * fromBlend(a + (b - a) * w);
+  }) as [number, number, number];
+}
+
+/** `ST_Percentage`, hundred-thousandths. */
+const PERCENT = 100000;
+
+const FILL_TO_RECT = /<a:fillToRect([^/]*)\/>/;
+const INSET_OF = {
+  l: /\sl="(-?\d+)"/,
+  t: /\st="(-?\d+)"/,
+  r: /\sr="(-?\d+)"/,
+  b: /\sb="(-?\d+)"/,
+} as const;
+
+/**
+ * The focus a probe's `a:fillToRect` names, in shape fractions.
+ *
+ * All four insets zero is the top-left corner, not the whole box: PowerPoint
+ * paints `path-circle-whole` with its dark end in the corner, and an element
+ * carrying no information is indistinguishable from an absent one.
+ */
+function focusOf(fill: string): [number, number] | null {
+  const m = FILL_TO_RECT.exec(fill);
+  if (m === null) return null;
+  const attrs = m[1] ?? '';
+  const read = (k: keyof typeof INSET_OF): number => {
+    const hit = INSET_OF[k].exec(attrs);
+    return hit === null ? 0 : Number(hit[1]) / PERCENT;
+  };
+  const l = read('l');
+  const t = read('t');
+  const r = read('r');
+  const b = read('b');
+  if (l === 0 && t === 0 && r === 0 && b === 0) return [0, 0];
+  return [(l + (1 - r)) / 2, (t + (1 - b)) / 2];
+}
+
+const PATH_KIND = /<a:path(?:\s+path="(\w+)")?\s*[/>]/;
+
+/**
+ * Ramp position at a point, given a focus, for one candidate reading.
+ *
+ * Everything is in export pixels measured from the shape's top-left corner. The
+ * export is isotropic - 1920 across 12192000 EMU and 1080 across 6858000 is the
+ * same scale on both axes - so a circle in shape units is a circle here too, and
+ * a model written in shape *fractions* is a different model on any shape that is
+ * not square. That is what the wide and tall probes are for.
+ */
+type PathModel = (fx: number, fy: number, w: number, h: number) => (x: number, y: number) => number;
+
+/** Solve |P - (F + t(C - F))| = tR: the contour through P, in SVG's focal form. */
+function focalAt(
+  fx: number,
+  fy: number,
+  cx: number,
+  cy: number,
+  radius: number,
+): (x: number, y: number) => number {
+  const ex = cx - fx;
+  const ey = cy - fy;
+  const a = ex * ex + ey * ey - radius * radius;
+  return (x, y) => {
+    const dx = x - fx;
+    const dy = y - fy;
+    const b = -2 * (dx * ex + dy * ey);
+    const c = dx * dx + dy * dy;
+    if (Math.abs(a) < 1e-9) return b === 0 ? 0 : -c / b;
+    const disc = b * b - 4 * a * c;
+    if (disc < 0) return 1;
+    const s = Math.sqrt(disc);
+    const roots = [(-b + s) / (2 * a), (-b - s) / (2 * a)].filter((t) => t >= -1e-9);
+    return roots.length === 0 ? 1 : Math.min(...roots);
+  };
+}
+
+const farthestCorner = (fx: number, fy: number, w: number, h: number): number =>
+  Math.max(
+    ...(
+      [
+        [0, 0],
+        [w, 0],
+        [0, h],
+        [w, h],
+      ] as const
+    ).map(([x, y]) => Math.hypot(x - fx, y - fy)),
+  );
+
+const PATH_MODELS: Readonly<Record<string, PathModel>> = {
+  // The reading this experiment was run to test: SVG's own focal radial, whose
+  // outer circle is the one the centred probes already fixed.
+  focal: (fx, fy, w, h) => focalAt(fx, fy, w / 2, h / 2, Math.hypot(w, h) / 2),
+  'focal-farcorner': (fx, fy, w, h) => focalAt(fx, fy, w / 2, h / 2, farthestCorner(fx, fy, w, h)),
+  // The reading that shipped from the first pass.
+  'concentric-farcorner': (fx, fy, w, h) => {
+    const radius = farthestCorner(fx, fy, w, h);
+    return (x, y) => Math.hypot(x - fx, y - fy) / radius;
+  },
+  'concentric-halfdiag': (fx, fy, w, h) => {
+    const radius = Math.hypot(w, h) / 2;
+    return (x, y) => Math.hypot(x - fx, y - fy) / radius;
+  },
+  // The reading `path="rect"` needs, and the one a renderer reaches for first.
+  box: (fx, fy, w, h) => (x, y) => {
+    const dx = x - fx;
+    const dy = y - fy;
+    const rx = dx >= 0 ? w - fx : fx;
+    const ry = dy >= 0 ? h - fy : fy;
+    const ax = rx <= 0 ? (dx === 0 ? 0 : 2) : Math.abs(dx) / rx;
+    const ay = ry <= 0 ? (dy === 0 ? 0 : 2) : Math.abs(dy) / ry;
+    return Math.max(ax, ay);
+  },
+  // Focal, but in a space where the shape is a unit square - an ellipse fitted
+  // to the box rather than a circle. Identical on a square, so only the wide and
+  // tall probes can tell it apart from `focal`.
+  'focal-ellipse': (fx, fy, w, h) => {
+    const inner = focalAt((fx / w) * 2, (fy / h) * 2, 1, 1, Math.SQRT2);
+    return (x, y) => inner((x / w) * 2, (y / h) * 2);
+  },
+};
+
+/** A rectangle of the export, in pixels, whose samples are not to be scored. */
+interface Exclusion {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+/**
+ * Root-mean-square byte error of a ramp-position function over a probe's grid.
+ *
+ * `at` is given a point in pixels from the probe rectangle's top-left, together
+ * with the rectangle's size, and returns where along the ramp that point is.
+ */
+function scoreGrid(
+  p: FixtureProbe,
+  fill: string,
+  at: (x: number, y: number, w: number, h: number) => number,
+  exclude?: Exclusion,
+): {
+  rms: number;
+  worst: number;
+  n: number;
+  worstAt: { u: number; v: number; t: number } | null;
+} | null {
+  const g = gridOf(p.id);
+  const stops = endStops(fill);
+  if (g === null || stops === null) return null;
+  const { x0, y0, x1, y1 } = pixelRect(p, 1920, 1080);
+  const w = x1 - x0;
+  const h = y1 - y0;
+  const ax = x0 + 1;
+  const ay = y0 + 1;
+  const bx = x1 - 2;
+  const by = y1 - 2;
+  let sum = 0;
+  let worst = 0;
+  let n = 0;
+  let worstAt: { u: number; v: number; t: number } | null = null;
+  for (let r = 0; r < GRID_N; r++) {
+    for (let c = 0; c < GRID_N; c++) {
+      const px = ax + Math.round((c / (GRID_N - 1)) * (bx - ax));
+      const py = ay + Math.round((r / (GRID_N - 1)) * (by - ay));
+      if (
+        exclude !== undefined &&
+        px >= exclude.x0 &&
+        px < exclude.x1 &&
+        py >= exclude.y0 &&
+        py < exclude.y1
+      ) {
+        continue;
+      }
+      const t = at(px - x0 + 0.5, py - y0 + 0.5, w, h);
+      const want = colorAt(stops, t);
+      const got = g[r * GRID_N + c]!;
+      for (let ch = 0; ch < 3; ch++) {
+        const e = Math.abs(want[ch]! - got[ch]!);
+        sum += e * e;
+        // The sample sitting on the focus is excluded: there the two-colour
+        // curve is near vertical and half a pixel of lattice error reads as
+        // several bytes, which is a fact about the probe rather than the model.
+        if (e > worst && t > 0.05) {
+          worst = e;
+          worstAt = { u: (px - x0) / w, v: (py - y0) / h, t };
+        }
+      }
+      n++;
+    }
+  }
+  return n === 0 ? null : { rms: Math.sqrt(sum / (n * 3)), worst, n, worstAt };
+}
+
+/** Root-mean-square byte error of one path model over one probe's grid. */
+function scorePath(
+  p: FixtureProbe,
+  model: PathModel,
+  exclude?: Exclusion,
+): {
+  rms: number;
+  worst: number;
+  n: number;
+  worstAt: { u: number; v: number; t: number } | null;
+} | null {
+  // An absent `a:fillToRect` is the centre, measured in section 9 - so these
+  // probes are scored here too rather than sitting outside the verdict.
+  const focus = focusOf(p.fill) ?? [0.5, 0.5];
+  return scoreGrid(
+    p,
+    p.fill,
+    (x, y, w, h) => model(focus[0] * w, focus[1] * h, w, h)(x, y),
+    exclude,
+  );
+}
+
+console.log('');
+console.log('6b. Where an off-centre focus puts the ramp.');
+console.log('    Hypothesis: concentric circles scaled to the farthest corner, which is what');
+console.log('    the first pass shipped. The alternative is SVG’s focal radial.');
+
+/** A fit at or under this is the measurement noise floor: the centred probes sit at 0.9. */
+const PATH_TOL = 4;
+
+const MODEL_NAMES = Object.keys(PATH_MODELS);
+const pathProbes = fixtureProbes.filter(
+  (p) =>
+    (p.group === 'focus' || p.group === 'path' || p.group === 'pathdef') && p.grid !== undefined,
+);
+console.log(
+  `    ${'probe'.padEnd(25)}${'kind'.padEnd(8)}${MODEL_NAMES.map((n) => n.slice(0, 20).padStart(22)).join('')}`,
+);
+interface PathRow {
+  id: string;
+  kind: string;
+  scores: Record<string, number>;
+}
+const pathRows: PathRow[] = [];
+for (const p of pathProbes) {
+  const kind = PATH_KIND.exec(p.fill)?.[1] ?? '(none)';
+  const scores: Record<string, number> = {};
+  for (const name of MODEL_NAMES) {
+    const s = scorePath(p, PATH_MODELS[name]!);
+    if (s !== null) scores[name] = s.rms;
+  }
+  if (Object.keys(scores).length === 0) continue;
+  pathRows.push({ id: p.id, kind, scores });
+  console.log(
+    `    ${p.id.padEnd(25)}${kind.padEnd(8)}${MODEL_NAMES.map((n) => (scores[n] ?? NaN).toFixed(2).padStart(22)).join('')}`,
+  );
+}
+
+/**
+ * The verdict, and the refusal.
+ *
+ * `path="shape"` on an ellipse is excluded: it follows the outline, which none of
+ * these rectangle models claims to describe, and the first pass already measured
+ * it. Everything else has to fall to exactly one model, and every other model has
+ * to be refuted by at least one probe - otherwise the probes did not separate
+ * them and the fixture would be recording a coincidence.
+ */
+function verdict(kinds: readonly string[], expected: string, label: string): void {
+  const rows = pathRows.filter((r) => kinds.includes(r.kind) && !r.id.includes('ellipse'));
+  if (rows.length === 0) throw new Error(`no probes for ${label}`);
+  const byWorst = rows
+    .map((r) => ({
+      id: r.id,
+      worst:
+        scorePath(
+          fixtureProbes.find((p) => p.id === r.id)!,
+          PATH_MODELS[expected]!,
+        )?.worst ?? Infinity,
+      where:
+        scorePath(
+          fixtureProbes.find((p) => p.id === r.id)!,
+          PATH_MODELS[expected]!,
+        )?.worstAt ?? null,
+    }))
+    .sort((a, b) => b.worst - a.worst);
+  console.log(
+    `    ${label}: worst single byte under "${expected}" is ${byWorst[0]!.worst.toFixed(1)} on ${byWorst[0]!.id}` +
+      ` at u=${byWorst[0]!.where?.u.toFixed(2) ?? '?'} v=${byWorst[0]!.where?.v.toFixed(2) ?? '?'} t=${byWorst[0]!.where?.t.toFixed(3) ?? '?'}` +
+      ` (then ${byWorst
+        .slice(1, 4)
+        .map((r) => `${r.id} ${r.worst.toFixed(1)}`)
+        .join(', ')})`,
+  );
+  const failed = rows.filter((r) => (r.scores[expected] ?? Infinity) > PATH_TOL);
+  if (failed.length > 0) {
+    throw new Error(
+      `${label}: "${expected}" does not fit ${failed.map((r) => `${r.id} (${(r.scores[expected] ?? NaN).toFixed(2)})`).join(', ')}`,
+    );
+  }
+  const survivors = MODEL_NAMES.filter(
+    (n) => n !== expected && rows.every((r) => (r.scores[n] ?? Infinity) <= PATH_TOL),
+  );
+  const worstOf = (n: string): number => Math.max(...rows.map((r) => r.scores[n] ?? Infinity));
+  console.log(
+    `    ${label}: "${expected}" fits all ${String(rows.length)} at rms <= ${worstOf(expected).toFixed(2)};` +
+      ` next best is ${MODEL_NAMES.filter((n) => n !== expected)
+        .map((n) => `${n} ${worstOf(n).toFixed(1)}`)
+        .join(', ')}`,
+  );
+  if (survivors.length > 0) {
+    throw new Error(
+      `${label}: ${survivors.join(', ')} fits as well as "${expected}" - the probes do not separate them`,
+    );
+  }
+}
+
+verdict(['circle'], 'focal', 'path="circle"');
+verdict(['rect', 'shape', '(none)'], 'box', 'path="rect", "shape" and the default');
+
+/* -------------------------------------------------------------------------- */
 /* 7 - tileRect and flip                                                      */
 /* -------------------------------------------------------------------------- */
 
@@ -646,6 +1017,278 @@ if (scaling.length > 0) {
 }
 const impure = fixtureProbes.filter((q) => q.group === 'pattern' && (q.tile?.soft ?? 0) > 0);
 console.log(`   tiles containing an antialiased pixel: ${String(impure.length)}`);
+
+/* -------------------------------------------------------------------------- */
+/* 9 - what a:path defaults to                                                */
+/* -------------------------------------------------------------------------- */
+
+console.log('');
+console.log('9. The defaults inside a:path.');
+console.log('   Both @path and a:fillToRect are optional, and a renderer has to pick something.');
+
+/** Score one probe against a named model at a focus the markup did not give. */
+function scoreAssuming(p: FixtureProbe, model: string, focus: [number, number]): number | null {
+  const inset = (v: number): string => String(Math.round(v * PERCENT));
+  const withFocus = p.fill.replace(
+    /<a:path(\s+path="\w+")?\s*\/>/,
+    `<a:path$1><a:fillToRect l="${inset(focus[0])}" t="${inset(focus[1])}" r="${inset(1 - focus[0])}" b="${inset(1 - focus[1])}"/></a:path>`,
+  );
+  if (withFocus === p.fill) return null;
+  return scorePath({ ...p, fill: withFocus }, PATH_MODELS[model]!)?.rms ?? null;
+}
+
+// Not exactly zero: four zero insets are the one case PowerPoint reads as
+// carrying no information, so `focusOf` would hand back the corner either way
+// and the two candidates would stop being distinguishable.
+const DEFAULT_FOCI: readonly (readonly [string, [number, number]])[] = [
+  ['centre', [0.5, 0.5]],
+  ['top-left', [0.0001, 0.0001]],
+];
+for (const p of fixtureProbes.filter((q) => q.group === 'pathdef')) {
+  const kind = PATH_KIND.exec(p.fill)?.[1] ?? '(none)';
+  if (focusOf(p.fill) !== null) {
+    const box = scorePath(p, PATH_MODELS['box']!)?.rms ?? NaN;
+    const focal = scorePath(p, PATH_MODELS['focal']!)?.rms ?? NaN;
+    console.log(
+      `   ${p.id.padEnd(22)} @path=${kind.padEnd(8)} box ${box.toFixed(2).padStart(6)}   focal ${focal.toFixed(2).padStart(6)}`,
+    );
+    continue;
+  }
+  for (const model of ['box', 'focal'] as const) {
+    const cells = DEFAULT_FOCI.map(
+      ([label, focus]) =>
+        `${label} ${(scoreAssuming(p, model, focus) ?? NaN).toFixed(2).padStart(6)}`,
+    );
+    console.log(
+      `   ${p.id.padEnd(22)} @path=${kind.padEnd(8)} as ${model.padEnd(5)}  ${cells.join('   ')}`,
+    );
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 10 - @flip, on a tile with no symmetry to hide behind                      */
+/* -------------------------------------------------------------------------- */
+
+console.log('');
+console.log('10. @flip on an asymmetric tile.');
+console.log('    The first pass used a centred path tile, which is its own mirror on both axes.');
+for (const kind of ['path', 'lin'] as const) {
+  const rows = fixtureProbes.filter((p) => p.id.startsWith(`flipasym-${kind}-`));
+  const baseGrid = gridOf(`flipasym-${kind}-none`);
+  if (baseGrid === null) continue;
+  for (const p of rows) {
+    const g = gridOf(p.id);
+    if (g === null) continue;
+    let worst = 0;
+    for (let i = 0; i < g.length; i++) {
+      for (let ch = 0; ch < 3; ch++) {
+        worst = Math.max(worst, Math.abs(g[i]![ch]! - baseGrid[i]![ch]!));
+      }
+    }
+    console.log(`    ${p.id.padEnd(22)} worst byte against flip="none": ${String(worst)}`);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 11 - the rounded corner: device pixels, or a share of the ramp?            */
+/* -------------------------------------------------------------------------- */
+
+console.log('');
+console.log('11. How wide the softened corner is.');
+console.log('    A corner sampled at pixel centres is already blunt: the apex almost never');
+console.log('    lands on one. So the candidates are box filters of a given width in device');
+console.log('    pixels, and zero - point sampling - is one of them.');
+
+const ARM_PCT = /soften-arm(\d+)/;
+
+/**
+ * The profile these probes ask for, before any rasteriser touches it: two
+ * straight arms in sRGB meeting at the middle stop, flat beyond the end stops.
+ */
+function idealProfile(armPx: number, mid: number): (x: number) => number {
+  const black = 0x00;
+  const apex = 0xe0;
+  const tail = 0x20;
+  return (x) => {
+    const d = x - mid;
+    if (d <= -armPx) return black;
+    if (d >= armPx) return tail;
+    return d <= 0
+      ? black + ((apex - black) * (d + armPx)) / armPx
+      : apex + ((tail - apex) * d) / armPx;
+  };
+}
+
+/** The ideal profile averaged over a box of `boxPx` centred on each pixel. */
+function boxFiltered(ideal: (x: number) => number, boxPx: number, at: number): number {
+  if (boxPx <= 0) return ideal(at);
+  const steps = 64;
+  let sum = 0;
+  for (let k = 0; k < steps; k++) {
+    sum += ideal(at + boxPx * ((k + 0.5) / steps - 0.5));
+  }
+  return sum / steps;
+}
+
+/** Widths in device pixels to score. 1.0 is the pixel's own footprint. */
+const BOX_WIDTHS = [0, 0.5, 1, 1.6, 2.5, 4];
+const softRows: { id: string; export: number; slope: number; rms: Record<string, number> }[] = [];
+for (const p of fixtureProbes.filter((q) => q.group === 'soften')) {
+  if (p.corner === undefined) continue;
+  const armPct = Number(ARM_PCT.exec(p.id)?.[1] ?? 0) / 100;
+  for (const [w, packed] of Object.entries(p.corner).sort((a, b) => Number(a[0]) - Number(b[0]))) {
+    const value = samples(packed).map((px) => px[0]!);
+    const mid = (value.length - 1) / 2;
+    const shapePx = (p.cx / inputs.slideSize.cx) * Number(w);
+    const armPx = armPct * shapePx;
+    // The middle stop is at half the shape, which is a pixel boundary, and the
+    // sample at `mid` is the pixel just past it - so the apex is half a pixel
+    // to the left of that sample's centre.
+    const ideal = idealProfile(armPx, mid - 0.5);
+    const span = Math.min(mid, Math.round(armPx));
+    const rms: Record<string, number> = {};
+    for (const box of BOX_WIDTHS) {
+      let sum = 0;
+      let n = 0;
+      for (let i = mid - span; i <= mid + span; i++) {
+        const e = boxFiltered(ideal, box, i) - value[i]!;
+        sum += e * e;
+        n++;
+      }
+      rms[String(box)] = Math.sqrt(sum / n);
+    }
+    softRows.push({
+      id: p.id,
+      export: Number(w),
+      slope: (0xe0 / armPx) * 1,
+      rms,
+    });
+  }
+}
+console.log(
+  `    ${'probe'.padEnd(15)}${'export'.padEnd(8)}${'bytes/px'.padEnd(10)}${BOX_WIDTHS.map((b) => `box ${b.toFixed(1)}`.padStart(10)).join('')}`,
+);
+for (const row of softRows) {
+  console.log(
+    `    ${row.id.padEnd(15)}${String(row.export).padEnd(8)}${row.slope.toFixed(1).padEnd(10)}${BOX_WIDTHS.map((b) => (row.rms[String(b)] ?? NaN).toFixed(2).padStart(10)).join('')}`,
+  );
+}
+const bestBox = BOX_WIDTHS.map((b) => ({
+  b,
+  worst: Math.max(...softRows.map((r) => r.rms[String(b)] ?? Infinity)),
+})).sort((a, b) => a.worst - b.worst);
+console.log(
+  `    best over all ${String(softRows.length)}: box ${bestBox[0]!.b.toFixed(1)} px at worst rms ${bestBox[0]!.worst.toFixed(2)};` +
+    ` next ${bestBox[1]!.b.toFixed(1)} px at ${bestBox[1]!.worst.toFixed(2)}`,
+);
+
+/*
+ * The pairing that settles it without any model at all.
+ *
+ * `arm1` exported at 3840 and `arm2` exported at 1920 are the same profile in
+ * device pixels - 19.2 px per arm, 11.7 bytes per pixel - and different profiles
+ * as fractions of the ramp, 1% against 2%. A rounding fixed in device pixels
+ * makes them the same picture; a rounding that is a share of the ramp makes the
+ * first one twice as blunt.
+ */
+console.log('');
+console.log('    The same corner in device pixels, from two different ramps:');
+const cornerOf = (id: string, width: number): number[] | null => {
+  const packed = fixtureProbes.find((q) => q.id === id)?.corner?.[String(width)];
+  return packed === undefined ? null : samples(packed).map((px) => px[0]!);
+};
+for (const [fine, coarse, armPx] of [
+  ['soften-arm1', 'soften-arm2', 19.2],
+  ['soften-arm2', 'soften-arm4', 38.4],
+  ['soften-arm4', 'soften-arm8', 76.8],
+] as const) {
+  const a = cornerOf(fine, 3840);
+  const b = cornerOf(coarse, 1920);
+  if (a === null || b === null) continue;
+  const mid = (a.length - 1) / 2;
+  // Three quarters of an arm: the corner and its approaches, and not the outer
+  // stops, where the two exports differ for a reason of their own - see below.
+  const near = Math.min(mid, Math.round(armPx * 0.75));
+  const far = Math.min(mid, Math.round(armPx * 1.2));
+  const band = (from: number, to: number): string => {
+    let worst = 0;
+    let sum = 0;
+    let n = 0;
+    for (let i = mid - to; i <= mid + to; i++) {
+      if (Math.abs(i - mid) < from) continue;
+      const e = Math.abs(a[i]! - b[i]!);
+      worst = Math.max(worst, e);
+      sum += e * e;
+      n++;
+    }
+    return `rms ${Math.sqrt(sum / n).toFixed(2)}, worst ${String(worst)}`;
+  };
+  console.log(
+    `    ${fine}@3840 vs ${coarse}@1920: corner ${band(0, near)};  outer stops ${band(near, far)}`,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* 12 - a gradient on the slide background                                    */
+/* -------------------------------------------------------------------------- */
+
+console.log('');
+console.log('12. What a gradient in p:bg is laid out over.');
+console.log('    Hypothesis: the slide, which is the only rectangle a background has.');
+const LIN_ANG = /<a:lin ang="(\d+)"/;
+for (const p of fixtureProbes.filter((q) => q.group === 'background')) {
+  if (p.grid === undefined) continue;
+  // The `-slide` probe is a noFill rectangle over the whole slide, so what it
+  // shows is the background - scored against the same markup its `-shape`
+  // sibling carries, with the sibling's own rectangle cut out of the samples.
+  const sibling = fixtureProbes.find((q) => q.id === `${p.deck}-shape`);
+  const onSlide = p.id.endsWith('-slide');
+  const fill = sibling?.fill ?? p.fill;
+  const exclude = onSlide && sibling !== undefined ? pixelRect(sibling, 1920, 1080) : undefined;
+  const kind = PATH_KIND.exec(fill)?.[1];
+  const ang = LIN_ANG.exec(fill)?.[1];
+  let label: string;
+  let score: {
+    rms: number;
+    worst: number;
+    n: number;
+    worstAt: { u: number; v: number; t: number } | null;
+  } | null;
+  if (kind !== undefined) {
+    label = kind === 'circle' ? 'focal' : 'box';
+    const focus = focusOf(fill) ?? [0.5, 0.5];
+    const model = PATH_MODELS[label]!;
+    score = scoreGrid(
+      p,
+      fill,
+      (x, y, w, h) => model(focus[0] * w, focus[1] * h, w, h)(x, y),
+      exclude,
+    );
+  } else {
+    // Zero points along +x and the angle increases clockwise, measured in
+    // section 5. The ramp runs from the box corner that projects lowest onto
+    // that direction to the one that projects highest.
+    const degrees = Number(ang ?? 0) / 60000;
+    const radians = degrees * (Math.PI / 180);
+    label = `lin ${degrees.toFixed(0)}deg`;
+    const ux = Math.cos(radians);
+    const uy = Math.sin(radians);
+    score = scoreGrid(
+      p,
+      fill,
+      (x, y, w, h) => {
+        const at = (px: number, py: number): number => px * ux + py * uy;
+        const ends = [at(0, 0), at(w, 0), at(0, h), at(w, h)];
+        const lo = Math.min(...ends);
+        return (at(x, y) - lo) / (Math.max(...ends) - lo);
+      },
+      exclude,
+    );
+  }
+  console.log(
+    `    ${p.id.padEnd(22)} ${label.padEnd(10)} rms ${(score?.rms ?? NaN).toFixed(2).padStart(6)} over ${String(score?.n ?? 0)} samples`,
+  );
+}
 
 /* -------------------------------------------------------------------------- */
 /* the fixture                                                                */

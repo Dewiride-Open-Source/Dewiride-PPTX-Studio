@@ -2,7 +2,7 @@
 
 Status: accepted
 Sub-phase: 2.7
-Date: 2026-09-03
+Date: 2026-09-03, amended 2026-09-07
 Fixture: `corpus/ground-truth/fills.json`
 Supersedes nothing. Amends the approved plan's 2.7 in three places, listed below.
 
@@ -36,14 +36,17 @@ read. That cost one script and settled three things:
 - PowerPoint writes `a:gsLst` **out of `@pos` order**. Its own from-centre
   variant is `pos="50000"`, `pos="0"`, `pos="100000"`.
 
-**Then C3.** 144 probes in 23 packages: `tools/ground-truth/paint/fills/probes.ts`,
+**Then C3.** 182 probes in 34 packages: `tools/ground-truth/paint/fills/probes.ts`,
 `tools/ground-truth/paint/fills/build-deck.ts`, `tools/ground-truth/paint/fills/read.ps1`, `tools/ground-truth/paint/fills/analyse.ts`. Ramps sampled at 481
 points across a full-width strip; two-dimensional probes on a 13 × 13 lattice;
 pattern tiles read at 1280 × 720, which over a 13.333-inch slide is exactly 96
-DPI and the only resolution at which a tile is 1:1 with its own pixels.
+DPI and the only resolution at which a tile is 1:1 with its own pixels; and
+profile corners at 1:1 over 257 pixels, because a 481-point strip across a
+1800-pixel shape cannot resolve a feature one pixel wide.
 
-Fifteen of the 144 are hostile and each is alone in its package, so a refusal
-names itself — the rule C2 paid for.
+Fifteen are hostile and each is alone in its package, so a refusal names itself —
+the rule C2 paid for. Thirty-eight came from the second pass; see the section
+below.
 
 ## Decisions
 
@@ -121,10 +124,17 @@ plan says they reverse; measured, they do not.
 
 **14. `a:fillToRect` behaves as a point at its centre.** A focus rectangle
 covering the middle half of a shape paints byte-for-byte what a point focus at
-the centre paints, over all 169 samples. There is no flat region to model. The
-exception is an all-zero `fillToRect`, which behaves as the top-left corner —
-most likely because it is indistinguishable from an element carrying no
-information.
+the centre paints, over all 169 samples. There is no flat region to model.
+
+**14a. The two ways of writing nothing are two different pictures.** An
+**all-zero** `fillToRect` is the top-left corner. An **absent** `a:fillToRect`
+is the **centre** — `pathdef-norect-rect` fits the centre at rms 0.45 and the
+corner at 72.6. So the element is nullable in the model rather than defaulted:
+collapsing the two spellings moves the light of every gradient that omits it.
+
+**14b. An absent `@path` paints the box ramp.** `pathdef-nopath` fits `box` at
+0.45 and the circle at 24.8. The schema makes the attribute optional and names no
+default; this is the measured one.
 
 **15. `path="circle"` is a circle, reaching its last stop at the corner.** On a
 3:1 shape the top edge's midpoint reads 0.30 and the left edge's 0.94, the ratio
@@ -133,6 +143,30 @@ for both. `path="rect"` is Chebyshev with each axis normalised to the distance
 from the focus to the edge it faces, which also reproduces the corner focus
 PowerPoint writes for itself. `path="shape"` follows the geometry's own outline —
 identical to `rect` on a rectangle, elliptical on an ellipse.
+
+**15a. An off-centre focus does not move the circle. It is SVG's focal radial.**
+The circle the last stop lands on is the _shape's_ — centred, with the
+half-diagonal for a radius — whatever the focus says; the focus only says where
+the ramp starts, exactly as SVG's `fx`/`fy` do. The contour through a point is
+the circle grown from the focus towards that outer circle, so the ramp position
+is the smaller root of
+
+```
+|P − F − t(C − F)| = tR      C = the shape centre, R = hypot(w, h) / 2
+```
+
+Seventeen probes over eight foci and three aspect ratios fit this to rms 0.53 and
+two bytes at worst. The reading 2.7 shipped first — concentric circles about the
+focus, scaled to the farthest corner — is out by up to 49, and the same
+construction in a space where the shape is a unit square by up to 39. That last
+one only shows on a shape that is not square, which is why the wide and tall
+probes exist.
+
+Two consequences worth stating. The renderer emits this as one
+`<radialGradient>` with `fx`/`fy` and needs no approximation at all. And `a` in
+that quadratic is zero exactly when the focus lands on the outer circle — which
+a corner focus on a square shape does — so it is solved in the stable form; the
+textbook one divides by almost nothing and paints the shape inside out.
 
 **16. The 54 tiles are eight pixels square at 96 DPI: 6 pt, 76200 EMU.** The same
 shape exported at 640, 1280, 1920 and 2560 pixels wide gives periods of 4, 8, 12
@@ -176,13 +210,26 @@ than inferred.
 The pair worth staring at is rows 5 and 6 against row 2: an empty `a:gsLst` is
 refused and a missing one is fine.
 
-### PowerPoint softens every corner in a ramp profile
+### PowerPoint softens every corner in a ramp profile, by a fixed number of pixels
 
 Wherever the profile has a corner — a stop boundary, or the apex of a V — the
-rasteriser rounds it off over roughly 1.6 px of the export. Eleven bytes on a
-ramp that crosses black to white in 2% of the width; four where two halves meet
-at 50%; a fraction of a byte on anything a real deck contains. Recorded rather
-than modelled: it is sub-pixel, and an SVG stop list cannot express it.
+rasteriser rounds it off. It is a distance in **device pixels**, not a share of
+the ramp, and the probes settle that without needing a model of the rounding at
+all: the corner is drawn with arms of 1, 2, 4 and 8% of the shape, and each deck
+is exported at 1920 and at 3840. That makes three pairs which are the same corner
+in device pixels and different fractions of the ramp — `arm1` at 3840 against
+`arm2` at 1920, and so on — and all three pairs agree **to within one byte**.
+
+The magnitude is under a pixel: at 21 bytes per pixel the apex falls about ten
+bytes short of where the two straight arms meet, and by 3 bytes/px it is one.
+Most of even that is the apex not landing on a pixel centre. Still recorded
+rather than modelled — it is sub-pixel and an SVG stop list cannot express it —
+but the shape of the answer is now known rather than guessed.
+
+One observation that is not part of the rule: on the steepest probe, where each
+arm is 1% of the shape, the two exports disagree by up to 18 bytes **at the outer
+stops** while agreeing at the corner. That is PowerPoint's export resampling a
+very short ramp, not a property of gradients.
 
 ### `a:tileRect` and `@flip` are very nearly decorative
 
@@ -192,6 +239,24 @@ nothing measurable: PowerPoint's own from-corner fill carries
 `tileRect l="-100000" t="-100000"`, and with it and without it all 169 samples
 agree to within one byte. So the attribute PowerPoint writes for itself is one it
 does not read.
+
+**`@flip` does nothing at all**, and the first pass could not have said so. Its
+four flip probes were a _centred_ path tile, which is its own mirror image on
+both axes, so their agreement was evidence of nothing. Repeated with a tile that
+has an off-centre focus, and again with a 30° linear ramp — both asymmetric on
+both axes, and a mirrored copy of the linear one differs from itself by 155 bytes
+— all four modes still agree to within one byte. The attribute is inert on a
+gradient fill. Note this is `a:gradFill/@flip`; `a:tile/@flip` on a _blip_ fill
+is a different attribute and does mirror alternate tiles (ADR 0036).
+
+### A gradient on a slide background is laid out over the slide
+
+A background has no shape box, so the ramp needs a rectangle from somewhere, and
+the slide is the only candidate in sight. Four decks carry the same fill on their
+background and on a shape in one quadrant; predicting the background over the
+slide's own rectangle lands within a byte, for a horizontal ramp, a vertical one,
+a centred circle and an off-centre one. This confirms what `render-svg` already
+did rather than changing it.
 
 ### The measurement had to be fixed twice, by its own evidence
 
@@ -263,21 +328,47 @@ running the mutations at all rather than trusting a suite that is green.
 - Slide and master backgrounds carry `a:gradFill` with no shape at all. The
   extent is presumably the slide; unmeasured.
 
+## The second pass, 2026-09-07
+
+Five of the six open questions below were left open when 2.7 was accepted. They
+are now closed, by 38 further probes in 11 further packages — decisions 14a, 14b
+and 15a above, and the two "what building it found" sections on softening and on
+`@flip`. The experiment is the same four files, extended; the fixture is the same
+file, regrown from 144 probes to 182.
+
+Two things are worth separating out.
+
+**The off-centre focus was a real defect, not a gap.** 2.7 shipped the natural
+generalisation of its verified rule and flagged it `centred: false`. That reading
+is wrong by up to 49 bytes, and it took eight foci to see it — the single probe
+2.7 had fits four different constructions about equally badly, which is why it
+looked like an open question rather than a bug. One sample is an anecdote even
+when it disagrees with you.
+
+**Re-running the first 144 probes reproduced them exactly.** Both generated
+tables — `gradient-ramp.ts` and `pattern-tiles.ts` — regenerate byte-identically
+from the new fixture, and the seven hostile packages PowerPoint repairs are the
+same seven. That is the reproducibility check nobody asked for and it is worth
+having.
+
+One defect in the harness was found and fixed on the way: `read.ps1` wrote
+`@(@(1920, 1080))`, which PowerShell unrolls, so every deck had been exported a
+second time at width 1080. Nothing read those files, so no measurement was
+affected.
+
 ## Open questions
 
-1. **An off-centre path focus.** Only a centred focus is verified. The measured
-   off-centre case fits neither a fixed radius, nor the distance to the farthest
-   corner, nor per-ray normalisation, nor per-axis normalisation. The data is in
-   the fixture; the rule is not known.
-2. **`a:path` with no `@path`, and `a:path` with no `a:fillToRect`.** Both legal,
-   both unmeasured.
-3. **Whether the corner softening is a fixed 1.6 px or a fraction of the ramp.**
-   A designed probe with several ramp widths would say.
-4. **Whether a gradient background on a slide uses the slide as its extent.**
-5. **Whether `@flip` does anything at all**, on any fill, at any tile size. Three
-   flip modes on a path tile were indistinguishable, but the tile was symmetric,
-   so the probe was uninformative rather than negative.
-6. Carried from 2.6, unchanged: what decides PowerPoint's rounding at an exact
+1. **What the corner rounding actually is.** It is now known to be a fixed
+   distance in device pixels rather than a share of the ramp, and to be under a
+   pixel. Which filter it is remains open: box widths from 0 to 4 px all fit the
+   six gentler probes at rms 0.4 to 0.7, and none fits the steepest.
+2. **`path="shape"` on anything but a rectangle.** The outline case needs
+   `@pptx-studio/geometry`, which `@pptx-studio/paint` deliberately does not
+   depend on, so both renderers still draw an ellipse's `shape` ramp as a box.
+   Two probes measure it and neither is asserted against.
+3. **`path="rect"` in SVG.** Still an inscribed ellipse rather than concentric
+   rectangles; SVG has no primitive for the Chebyshev metric.
+4. Carried from 2.6, unchanged: what decides PowerPoint's rounding at an exact
    half; whether PowerPoint for the web resolves `a:sysClr` per viewer; whether a
    `clrMapOvr` reaches a colour inside a theme style; whether `a:scrgbClr` is
    clamped before or after its transforms; what a `schemeClr` naming an undefined
@@ -285,14 +376,23 @@ running the mutations at all rather than trusting a suite that is green.
 
 ## Verification
 
-- `pnpm check` green: layering, corpus, format, lint, typecheck, build,
-  round trip 52/52, package QA, 1843 tests across 67 files.
-- `packages/paint/src/fills/fill.test.ts` — 42 tests, every one anchored to the
+- `pnpm check` green, both passes. At the second: structure, layering, docs,
+  corpus, format, lint, typecheck, build, round trip 52/52, fidelity, package QA,
+  3157 tests across 89 files.
+- `packages/paint/src/fills/fill.test.ts` — 78 tests, every one anchored to the
   fixture. The load-bearing ones: every ramp in the fixture reproduced to within
   two bytes with two named exceptions; every angle probe predicted from the shape
   and the two attributes; the 54 tiles re-derived from the fixture so the shipped
-  table cannot drift from the measurement.
-- All eight substantive probe packages opened with no repair. Sixteen of the 23
-  did; the seven that did not are hostile probes that exist to be refused, each
-  is flagged `repaired` in the fixture, and none is used as evidence for anything
-  except the refusal itself.
+  table cannot drift from the measurement; and **every path probe predicted
+  sample by sample** — 26 of them, rms under 2 bytes each.
+- `tools/ground-truth/paint/fills/analyse.ts` refuses to write a fixture it
+  cannot fit. It throws if the named model misses any probe of its kind, and it
+  throws again if any _other_ model fits them all, because then the probes did
+  not separate the candidates and the fixture would be recording a coincidence.
+- Mutation sweep, second pass: **9 of 10 killed**. The survivor takes the far
+  root of the focal quadratic instead of the near one, and is equivalent — the
+  focus lies inside the outer circle, so the two roots straddle zero and exactly
+  one survives the filter. It is commented as such at the point it is made.
+- All eleven new packages opened with **no repair**, including all four that omit
+  something the schema makes optional. The seven hostile packages that repair are
+  the same seven as in the first pass.

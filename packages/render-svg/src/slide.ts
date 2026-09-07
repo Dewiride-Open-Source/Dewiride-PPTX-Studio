@@ -12,6 +12,7 @@
  * scale(z)` do the zooming, because font metrics are not linear in point size.
  */
 
+import type { MediaResolver } from './image/blip.js';
 import { colorContextOf, resolveBackground, type Sheet } from '@pptx-studio/model';
 
 import { layoutSheet, layoutSlide, type Placed } from './layout.js';
@@ -52,6 +53,13 @@ export interface RenderOptions {
    * Node script, a test asserting geometry alone - turns it off rather than
    * getting a throw from a package it did not know it was using.
    */
+  /**
+   * How an image fill or picture reaches its bytes.
+   *
+   * The renderer resolves no relationships: a fill written in a layout means
+   * the layout part own rels, and only the caller knows which part it came from.
+   */
+  readonly media?: MediaResolver;
   readonly text?: TextOptions | false;
 }
 
@@ -96,7 +104,7 @@ export interface SlideRender {
  * against without walking the DOM back.
  */
 export function slideNode(sheet: Sheet, size: SlideSize, options: RenderOptions = {}): SlideRender {
-  const defs = new Defs(options.idPrefix ?? nextPrefix());
+  const defs = new Defs(options.idPrefix ?? nextPrefix(), options.media);
   const placed = options.inherited === false ? layoutSheet(sheet) : layoutSlide(sheet);
   const background = backgroundNode(sheet, size, defs);
   const engine = options.text === false ? null : createTextEngine(options.text ?? {});

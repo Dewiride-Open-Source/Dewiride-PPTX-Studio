@@ -39,19 +39,20 @@ date.
 
 ## Phase 2 — geometry and paint
 
-| #                                                                       | decision                                        |
-| ----------------------------------------------------------------------- | ----------------------------------------------- |
-| [0016](phase-2-geometry-and-paint/0016-preset-geometry-codegen.md)      | The 187 preset shapes, and how they get here    |
-| [0017](phase-2-geometry-and-paint/0017-the-formula-evaluator.md)        | The formula evaluator                           |
-| [0018](phase-2-geometry-and-paint/0018-arc-math.md)                     | Arc math                                        |
-| [0019](phase-2-geometry-and-paint/0019-path-emit-and-custgeom.md)       | Path emit, and `custGeom` as the same thing     |
-| [0020](phase-2-geometry-and-paint/0020-adjust-handles.md)               | Adjust handles, and the inverse of a shape      |
-| [0021](phase-2-geometry-and-paint/0021-colour.md)                       | Colour, and the second time we asked PowerPoint |
-| [0022](phase-2-geometry-and-paint/0022-fills.md)                        | Gradients and pattern fills                     |
-| [0023](phase-2-geometry-and-paint/0023-lines.md)                        | Strokes and effects                             |
-| [0024](phase-2-geometry-and-paint/0024-model-parse-and-resolve.md)      | Model: parse and resolve                        |
-| [0025](phase-2-geometry-and-paint/0025-renderers-geometry.md)           | Renderers, geometry only                        |
-| [0026](phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md) | Debug overlay and preset gallery                |
+| #                                                                       | decision                                               |
+| ----------------------------------------------------------------------- | ------------------------------------------------------ |
+| [0016](phase-2-geometry-and-paint/0016-preset-geometry-codegen.md)      | The 187 preset shapes, and how they get here           |
+| [0017](phase-2-geometry-and-paint/0017-the-formula-evaluator.md)        | The formula evaluator                                  |
+| [0018](phase-2-geometry-and-paint/0018-arc-math.md)                     | Arc math                                               |
+| [0019](phase-2-geometry-and-paint/0019-path-emit-and-custgeom.md)       | Path emit, and `custGeom` as the same thing            |
+| [0020](phase-2-geometry-and-paint/0020-adjust-handles.md)               | Adjust handles, and the inverse of a shape             |
+| [0021](phase-2-geometry-and-paint/0021-colour.md)                       | Colour, and the second time we asked PowerPoint        |
+| [0022](phase-2-geometry-and-paint/0022-fills.md)                        | Gradients and pattern fills                            |
+| [0023](phase-2-geometry-and-paint/0023-lines.md)                        | Strokes and effects                                    |
+| [0024](phase-2-geometry-and-paint/0024-model-parse-and-resolve.md)      | Model: parse and resolve                               |
+| [0025](phase-2-geometry-and-paint/0025-renderers-geometry.md)           | Renderers, geometry only                               |
+| [0026](phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md) | Debug overlay and preset gallery                       |
+| [0036](phase-2-geometry-and-paint/0036-image-fills.md)                  | Image fills, and the two readings everybody gets wrong |
 
 ## Phase 3 — text
 

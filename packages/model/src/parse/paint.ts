@@ -24,6 +24,9 @@ import {
   type ColorTransformOp,
   type DashSegment,
   type Effect,
+  type BlipEffect,
+  type BlipStretch,
+  type BlipTile,
   type Fill,
   type GradientShade,
   type GradientStop,
@@ -39,6 +42,7 @@ import {
   type RelativeRect,
   type SchemeColorName,
   type ShadowGeometry,
+  type TileAlign,
   type TileFlipMode,
 } from '@pptx-studio/paint';
 import { attributeValue, childElements, firstChild, type XElement } from '@pptx-studio/xml';
@@ -202,24 +206,138 @@ function parseGradientShade(element: XElement): GradientShade | null {
   }
   const path = firstChild(element, 'a:path');
   if (path === undefined) return null;
-  const raw = attributeValue(path, 'path') ?? 'shape';
+  // An absent `@path` paints the box ramp, measured against 27 probes: ADR 0022.
+  const raw = attributeValue(path, 'path') ?? 'rect';
   const kind = raw === 'circle' || raw === 'rect' ? raw : 'shape';
+  const rect = firstChild(path, 'a:fillToRect');
   return {
     kind: 'path',
     path: kind,
-    fillToRect: parseRelativeRect(firstChild(path, 'a:fillToRect')),
+    fillToRect: rect === undefined ? null : parseRelativeRect(rect),
+  };
+}
+
+const TILE_ALIGNS = new Set<string>(['tl', 't', 'tr', 'l', 'ctr', 'r', 'bl', 'b', 'br']);
+const TILE_FLIPS = new Set<string>(['none', 'x', 'y', 'xy']);
+
+/** `a:blip`'s colour effects, in document order, which is the order they apply. */
+function parseBlipEffects(blip: XElement): BlipEffect[] {
+  const effects: BlipEffect[] = [];
+  for (const child of childElements(blip)) {
+    switch (child.qname) {
+      case 'a:grayscl':
+        effects.push({ kind: 'grayscale' });
+        break;
+      case 'a:biLevel':
+        effects.push({ kind: 'biLevel', thresh: percentAttr(child, 'thresh', 0) });
+        break;
+      case 'a:lum':
+        effects.push({
+          kind: 'lum',
+          bright: percentAttr(child, 'bright', 0),
+          contrast: percentAttr(child, 'contrast', 0),
+        });
+        break;
+      case 'a:duotone': {
+        const colors = childElements(child)
+          .filter((c) => COLOR_ELEMENTS.has(c.qname))
+          .map(parseColorElement);
+        const [from, to] = colors;
+        if (from === undefined || to === undefined) {
+          throw new ModelError('BLIP_DUOTONE', 'a:duotone needs two colours', 'a:duotone');
+        }
+        effects.push({ kind: 'duotone', from, to });
+        break;
+      }
+      case 'a:alphaModFix':
+        effects.push({ kind: 'alphaModFix', amt: percentAttr(child, 'amt', 100000) });
+        break;
+      case 'a:clrChange': {
+        const from = parseColorChild(firstChild(child, 'a:clrFrom'));
+        const to = parseColorChild(firstChild(child, 'a:clrTo'));
+        if (from === null || to === null) {
+          throw new ModelError('BLIP_CLR_CHANGE', 'a:clrChange needs both colours', 'a:clrChange');
+        }
+        effects.push({ kind: 'clrChange', from, to, useAlpha: boolAttr(child, 'useA', true) });
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  return effects;
+}
+
+/**
+ * `a:blipFill`.
+ *
+ * The relationship id is carried, never resolved: a fill in a layout resolves
+ * against the layout's rels and the same markup inherited onto a slide still
+ * means the layout's image. Same contract as `a:buBlip`.
+ */
+function parseBlipFill(element: XElement, partName: string): Fill {
+  const blip = firstChild(element, 'a:blip');
+  const embed = blip === undefined ? undefined : attributeValue(blip, 'r:embed');
+  if (blip === undefined || embed === undefined) {
+    throw new ModelError(
+      'BLIP_NO_EMBED',
+      'a:blipFill has no a:blip/@r:embed to resolve',
+      'a:blipFill',
+    );
+  }
+
+  const tile = firstChild(element, 'a:tile');
+  const stretch = firstChild(element, 'a:stretch');
+  let mode: BlipStretch | BlipTile;
+  if (tile !== undefined) {
+    const algn = attributeValue(tile, 'algn') ?? 'tl';
+    const flip = attributeValue(tile, 'flip') ?? 'none';
+    if (!TILE_ALIGNS.has(algn)) {
+      throw new ModelError('BLIP_TILE_ALIGN', `a:tile/@algn is "${algn}"`, 'a:tile');
+    }
+    if (!TILE_FLIPS.has(flip)) {
+      throw new ModelError('BLIP_TILE_FLIP', `a:tile/@flip is "${flip}"`, 'a:tile');
+    }
+    mode = {
+      kind: 'tile',
+      tx: intAttr(tile, 'tx', 0, 'a:tile'),
+      ty: intAttr(tile, 'ty', 0, 'a:tile'),
+      sx: percentAttr(tile, 'sx', 100000),
+      sy: percentAttr(tile, 'sy', 100000),
+      flip: flip as TileFlipMode,
+      algn: algn as TileAlign,
+    };
+  } else {
+    // No `a:tile` and no `a:stretch` is legal and behaves as a bare stretch.
+    mode = {
+      kind: 'stretch',
+      fillRect: parseRelativeRect(
+        stretch === undefined ? undefined : firstChild(stretch, 'a:fillRect'),
+      ),
+    };
+  }
+
+  return {
+    type: 'blip',
+    embed,
+    part: partName,
+    srcRect: parseRelativeRect(firstChild(element, 'a:srcRect')),
+    mode,
+    effects: parseBlipEffects(blip),
+    dpi: intAttr(element, 'dpi', 0, 'a:blipFill'),
+    rotWithShape: boolAttr(element, 'rotWithShape', true),
   };
 }
 
 /** One member of `EG_FillProperties`. */
-export function parseFillElement(element: XElement): Fill {
+export function parseFillElement(element: XElement, partName: string): Fill {
   switch (element.qname) {
     case 'a:noFill':
       return { type: 'none' };
     case 'a:grpFill':
       return { type: 'group' };
     case 'a:blipFill':
-      return { type: 'blip' };
+      return parseBlipFill(element, partName);
     case 'a:solidFill': {
       const color = parseColorChild(element);
       if (color === null) {
@@ -271,9 +389,9 @@ export function parseFillElement(element: XElement): Fill {
 }
 
 /** The fill a container declares, or `undefined` when it declares none. */
-export function parseFill(parent: XElement): Fill | undefined {
+export function parseFill(parent: XElement, partName: string): Fill | undefined {
   for (const child of childElements(parent)) {
-    if (FILL_ELEMENTS.has(child.qname)) return parseFillElement(child);
+    if (FILL_ELEMENTS.has(child.qname)) return parseFillElement(child, partName);
   }
   return undefined;
 }
@@ -315,7 +433,7 @@ function parseDash(element: XElement): LineDash | null {
 }
 
 /** `a:ln`, lazily: every field is `null` when the attribute was absent. */
-export function parseLineElement(element: XElement): Line {
+export function parseLineElement(element: XElement, partName: string): Line {
   let join: LineJoin | null = null;
   for (const child of childElements(element)) {
     const kind = JOIN_KINDS[child.qname];
@@ -334,7 +452,7 @@ export function parseLineElement(element: XElement): Line {
     cap: cap === 'flat' || cap === 'sq' || cap === 'rnd' ? (cap satisfies LineCap) : null,
     cmpd: attributeValue(element, 'cmpd') ?? null,
     algn: algn === 'ctr' || algn === 'in' ? (algn satisfies PenAlignment) : null,
-    fill: parseFill(element) ?? null,
+    fill: parseFill(element, partName) ?? null,
     dash: parseDash(element),
     join,
     headEnd: parseLineEnd(firstChild(element, 'a:headEnd')),
@@ -342,9 +460,9 @@ export function parseLineElement(element: XElement): Line {
   };
 }
 
-export function parseLine(parent: XElement): Line | undefined {
+export function parseLine(parent: XElement, partName: string): Line | undefined {
   const element = firstChild(parent, 'a:ln');
-  return element === undefined ? undefined : parseLineElement(element);
+  return element === undefined ? undefined : parseLineElement(element, partName);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -92,6 +92,54 @@ export function inkBox(bitmap: Bitmap, threshold = 200): InkBox | null {
   return right < 0 ? null : { left, top, right, bottom };
 }
 
+/**
+ * Write a 24-bit BMP, bottom-up, with an explicit resolution in the header.
+ *
+ * A probe image needs a declared DPI, because whether PowerPoint sizes a tile
+ * from the image's own resolution or from a fixed 96 is a question only an image
+ * that disagrees with 96 can answer. BMP states it in two header fields, so the
+ * probe needs no metadata library and no PNG encoder.
+ */
+export function writeBmp(
+  width: number,
+  height: number,
+  pixel: (x: number, y: number) => number,
+  dpi = 96,
+): Uint8Array {
+  if (width < 1 || height < 1) throw new Error(`a ${String(width)}x${String(height)} BMP is empty`);
+  const stride = Math.floor((width * 24 + 31) / 32) * 4;
+  const dataSize = stride * height;
+  const out = new Uint8Array(54 + dataSize);
+  const view = new DataView(out.buffer);
+
+  out[0] = 0x42;
+  out[1] = 0x4d;
+  view.setUint32(2, out.length, true);
+  view.setUint32(10, 54, true);
+  view.setUint32(14, 40, true);
+  view.setInt32(18, width, true);
+  view.setInt32(22, height, true);
+  view.setUint16(26, 1, true);
+  view.setUint16(28, 24, true);
+  view.setUint32(34, dataSize, true);
+  // Pixels per metre, which is how BMP spells DPI: 96 dpi is 3780.
+  const perMetre = Math.round(dpi / 0.0254);
+  view.setInt32(38, perMetre, true);
+  view.setInt32(42, perMetre, true);
+
+  for (let y = 0; y < height; y++) {
+    // Bottom-up: the last row of the image is the first row in the file.
+    const row = 54 + (height - 1 - y) * stride;
+    for (let x = 0; x < width; x++) {
+      const rgb = pixel(x, y);
+      out[row + x * 3] = rgb & 0xff;
+      out[row + x * 3 + 1] = (rgb >> 8) & 0xff;
+      out[row + x * 3 + 2] = (rgb >> 16) & 0xff;
+    }
+  }
+  return out;
+}
+
 /** Every column that holds ink, as a sorted list. For finding a rule under a word. */
 export function inkRows(bitmap: Bitmap, threshold = 200): readonly number[] {
   const rows: number[] = [];

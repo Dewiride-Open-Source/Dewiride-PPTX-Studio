@@ -63,7 +63,12 @@ export type ModelErrorCode =
   | 'MODEL_TEXT_BULLET'
   /** A paragraph level that is not an integer. */
   | 'MODEL_TEXT_LEVEL'
-  | 'MODEL_TEXT_TYPEFACE';
+  | 'MODEL_TEXT_TYPEFACE'
+  | 'BLIP_NO_EMBED'
+  | 'BLIP_DUOTONE'
+  | 'BLIP_CLR_CHANGE'
+  | 'BLIP_TILE_ALIGN'
+  | 'BLIP_TILE_FLIP';
 
 export class ModelError extends Error {
   override readonly name = 'ModelError';

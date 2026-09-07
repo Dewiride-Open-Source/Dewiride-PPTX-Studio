@@ -127,7 +127,11 @@ corpus/
   ground-truth/  what PowerPoint answered, as committed fixtures
   bench/         benchmark deck recipes, their hashes, and recorded timings
 docs/adr/        architecture decision records
+docs/plan/       the 13 phases, and where the build has got to
 ```
+
+[`docs/plan/README.md`](./docs/plan/README.md) is generated from `docs/plan/phases.json`: which
+sub-phases have a record, which gates are closed, and the debt carried across them.
 
 Further packages arrive with the phases that need them. Every one of them is already declared in
 [`tools/repo/layering/layers.ts`](./tools/repo/layering/layers.ts) with its layer and runtime, because a

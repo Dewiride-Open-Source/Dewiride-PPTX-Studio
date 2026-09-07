@@ -318,7 +318,7 @@ export function insetRect(rect: RelativeRect): {
 }
 
 export interface PathGeometry {
-  /** The focus, in 0..1 shape fractions. */
+  /** The focus, in shape units from the shape's top-left corner. */
   readonly fx: number;
   readonly fy: number;
   /**
@@ -330,10 +330,13 @@ export interface PathGeometry {
    * a rectangle is `box` and for an ellipse is the ellipse.
    */
   readonly metric: 'radial' | 'box' | 'outline';
-  /** For `radial`: the distance, in shape units, at which the last stop lands. */
+  /** For `radial`: the circle the last stop lands on, always the shape's own. */
+  readonly cx: number;
+  readonly cy: number;
   readonly radius: number;
-  /** True when the focus is the shape's centre, which is the case we verified. */
-  readonly centred: boolean;
+  /** The shape, in the same units, which is what `box` normalises against. */
+  readonly w: number;
+  readonly h: number;
 }
 
 /**
@@ -347,53 +350,40 @@ export interface PathGeometry {
  * **`a:fillToRect` is insets, and only its centre matters.** A focus rect
  * covering the middle half of the shape paints byte-for-byte the same picture as
  * a degenerate point at the centre, over all 169 sampled positions, so the
- * rectangle's extent is not a flat region and does not need modelling. The one
- * exception is a `fillToRect` with all four insets zero, which PowerPoint treats
- * as the top-left corner rather than as the whole box - most likely because that
- * is indistinguishable from the element carrying no information at all.
+ * rectangle's extent is not a flat region and does not need modelling. Two
+ * spellings are not the centre: four zero insets are the **top-left corner**,
+ * and no `a:fillToRect` element at all is the **centre** - which is why
+ * `fillToRect` is nullable rather than defaulted.
  *
- * **`path="circle"` is a circle, not an ellipse.** On a 3:1 shape the top edge's
- * midpoint reads 0.30 and the left edge's 0.94, which is the ratio of their
- * distances in shape units; an ellipse fitted to the box would read 1.00 for
- * both. The radius reaches the last stop at the far corner.
+ * **`path="circle"` is a circle, not an ellipse, and an off-centre focus does
+ * not move it.** The circle the last stop lands on is the shape's own - centred,
+ * with the half-diagonal for a radius - and the focus only says where the ramp
+ * begins, exactly as SVG's `fx`/`fy` do. Sixteen probes over eight foci and
+ * three aspect ratios fit this to within half a byte; concentric circles about
+ * the focus, however they are scaled, are out by up to 49, and the same
+ * construction in a space where the shape is a unit square by up to 39.
  *
- * **`path="rect"` and `path="shape"` are the same on a rectangle** - Chebyshev,
- * reaching the last stop at the edge - and differ on anything else: on an
- * ellipse, `shape` follows the outline, with a point two thirds of the way to
- * the corner reading 0.94 exactly as the ellipse says it should.
- *
- * Only a centred focus is verified. An off-centre one is measured and does not
- * fit any of the obvious normalisations - see the open question in ADR 0022 -
- * so `radius` for a non-centred focus is the distance to the farthest corner,
- * which is the natural generalisation of the rule that is verified and is
- * flagged by `centred: false`.
+ * **`path="rect"`, `path="shape"` on a rectangle, and an absent `@path` are the
+ * same** - Chebyshev, each axis normalised to the distance from the focus to the
+ * edge it is heading for, over nine probes to within 1.6 bytes. `shape` differs
+ * on anything that is not a rectangle: on an ellipse it follows the outline.
  */
 export function pathGeometry(shade: PathShade, w: number, h: number): PathGeometry {
-  const rect = insetRect(shade.fillToRect);
-  const empty =
-    shade.fillToRect.l === 0 &&
-    shade.fillToRect.t === 0 &&
-    shade.fillToRect.r === 0 &&
-    shade.fillToRect.b === 0;
-  const fx = empty ? 0 : (rect.l + rect.r) / 2;
-  const fy = empty ? 0 : (rect.t + rect.b) / 2;
-
-  const metric = shade.path === 'circle' ? 'radial' : shade.path === 'rect' ? 'box' : 'outline';
-  const corners: [number, number][] = [
-    [0, 0],
-    [w, 0],
-    [0, h],
-    [w, h],
-  ];
-  let radius = 0;
-  for (const [x, y] of corners) radius = Math.max(radius, Math.hypot(x - fx * w, y - fy * h));
+  const rect = shade.fillToRect;
+  const inset = insetRect(rect ?? { l: 0, t: 0, r: 0, b: 0 });
+  const corner = rect !== null && rect.l === 0 && rect.t === 0 && rect.r === 0 && rect.b === 0;
+  const fx = rect === null ? 0.5 : corner ? 0 : (inset.l + inset.r) / 2;
+  const fy = rect === null ? 0.5 : corner ? 0 : (inset.t + inset.b) / 2;
 
   return {
-    fx,
-    fy,
-    metric,
-    radius,
-    centred: Math.abs(fx - 0.5) < 1e-9 && Math.abs(fy - 0.5) < 1e-9,
+    fx: fx * w,
+    fy: fy * h,
+    metric: shade.path === 'circle' ? 'radial' : shade.path === 'rect' ? 'box' : 'outline',
+    cx: w / 2,
+    cy: h / 2,
+    radius: Math.hypot(w, h) / 2,
+    w,
+    h,
   };
 }
 
@@ -405,24 +395,41 @@ export function pathGeometry(shade: PathShade, w: number, h: number): PathGeomet
  * deliberately not a dependency of this package - a rectangle is the only
  * outline available.
  */
-export function pathPositionAt(
-  geometry: PathGeometry,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-): number {
-  const dx = x - geometry.fx * w;
-  const dy = y - geometry.fy * h;
+export function pathPositionAt(geometry: PathGeometry, x: number, y: number): number {
+  const dx = x - geometry.fx;
+  const dy = y - geometry.fy;
   let t: number;
   if (geometry.metric === 'radial') {
-    t = geometry.radius === 0 ? 1 : Math.hypot(dx, dy) / geometry.radius;
+    // The contour through (x, y) is the circle that has grown from the focus
+    // towards the shape's own circle: centre at F + s(C - F), radius sR. Solve
+    // |P - F - s(C - F)| = sR for s, which is what SVG's fx/fy paint.
+    const ex = geometry.cx - geometry.fx;
+    const ey = geometry.cy - geometry.fy;
+    const a = ex * ex + ey * ey - geometry.radius * geometry.radius;
+    const b = -2 * (dx * ex + dy * ey);
+    const c = dx * dx + dy * dy;
+    const disc = b * b - 4 * a * c;
+    if (disc < 0) {
+      t = 1;
+    } else {
+      // The stable pair, because `a` goes to zero whenever the focus lands on
+      // the outer circle - which a corner focus on a square shape does exactly,
+      // and which the textbook formula turns into a division by almost nothing.
+      const q = -0.5 * (b + (b >= 0 ? Math.sqrt(disc) : -Math.sqrt(disc)));
+      const roots: number[] = [];
+      if (a !== 0) roots.push(q / a);
+      if (q !== 0) roots.push(c / q);
+      // The focus is inside the outer circle, so `a` is never positive and the
+      // two roots straddle zero: exactly one survives the filter.
+      const usable = roots.filter((r) => r >= 0 && Number.isFinite(r));
+      t = c === 0 ? 0 : usable.length === 0 ? 1 : Math.min(...usable);
+    }
   } else {
     // Chebyshev, each axis normalised to the distance from the focus to the edge
     // it is heading for - which reduces to half the extent for a centred focus
     // and reproduces the corner focus PowerPoint's own from-corner fill writes.
-    const rx = dx >= 0 ? (1 - geometry.fx) * w : geometry.fx * w;
-    const ry = dy >= 0 ? (1 - geometry.fy) * h : geometry.fy * h;
+    const rx = dx >= 0 ? geometry.w - geometry.fx : geometry.fx;
+    const ry = dy >= 0 ? geometry.h - geometry.fy : geometry.fy;
     t = Math.max(rx === 0 ? 0 : Math.abs(dx) / rx, ry === 0 ? 0 : Math.abs(dy) / ry);
   }
   return t < 0 ? 0 : t > 1 ? 1 : t;

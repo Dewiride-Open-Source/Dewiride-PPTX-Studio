@@ -22,7 +22,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildPptx, shapeXml, CLR_SCHEME, SLIDE_HEIGHT, SLIDE_WIDTH } from '../../lib/pptx.ts';
-import { DECK_GRID, fillProbes, hostileProbes, type Probe } from './probes.ts';
+import { backgroundProbes, DECK_GRID, fillProbes, hostileProbes, type Probe } from './probes.ts';
 
 /** One point. Every emitted coordinate is a multiple of this. */
 const PT = 12700;
@@ -32,7 +32,12 @@ if (outDir === undefined)
   throw new Error('usage: tools/ground-truth/paint/fills/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
-const probes = [...fillProbes(), ...hostileProbes()];
+const backgrounds = backgroundProbes();
+
+/** The fill in a deck's `p:bgPr`, for the decks that carry one. */
+const deckBackground = new Map(backgrounds.map((b) => [b.deck, b.background]));
+
+const probes = [...fillProbes(), ...backgrounds.flatMap((b) => b.probes), ...hostileProbes()];
 
 const byDeck = new Map<string, Probe[]>();
 for (const probe of probes) {
@@ -66,6 +71,14 @@ interface Rect {
  * position (i + 0.5) / 1920 along the gradient, with no arithmetic in between.
  */
 function place(probe: Probe, cell: Rect): Rect {
+  if (probe.fullSlide === true) {
+    return { x: 0, y: 0, cx: SLIDE_WIDTH, cy: SLIDE_HEIGHT };
+  }
+  if (probe.widthPt !== undefined && probe.heightPt !== undefined) {
+    const cx = probe.widthPt * PT;
+    const cy = probe.heightPt * PT;
+    return { x: pt(cell.x + (cell.cx - cx) / 2), y: pt(cell.y + (cell.cy - cy) / 2), cx, cy };
+  }
   if (probe.aspect === undefined) return cell;
   const scale = probe.scale ?? 0.88;
   const availW = cell.cx * scale;
@@ -160,7 +173,11 @@ for (const [deck, page] of byDeck) {
   }
 
   const file = `fill-${deck}.pptx`;
-  writeFileSync(join(outDir, file), buildPptx({ slides }));
+  const background = deckBackground.get(deck);
+  writeFileSync(
+    join(outDir, file),
+    buildPptx({ slides, backgrounds: slides.map(() => background) }),
+  );
   decks.push({ deck, file, slides: slides.length, probes: page.length });
 }
 

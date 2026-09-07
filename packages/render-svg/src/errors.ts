@@ -24,7 +24,9 @@ export type RenderErrorCode =
   /** An `a:bodyPr` attribute that is not a length or an angle. */
   | 'RENDER_TEXT_FRAME'
   /** A text direction this package lays out but does not yet draw. */
-  | 'RENDER_TEXT_UNSUPPORTED';
+  | 'RENDER_TEXT_UNSUPPORTED'
+  /** An image whose header is not a PNG, JPEG, GIF or BMP. */
+  | 'RENDER_IMAGE_FORMAT';
 
 export const RENDER_ERROR_CODES: readonly RenderErrorCode[] = [
   'RENDER_UNKNOWN_PRESET',
@@ -32,6 +34,7 @@ export const RENDER_ERROR_CODES: readonly RenderErrorCode[] = [
   'RENDER_NO_HOST',
   'RENDER_TEXT_FRAME',
   'RENDER_TEXT_UNSUPPORTED',
+  'RENDER_IMAGE_FORMAT',
 ];
 
 export class RenderError extends Error {

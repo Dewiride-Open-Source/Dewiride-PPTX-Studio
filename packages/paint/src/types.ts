@@ -1,3 +1,6 @@
+/** EMU in one inch, which is what turns an image resolution into a size. */
+export const EMU_PER_INCH = 914400;
+
 /**
  * What a DrawingML colour is, before anything has been decided about it.
  *

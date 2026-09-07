@@ -1,0 +1,616 @@
+{
+  "plan": "PPTX Studio - 13 phases, one ADR per sub-phase, one gate per phase.",
+  "phases": [
+    {
+      "number": 0,
+      "title": "Foundation and ground truth",
+      "subPhases": [
+        {
+          "id": "0.1",
+          "title": "Repo skeleton",
+          "adr": "phase-0-foundation/0001-toolchain.md"
+        },
+        {
+          "id": "0.2",
+          "title": "`opc`: ZIP reader and safety",
+          "adr": "phase-0-foundation/0002-zip-reader.md"
+        },
+        {
+          "id": "0.3",
+          "title": "`opc`: parts, content types, relationships, writer",
+          "adr": "phase-0-foundation/0003-the-package.md"
+        },
+        {
+          "id": "0.4",
+          "title": "`xml`: tokenizer and XNode",
+          "adr": "phase-0-foundation/0004-the-xml-layer.md"
+        },
+        {
+          "id": "0.5",
+          "title": "`xml`: serializer and the round-trip gate",
+          "adr": "phase-0-foundation/0005-the-serializer.md"
+        },
+        {
+          "id": "0.6",
+          "title": "`xml`: order, MCE, invertible edits",
+          "adr": "phase-0-foundation/0006-order-mce-and-edits.md"
+        },
+        {
+          "id": "0.7",
+          "title": "Ground-truth experiments A, B and C",
+          "adr": "phase-0-foundation/0007-ground-truth.md"
+        },
+        {
+          "id": "0.8",
+          "title": "`cli inspect`, Worker shell, benchmark",
+          "adr": "phase-0-foundation/0008-inspect-worker-and-the-benchmark.md"
+        }
+      ],
+      "gate": {
+        "title": "Drop a deck, get a live explorer of its internals",
+        "adr": "phase-0-foundation/0008-inspect-worker-and-the-benchmark.md"
+      }
+    },
+    {
+      "number": 1,
+      "title": "Byte-perfect round trip",
+      "subPhases": [
+        {
+          "id": "1.1",
+          "title": "Corpus, with a CI-enforced licence field",
+          "adr": "phase-1-round-trip/0009-the-corpus.md"
+        },
+        {
+          "id": "1.2",
+          "title": "`validate`: the 29-rule repair firewall",
+          "adr": "phase-1-round-trip/0010-the-repair-firewall.md"
+        },
+        {
+          "id": "1.3",
+          "title": "`writer`: dirty-part export and media GC",
+          "adr": "phase-1-round-trip/0011-the-writer.md"
+        },
+        {
+          "id": "1.4",
+          "title": "`cli roundtrip`",
+          "adr": "phase-1-round-trip/0012-the-round-trip-oracle.md"
+        },
+        {
+          "id": "1.5",
+          "title": "`cli bisect` and the PowerPoint loop",
+          "adr": "phase-1-round-trip/0013-bisect-and-the-powerpoint-oracle.md"
+        },
+        {
+          "id": "1.6",
+          "title": "CI gate and badge",
+          "adr": "phase-1-round-trip/0014-the-ci-gate-and-the-badge.md"
+        }
+      ],
+      "gate": {
+        "title": "A deck out of a browser and into PowerPoint with no repair prompt",
+        "adr": "phase-1-round-trip/0015-gate-1-the-browser-round-trip.md",
+        "result": "52/52 decks, 1474 parts"
+      }
+    },
+    {
+      "number": 2,
+      "title": "Geometry and paint",
+      "subPhases": [
+        {
+          "id": "2.1",
+          "title": "Preset codegen, all 187 shapes",
+          "adr": "phase-2-geometry-and-paint/0016-preset-geometry-codegen.md"
+        },
+        {
+          "id": "2.2",
+          "title": "Formula evaluator",
+          "adr": "phase-2-geometry-and-paint/0017-the-formula-evaluator.md"
+        },
+        {
+          "id": "2.3",
+          "title": "Arc math",
+          "adr": "phase-2-geometry-and-paint/0018-arc-math.md"
+        },
+        {
+          "id": "2.4",
+          "title": "Path emit and `custGeom` unification",
+          "adr": "phase-2-geometry-and-paint/0019-path-emit-and-custgeom.md"
+        },
+        {
+          "id": "2.5",
+          "title": "Adjust handles",
+          "adr": "phase-2-geometry-and-paint/0020-adjust-handles.md"
+        },
+        {
+          "id": "2.6",
+          "title": "Colour",
+          "adr": "phase-2-geometry-and-paint/0021-colour.md"
+        },
+        {
+          "id": "2.7",
+          "title": "Gradients and patterns",
+          "adr": "phase-2-geometry-and-paint/0022-fills.md",
+          "result": "the off-centre path focus is SVG's focal radial, 17 probes at rms 0.53; @flip is inert on a gradient fill"
+        },
+        {
+          "id": "2.8",
+          "title": "Lines and effects",
+          "adr": "phase-2-geometry-and-paint/0023-lines.md"
+        },
+        {
+          "id": "2.9",
+          "title": "Model: parse and resolve",
+          "adr": "phase-2-geometry-and-paint/0024-model-parse-and-resolve.md"
+        },
+        {
+          "id": "2.10",
+          "title": "Renderers, geometry only",
+          "adr": "phase-2-geometry-and-paint/0025-renderers-geometry.md"
+        },
+        {
+          "id": "2.11",
+          "title": "Debug overlay and 187-preset gallery",
+          "adr": "phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md"
+        },
+        {
+          "id": "2.12",
+          "title": "Image fills (`a:blipFill`)",
+          "adr": "phase-2-geometry-and-paint/0036-image-fills.md",
+          "result": "63 probes, 14 refuted readings; a03-fills-02 8199 to 9378 bp"
+        }
+      ],
+      "gate": {
+        "title": "A real deck rendered silent: fills, strokes, effects, nested rotated groups",
+        "adr": "phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md",
+        "note": "Closed with one shortfall on the record: no LibreOffice side-by-side. Cropped image fills arrived in 2.12."
+      }
+    },
+    {
+      "number": 3,
+      "title": "Text engine, viewer, fidelity scoreboard",
+      "subPhases": [
+        {
+          "id": "3.1",
+          "title": "Text parse and the 10-source cascade",
+          "adr": "phase-3-text/0027-the-text-cascade.md"
+        },
+        {
+          "id": "3.2",
+          "title": "Measurement and the line model",
+          "adr": "phase-3-text/0028-measurement-and-the-line-model.md"
+        },
+        {
+          "id": "3.3",
+          "title": "Line breaking",
+          "adr": "phase-3-text/0029-line-breaking.md"
+        },
+        {
+          "id": "3.4",
+          "title": "Autofit, view and edit modes",
+          "adr": "phase-3-text/0030-autofit.md"
+        },
+        {
+          "id": "3.5",
+          "title": "Bullets, fields, script runs",
+          "adr": "phase-3-text/0031-bullets-fields-and-script-runs.md"
+        },
+        {
+          "id": "3.6",
+          "title": "Anchors, insets, vertical text",
+          "adr": "phase-3-text/0032-anchors-insets-and-vertical-text.md",
+          "note": "`eaVert` is refused rather than approximated, so three corpus slides are reported as gaps"
+        },
+        {
+          "id": "3.7",
+          "title": "Font substitution and the guard",
+          "adr": "phase-3-text/0033-font-substitution-and-the-guard.md"
+        },
+        {
+          "id": "3.8",
+          "title": "Text in both renderers",
+          "adr": "phase-3-text/0034-text-in-both-renderers.md"
+        },
+        {
+          "id": "3.9",
+          "title": "Fidelity harness",
+          "adr": "phase-3-text/0035-the-fidelity-harness.md",
+          "note": "Green as a developer gate; CI cannot run it until a Linux baseline is recorded"
+        },
+        {
+          "id": "3.10",
+          "title": "First npm release: `render-svg` and `cli render`"
+        }
+      ],
+      "gate": {
+        "title": "A 100-slide deck rendered faithfully at any zoom, entirely client-side"
+      }
+    },
+    {
+      "number": 4,
+      "title": "Tables and SmartArt",
+      "subPhases": [
+        {
+          "id": "4.1",
+          "title": "Table parse: grid, spans, merges"
+        },
+        {
+          "id": "4.2",
+          "title": "The 74 built-in table styles, re-derived from PowerPoint"
+        },
+        {
+          "id": "4.3",
+          "title": "The 13-layer table cascade"
+        },
+        {
+          "id": "4.4",
+          "title": "Table render and cell editing"
+        },
+        {
+          "id": "4.5",
+          "title": "SmartArt fallback resolution"
+        },
+        {
+          "id": "4.6",
+          "title": "SmartArt render, read-only"
+        }
+      ],
+      "gate": {
+        "title": "Banded tables with merges edit cell by cell; SmartArt renders with real content"
+      }
+    },
+    {
+      "number": 5,
+      "title": "Select and move",
+      "subPhases": [
+        {
+          "id": "5.1",
+          "title": "Command bus and history"
+        },
+        {
+          "id": "5.2",
+          "title": "Selection and hit-test"
+        },
+        {
+          "id": "5.3",
+          "title": "Resize and rotate"
+        },
+        {
+          "id": "5.4",
+          "title": "Snapping and the overlay canvas"
+        },
+        {
+          "id": "5.5",
+          "title": "Preview/Commit gesture"
+        },
+        {
+          "id": "5.6",
+          "title": "Slide operations"
+        },
+        {
+          "id": "5.7",
+          "title": "React shell and inspector v1"
+        },
+        {
+          "id": "5.8",
+          "title": "Export verification after every gesture class"
+        }
+      ],
+      "gate": {
+        "title": "Drag, resize, rotate, recolour, reorder - and export still opens clean"
+      }
+    },
+    {
+      "number": 6,
+      "title": "Type",
+      "subPhases": [
+        {
+          "id": "6.1",
+          "title": "ProseMirror schema and lossless converters"
+        },
+        {
+          "id": "6.2",
+          "title": "A single lazy EditorView"
+        },
+        {
+          "id": "6.3",
+          "title": "IME"
+        },
+        {
+          "id": "6.4",
+          "title": "Live autofit"
+        },
+        {
+          "id": "6.5",
+          "title": "Inspector provenance"
+        }
+      ],
+      "gate": {
+        "title": "Click a placeholder once and type; one undo for the whole burst"
+      }
+    },
+    {
+      "number": 7,
+      "title": "Layout-aware",
+      "subPhases": [
+        {
+          "id": "7.1",
+          "title": "Matcher hardening, the 121-case matrix"
+        },
+        {
+          "id": "7.2",
+          "title": "Change-layout plan, pure"
+        },
+        {
+          "id": "7.3",
+          "title": "Preview UI"
+        },
+        {
+          "id": "7.4",
+          "title": "Change-layout apply"
+        },
+        {
+          "id": "7.5",
+          "title": "Reset"
+        },
+        {
+          "id": "7.6",
+          "title": "Theme verb: Colors"
+        },
+        {
+          "id": "7.7",
+          "title": "Theme verb: Fonts"
+        },
+        {
+          "id": "7.8",
+          "title": "Theme verb: Design, the master swap"
+        },
+        {
+          "id": "7.9",
+          "title": "Backgrounds"
+        },
+        {
+          "id": "7.10",
+          "title": "Theme-ification"
+        },
+        {
+          "id": "7.11",
+          "title": "Adapt layouts"
+        }
+      ],
+      "gate": {
+        "title": "Switch layout from a picker that said in advance what would happen"
+      }
+    },
+    {
+      "number": 8,
+      "title": "Fonts, end to end",
+      "subPhases": [
+        {
+          "id": "8.1",
+          "title": "SFNT reader"
+        },
+        {
+          "id": "8.2",
+          "title": "EOT reader"
+        },
+        {
+          "id": "8.3",
+          "title": "EOT writer"
+        },
+        {
+          "id": "8.4",
+          "title": "Rights gate on `fsType`"
+        },
+        {
+          "id": "8.5",
+          "title": "WOFF and WOFF2 decode"
+        },
+        {
+          "id": "8.6",
+          "title": "FontFace registry"
+        },
+        {
+          "id": "8.7",
+          "title": "The six-artifact export"
+        },
+        {
+          "id": "8.8",
+          "title": "`fonts-metric-compat` and the font panel"
+        },
+        {
+          "id": "8.9",
+          "title": "Clean-machine verification"
+        }
+      ],
+      "gate": {
+        "title": "Custom fonts survive into exported PowerPoint on a machine that never had them"
+      }
+    },
+    {
+      "number": 9,
+      "title": "Charts, core",
+      "subPhases": [
+        {
+          "id": "9.1",
+          "title": "Chart parse and colour resolution"
+        },
+        {
+          "id": "9.2",
+          "title": "Axes and scales"
+        },
+        {
+          "id": "9.3",
+          "title": "Bar and column"
+        },
+        {
+          "id": "9.4",
+          "title": "Line and area"
+        },
+        {
+          "id": "9.5",
+          "title": "Pie and doughnut"
+        },
+        {
+          "id": "9.6",
+          "title": "Scatter, bubble, radar"
+        },
+        {
+          "id": "9.7",
+          "title": "Legends, labels, titles"
+        },
+        {
+          "id": "9.8",
+          "title": "Combo charts"
+        }
+      ],
+      "gate": {
+        "title": "Charts render recognizably; export leaves every chart part byte-identical"
+      }
+    },
+    {
+      "number": 10,
+      "title": "ChartEx, 3-D, and the remaining content types",
+      "subPhases": [
+        {
+          "id": "10.1",
+          "title": "ChartEx data model"
+        },
+        {
+          "id": "10.2",
+          "title": "Waterfall, funnel, Pareto"
+        },
+        {
+          "id": "10.3",
+          "title": "Treemap, sunburst"
+        },
+        {
+          "id": "10.4",
+          "title": "Histogram, box-whisker, region map"
+        },
+        {
+          "id": "10.5",
+          "title": "3-D chart variants"
+        },
+        {
+          "id": "10.6",
+          "title": "EMF and WMF"
+        },
+        {
+          "id": "10.7",
+          "title": "SVG, TIFF, animated GIF"
+        },
+        {
+          "id": "10.8",
+          "title": "Media"
+        },
+        {
+          "id": "10.9",
+          "title": "OLE"
+        },
+        {
+          "id": "10.10",
+          "title": "Ink and 3-D models"
+        },
+        {
+          "id": "10.11",
+          "title": "Kitchen-sink verification"
+        }
+      ],
+      "gate": {
+        "title": "Nothing on a real slide is a blank rectangle"
+      }
+    },
+    {
+      "number": 11,
+      "title": "Theme and template assets",
+      "subPhases": [
+        {
+          "id": "11.1",
+          "title": "Palette generator in OKLCH"
+        },
+        {
+          "id": "11.2",
+          "title": "Contrast validation, WCAG and APCA"
+        },
+        {
+          "id": "11.3",
+          "title": "Font pairing sets"
+        },
+        {
+          "id": "11.4",
+          "title": "Master authoring pipeline"
+        },
+        {
+          "id": "11.5",
+          "title": "Three to five original CC0 masters"
+        },
+        {
+          "id": "11.6",
+          "title": "Design gallery UI"
+        }
+      ],
+      "gate": {
+        "title": "Pick a palette and watch a real deck restyle live"
+      }
+    },
+    {
+      "number": 12,
+      "title": "1.0",
+      "subPhases": [
+        {
+          "id": "12.1",
+          "title": "Slide virtualization"
+        },
+        {
+          "id": "12.2",
+          "title": "Image cache"
+        },
+        {
+          "id": "12.3",
+          "title": "Accessibility"
+        },
+        {
+          "id": "12.4",
+          "title": "Accessibility check panel"
+        },
+        {
+          "id": "12.5",
+          "title": "Fuzzing"
+        },
+        {
+          "id": "12.6",
+          "title": "Docs site"
+        },
+        {
+          "id": "12.7",
+          "title": "Release"
+        }
+      ],
+      "gate": {
+        "title": "A public demo: 200 slides, first paint under 3s, published fidelity score"
+      }
+    }
+  ],
+  "carried": [
+    {
+      "title": "CI cannot run the fidelity gate",
+      "detail": "A baseline for a platform has to be recorded on that platform and this machine is Windows, so there is no `expected.linux-x64.json`. One `workflow_dispatch` run fixes it. Turborepo inputs for the task are deferred until then.",
+      "raisedIn": ["ADR 0035, open questions 1 and 2"]
+    },
+    {
+      "title": "`packages/validate` is still at 1.2's 29 rules",
+      "detail": "Four text sub-phases each identified rules that belong in the repair firewall and none were added: `p:kinsoku/@lang`, three `bodyPr` rules, `@panose` shape, and `@u`/`@strike` simple types.",
+      "raisedIn": ["ADR 0029", "ADR 0032", "ADR 0033", "ADR 0034"]
+    },
+    {
+      "title": "The `@pptx-studio` npm scope and GitHub org are unclaimed",
+      "detail": "The plan names this the first action on approval. Every package is version 0.0.0 and publishable, so 3.10 is now blocked on it.",
+      "raisedIn": ["the plan"]
+    },
+    {
+      "title": "`p:pic` picture shapes are still not drawn",
+      "detail": "2.12 built image FILLS. A picture is a shape kind rather than a fill, so b09-picture-01 still scores 8642 bp and is the largest single gap the fidelity score can see. It belongs with 2.10 pic.",
+      "raisedIn": ["ADR 0036"]
+    }
+  ]
+}

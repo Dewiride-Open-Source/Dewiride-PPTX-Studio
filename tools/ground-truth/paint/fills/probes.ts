@@ -115,6 +115,16 @@ export function path(kind: 'shape' | 'circle' | 'rect', rect: Insets = {}): stri
   return `<a:path path="${kind}"><a:fillToRect ${insetAttrs(rect)}/></a:path>`;
 }
 
+/** A point focus at `(fx, fy)` in shape fractions, written as four equal insets. */
+export function focusAt(fx: number, fy: number): Insets {
+  return {
+    l: Math.round(fx * 100000),
+    t: Math.round(fy * 100000),
+    r: Math.round((1 - fx) * 100000),
+    b: Math.round((1 - fy) * 100000),
+  };
+}
+
 export function tileRect(rect: Insets = {}): string {
   const parts = insetAttrs(rect);
   return parts === '' ? '<a:tileRect/>' : `<a:tileRect ${parts}/>`;
@@ -142,8 +152,11 @@ export function pattFill(prst: string | null, fg: string | null, bg: string | nu
  * - `grid` - a lattice over the interior. For anything two-dimensional: an
  *   angle, a path gradient, a flip.
  * - `tile` - the pattern period, recovered from the pixels rather than assumed.
+ * - `corner` - 129 pixels at 1:1, centred on the shape's horizontal midpoint.
+ *   A 481-sample strip over a 1800 px shape is one sample every 3.7 pixels, which
+ *   cannot resolve a feature 1.6 pixels wide.
  */
-export type SampleMode = 'strip' | 'grid' | 'tile';
+export type SampleMode = 'strip' | 'grid' | 'tile' | 'corner';
 
 export interface Probe {
   /** Unique, and used verbatim as `p:cNvPr/@name` so the readback can find it. */
@@ -160,6 +173,11 @@ export interface Probe {
   readonly aspect?: number;
   /** Fraction of the cell the shape occupies. Defaults to 0.88. */
   readonly scale?: number;
+  /** An exact size in points, centred in the cell. Overrides `aspect` and `scale`. */
+  readonly widthPt?: number;
+  readonly heightPt?: number;
+  /** The shape is the whole slide, whatever the deck's grid says. */
+  readonly fullSlide?: boolean;
   readonly prst?: string;
   readonly rot?: number;
   readonly flipH?: boolean;
@@ -189,6 +207,16 @@ export const DECK_GRID: Readonly<Record<string, { cols: number; rows: number }>>
   patsize: { cols: 4, rows: 3 },
   patcolor: { cols: 4, rows: 2 },
   mixed: { cols: 4, rows: 2 },
+  focus: { cols: 4, rows: 3 },
+  flipasym: { cols: 4, rows: 2 },
+  // One row per width, so the 900 pt shape has a row to itself.
+  soften: { cols: 1, rows: 4 },
+  // Quadrants, so the comparison shape sits away from the slide centre - where a
+  // background focus and a shape focus would otherwise coincide.
+  'bg-lin': { cols: 2, rows: 2 },
+  'bg-lin-vert': { cols: 2, rows: 2 },
+  'bg-path': { cols: 2, rows: 2 },
+  'bg-path-off': { cols: 2, rows: 2 },
 };
 
 const BLACK = '000000';
@@ -848,7 +876,229 @@ export function fillProbes(): Probe[] {
     fill: bw(lin(0, 0)),
   });
 
+  /* ---- focus: where an off-centre path focus puts the ramp -------------- */
+  //
+  // The first pass measured one off-centre focus, found that no concentric
+  // normalisation fitted it, and shipped the farthest-corner reading with a
+  // `centred: false` flag. One focus is an anecdote. These are fourteen, over
+  // three aspect ratios and all three path kinds, chosen so that the readings
+  // that fit the single (0.2, 0.2) sample to within a few bytes - concentric
+  // circles scaled to the farthest corner, and the per-axis box rule - are
+  // separated from each other everywhere except the shape's centre.
+  const F = 'focus';
+  const FOCI: readonly (readonly [string, number, number])[] = [
+    ['1010', 0.1, 0.1],
+    ['5015', 0.5, 0.15],
+    ['8550', 0.85, 0.5],
+    ['3070', 0.3, 0.7],
+    ['7030', 0.7, 0.3],
+    ['9090', 0.9, 0.9],
+    ['1560', 0.15, 0.6],
+    ['6085', 0.6, 0.85],
+  ];
+  for (const [label, fx, fy] of FOCI) {
+    add({
+      id: `focus-circle-${label}`,
+      deck: F,
+      group: 'focus',
+      sample: 'grid',
+      aspect: 1,
+      question: `path="circle" with the focus at (${String(fx)}, ${String(fy)}).`,
+      fill: bw(path('circle', focusAt(fx, fy))),
+    });
+  }
+  // A circle on a 3:1 shape is isotropic in shape units, so an off-centre focus
+  // on a wide shape is where a model written in shape *fractions* comes apart.
+  for (const [label, aspect] of [
+    ['wide', 3],
+    ['tall', 1 / 3],
+  ] as const) {
+    add({
+      id: `focus-circle-${label}`,
+      deck: F,
+      group: 'focus',
+      sample: 'grid',
+      aspect,
+      question: `path="circle" at (0.25, 0.25) on a ${label} shape - shape units, or fractions?`,
+      fill: bw(path('circle', focusAt(0.25, 0.25))),
+    });
+  }
+  add({
+    id: 'focus-rect-3070',
+    deck: F,
+    group: 'focus',
+    sample: 'grid',
+    aspect: 1,
+    question: 'path="rect" off centre: does the box rule survive a focus that is not the centre?',
+    fill: bw(path('rect', focusAt(0.3, 0.7))),
+  });
+  add({
+    id: 'focus-rect-wide',
+    deck: F,
+    group: 'focus',
+    sample: 'grid',
+    aspect: 3,
+    question: 'path="rect" at (0.25, 0.25) on a 3:1 shape.',
+    fill: bw(path('rect', focusAt(0.25, 0.25))),
+  });
+  add({
+    id: 'focus-shape-ellipse',
+    deck: F,
+    group: 'focus',
+    sample: 'grid',
+    aspect: 1,
+    prst: 'ellipse',
+    question: 'path="shape" off centre on an ellipse: does the outline still lead?',
+    fill: bw(path('shape', focusAt(0.3, 0.3))),
+  });
+  add({
+    id: 'focus-shape-rect',
+    deck: F,
+    group: 'focus',
+    sample: 'grid',
+    aspect: 1,
+    question: 'path="shape" off centre on a rectangle: still identical to path="rect"?',
+    fill: bw(path('shape', focusAt(0.3, 0.7))),
+  });
+
+  /* ---- flipasym: an asymmetric tile, which the first pass did not have --- */
+  //
+  // The first pass put a *centred* path tile under all four flip modes and found
+  // them indistinguishable, which says nothing: a centred circle is its own
+  // mirror image on both axes. These tiles have no symmetry to hide behind.
+  const FA = 'flipasym';
+  for (const flip of ['none', 'x', 'y', 'xy'] as const) {
+    add({
+      id: `flipasym-path-${flip}`,
+      deck: FA,
+      group: 'flipasym',
+      sample: 'grid',
+      aspect: 1,
+      question: `A quarter-size path tile with an off-centre focus and flip="${flip}".`,
+      fill: bw(path('circle', focusAt(0.25, 0.25)), {
+        flip,
+        tileRect: tileRect({ r: 50000, b: 50000 }),
+      }),
+    });
+    add({
+      id: `flipasym-lin-${flip}`,
+      deck: FA,
+      group: 'flipasym',
+      sample: 'grid',
+      aspect: 1,
+      question: `A quarter-size 30-degree ramp tile with flip="${flip}" - asymmetric on both axes.`,
+      fill: bw(lin(1800000, 0), { flip, tileRect: tileRect({ r: 50000, b: 50000 }) }),
+    });
+  }
+
+  /* ---- soften: is the rounded corner device pixels or a share of the ramp? */
+  //
+  // A three-colour profile has a hard corner at its middle stop, and PowerPoint
+  // rounds it off. What separates a fixed count of device pixels from a share of
+  // the ramp is the *slope*: a rounding 1.6 px wide shows up as a deviation
+  // proportional to bytes-per-pixel, while a rounding that is a share of the ramp
+  // is the same number of bytes however steep the arms are. So the shape stays
+  // one size and the arms are shortened instead, from 8% of the width down to 1%
+  // - an eightfold change in slope - and `read.ps1` exports at 1920 and 3840 for
+  // a further factor of two that no change to the markup can imitate.
+  //
+  // Three distinct colours, because two colours at 0 and 100% are joined by the
+  // measured curve and a curve has no corner to find. The apex is E0 rather than
+  // white: a corner at 255 is clipped by the export and the rounding vanishes
+  // into the top two bytes, which is what a first attempt at this measured.
+  const S = 'soften';
+  for (const arm of [1, 2, 4, 8]) {
+    const d = arm * 1000;
+    add({
+      id: `soften-arm${String(arm)}`,
+      deck: S,
+      group: 'soften',
+      sample: 'corner',
+      widthPt: 480,
+      heightPt: 60,
+      question: `A corner at 50% whose arms are ${String(arm)}% of the width each.`,
+      fill: gradFill(
+        [gs(50000 - d, srgb(BLACK)), gs(50000, srgb('E0E0E0')), gs(50000 + d, srgb('202020'))],
+        lin(0, 0),
+      ),
+    });
+  }
+
   return out;
+}
+
+/* -------------------------------------------------------------------------- */
+/* the background probes                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What a gradient in `p:bg` is laid out over.
+ *
+ * A slide background has no shape box, so every question the other probes ask
+ * about a rectangle has to be asked again: a linear ramp needs an extent and a
+ * path needs a focus, and the slide is the only rectangle in sight. Each deck
+ * carries the fill on its slide background and the same fill on a shape covering
+ * the right-hand third, so one bitmap answers both halves of the question - if
+ * the background runs over the slide, the ramp under the shape and the ramp
+ * inside it disagree everywhere except where they happen to cross.
+ *
+ * The probe named for the background is a `noFill` rectangle spanning the whole
+ * slide. It paints nothing; it exists so the sampler has a named rectangle to
+ * read the background through, which is the only way this harness can sample
+ * something that is not a shape.
+ */
+export function backgroundProbes(): readonly {
+  readonly deck: string;
+  readonly background: string;
+  readonly probes: readonly Probe[];
+}[] {
+  const cases: readonly (readonly [string, string, string])[] = [
+    [
+      'bg-lin',
+      'A horizontal ramp on the slide background: is the extent the slide?',
+      bw(lin(0, 0)),
+    ],
+    [
+      'bg-lin-vert',
+      'A vertical ramp on the slide background - the slide is 16:9, so the two axes differ.',
+      bw(lin(5400000, 0)),
+    ],
+    [
+      'bg-path',
+      'A centred circle path on the slide background: is the focus the slide centre?',
+      bw(path('circle', CTR)),
+    ],
+    [
+      'bg-path-off',
+      'An off-centre circle path on the background, at (0.25, 0.25) of the slide.',
+      bw(path('circle', focusAt(0.25, 0.25))),
+    ],
+  ];
+  return cases.map(([deck, question, fill]) => ({
+    deck,
+    background: fill,
+    probes: [
+      {
+        id: `${deck}-slide`,
+        deck,
+        group: 'background',
+        sample: 'grid',
+        question,
+        fill: '<a:noFill/>',
+        fullSlide: true,
+      },
+      {
+        id: `${deck}-shape`,
+        deck,
+        group: 'background',
+        sample: 'grid',
+        question: `The same fill on a shape, for comparison with ${deck}-slide.`,
+        fill,
+        widthPt: 200,
+        heightPt: 200,
+      },
+    ],
+  }));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -871,7 +1121,31 @@ export function hostileProbes(): Probe[] {
     aspect: 1,
     scale: 0.9,
   });
+  // `@path` and `a:fillToRect` are both optional in `CT_PathShadeProperties`, so
+  // these are legal files rather than hostile ones - but a renderer has to
+  // default them to something, and an isolated package is what makes a refusal
+  // legible if PowerPoint disagrees about the schema.
+  const shapes = [
+    one(
+      'pathdef-nopath',
+      'a:path with no @path, focus centred: which of the three kinds is the default?',
+      bw('<a:path><a:fillToRect l="50000" t="50000" r="50000" b="50000"/></a:path>'),
+    ),
+    one(
+      'pathdef-norect',
+      'path="circle" with no a:fillToRect: is the focus the centre, or the top-left corner?',
+      bw('<a:path path="circle"/>'),
+    ),
+    one(
+      'pathdef-norect-rect',
+      'path="rect" with no a:fillToRect - the same question, where the corner reading shows.',
+      bw('<a:path path="rect"/>'),
+    ),
+    one('pathdef-bare', 'a:path with neither attribute nor child.', bw('<a:path/>')),
+  ].map((p) => ({ ...p, group: 'pathdef' }));
+
   return [
+    ...shapes,
     one(
       'h-angneg',
       'ST_PositiveFixedAngle excludes negatives. Is a negative @ang refused?',

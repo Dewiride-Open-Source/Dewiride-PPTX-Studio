@@ -1,0 +1,1030 @@
+{
+  "experiment": "C6 - image fills",
+  "generator": "tools/ground-truth/paint/blips/analyse.ts",
+  "powerPoint": "Microsoft PowerPoint, version 16.0, build 20326",
+  "exportWidth": 1920,
+  "rules": {
+    "tileNaturalSize": "the FULL image pixel count divided by the image resolution, in inches - a:srcRect changes what is drawn in the tile, not how big the tile is",
+    "tileAnchor": "one whole tile is placed flush to the @algn edge or corner of the shape box",
+    "tileOffset": "a:tile/@tx and @ty are EMU, positive right and down, from that anchor",
+    "tileFlip": "a:tile/@flip mirrors ALTERNATE tiles, so the visible period doubles",
+    "stretch": "the source left by a:srcRect maps onto the shape box inset by a:fillRect",
+    "luminanceWeights": "BT.709 (0.2126, 0.7152, 0.0722), in sRGB and not in linear light",
+    "grayscale": "the weighted sum, written to all three channels",
+    "biLevel": "that luminance compared against @thresh x 255, inclusive",
+    "duotone": "linear sRGB interpolation between the two colours by that luminance",
+    "alphaModFix": "@amt is the resulting OPACITY, not the transparency",
+    "lum": "per channel: k(v - 127.5) + 127.5 + bright x 127.5 x (1 + k), where k is 1/(1 - contrast) when contrast >= 0 and 1 + contrast when it is negative",
+    "clrChange": "an exact colour match; a clrTo carrying alpha=\"0\" erases rather than repaints"
+  },
+  "findings": [
+    {
+      "probe": "stretch",
+      "deck": "geom",
+      "question": "Does a bare a:stretch map the whole image onto the whole shape, aspect ignored?",
+      "samples": 2494,
+      "scores": {
+        "measured": 0.9735,
+        "fillrect-ignored": 0.9735,
+        "srcrect-ignored": 0.9735,
+        "srcrect-as-coordinates": 0.1154,
+        "effects:bt601-weights": 0.9735,
+        "effects:bright-independent-of-contrast": 0.9735,
+        "effects:pivot-128": 0.9735,
+        "effects:round-toward-zero": 0.9735
+      }
+    },
+    {
+      "probe": "stretch-fillrect-in",
+      "deck": "geom",
+      "question": "Is a:fillRect an inset of the destination, leaving the shape bare outside it?",
+      "samples": 2799,
+      "scores": {
+        "measured": 0.8106,
+        "fillrect-ignored": 0.4511,
+        "srcrect-ignored": 0.8106,
+        "srcrect-as-coordinates": 0.3738,
+        "effects:bt601-weights": 0.8106,
+        "effects:bright-independent-of-contrast": 0.8106,
+        "effects:pivot-128": 0.8106,
+        "effects:round-toward-zero": 0.8106
+      }
+    },
+    {
+      "probe": "stretch-fillrect-out",
+      "deck": "geom",
+      "question": "Does a negative a:fillRect outset the image and clip it to the shape?",
+      "samples": 2442,
+      "scores": {
+        "measured": 0.9676,
+        "fillrect-ignored": 0.7298,
+        "srcrect-ignored": 0.9676,
+        "srcrect-as-coordinates": 0.0385,
+        "effects:bt601-weights": 0.9676,
+        "effects:bright-independent-of-contrast": 0.9676,
+        "effects:pivot-128": 0.9676,
+        "effects:round-toward-zero": 0.9676
+      }
+    },
+    {
+      "probe": "srcrect-crop",
+      "deck": "geom",
+      "question": "Is a:srcRect an inset of the SOURCE, measured as a fraction of the image?",
+      "samples": 2212,
+      "scores": {
+        "measured": 0.9394,
+        "fillrect-ignored": 0.9394,
+        "srcrect-ignored": 0.6804,
+        "srcrect-as-coordinates": 0,
+        "effects:bt601-weights": 0.9394,
+        "effects:bright-independent-of-contrast": 0.9394,
+        "effects:pivot-128": 0.9394,
+        "effects:round-toward-zero": 0.9394
+      }
+    },
+    {
+      "probe": "srcrect-and-fillrect",
+      "deck": "geom",
+      "question": "When both are present, is the cropped source mapped onto the inset destination?",
+      "samples": 2788,
+      "scores": {
+        "measured": 0.9039,
+        "fillrect-ignored": 0.3465,
+        "srcrect-ignored": 0.7201,
+        "srcrect-as-coordinates": 0.5194,
+        "effects:bt601-weights": 0.9039,
+        "effects:bright-independent-of-contrast": 0.9039,
+        "effects:pivot-128": 0.9039,
+        "effects:round-toward-zero": 0.9039
+      }
+    },
+    {
+      "probe": "tile-algn-tl",
+      "deck": "geom",
+      "question": "Where does @algn=\"tl\" anchor the tile grid inside the shape?",
+      "samples": 2724,
+      "scores": {
+        "measured": 0.8642,
+        "tile-srcrect-ignored": 0.8642,
+        "flip-every-tile": 0.8642,
+        "anchor-at-shape-origin": 0.8642,
+        "offset-negated": 0.8642,
+        "scale-of-shape-not-image": 0.2153,
+        "tile-size-follows-crop": 0.8642,
+        "ignores-image-dpi": 0.8642
+      }
+    },
+    {
+      "probe": "tile-algn-t",
+      "deck": "geom",
+      "question": "Where does @algn=\"t\" anchor the tile grid inside the shape?",
+      "samples": 2408,
+      "scores": {
+        "measured": 0.9302,
+        "tile-srcrect-ignored": 0.9302,
+        "flip-every-tile": 0.9302,
+        "anchor-at-shape-origin": 0.152,
+        "offset-negated": 0.9302,
+        "scale-of-shape-not-image": 0.2574,
+        "tile-size-follows-crop": 0.9302,
+        "ignores-image-dpi": 0.9302
+      }
+    },
+    {
+      "probe": "tile-algn-tr",
+      "deck": "geom",
+      "question": "Where does @algn=\"tr\" anchor the tile grid inside the shape?",
+      "samples": 2742,
+      "scores": {
+        "measured": 0.8651,
+        "tile-srcrect-ignored": 0.8651,
+        "flip-every-tile": 0.8651,
+        "anchor-at-shape-origin": 0.5198,
+        "offset-negated": 0.8651,
+        "scale-of-shape-not-image": 0.215,
+        "tile-size-follows-crop": 0.8651,
+        "ignores-image-dpi": 0.8651
+      }
+    },
+    {
+      "probe": "tile-algn-l",
+      "deck": "geom",
+      "question": "Where does @algn=\"l\" anchor the tile grid inside the shape?",
+      "samples": 2771,
+      "scores": {
+        "measured": 0.8455,
+        "tile-srcrect-ignored": 0.8455,
+        "flip-every-tile": 0.8455,
+        "anchor-at-shape-origin": 0.5092,
+        "offset-negated": 0.8455,
+        "scale-of-shape-not-image": 0.249,
+        "tile-size-follows-crop": 0.8455,
+        "ignores-image-dpi": 0.8455
+      }
+    },
+    {
+      "probe": "tile-algn-ctr",
+      "deck": "geom",
+      "question": "Where does @algn=\"ctr\" anchor the tile grid inside the shape?",
+      "samples": 2456,
+      "scores": {
+        "measured": 0.9088,
+        "tile-srcrect-ignored": 0.9088,
+        "flip-every-tile": 0.9088,
+        "anchor-at-shape-origin": 0.0925,
+        "offset-negated": 0.9088,
+        "scale-of-shape-not-image": 0.2968,
+        "tile-size-follows-crop": 0.9088,
+        "ignores-image-dpi": 0.9088
+      }
+    },
+    {
+      "probe": "tile-algn-r",
+      "deck": "geom",
+      "question": "Where does @algn=\"r\" anchor the tile grid inside the shape?",
+      "samples": 2786,
+      "scores": {
+        "measured": 0.8464,
+        "tile-srcrect-ignored": 0.8464,
+        "flip-every-tile": 0.8464,
+        "anchor-at-shape-origin": 0.3172,
+        "offset-negated": 0.8464,
+        "scale-of-shape-not-image": 0.2487,
+        "tile-size-follows-crop": 0.8464,
+        "ignores-image-dpi": 0.8464
+      }
+    },
+    {
+      "probe": "tile-algn-bl",
+      "deck": "geom",
+      "question": "Where does @algn=\"bl\" anchor the tile grid inside the shape?",
+      "samples": 2546,
+      "scores": {
+        "measured": 0.9277,
+        "tile-srcrect-ignored": 0.9277,
+        "flip-every-tile": 0.9277,
+        "anchor-at-shape-origin": 0.2963,
+        "offset-negated": 0.9277,
+        "scale-of-shape-not-image": 0.2801,
+        "tile-size-follows-crop": 0.9277,
+        "ignores-image-dpi": 0.9277
+      }
+    },
+    {
+      "probe": "tile-algn-b",
+      "deck": "geom",
+      "question": "Where does @algn=\"b\" anchor the tile grid inside the shape?",
+      "samples": 2252,
+      "scores": {
+        "measured": 1,
+        "tile-srcrect-ignored": 1,
+        "flip-every-tile": 1,
+        "anchor-at-shape-origin": 0.0496,
+        "offset-negated": 1,
+        "scale-of-shape-not-image": 0.3324,
+        "tile-size-follows-crop": 1,
+        "ignores-image-dpi": 1
+      }
+    },
+    {
+      "probe": "tile-algn-br",
+      "deck": "geom",
+      "question": "Where does @algn=\"br\" anchor the tile grid inside the shape?",
+      "samples": 2564,
+      "scores": {
+        "measured": 0.9282,
+        "tile-srcrect-ignored": 0.9282,
+        "flip-every-tile": 0.9282,
+        "anchor-at-shape-origin": 0.185,
+        "offset-negated": 0.9282,
+        "scale-of-shape-not-image": 0.2798,
+        "tile-size-follows-crop": 0.9282,
+        "ignores-image-dpi": 0.9282
+      }
+    },
+    {
+      "probe": "tile-flip-none",
+      "deck": "geom",
+      "question": "Does @flip=\"none\" mirror every tile, or alternate ones?",
+      "samples": 2724,
+      "scores": {
+        "measured": 0.8642,
+        "tile-srcrect-ignored": 0.8642,
+        "flip-every-tile": 0.8642,
+        "anchor-at-shape-origin": 0.8642,
+        "offset-negated": 0.8642,
+        "scale-of-shape-not-image": 0.2153,
+        "tile-size-follows-crop": 0.8642,
+        "ignores-image-dpi": 0.8642
+      }
+    },
+    {
+      "probe": "tile-flip-x",
+      "deck": "geom",
+      "question": "Does @flip=\"x\" mirror every tile, or alternate ones?",
+      "samples": 2724,
+      "scores": {
+        "measured": 0.9317,
+        "tile-srcrect-ignored": 0.9317,
+        "flip-every-tile": 0.4493,
+        "anchor-at-shape-origin": 0.9317,
+        "offset-negated": 0.9317,
+        "scale-of-shape-not-image": 0.2197,
+        "tile-size-follows-crop": 0.9317,
+        "ignores-image-dpi": 0.9317
+      }
+    },
+    {
+      "probe": "tile-flip-y",
+      "deck": "geom",
+      "question": "Does @flip=\"y\" mirror every tile, or alternate ones?",
+      "samples": 2771,
+      "scores": {
+        "measured": 0.9293,
+        "tile-srcrect-ignored": 0.9293,
+        "flip-every-tile": 0.3656,
+        "anchor-at-shape-origin": 0.9293,
+        "offset-negated": 0.9293,
+        "scale-of-shape-not-image": 0.1977,
+        "tile-size-follows-crop": 0.9293,
+        "ignores-image-dpi": 0.9293
+      }
+    },
+    {
+      "probe": "tile-flip-xy",
+      "deck": "geom",
+      "question": "Does @flip=\"xy\" mirror every tile, or alternate ones?",
+      "samples": 2771,
+      "scores": {
+        "measured": 1,
+        "tile-srcrect-ignored": 1,
+        "flip-every-tile": 0.1895,
+        "anchor-at-shape-origin": 1,
+        "offset-negated": 1,
+        "scale-of-shape-not-image": 0.1989,
+        "tile-size-follows-crop": 1,
+        "ignores-image-dpi": 1
+      }
+    },
+    {
+      "probe": "tile-scale-half",
+      "deck": "geom",
+      "question": "Is @sx a percentage of the natural tile size rather than of the shape?",
+      "samples": 2176,
+      "scores": {
+        "measured": 1,
+        "tile-srcrect-ignored": 1,
+        "flip-every-tile": 1,
+        "anchor-at-shape-origin": 1,
+        "offset-negated": 1,
+        "scale-of-shape-not-image": 0.2592,
+        "tile-size-follows-crop": 1,
+        "ignores-image-dpi": 1
+      }
+    },
+    {
+      "probe": "tile-scale-uneven",
+      "deck": "geom",
+      "question": "Do @sx and @sy scale independently?",
+      "samples": 2380,
+      "scores": {
+        "measured": 0.9513,
+        "tile-srcrect-ignored": 0.9513,
+        "flip-every-tile": 0.9513,
+        "anchor-at-shape-origin": 0.9513,
+        "offset-negated": 0.9513,
+        "scale-of-shape-not-image": 0.291,
+        "tile-size-follows-crop": 0.9513,
+        "ignores-image-dpi": 0.9513
+      }
+    },
+    {
+      "probe": "tile-offset-pos",
+      "deck": "geom",
+      "question": "Does a positive @tx move the grid right and down from the anchor?",
+      "samples": 2786,
+      "scores": {
+        "measured": 0.8464,
+        "tile-srcrect-ignored": 0.8464,
+        "flip-every-tile": 0.8464,
+        "anchor-at-shape-origin": 0.8464,
+        "offset-negated": 0,
+        "scale-of-shape-not-image": 0.2698,
+        "tile-size-follows-crop": 0.8464,
+        "ignores-image-dpi": 0.8464
+      }
+    },
+    {
+      "probe": "tile-offset-neg",
+      "deck": "geom",
+      "question": "And a negative one left and up?",
+      "samples": 2636,
+      "scores": {
+        "measured": 0.8623,
+        "tile-srcrect-ignored": 0.8623,
+        "flip-every-tile": 0.8623,
+        "anchor-at-shape-origin": 0.8623,
+        "offset-negated": 0,
+        "scale-of-shape-not-image": 0.1891,
+        "tile-size-follows-crop": 0.8623,
+        "ignores-image-dpi": 0.8623
+      }
+    },
+    {
+      "probe": "tile-offset-centre",
+      "deck": "geom",
+      "question": "Is @tx measured from the anchor even when the anchor is not a corner?",
+      "samples": 2530,
+      "scores": {
+        "measured": 0.9312,
+        "tile-srcrect-ignored": 0.9312,
+        "flip-every-tile": 0.9312,
+        "anchor-at-shape-origin": 0.089,
+        "offset-negated": 0,
+        "scale-of-shape-not-image": 0.3122,
+        "tile-size-follows-crop": 0.9312,
+        "ignores-image-dpi": 0.9312
+      }
+    },
+    {
+      "probe": "tile-srcrect",
+      "deck": "geom",
+      "question": "Does a:srcRect crop the source BEFORE it is tiled?",
+      "samples": 2644,
+      "scores": {
+        "measured": 0.8646,
+        "tile-srcrect-ignored": 0.717,
+        "flip-every-tile": 0.8646,
+        "anchor-at-shape-origin": 0.8646,
+        "offset-negated": 0.8646,
+        "scale-of-shape-not-image": 0.2685,
+        "tile-size-follows-crop": 0.2628,
+        "ignores-image-dpi": 0.2628
+      }
+    },
+    {
+      "probe": "clrchange-exact",
+      "deck": "geom",
+      "question": "Does a:clrChange replace one exact colour and leave its neighbours alone?",
+      "samples": 2494,
+      "scores": {
+        "measured": 0.9711,
+        "fillrect-ignored": 0.9711,
+        "srcrect-ignored": 0.9711,
+        "srcrect-as-coordinates": 0.1154,
+        "effects:bt601-weights": 0.9711,
+        "effects:bright-independent-of-contrast": 0.9711,
+        "effects:pivot-128": 0.9711,
+        "effects:round-toward-zero": 0.9711
+      }
+    },
+    {
+      "probe": "clrchange-near",
+      "deck": "geom",
+      "question": "A colour one level away: is the match exact, or is there a tolerance?",
+      "samples": 2494,
+      "scores": {
+        "measured": 0.9735,
+        "fillrect-ignored": 0.9735,
+        "srcrect-ignored": 0.9735,
+        "srcrect-as-coordinates": 0.1154,
+        "effects:bt601-weights": 0.9735,
+        "effects:bright-independent-of-contrast": 0.9735,
+        "effects:pivot-128": 0.9735,
+        "effects:round-toward-zero": 0.9735
+      }
+    },
+    {
+      "probe": "clrchange-alpha",
+      "deck": "geom",
+      "question": "Does a clrTo carrying alpha=0 erase the colour rather than repaint it?",
+      "samples": 2494,
+      "scores": {
+        "measured": 0.9812,
+        "fillrect-ignored": 0.9812,
+        "srcrect-ignored": 0.9812,
+        "srcrect-as-coordinates": 0.2331,
+        "effects:bt601-weights": 0.9812,
+        "effects:bright-independent-of-contrast": 0.9812,
+        "effects:pivot-128": 0.9812,
+        "effects:round-toward-zero": 0.9812
+      }
+    },
+    {
+      "probe": "dpi-image96",
+      "deck": "dpi",
+      "question": "A 96 dpi image with no @dpi: what is the tile period?",
+      "samples": 2724,
+      "scores": {
+        "measured": 0.8642,
+        "tile-srcrect-ignored": 0.8642,
+        "flip-every-tile": 0.8642,
+        "anchor-at-shape-origin": 0.8642,
+        "offset-negated": 0.8642,
+        "scale-of-shape-not-image": 0.2153,
+        "tile-size-follows-crop": 0.8642,
+        "ignores-image-dpi": 0.8642
+      }
+    },
+    {
+      "probe": "dpi-image150",
+      "deck": "dpi",
+      "question": "Same pixels declaring 150 dpi: does the period shrink?",
+      "samples": 2525,
+      "scores": {
+        "measured": 0.9184,
+        "tile-srcrect-ignored": 0.9184,
+        "flip-every-tile": 0.9184,
+        "anchor-at-shape-origin": 0.9184,
+        "offset-negated": 0.9184,
+        "scale-of-shape-not-image": 0.2694,
+        "tile-size-follows-crop": 0.9184,
+        "ignores-image-dpi": 0.243
+      }
+    },
+    {
+      "probe": "dpi-attr-0",
+      "deck": "dpi",
+      "question": "dpi=\"0\" is what PowerPoint writes: does it mean \"use the image\"?",
+      "samples": 2525,
+      "scores": {
+        "measured": 0.9184,
+        "tile-srcrect-ignored": 0.9184,
+        "flip-every-tile": 0.9184,
+        "anchor-at-shape-origin": 0.9184,
+        "offset-negated": 0.9184,
+        "scale-of-shape-not-image": 0.2694,
+        "tile-size-follows-crop": 0.9184,
+        "ignores-image-dpi": 0.243
+      }
+    },
+    {
+      "probe": "dpi-attr-96",
+      "deck": "dpi",
+      "question": "Does an explicit dpi=\"96\" override a 150 dpi image?",
+      "samples": 2325,
+      "scores": {
+        "measured": 0.7647,
+        "tile-srcrect-ignored": 0.7647,
+        "flip-every-tile": 0.7647,
+        "anchor-at-shape-origin": 0.7647,
+        "offset-negated": 0.7647,
+        "scale-of-shape-not-image": 0.1443,
+        "tile-size-follows-crop": 0.1388,
+        "ignores-image-dpi": 0.1388
+      }
+    },
+    {
+      "probe": "dpi-attr-300",
+      "deck": "dpi",
+      "question": "And does dpi=\"300\" shrink the tile further still?",
+      "samples": 2724,
+      "scores": {
+        "measured": 0.8642,
+        "tile-srcrect-ignored": 0.8642,
+        "flip-every-tile": 0.8642,
+        "anchor-at-shape-origin": 0.8642,
+        "offset-negated": 0.8642,
+        "scale-of-shape-not-image": 0.2153,
+        "tile-size-follows-crop": 0.1863,
+        "ignores-image-dpi": 0.8642
+      }
+    },
+    {
+      "probe": "dpi-attr-32",
+      "deck": "dpi",
+      "question": "At dpi=\"32\" the resampled pixel count is fractional: which way does it go?",
+      "samples": 2410,
+      "scores": {
+        "measured": 0.3548,
+        "tile-srcrect-ignored": 0.3548,
+        "flip-every-tile": 0.3548,
+        "anchor-at-shape-origin": 0.3548,
+        "offset-negated": 0.3548,
+        "scale-of-shape-not-image": 0.083,
+        "tile-size-follows-crop": 0.0596,
+        "ignores-image-dpi": 0.0602
+      }
+    },
+    {
+      "probe": "dpi-attr-40",
+      "deck": "dpi",
+      "question": "At dpi=\"40\" the resampled pixel count is fractional: which way does it go?",
+      "samples": 2496,
+      "scores": {
+        "measured": 0.4848,
+        "tile-srcrect-ignored": 0.4848,
+        "flip-every-tile": 0.4848,
+        "anchor-at-shape-origin": 0.4848,
+        "offset-negated": 0.4848,
+        "scale-of-shape-not-image": 0.1191,
+        "tile-size-follows-crop": 0.0681,
+        "ignores-image-dpi": 0.0877
+      }
+    },
+    {
+      "probe": "dpi-attr-56",
+      "deck": "dpi",
+      "question": "At dpi=\"56\" the resampled pixel count is fractional: which way does it go?",
+      "samples": 2458,
+      "scores": {
+        "measured": 0.7571,
+        "tile-srcrect-ignored": 0.7571,
+        "flip-every-tile": 0.7571,
+        "anchor-at-shape-origin": 0.7571,
+        "offset-negated": 0.7571,
+        "scale-of-shape-not-image": 0.1736,
+        "tile-size-follows-crop": 0.1529,
+        "ignores-image-dpi": 0.1215
+      }
+    },
+    {
+      "probe": "plain",
+      "deck": "effects",
+      "question": "The control: does an unfiltered stretch reproduce the source exactly?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9996,
+        "fillrect-ignored": 0.9996,
+        "srcrect-ignored": 0.9996,
+        "srcrect-as-coordinates": 0.0041,
+        "effects:bt601-weights": 0.9996,
+        "effects:bright-independent-of-contrast": 0.9996,
+        "effects:pivot-128": 0.9996,
+        "effects:round-toward-zero": 0.9996
+      }
+    },
+    {
+      "probe": "grayscl",
+      "deck": "effects",
+      "question": "Which luminance weights does a:grayscl use?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9993,
+        "fillrect-ignored": 0.9993,
+        "srcrect-ignored": 0.9993,
+        "srcrect-as-coordinates": 0.0389,
+        "effects:bt601-weights": 0.3157,
+        "effects:bright-independent-of-contrast": 0.9993,
+        "effects:pivot-128": 0.9993,
+        "effects:round-toward-zero": 0.9976
+      }
+    },
+    {
+      "probe": "bilevel-25",
+      "deck": "effects",
+      "question": "Is a:biLevel/@thresh compared against luminance?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.998,
+        "fillrect-ignored": 0.998,
+        "srcrect-ignored": 0.998,
+        "srcrect-as-coordinates": 0.6278,
+        "effects:bt601-weights": 0.9413,
+        "effects:bright-independent-of-contrast": 0.998,
+        "effects:pivot-128": 0.998,
+        "effects:round-toward-zero": 0.998
+      }
+    },
+    {
+      "probe": "bilevel-50",
+      "deck": "effects",
+      "question": "And is the comparison inclusive at the threshold?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.998,
+        "fillrect-ignored": 0.998,
+        "srcrect-ignored": 0.998,
+        "srcrect-as-coordinates": 0.7889,
+        "effects:bt601-weights": 0.9615,
+        "effects:bright-independent-of-contrast": 0.998,
+        "effects:pivot-128": 0.998,
+        "effects:round-toward-zero": 0.998
+      }
+    },
+    {
+      "probe": "bilevel-75",
+      "deck": "effects",
+      "question": "A third threshold, because two points fit any straight line.",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.999,
+        "fillrect-ignored": 0.999,
+        "srcrect-ignored": 0.999,
+        "srcrect-as-coordinates": 0.935,
+        "effects:bt601-weights": 0.999,
+        "effects:bright-independent-of-contrast": 0.999,
+        "effects:pivot-128": 0.999,
+        "effects:round-toward-zero": 0.999
+      }
+    },
+    {
+      "probe": "lum-bright-40",
+      "deck": "effects",
+      "question": "Is @bright an additive offset in sRGB or in linear light?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9996,
+        "fillrect-ignored": 0.9996,
+        "srcrect-ignored": 0.9996,
+        "srcrect-as-coordinates": 0.0041,
+        "effects:bt601-weights": 0.9996,
+        "effects:bright-independent-of-contrast": 0.9996,
+        "effects:pivot-128": 0.9996,
+        "effects:round-toward-zero": 0.9996
+      }
+    },
+    {
+      "probe": "lum-bright-neg40",
+      "deck": "effects",
+      "question": "Does a negative @bright subtract by the same rule?",
+      "samples": 13526,
+      "scores": {
+        "measured": 1,
+        "fillrect-ignored": 1,
+        "srcrect-ignored": 1,
+        "srcrect-as-coordinates": 0.4096,
+        "effects:bt601-weights": 1,
+        "effects:bright-independent-of-contrast": 1,
+        "effects:pivot-128": 1,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-contrast-60",
+      "deck": "effects",
+      "question": "What pivot does @contrast scale about?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9961,
+        "fillrect-ignored": 0.9961,
+        "srcrect-ignored": 0.9961,
+        "srcrect-as-coordinates": 0.3033,
+        "effects:bt601-weights": 0.9961,
+        "effects:bright-independent-of-contrast": 0.9961,
+        "effects:pivot-128": 1,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-contrast-neg60",
+      "deck": "effects",
+      "question": "And does a negative @contrast compress toward the same pivot?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9997,
+        "fillrect-ignored": 0.9997,
+        "srcrect-ignored": 0.9997,
+        "srcrect-as-coordinates": 0.0239,
+        "effects:bt601-weights": 0.9997,
+        "effects:bright-independent-of-contrast": 0.9997,
+        "effects:pivot-128": 0.9996,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-watermark",
+      "deck": "effects",
+      "question": "The pair PowerPoint writes for Watermark, as one operation.",
+      "samples": 13526,
+      "scores": {
+        "measured": 1,
+        "fillrect-ignored": 1,
+        "srcrect-ignored": 1,
+        "srcrect-as-coordinates": 0.0202,
+        "effects:bt601-weights": 1,
+        "effects:bright-independent-of-contrast": 0.0952,
+        "effects:pivot-128": 0.8064,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "duotone-black-amber",
+      "deck": "effects",
+      "question": "Does a:duotone map luminance onto a two-colour ramp?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9987,
+        "fillrect-ignored": 0.9987,
+        "srcrect-ignored": 0.9987,
+        "srcrect-as-coordinates": 0.0386,
+        "effects:bt601-weights": 0.3157,
+        "effects:bright-independent-of-contrast": 0.9987,
+        "effects:pivot-128": 0.9987,
+        "effects:round-toward-zero": 0.9958
+      }
+    },
+    {
+      "probe": "duotone-blue-red",
+      "deck": "effects",
+      "question": "Two chromatic ends, so the interpolation space is visible.",
+      "samples": 13526,
+      "scores": {
+        "measured": 1,
+        "fillrect-ignored": 1,
+        "srcrect-ignored": 1,
+        "srcrect-as-coordinates": 0.0397,
+        "effects:bt601-weights": 0.3368,
+        "effects:bright-independent-of-contrast": 1,
+        "effects:pivot-128": 1,
+        "effects:round-toward-zero": 0.997
+      }
+    },
+    {
+      "probe": "alphamodfix-60",
+      "deck": "effects",
+      "question": "Is @amt the resulting opacity rather than the transparency?",
+      "samples": 13526,
+      "scores": {
+        "measured": 1,
+        "fillrect-ignored": 1,
+        "srcrect-ignored": 1,
+        "srcrect-as-coordinates": 0.0081,
+        "effects:bt601-weights": 1,
+        "effects:bright-independent-of-contrast": 1,
+        "effects:pivot-128": 1,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "alphamodfix-30",
+      "deck": "effects",
+      "question": "A second amount, to separate a scale from a constant.",
+      "samples": 13526,
+      "scores": {
+        "measured": 1,
+        "fillrect-ignored": 1,
+        "srcrect-ignored": 1,
+        "srcrect-as-coordinates": 0.0201,
+        "effects:bt601-weights": 1,
+        "effects:bright-independent-of-contrast": 1,
+        "effects:pivot-128": 1,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "grayscl-then-alpha",
+      "deck": "effects",
+      "question": "Do two effects apply in document order?",
+      "samples": 13526,
+      "scores": {
+        "measured": 1,
+        "fillrect-ignored": 1,
+        "srcrect-ignored": 1,
+        "srcrect-as-coordinates": 0.0601,
+        "effects:bt601-weights": 0.3551,
+        "effects:bright-independent-of-contrast": 1,
+        "effects:pivot-128": 1,
+        "effects:round-toward-zero": 0.9999
+      }
+    },
+    {
+      "probe": "clrchange",
+      "deck": "effects",
+      "question": "Does a:clrChange match a colour exactly, or within a tolerance?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9954,
+        "fillrect-ignored": 0.9954,
+        "srcrect-ignored": 0.9954,
+        "srcrect-as-coordinates": 0.0041,
+        "effects:bt601-weights": 0.9954,
+        "effects:bright-independent-of-contrast": 0.9954,
+        "effects:pivot-128": 0.9954,
+        "effects:round-toward-zero": 0.9954
+      }
+    },
+    {
+      "probe": "lum-b-40-c-70",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9999,
+        "fillrect-ignored": 0.9999,
+        "srcrect-ignored": 0.9999,
+        "srcrect-as-coordinates": 0.0241,
+        "effects:bt601-weights": 0.9999,
+        "effects:bright-independent-of-contrast": 0,
+        "effects:pivot-128": 0.9997,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-b-40-c-30",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 1,
+        "fillrect-ignored": 1,
+        "srcrect-ignored": 1,
+        "srcrect-as-coordinates": 0.2836,
+        "effects:bt601-weights": 1,
+        "effects:bright-independent-of-contrast": 0.2869,
+        "effects:pivot-128": 1,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-b-40-c30",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 1,
+        "fillrect-ignored": 1,
+        "srcrect-ignored": 1,
+        "srcrect-as-coordinates": 0.4962,
+        "effects:bt601-weights": 1,
+        "effects:bright-independent-of-contrast": 0.4358,
+        "effects:pivot-128": 1,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-b-40-c60",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9961,
+        "fillrect-ignored": 0.9961,
+        "srcrect-ignored": 0.9961,
+        "srcrect-as-coordinates": 0.5866,
+        "effects:bt601-weights": 0.9961,
+        "effects:bright-independent-of-contrast": 0.4828,
+        "effects:pivot-128": 0.9938,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-b40-c-70",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9999,
+        "fillrect-ignored": 0.9999,
+        "srcrect-ignored": 0.9999,
+        "srcrect-as-coordinates": 0.0319,
+        "effects:bt601-weights": 0.9999,
+        "effects:bright-independent-of-contrast": 0,
+        "effects:pivot-128": 0.9015,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-b40-c-30",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.986,
+        "fillrect-ignored": 0.986,
+        "srcrect-ignored": 0.986,
+        "srcrect-as-coordinates": 0.0081,
+        "effects:bt601-weights": 0.986,
+        "effects:bright-independent-of-contrast": 0.0725,
+        "effects:pivot-128": 0.9854,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-b40-c30",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9989,
+        "fillrect-ignored": 0.9989,
+        "srcrect-ignored": 0.9989,
+        "srcrect-as-coordinates": 0.0041,
+        "effects:bt601-weights": 0.9989,
+        "effects:bright-independent-of-contrast": 0.1139,
+        "effects:pivot-128": 0.929,
+        "effects:round-toward-zero": 0.9992
+      }
+    },
+    {
+      "probe": "lum-b40-c60",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9954,
+        "fillrect-ignored": 0.9954,
+        "srcrect-ignored": 0.9954,
+        "srcrect-as-coordinates": 0.0236,
+        "effects:bt601-weights": 0.9954,
+        "effects:bright-independent-of-contrast": 0.486,
+        "effects:pivot-128": 0.9954,
+        "effects:round-toward-zero": 0.9999
+      }
+    },
+    {
+      "probe": "lum-b70-c-70",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 1,
+        "fillrect-ignored": 1,
+        "srcrect-ignored": 1,
+        "srcrect-as-coordinates": 0.0202,
+        "effects:bt601-weights": 1,
+        "effects:bright-independent-of-contrast": 0.0952,
+        "effects:pivot-128": 0.8064,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-b70-c-30",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9997,
+        "fillrect-ignored": 0.9997,
+        "srcrect-ignored": 0.9997,
+        "srcrect-as-coordinates": 0.0081,
+        "effects:bt601-weights": 0.9997,
+        "effects:bright-independent-of-contrast": 0.1687,
+        "effects:pivot-128": 0.2357,
+        "effects:round-toward-zero": 1
+      }
+    },
+    {
+      "probe": "lum-b70-c30",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9989,
+        "fillrect-ignored": 0.9989,
+        "srcrect-ignored": 0.9989,
+        "srcrect-as-coordinates": 0.0041,
+        "effects:bt601-weights": 0.9989,
+        "effects:bright-independent-of-contrast": 0.1697,
+        "effects:pivot-128": 0.856,
+        "effects:round-toward-zero": 0.9992
+      }
+    },
+    {
+      "probe": "lum-b70-c60",
+      "deck": "lum",
+      "question": "In which order, and about which pivot, do bright and contrast compose?",
+      "samples": 13526,
+      "scores": {
+        "measured": 0.9942,
+        "fillrect-ignored": 0.9942,
+        "srcrect-ignored": 0.9942,
+        "srcrect-as-coordinates": 0.0039,
+        "effects:bt601-weights": 0.9942,
+        "effects:bright-independent-of-contrast": 0.1532,
+        "effects:pivot-128": 0.8598,
+        "effects:round-toward-zero": 0.9987
+      }
+    }
+  ]
+}

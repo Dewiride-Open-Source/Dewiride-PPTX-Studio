@@ -76,6 +76,10 @@ export { SYSTEM_COLORS, isSystemColorName } from './colors/sys-colors.js';
 export {
   WHOLE_RECT,
   type BlipFill,
+  type BlipEffect,
+  type BlipStretch,
+  type BlipTile,
+  type TileAlign,
   type Fill,
   type GradientFill,
   type GradientShade,
@@ -114,6 +118,17 @@ export {
   type TwoColorRamp,
   type SvgStop,
 } from './fills/gradient.js';
+export {
+  blipPlacement,
+  brightOffset,
+  contrastScale,
+  BLIP_LUMA,
+  type BlipPlacement,
+  type ImageSize,
+  type Rect,
+  type StretchPlacement,
+  type TilePlacement,
+} from './fills/blip.js';
 
 export {
   ANTIALIASED_PATTERNS,

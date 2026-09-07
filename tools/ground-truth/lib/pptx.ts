@@ -18,6 +18,15 @@
 
 import { writeZip, type ZipEntry } from './zip.ts';
 
+/** Content types for the media a probe deck may carry. */
+const MEDIA_TYPES: Readonly<Record<string, string>> = {
+  png: 'image/png',
+  jpeg: 'image/jpeg',
+  jpg: 'image/jpeg',
+  gif: 'image/gif',
+  bmp: 'image/bmp',
+};
+
 export const EMU_PER_INCH = 914400;
 export const SLIDE_WIDTH = 12192000; // 13.333in - 16:9
 export const SLIDE_HEIGHT = 6858000; // 7.5in
@@ -180,11 +189,16 @@ function slideLayout(): string {
   );
 }
 
-function slide(body: string): string {
+/** `p:bg` comes before `p:spTree`: `CT_CommonSlideData` is an `xsd:sequence`. */
+function slide(body: string, background: string | undefined): string {
+  // `a:effectLst` is what PowerPoint writes in every `p:bgPr` it authors itself.
+  const bg =
+    background === undefined ? '' : `<p:bg><p:bgPr>${background}<a:effectLst/></p:bgPr></p:bg>`;
   return (
     DECLARATION +
     `<p:sld ${NS_DECLS}>` +
     '<p:cSld>' +
+    bg +
     spTreeHead() +
     body +
     '</p:spTree></p:cSld>' +
@@ -238,9 +252,21 @@ export interface EmbeddedFont {
   >;
 }
 
+/** One file under `ppt/media/`, related from every slide. */
+export interface MediaPart {
+  /** File name with its extension, which is what the content type keys off. */
+  readonly name: string;
+  readonly bytes: Uint8Array;
+}
+
 export interface BuildOptions {
   /** One entry per slide: the children of `p:spTree` after `grpSpPr`. */
   readonly slides: readonly string[];
+  /**
+   * Images, related from every slide at `rId2` upwards in this order, so a probe
+   * can name its `r:embed` without reading anything back.
+   */
+  readonly media?: readonly MediaPart[];
   readonly fonts?: readonly EmbeddedFont[];
   /**
    * The master colour map. Defaults to the identity, which is what every deck
@@ -250,10 +276,16 @@ export interface BuildOptions {
   readonly clrMap?: ClrMapAttrs;
   /** Defaults to `DEFAULT_FONT_SCHEME`. */
   readonly fontScheme?: FontScheme;
+  /**
+   * One entry per slide: the fill element inside that slide's `p:bgPr`, or
+   * `undefined` to inherit the master's background.
+   */
+  readonly backgrounds?: readonly (string | undefined)[];
 }
 
 export function buildPptx(options: BuildOptions): Uint8Array {
   const fonts = options.fonts ?? [];
+  const media = options.media ?? [];
 
   // ---- presentation.xml.rels: master, then slides, then theme, then fonts ---
   const presRels: { id: string; type: string; target: string }[] = [];
@@ -338,11 +370,27 @@ export function buildPptx(options: BuildOptions): Uint8Array {
     })),
     { part: '/ppt/theme/theme1.xml', type: `${CT}.theme+xml` },
   ];
+
+  /** One `Default` per distinct media extension; a missing one is a repair. */
+  const mediaDefaults = [
+    ...new Map(
+      media.map((part) => {
+        const extension = part.name.slice(part.name.lastIndexOf('.') + 1).toLowerCase();
+        const type = MEDIA_TYPES[extension];
+        if (type === undefined) throw new Error(`no content type for media "${part.name}"`);
+        return [extension, type] as const;
+      }),
+    ),
+  ];
+
   const contentTypes =
     DECLARATION +
     `<Types xmlns="${NS_CT}">` +
     '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
     '<Default Extension="xml" ContentType="application/xml"/>' +
+    mediaDefaults
+      .map(([extension, type]) => `<Default Extension="${extension}" ContentType="${type}"/>`)
+      .join('') +
     // Omitting this one is the canonical "PowerPoint found a problem with
     // content" bug for embedded fonts.
     (fontParts.length > 0
@@ -389,19 +437,30 @@ export function buildPptx(options: BuildOptions): Uint8Array {
     },
   ];
 
+  const mediaRels = media.map((part, i) => ({
+    id: `rId${String(i + 2)}`,
+    type: `${REL}/image`,
+    target: `../media/${part.name}`,
+  }));
+
   options.slides.forEach((body, i) => {
     const n = String(i + 1);
-    entries.push({ name: `ppt/slides/slide${n}.xml`, bytes: utf8(slide(body)) });
+    entries.push({
+      name: `ppt/slides/slide${n}.xml`,
+      bytes: utf8(slide(body, options.backgrounds?.[i])),
+    });
     entries.push({
       name: `ppt/slides/_rels/slide${n}.xml.rels`,
       bytes: utf8(
         rels([
           { id: 'rId1', type: `${REL}/slideLayout`, target: '../slideLayouts/slideLayout1.xml' },
+          ...mediaRels,
         ]),
       ),
     });
   });
 
+  for (const part of media) entries.push({ name: `ppt/media/${part.name}`, bytes: part.bytes });
   entries.push(...fontParts);
   return writeZip(entries);
 }
