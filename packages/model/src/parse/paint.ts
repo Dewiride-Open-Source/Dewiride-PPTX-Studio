@@ -599,9 +599,9 @@ function parseEffectElement(element: XElement): Effect | null {
  * an outer shadow, the reverse of the schema's sequence. `effectFilter` in
  * `paint` owns that, and this owns only the reading.
  *
- * `a:effectDag` is not modelled. It is a directed graph of the same primitives
- * that PowerPoint has never been observed to write, and an `undefined` here
- * means the shape is re-emitted byte for byte rather than approximated.
+ * `a:effectDag` is not modelled, so the shape is re-emitted byte for byte
+ * rather than approximated. PowerPoint writes none but does render one:
+ * measured on `a04-effects-03`, where it composites a glow over the fill.
  */
 export function parseEffects(parent: XElement): readonly Effect[] | undefined {
   const list = firstChild(parent, 'a:effectLst');

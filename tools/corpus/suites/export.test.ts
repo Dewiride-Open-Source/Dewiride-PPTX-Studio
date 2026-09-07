@@ -71,8 +71,8 @@ describe('a no-op export of every committed deck', () => {
     result: exportPackage(openPackage(deck.bytes)),
   }));
 
-  it('exports all fifty-two without the firewall refusing', () => {
-    expect(results).toHaveLength(52);
+  it('exports all fifty-four without the firewall refusing', () => {
+    expect(results).toHaveLength(54);
     for (const { deck, result } of results) {
       expect(result.report?.ok, deck.id).toBe(true);
       expect(result.report?.blocking, deck.id).toBe(0);
@@ -88,7 +88,7 @@ describe('a no-op export of every committed deck', () => {
     expect(rewritten).toEqual([]);
   });
 
-  it('compares all 1526 entries of all 52 archives and finds them identical', () => {
+  it('compares all 1570 entries of all 54 archives and finds them identical', () => {
     // 1474 parts plus the content-type stream of each deck. The export threw if
     // any single one differed; this asserts that none was quietly *skipped*,
     // which is the failure mode a passing preservation check can hide - and the
@@ -99,7 +99,7 @@ describe('a no-op export of every committed deck', () => {
       expect(result.preservation.checked, deck.id).toBe(deck.entries);
     }
     const total = results.reduce((sum, { result }) => sum + result.preservation.checked, 0);
-    expect(total).toBe(1526);
+    expect(total).toBe(1570);
   });
 
   it('collects nothing and keeps nothing back', () => {

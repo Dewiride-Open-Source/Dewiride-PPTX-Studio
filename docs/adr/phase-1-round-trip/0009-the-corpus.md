@@ -38,7 +38,7 @@ is a property of who serialized the file:
 
 | Tier  | Producer                              | Committed             | Why it exists                                                         |
 | ----- | ------------------------------------- | --------------------- | --------------------------------------------------------------------- |
-| **A** | `tools/corpus/gen`                    | bytes + recipe + hash | Breadth. Every feature, on demand, deterministically.                 |
+| **A** | `tools/corpus/tiers/a-generated`      | bytes + recipe + hash | Breadth. Every feature, on demand, deterministically.                 |
 | **B** | Microsoft PowerPoint 365 (16.0.20326) | bytes only            | The byte conventions. This is the tier that makes 1.4 mean something. |
 | **C** | `packages/opc`'s own writer           | bytes                 | Gives 1.4 a case against the writer this project ships.               |
 | **D** | (`corpus/bench/`, sub-phase 0.8)      | recipe + hash         | Too large to commit. Not counted toward the 50.                       |
@@ -1112,7 +1112,7 @@ collections sharing a serializer count once, so the caveat is enforced rather
 than written in a paragraph and trusted.
 
 `corpus/decks` names `tools/ground-truth/lib/zip.ts` as its container rather than
-`tools/corpus/gen`, because the chassis hands its entries to `writeZip` and
+`tools/corpus/tiers/a-generated`, because the chassis hands its entries to `writeZip` and
 decides no header field itself.
 
 ### It reads bytes, and does not ask `packages/xml`
@@ -1135,7 +1135,7 @@ Three container writers and two XML serializers is the ceiling, and it is the
 whole story. The container is well evidenced. The markup is not, and the largest
 single reason is one nobody had noticed:
 
-**Every entity reference in the corpus was written by `tools/corpus/gen`.** The
+**Every entity reference in the corpus was written by `tools/corpus/tiers/a-generated`.** The
 nine PowerPoint-authored decks contain no ampersand at all across their 387 XML
 parts, so `&amp;`, `&lt;`, `&gt;` and `&quot;` are each checked only against the
 escaper that wrote them. That is exactly the failure the rule exists to name,

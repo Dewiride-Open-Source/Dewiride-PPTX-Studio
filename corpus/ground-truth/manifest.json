@@ -297,7 +297,7 @@
       "license": "CC0-1.0",
       "source": "self-authored",
       "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
-      "sha256": "3d909890388a789b257ca334c2e9672d373fd03c7d399c9a28113211dd98c1d3",
+      "sha256": "80388e6710560738aeb0a28f3a04669d73fa7f5ad1335fad83e95edd53704483",
       "bytes": 36810,
       "tags": ["fidelity", "oracle", "render"],
       "description": "PowerPoint's own rendering of every slide of a09-fields, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
@@ -866,6 +866,42 @@
       "addedIn": "3.9"
     },
     {
+      "id": "fidelity-a44-transforms",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a44-transforms.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "5587e237032c1452a5fc95ef44936ff77704cf0f8953175ab726882d2851b715",
+      "bytes": 24550,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a44-transforms, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a45-backgrounds",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a45-backgrounds.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "5bcd8646291d878594db6b236ed042c1a5f7341fb02c73ff9413d29979c38482",
+      "bytes": 49098,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a45-backgrounds, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
       "id": "fidelity-b01-blank",
       "kind": "fixture",
       "storage": "committed",
@@ -1053,8 +1089,8 @@
       "license": "CC0-1.0",
       "source": "self-authored",
       "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
-      "sha256": "2809ad9f8729cf894889cfd8aa0ab9a685cfb9fa26326228a57a214791fc9524",
-      "bytes": 32028,
+      "sha256": "5a6e83a80b54e829972e3a7a2e77dffce32a1dc019f874b831e540324dcf775a",
+      "bytes": 33292,
       "tags": ["fidelity", "baseline", "render"],
       "description": "The digest of our own raster for every slide on win32-x64, and the font environment it was recorded in. This is the gate: a slide that rasterises differently here has changed, and no tolerance is involved in saying so.",
       "recipe": {
@@ -1071,8 +1107,8 @@
       "license": "CC0-1.0",
       "source": "self-authored",
       "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
-      "sha256": "08b4842304d712c603594de9c2fdf8aa266512c0620f4eb646dcafed784ce1d0",
-      "bytes": 22631,
+      "sha256": "5a94fb837a21e33b0d5dd397b9ffcb08d7a81f99b969545f08f8ef62f607ea79",
+      "bytes": 23553,
       "tags": ["fidelity", "oracle", "render"],
       "description": "The index of the fidelity oracle: which slide each grid belongs to, and how far PowerPoint disagreed with its own second rendering of the same slide, which is the noise floor of every number scored against it.",
       "recipe": {

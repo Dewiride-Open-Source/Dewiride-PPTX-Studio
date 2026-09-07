@@ -1188,6 +1188,59 @@
         "args": ["--out", "corpus/decks", "--id", "a43-kitchen-sink"]
       },
       "addedIn": "gate-1"
+    },
+    {
+      "id": "a44-transforms",
+      "kind": "deck",
+      "storage": "committed",
+      "path": "a44-transforms.pptx",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "producer": "tools/corpus/gen",
+      "sha256": "c45b3c0600159e49c2b6259777251f9cca73eb03b1ced4232792e54891de4f32",
+      "bytes": 37981,
+      "slides": 2,
+      "zipEntries": 20,
+      "format": "pptx",
+      "features": {
+        "shape": 36,
+        "placeholder": 5,
+        "presetGeom": 31,
+        "gradientFill": 2,
+        "group": 7
+      },
+      "description": "Rotation and mirroring on a shape, including the flip-with-rotation pair that separates the two composition orders, and six groups: the identity, a halved child space, a rotated group, a mirrored one, a rotated group holding a mirrored one, and a child space far from the origin. First deck in the corpus to write @rot, @flipH or a nested p:grpSp.",
+      "recipe": {
+        "tool": "tools/corpus/tiers/a-generated/build-probes.ts",
+        "args": ["--out", "corpus/decks", "--id", "a44-transforms"]
+      },
+      "addedIn": "2.14"
+    },
+    {
+      "id": "a45-backgrounds",
+      "kind": "deck",
+      "storage": "committed",
+      "path": "a45-backgrounds.pptx",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "producer": "tools/corpus/gen",
+      "sha256": "bed430e3c9070cb6108796bb7e5d5a5755fc87889ff0bf4e29b2bb1750c78998",
+      "bytes": 31783,
+      "slides": 4,
+      "zipEntries": 24,
+      "format": "pptx",
+      "features": {
+        "shape": 20,
+        "placeholder": 8,
+        "presetGeom": 12,
+        "gradientFill": 3
+      },
+      "description": "Slide backgrounds through all three routes: p:bgRef into fillStyleLst and into bgFillStyleLst across the 1000 offset, an explicit p:bgPr gradient, and a slide with no p:bg that inherits its layout instead of the master. First deck in the corpus to write a p:bgPr, a bgRef anywhere but the master, or a background on a layout.",
+      "recipe": {
+        "tool": "tools/corpus/tiers/a-generated/build-probes.ts",
+        "args": ["--out", "corpus/decks", "--id", "a45-backgrounds"]
+      },
+      "addedIn": "2.14"
     }
   ]
 }

@@ -27,7 +27,7 @@ import type { Grid } from '../../../fidelity/metric/reduce.ts';
 import { openHarness } from '../../../fidelity/raster/browser.ts';
 import {
   geometryOf,
-  injectReduce,
+  injectHarness,
   oracleGrid,
   RASTER_WIDTH,
 } from '../../../fidelity/raster/render.ts';
@@ -149,7 +149,7 @@ if (colourManaged.length > 0) {
 /* ------------------------------------------------------------- the reduction */
 
 const harness = await openHarness();
-await injectReduce(harness.page);
+await injectHarness(harness.page);
 
 mkdirSync(join(FIXTURES, 'grids'), { recursive: true });
 for (const stale of readdirSync(join(FIXTURES, 'grids'))) {

@@ -77,8 +77,9 @@ function effectPrimitives(effect: BlipEffect, ctx: ColorContext): SvgElement[] {
     case 'duotone': {
       const from = resolveColor(effect.from, ctx);
       const to = resolveColor(effect.to, ctx);
+      // `Rgba` is already 0..1, which is the space `feFunc` operates in.
       const channel = (name: 'feFuncR' | 'feFuncG' | 'feFuncB', a: number, b: number): SvgElement =>
-        element(name, { type: 'linear', slope: (b - a) / 255, intercept: a / 255 });
+        element(name, { type: 'linear', slope: b - a, intercept: a });
       return [
         luminanceMatrix(),
         element('feComponentTransfer', {}, [
@@ -99,10 +100,15 @@ function effectPrimitives(effect: BlipEffect, ctx: ColorContext): SvgElement[] {
   }
 }
 
+/** A 0..1 channel as the 0..255 level a `discrete` table is indexed by. */
+function level(channel: number): number {
+  return Math.round(channel * 255);
+}
+
 /** A 256-entry `discrete` table that is 1 only at one channel value. */
-function indicator(level: number): string {
+function indicator(at: number): string {
   const values: string[] = [];
-  for (let at = 0; at < 256; at++) values.push(at === level ? '1' : '0');
+  for (let value = 0; value < 256; value++) values.push(value === at ? '1' : '0');
   return values.join(' ');
 }
 
@@ -122,9 +128,10 @@ function colorChange(
   const to = resolveColor(effect.to, ctx);
   return [
     element('feComponentTransfer', { in: 'SourceGraphic', result: 'ind' }, [
-      element('feFuncR', { type: 'discrete', tableValues: indicator(Math.round(from.r)) }),
-      element('feFuncG', { type: 'discrete', tableValues: indicator(Math.round(from.g)) }),
-      element('feFuncB', { type: 'discrete', tableValues: indicator(Math.round(from.b)) }),
+      // The table is indexed by the channel's 0..255 level; `Rgba` is 0..1.
+      element('feFuncR', { type: 'discrete', tableValues: indicator(level(from.r)) }),
+      element('feFuncG', { type: 'discrete', tableValues: indicator(level(from.g)) }),
+      element('feFuncB', { type: 'discrete', tableValues: indicator(level(from.b)) }),
       element('feFuncA', { type: 'linear', slope: 0, intercept: 1 }),
     ]),
     // The three indicators average to 1 only where every channel matched.

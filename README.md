@@ -69,7 +69,7 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | Schema order, Markup Compatibility, invertible edits | ✅ 0.6         |
 | Ground truth: embedded fonts, colour transforms      | ✅ 0.7         |
 | Feature census, `cli inspect`, the Worker boundary   | ✅ 0.8         |
-| The corpus: 52 licensed decks, three producers       | ✅ 1.1         |
+| The corpus: 54 licensed decks, three producers       | ✅ 1.1         |
 | The repair firewall: 29 rules, `cli validate`        | ✅ 1.2         |
 | Writer: dirty-part export, media GC, prepare hooks   | ✅ 1.3         |
 | The round-trip oracle and `cli roundtrip`            | ✅ 1.4         |
@@ -84,7 +84,13 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | Colour: six bases, 28 transforms, theme and clrMap   | ✅ 2.6         |
 | Gradients and the 54 pattern tiles, both measured    | ✅ 2.7         |
 | Dashes, joins, arrowheads and effects, all measured  | ✅ 2.8         |
-| Painted: fills, strokes, gradients, effects          | ⬜ Phase 2     |
+| The document model, and the inheritance walk         | ✅ 2.9         |
+| Both renderers: transforms, groups, flip before rot  | ✅ 2.10        |
+| The debug overlay and the 187-preset gallery         | ✅ 2.11        |
+| Image fills: crop, tile, and the blip colour effects | ✅ 2.12        |
+| Picture shapes, and the border drawn outside them    | ✅ 2.13        |
+| Gate 2 side by side, with per-slide diff heatmaps    | ✅ 2.14        |
+| Painted: fills, strokes, gradients, effects, groups  | ✅ Gate 2      |
 | Text engine, viewer, fidelity scoreboard             | ⬜ Phase 3     |
 | Tables and SmartArt                                  | ⬜ Phase 4     |
 | Select, move, resize, rotate                         | ⬜ Phase 5     |
@@ -193,9 +199,9 @@ way that answer is worth anything.
 
 ## The round-trip badge
 
-The badge at the top says **52/52 decks**, and it means something narrow and checkable: every
+The badge at the top says **54/54 decks**, and it means something narrow and checkable: every
 licensed deck in [`corpus/`](./corpus) is read, written back out, and compared against the original
-— 1474 parts in all, 875 as canonical XML, 553 as relationship graphs with the ids treated as
+— 1516 parts in all, 901 as canonical XML, 569 as relationship graphs with the ids treated as
 opaque labels, and 46 by SHA-256.
 
 **It is not a byte comparison and must not become one.** Entry order, deflate level, timestamps and
@@ -211,7 +217,7 @@ hand.
 The number is committed to [`.github/badges/roundtrip.json`](./.github/badges/roundtrip.json)
 rather than published from a workflow run, because it is a fact about the contents of this
 repository and nothing about a run decides it. `pnpm roundtrip` recomputes it and fails if the two
-disagree, so the badge cannot claim 52/52 unless the last run to touch it measured 52/52 — and no
+disagree, so the badge cannot claim 54/54 unless the last run to touch it measured 54/54 — and no
 workflow here needs write access to anything.
 
 ## Development
@@ -221,11 +227,12 @@ Requires Node ≥ 24.11 and pnpm ≥ 11.
 ```sh
 pnpm install
 pnpm browsers        # one-off: Chromium for the core test suite
-pnpm check           # structure, layering, docs, corpus, format, lint, typecheck, build, test
+pnpm check           # structure, layering, docs, corpus, format, lint, typecheck,
+                     #   build, round trip, fidelity, Gate 2, package QA, test
 ```
 
 Individual steps: `pnpm layering`, `pnpm corpus`, `pnpm lint`, `pnpm typecheck`, `pnpm build`,
-`pnpm roundtrip`, `pnpm test`.
+`pnpm roundtrip`, `pnpm fidelity`, `pnpm gate2`, `pnpm test`.
 
 To look inside a deck:
 

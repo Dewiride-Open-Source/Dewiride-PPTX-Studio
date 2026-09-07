@@ -203,6 +203,10 @@ export interface GroupSpec extends DrawingProps {
   readonly childHeight?: number;
   /** `a:grpSpPr`'s fill. The one place `a:grpFill` on a child means anything. */
   readonly fill?: string;
+  /** Sixtieths of a degree on the group's own `a:xfrm`, applied after the flip. */
+  readonly rotation?: number;
+  readonly flipH?: boolean;
+  readonly flipV?: boolean;
   readonly children: string;
 }
 
@@ -220,12 +224,16 @@ export function group(spec: GroupSpec): string {
   const chOffY = spec.childOffsetY ?? spec.y;
   const chExtX = spec.childWidth ?? spec.cx;
   const chExtY = spec.childHeight ?? spec.cy;
+  const transform =
+    (spec.rotation === undefined ? '' : ` rot="${String(spec.rotation)}"`) +
+    (spec.flipH === true ? ' flipH="1"' : '') +
+    (spec.flipV === true ? ' flipV="1"' : '');
   return (
     '<p:grpSp><p:nvGrpSpPr>' +
     cNvPrXml(spec) +
     '<p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
     '<p:grpSpPr>' +
-    '<a:xfrm>' +
+    `<a:xfrm${transform}>` +
     `<a:off x="${String(spec.x)}" y="${String(spec.y)}"/>` +
     `<a:ext cx="${String(spec.cx)}" cy="${String(spec.cy)}"/>` +
     `<a:chOff x="${String(chOffX)}" y="${String(chOffY)}"/>` +

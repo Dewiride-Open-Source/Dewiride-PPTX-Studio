@@ -15,6 +15,7 @@
  */
 
 import { parseSheet, parseTheme, type Sheet, type Shape, type Xfrm } from '@pptx-studio/model';
+import type { BlipEffect, Color } from '@pptx-studio/paint';
 import { parseXmlString } from '@pptx-studio/xml';
 import { describe, expect, it } from 'vitest';
 
@@ -23,6 +24,8 @@ import pictures from '../../../corpus/ground-truth/pictures.json' with { type: '
 
 import { layoutSheet, layoutSlide, inheritedSheets, flatten, type Placed } from './layout.js';
 import { RenderError } from './errors.js';
+import { blipPaint } from './image/blip.js';
+import { Defs } from './paint.js';
 import { serializeSvg } from './node.js';
 import { renderSlide, slideNode } from './slide.js';
 import {
@@ -1013,5 +1016,95 @@ describe('the outline band, re-derived', () => {
     expect(markup).toContain(`stroke-width="${String(WIDTH * 2)}"`);
     expect(markup).toContain('clipPath');
     expect(markup).not.toContain('clip-rule="evenodd"');
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The `a:blip` colour effects, as arithmetic rather than as markup.
+ *
+ * `blips.json` states the rules in words - duotone interpolates linearly
+ * between two colours by the BT.709 luminance, `a:clrChange` matches a colour
+ * exactly - so these evaluate the emitted filter and check it computes that.
+ * Asserting the attribute text instead would have passed while both of these
+ * were emitting a colour 255 times too dark. ADR 0038.
+ */
+describe('the blip colour effects, evaluated', () => {
+  const BOX = { x: 0, y: 0, cx: 100, cy: 100 };
+  const IMAGE = { bytes: new Uint8Array([0]), contentType: 'image/png' };
+
+  function filterMarkup(effects: readonly BlipEffect[]): string {
+    const defs = new Defs('b');
+    blipPaint(
+      {
+        type: 'blip',
+        embed: 'rId1',
+        svgEmbed: null,
+        part: 'ppt/slides/slide1.xml',
+        srcRect: { l: 0, t: 0, r: 0, b: 0 },
+        mode: { kind: 'stretch', fillRect: { l: 0, t: 0, r: 0, b: 0 } },
+        effects,
+        dpi: 0,
+        rotWithShape: false,
+      },
+      {},
+      BOX,
+      defs,
+      () => IMAGE,
+      () => ({ widthPx: 32, heightPx: 32, dpi: 96 }),
+      () => 'data:image/png;base64,AA==',
+    );
+    const node = defs.toNode();
+    expect(node).not.toBeNull();
+    return node === null ? '' : serializeSvg(node);
+  }
+
+  /** `slope` and `intercept` off one `feFunc`, which is what the filter runs. */
+  function transfer(markup: string, channel: 'R' | 'G' | 'B'): [number, number] {
+    const found = new RegExp(
+      `<feFunc${channel} type="linear" slope="([-0-9.e]+)" intercept="([-0-9.e]+)"`,
+    ).exec(markup);
+    expect(found, `no linear feFunc${channel} in ${markup.slice(0, 200)}`).not.toBeNull();
+    return [Number(found?.[1]), Number(found?.[2])];
+  }
+
+  const srgb = (hex: string): Color => ({ space: 'srgb', hex, transforms: [] });
+
+  it('interpolates a duotone between its two colours, in 0..1 space', () => {
+    // Black to FFC000, which is the pair `a03-fills-02` carries.
+    const markup = filterMarkup([{ kind: 'duotone', from: srgb('000000'), to: srgb('FFC000') }]);
+
+    // `feFunc` is evaluated as `slope * luma + intercept` on 0..1 channels, so
+    // luma 0 must give the `from` colour and luma 1 the `to` colour.
+    for (const [channel, level] of [
+      ['R', 0xff],
+      ['G', 0xc0],
+      ['B', 0x00],
+    ] as const) {
+      const [slope, intercept] = transfer(markup, channel);
+      expect(intercept * 255).toBeCloseTo(0, 6);
+      // Within half a level: the attribute itself is written rounded.
+      expect((slope * 1 + intercept) * 255).toBeCloseTo(level, 0);
+    }
+  });
+
+  it('refutes the reading that divides the endpoints by 255 again', () => {
+    const markup = filterMarkup([{ kind: 'duotone', from: srgb('000000'), to: srgb('FFC000') }]);
+    const [slope] = transfer(markup, 'R');
+    // The bug this test exists for: a slope of 1/255 renders the whole image
+    // black, and every attribute in the filter still looks well formed.
+    expect(slope).not.toBeCloseTo(1 / 255, 6);
+    expect(slope).toBeCloseTo(1, 6);
+  });
+
+  it('matches a:clrChange at the source colour, not at level zero', () => {
+    const markup = filterMarkup([
+      { kind: 'clrChange', from: srgb('F1C40F'), to: srgb('000000'), useAlpha: true },
+    ]);
+    const table = /<feFuncR type="discrete" tableValues="([^"]+)"/.exec(markup)?.[1] ?? '';
+    const ones = table.split(' ').flatMap((value, at) => (value === '1' ? [at] : []));
+    // 0xF1 is 241; rounding a 0..1 channel instead lands on 0 or 1.
+    expect(ones).toStrictEqual([0xf1]);
   });
 });

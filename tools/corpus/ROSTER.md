@@ -1,6 +1,6 @@
 # The corpus roster
 
-What sub-phase 1.1's fifty decks are, deck by deck, and which experiment gates the ones that
+What sub-phase 1.1's corpus holds, now fifty-four decks, deck by deck, and which experiment gates the ones that
 cannot be written yet. ADR 0009 decides _where a fixture may come from_; this decides _what is in
 the corpus_.
 
@@ -8,14 +8,14 @@ It is a plan, not a manifest. `corpus/decks/manifest.json` is what exists; a slo
 missing there is a deck still to write. `C-COV` is the rule that refuses to let the difference go
 unnoticed — every census key covered by at least one deck, or named in a manifest's `uncovered`
 array with why nothing covers it and what would close it. A declared gap is a signed statement; an
-undeclared one is how a 50/50 badge becomes a lie. It is `C019` in `check.ts`, and it is now
+undeclared one is how a 54/54 badge becomes a lie. It is `C019` in `check.ts`, and it is now
 closed: forty-six of forty-seven keys covered, one declared.
 
 ## Status
 
 | Tier  | Producer                              | Planned | Built  |
 | ----- | ------------------------------------- | ------- | ------ |
-| **A** | `tools/corpus/gen`                    | 42      | **42** |
+| **A** | `tools/corpus/tiers/a-generated`      | 44      | **44** |
 | **B** | Microsoft PowerPoint 365 (16.0.20326) | 9       | **9**  |
 | **C** | `packages/opc`'s own writer           | 1       | **1**  |
 
@@ -41,7 +41,7 @@ The result is a corpus that is well evidenced at one layer and thin at the other
 | the ZIP container        | **3**       | 24    | **17**         |
 | the XML inside the parts | **2**       | 36    | **12**         |
 
-Forty-two, and forty-one of them keep the tier's rule that a probe is about one thing.
+Forty-four, and forty-three of them keep the tier's rule that a probe is about one thing.
 `a43-kitchen-sink` is the exception, added at Gate 1 and added deliberately: the gate does not ask
 whether five features survive a round trip — five decks here answer that — but whether they survive
 it **together**, which has failure modes none of the five can reach. Four `Default` content types
@@ -78,13 +78,14 @@ that deck's probe contributes.
 
 ### Fills, effects, geometry — built
 
-| id             | probes                                                                     | first to emit                                              |
-| -------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `a01-minimal`  | the floor: one slide, one title, nothing optional                          | —                                                          |
-| `a03-fills`    | six colour models, 7 gradients, 8 picture fills, 54 pattern presets        | `blipFill`, `groupFill`, `group`                           |
-| `a04-effects`  | all 8 `a:effectLst` children, `a:scene3d`/`a:sp3d`, `a:effectDag`          | `innerShadow`, `glow`, `softEdge`, `reflection`, `scene3d` |
-| `a05-geometry` | six path commands, `gdLst`/`ahLst`/`cxnLst`/`rect`, 24 adjusted presets    | `customGeom`                                               |
-| `a06-lines`    | widths, caps, `@cmpd`, 11 dashes, `custDash`, joins, arrowheads, `p:cxnSp` | `connector`                                                |
+| id               | probes                                                                               | first to emit                                              |
+| ---------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| `a01-minimal`    | the floor: one slide, one title, nothing optional                                    | —                                                          |
+| `a03-fills`      | six colour models, 7 gradients, 8 picture fills, 54 pattern presets                  | `blipFill`, `groupFill`, `group`                           |
+| `a04-effects`    | all 8 `a:effectLst` children, `a:scene3d`/`a:sp3d`, `a:effectDag`                    | `innerShadow`, `glow`, `softEdge`, `reflection`, `scene3d` |
+| `a05-geometry`   | six path commands, `gdLst`/`ahLst`/`cxnLst`/`rect`, 24 adjusted presets              | `customGeom`                                               |
+| `a06-lines`      | widths, caps, `@cmpd`, 11 dashes, `custDash`, joins, arrowheads, `p:cxnSp`           | `connector`                                                |
+| `a44-transforms` | 12 rotations and flips on one asymmetric preset, and 6 groups including a nested one | first `@rot`, `@flipH`, nested `p:grpSp`                   |
 
 ### Text and inheritance — built
 
@@ -112,16 +113,17 @@ is authoritative about is that stored values are applied verbatim in view mode.
 
 ### Structure — built
 
-| id                | probes                                                                         | first to emit                    |
-| ----------------- | ------------------------------------------------------------------------------ | -------------------------------- |
-| `a12-masters`     | three masters, three themes, three `p:clrMap`s, `a:overrideClrMapping`         | —                                |
-| `a13-sections`    | `p14:sectionLst`, `p:custShowLst`, a slide in two shows and one listed twice   | `section`, `customShow`          |
-| `a14-notes`       | notes master, handout master, three notes slides, and the `hdr`/`sldImg` pair  | `notesSlide`                     |
-| `a15-comments`    | `p:cmLst` and `p:cmAuthorLst`, **and** the 2018 `p188:cmLst` PowerPoint writes | `comment`                        |
-| `a16-transitions` | all 21 `p:transition` effects across a master, 18 layouts and 3 slides         | `transition`, `alternateContent` |
-| `a17-animations`  | `p:timing` nine levels deep, every behaviour but audio and video, `p:bldLst`   | `animation`                      |
-| `a18-slide-sizes` | `screen4x3`, and a `p:notesSz` in a different aspect ratio from the slide      | —                                |
-| `a19-decorative`  | `adec:decorative`, `@descr`, `@title`, `@hidden`, and `p:spTree` reading order | `decorative`                     |
+| id                | probes                                                                                   | first to emit                    |
+| ----------------- | ---------------------------------------------------------------------------------------- | -------------------------------- |
+| `a12-masters`     | three masters, three themes, three `p:clrMap`s, `a:overrideClrMapping`                   | —                                |
+| `a13-sections`    | `p14:sectionLst`, `p:custShowLst`, a slide in two shows and one listed twice             | `section`, `customShow`          |
+| `a14-notes`       | notes master, handout master, three notes slides, and the `hdr`/`sldImg` pair            | `notesSlide`                     |
+| `a15-comments`    | `p:cmLst` and `p:cmAuthorLst`, **and** the 2018 `p188:cmLst` PowerPoint writes           | `comment`                        |
+| `a16-transitions` | all 21 `p:transition` effects across a master, 18 layouts and 3 slides                   | `transition`, `alternateContent` |
+| `a17-animations`  | `p:timing` nine levels deep, every behaviour but audio and video, `p:bldLst`             | `animation`                      |
+| `a18-slide-sizes` | `screen4x3`, and a `p:notesSz` in a different aspect ratio from the slide                | —                                |
+| `a19-decorative`  | `adec:decorative`, `@descr`, `@title`, `@hidden`, and `p:spTree` reading order           | `decorative`                     |
+| `a45-backgrounds` | `p:bgRef` across the 1000 offset, an explicit `p:bgPr`, and a layout-supplied background | first `p:bgPr`                   |
 
 Four corrections came out of building these, and all four are measurements rather than opinions.
 
@@ -595,7 +597,7 @@ or more serializers. The thirty-one that are not divide into three kinds, and th
 them is the useful part:
 
 **Closable by one more deck — one item, and it is the important one.** Every entity reference in
-the corpus was written by `tools/corpus/gen`: the nine PowerPoint-authored decks contain **no
+the corpus was written by `tools/corpus/tiers/a-generated`: the nine PowerPoint-authored decks contain **no
 ampersand at all** across their 387 XML parts. So `&amp;`, `&lt;`, `&gt;` and `&quot;` are each
 checked only against the escaper that wrote them, which is precisely the failure `C-LEX` was written
 to name. It is not a limit of the producer: E8 measured PowerPoint writing all four, and a follow-up
@@ -680,7 +682,7 @@ Writing `C-LEX` added two more of the same kind, and they are cheaper than any o
 needs a setting, a device or a network, only a decision to author a tenth deck.
 
 - **Text and a shape name that need escaping.** Every entity reference in this corpus was written by
-  `tools/corpus/gen`; the nine PowerPoint-authored decks contain **no ampersand at all** across
+  `tools/corpus/tiers/a-generated`; the nine PowerPoint-authored decks contain **no ampersand at all** across
   their 387 XML parts, so `&amp;`, `&lt;`, `&gt;` and `&quot;` are each checked only against the
   escaper that wrote them. E8 already measured PowerPoint writing all four — the decks it measured
   were simply never committed. One deck whose title, body text and a shape's `@name` carry

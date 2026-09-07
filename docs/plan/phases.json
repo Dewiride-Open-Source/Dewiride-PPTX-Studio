@@ -163,12 +163,18 @@
           "title": "Picture shapes (`p:pic`)",
           "adr": "phase-2-geometry-and-paint/0037-picture-shapes.md",
           "result": "23 of 24 readings refuted at a full channel; a picture's border is drawn wholly outside it; b09-picture-01 8642 to 9776 bp"
+        },
+        {
+          "id": "2.14",
+          "title": "Gate 2's side-by-side, and the corpus gaps it found",
+          "adr": "phase-2-geometry-and-paint/0038-gate-2.md",
+          "result": "no committed slide carried a rotation, a flip or a non-default background until a44 and a45; a03-fills-02 9378 to 9638 bp"
         }
       ],
       "gate": {
         "title": "A real deck rendered silent: fills, strokes, effects, nested rotated groups",
-        "adr": "phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md",
-        "note": "Closed with one shortfall on the record: no LibreOffice side-by-side. Cropped image fills arrived in 2.12, picture shapes in 2.13."
+        "adr": "phase-2-geometry-and-paint/0038-gate-2.md",
+        "result": "all nine named features carried by a committed slide and drawn beside PowerPoint's own rather than LibreOffice's; pnpm gate2"
       }
     },
     {

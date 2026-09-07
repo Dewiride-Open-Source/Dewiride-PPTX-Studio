@@ -214,6 +214,13 @@ export interface ProbeSlide {
   readonly body: string;
   /** Shown in the title placeholder, so a human opening the deck can navigate. */
   readonly title: string;
+  /**
+   * A whole `p:bg`, first inside `p:cSld`.
+   *
+   * Omitted means the slide inherits its layout's, which is the case every
+   * other probe deck is in and the one a background probe has to contrast with.
+   */
+  readonly background?: string;
   /** Relationships beyond `rId1`, which is always the layout. */
   readonly rels?: readonly ProbeRel[];
   /**
@@ -285,6 +292,8 @@ export interface ProbeLayout {
   readonly type: string;
   /** `p:cSld/@name`, which is what a layout picker shows a user. */
   readonly name: string;
+  /** A whole `p:bg`, first inside `p:cSld` - what a slide with none inherits. */
+  readonly background?: string;
   /** `p:spTree` children after `p:grpSpPr` - the layout's own placeholders. */
   readonly shapes?: string;
   /**
@@ -875,6 +884,7 @@ function slideLayoutXml(layout: ProbeLayout): string {
     DECLARATION +
     `<p:sldLayout ${NS_DECLS} type="${layout.type}" preserve="1">` +
     `<p:cSld name="${escapeAttribute(layout.name)}">` +
+    (layout.background ?? '') +
     spTreeHead() +
     (layout.shapes ?? '') +
     '</p:spTree></p:cSld>' +
@@ -1256,6 +1266,7 @@ export function buildProbePackage(spec: ProbePackage): BuiltPackage {
       DECLARATION +
         `<p:sld ${NS_DECLS}${slide.rootAttributes ?? ''}>` +
         '<p:cSld>' +
+        (slide.background ?? '') +
         spTreeHead() +
         title +
         slide.body +

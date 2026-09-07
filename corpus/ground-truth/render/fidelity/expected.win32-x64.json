@@ -70,8 +70,8 @@
       "svgSha256": "a75b593cd48a31ef846085c62d0c851fa09d7e42da29820d1b8e6a86f656cb67"
     },
     "a03-fills-02": {
-      "rasterSha256": "0917fb60e385e653bd0c72b61619b68cb7e125449aed7ddc5e0738a1720aea94",
-      "svgSha256": "f3079b3e41c5fa03e616e170626e9cc6368a9880600e8cf2b6b034b6b7a6419e"
+      "rasterSha256": "ea7beeba83187070f3e2c630505e315f9e66ebee0fbc0dd1e799adcb6852ddd1",
+      "svgSha256": "7ef3a3500f47e8fccc14d0fe4d18d9430ee69f83567ddd3c29dcad1439166355"
     },
     "a03-fills-03": {
       "rasterSha256": "915b3886fd20da3af6d01cb67833d291b05dbea1638ac86b8f263702a7c86f5e",
@@ -520,6 +520,30 @@
     "a42-custom-size-03": {
       "rasterSha256": "e19a15185af53cbb605da03a03e288179292258ff30fb5c961fcfeb74c52f51b",
       "svgSha256": "baf82a5f1aad90af418089282140697add657d0d6f9cc46b39d4129a9646b6e5"
+    },
+    "a44-transforms-01": {
+      "rasterSha256": "672e91ebc773280b5c34662decd05624a3dffc482a13fa4fe79be5db9a4ecf28",
+      "svgSha256": "e2a56be0bf0e3bceb755838cb430f5ee3bbd7d6ffde1aae18ea8ccc3f6705409"
+    },
+    "a44-transforms-02": {
+      "rasterSha256": "f5785fdb9af7f1baeea121a5c1d4a2e457fb4d160f51ff474793fd6172707cda",
+      "svgSha256": "e5d3c23f2bb0d1115656781ccad4aed7dcef9370b94395375179068efbbe7950"
+    },
+    "a45-backgrounds-01": {
+      "rasterSha256": "1f415888a62d7bd96c2fc6ad689b0ca44be7ef9394bfded81304a67d150ad255",
+      "svgSha256": "3c6688e438f27f49cfed23577ce6fffed4f0113913cc2361fa4afcfcec1f01b6"
+    },
+    "a45-backgrounds-02": {
+      "rasterSha256": "ac02c7ea9a51c217cb21b5ff87ceeeb93698c0b4e67b49a40915ebe2c5bc18c8",
+      "svgSha256": "b0f730cfcf2d28f49d5d81ed6ea6ae5f7314cea4c8a9dfa7e5eea33ae1486039"
+    },
+    "a45-backgrounds-03": {
+      "rasterSha256": "eb09c27c2c8b582e6be4b3f0866fbb8de4af31b295bed10f41599280f4a1b1cd",
+      "svgSha256": "5fd07050e20d20e4ca42de53d9c1f42753406dc830c39fee322c29396547341d"
+    },
+    "a45-backgrounds-04": {
+      "rasterSha256": "b016a8b4cb27311d3dddec154eebc989f7bb54f0e0108ec8e532eaf9eb8ae12e",
+      "svgSha256": "4f39f75feda043319c292792a2600b5c8746338224a92c1ca934c8b88dda5316"
     },
     "b01-blank-01": {
       "rasterSha256": "77be907b639f038155ce8edbe1cb0d5e370c85c7cad5643ed1246f7141d98e10",

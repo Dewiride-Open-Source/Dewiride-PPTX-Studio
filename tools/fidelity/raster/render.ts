@@ -74,15 +74,91 @@ export function geometryOf(cx: number, cy: number): Geometry {
   };
 }
 
+/** What the harness page exposes on `globalThis.pptx`, as narrowly as it is used. */
+interface PptxApi {
+  readonly opc: {
+    readonly PartStore: {
+      open: (bytes: Uint8Array) => {
+        relationships: (part: string) => { targetOf: (id: string) => string | undefined };
+        read: (part: string) => Uint8Array;
+        contentTypeOf: (part: string) => string | undefined;
+      };
+    };
+  };
+  readonly model: {
+    loadDocument: (store: unknown) => {
+      slides: readonly { readonly partName: string }[];
+      slideSize: { cx: number; cy: number };
+      defaultTextStyle: unknown;
+    };
+  };
+  readonly rsvg: { renderSlide: (sheet: unknown, size: unknown, options: unknown) => string };
+}
+
+export interface DrawnSlide {
+  readonly markup: string;
+  /** The height the SVG was asked for, from the deck's own aspect ratio. */
+  readonly drawHeight: number;
+  readonly partName: string;
+}
+
+/** The shape `drawSlide` has once it is a property of the page's `globalThis`. */
+type DrawSlide = (input: {
+  url: string;
+  index: number;
+  width: number;
+}) => Promise<{ markup: string; drawHeight: number; partName: string }>;
+
 /**
- * Install the reduction in the page, as the same source Node runs.
+ * One slide, as the SVG our renderer emits for it.
+ *
+ * Written with no captured scope so `injectHarness` can stringify it into the
+ * page, where it is the single path from a package to markup: the raster, the
+ * digest and Gate 2's picture are all this one call. ADR 0038.
+ */
+export async function drawSlide(input: {
+  url: string;
+  index: number;
+  width: number;
+}): Promise<DrawnSlide> {
+  const api = (globalThis as unknown as { pptx: unknown }).pptx as PptxApi;
+  const bytes = new Uint8Array(await (await fetch(input.url)).arrayBuffer());
+  const store = api.opc.PartStore.open(bytes);
+  const document_ = api.model.loadDocument(store);
+  const size = document_.slideSize;
+  const drawHeight = Math.round((input.width * size.cy) / size.cx);
+
+  const sheet = document_.slides[input.index];
+  if (sheet === undefined) throw new Error(`no slide ${String(input.index)}`);
+  const markup = api.rsvg.renderSlide(sheet, size, {
+    width: input.width,
+    height: drawHeight,
+    idPrefix: `s${String(input.index)}`,
+    media: (embed: string, part: string) => {
+      const target = store.relationships(part).targetOf(embed);
+      if (target === undefined) return undefined;
+      const contentType = store.contentTypeOf(target);
+      if (contentType === undefined) return undefined;
+      return { bytes: store.read(target), contentType };
+    },
+    text: { defaultTextStyle: document_.defaultTextStyle },
+  });
+  return { markup, drawHeight, partName: sheet.partName };
+}
+
+/**
+ * Install the reduction and the renderer in the page, as the source Node runs.
  *
  * A script tag rather than `new Function`: the source crossing into the page is
- * this module's own compiled function and nothing else, so there is no string
+ * this module's own compiled functions and nothing else, so there is no string
  * here that anything outside the repository could reach.
  */
-export async function injectReduce(page: Page): Promise<void> {
-  await page.addScriptTag({ content: `globalThis.reduce = ${reduceRgba.toString()};` });
+export async function injectHarness(page: Page): Promise<void> {
+  await page.addScriptTag({
+    content:
+      `globalThis.reduce = ${reduceRgba.toString()};
+` + `globalThis.drawSlide = ${drawSlide.toString()};`,
+  });
 }
 
 export interface SlideRaster {
@@ -110,50 +186,14 @@ export async function renderSlide(
 ): Promise<SlideRaster> {
   const result = await page.evaluate(
     async ({ url, index, cell, width }) => {
-      const api = (globalThis as unknown as { pptx: Record<string, never> }).pptx as unknown as {
-        opc: {
-          PartStore: {
-            open: (bytes: Uint8Array) => {
-              relationships: (part: string) => { targetOf: (id: string) => string | undefined };
-              read: (part: string) => Uint8Array;
-              contentTypeOf: (part: string) => string | undefined;
-            };
-          };
-        };
-        model: {
-          loadDocument: (store: unknown) => {
-            slides: readonly unknown[];
-            slideSize: { cx: number; cy: number };
-            defaultTextStyle: unknown;
-          };
-        };
-        rsvg: { renderSlide: (sheet: unknown, size: unknown, options: unknown) => string };
-      };
+      const draw = (globalThis as unknown as { drawSlide: DrawSlide }).drawSlide;
       const reduce = (globalThis as unknown as { reduce: (input: unknown) => unknown }).reduce;
 
-      const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer());
-      const store = api.opc.PartStore.open(bytes);
-      const document_ = api.model.loadDocument(store);
-      const size = document_.slideSize;
-      const drawHeight = Math.round((width * size.cy) / size.cx);
+      const drawn = await draw({ url, index, width });
+      const markup = drawn.markup;
+      const drawHeight = drawn.drawHeight;
       const padWidth = Math.ceil(width / cell) * cell;
       const padHeight = Math.ceil(drawHeight / cell) * cell;
-
-      const sheet = document_.slides[index];
-      if (sheet === undefined) throw new Error(`no slide ${String(index)}`);
-      const markup = api.rsvg.renderSlide(sheet, size, {
-        width,
-        height: drawHeight,
-        idPrefix: `s${String(index)}`,
-        media: (embed: string, part: string) => {
-          const target = store.relationships(part).targetOf(embed);
-          if (target === undefined) return undefined;
-          const contentType = store.contentTypeOf(target);
-          if (contentType === undefined) return undefined;
-          return { bytes: store.read(target), contentType };
-        },
-        text: { defaultTextStyle: document_.defaultTextStyle },
-      });
 
       const image = new Image();
       // A blob rather than a data URI: `encodeURIComponent` throws on a lone
@@ -229,6 +269,27 @@ export async function renderSlide(
     families: result.families,
     geometry,
   };
+}
+
+/**
+ * The SVG itself, for a report that shows the slide rather than scoring it.
+ *
+ * Shipped over the protocol whole, which `renderSlide` deliberately does not
+ * do: at a hundred kilobytes a slide that is affordable for a gate's dozen and
+ * not for the corpus.
+ */
+export async function slideMarkup(
+  page: Page,
+  deckUrl: string,
+  slideIndex: number,
+): Promise<DrawnSlide> {
+  return await page.evaluate(
+    async ({ url, index, width }) => {
+      const draw = (globalThis as unknown as { drawSlide: DrawSlide }).drawSlide;
+      return await draw({ url, index, width });
+    },
+    { url: deckUrl, index: slideIndex, width: RASTER_WIDTH },
+  );
 }
 
 /** PowerPoint's PNG, decoded and reduced by the same code path as our SVG. */

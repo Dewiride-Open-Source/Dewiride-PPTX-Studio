@@ -58,16 +58,16 @@ describe('the number on the README', () => {
     // licence on, and counting a file no manifest claims would put an
     // unlicensed deck into the number on the front page.
     expect(report.total).toBe(committedDecks(ROOT).length);
-    expect(report.total).toBe(52);
-    expect(badgeFor(report).message).toBe('52/52 decks');
+    expect(report.total).toBe(54);
+    expect(badgeFor(report).message).toBe('54/54 decks');
     expect(badgeFor(report).color).toBe('brightgreen');
   });
 
   it('agrees with what 1.4 pinned, part for part', () => {
-    // The same 1474 the round-trip suite asserts, reached by a different route.
-    expect(report.parts).toBe(1474);
-    expect(report.xml).toBe(875);
-    expect(report.relationships).toBe(553);
+    // The same 1516 the round-trip suite asserts, reached by a different route.
+    expect(report.parts).toBe(1516);
+    expect(report.xml).toBe(901);
+    expect(report.relationships).toBe(569);
     expect(report.binary).toBe(46);
     expect(report.passed).toBe(report.total);
   });
@@ -78,7 +78,7 @@ describe('the number on the README', () => {
     // as a score.
     const failed = { ...report, ok: false, passed: report.total - 1 };
     expect(badgeFor(failed).color).toBe('red');
-    expect(badgeFor(failed).message).toBe('51/52 decks');
+    expect(badgeFor(failed).message).toBe('53/54 decks');
   });
 });
 
@@ -89,7 +89,7 @@ describe('the summary a pull request shows', () => {
     for (const collection of COLLECTIONS) {
       expect(summary, collection).toContain('| `' + collection + '` |');
     }
-    expect(summary).toContain('| **total** | **52** | **1474** |');
+    expect(summary).toContain('| **total** | **54** | **1516** |');
   });
 
   it('says what it does not measure', () => {

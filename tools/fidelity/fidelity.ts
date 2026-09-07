@@ -31,7 +31,7 @@ import {
   probeEnvironment,
   type Environment,
 } from './raster/fonts.ts';
-import { injectReduce, renderSlide, type SlideRaster } from './raster/render.ts';
+import { injectHarness, renderSlide, type SlideRaster } from './raster/render.ts';
 import {
   corpusMeanBp,
   reportMarkdown,
@@ -64,7 +64,7 @@ const oracleKeys = new Set(oracle.records.map((row) => row.key));
 /* --------------------------------------------------------------- the render */
 
 const harness = await openHarness();
-await injectReduce(harness.page);
+await injectHarness(harness.page);
 
 const rendered = new Map<string, SlideRaster>();
 const unsupported: { key: string; reason: string }[] = [];

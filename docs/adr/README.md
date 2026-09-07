@@ -54,6 +54,7 @@ date.
 | [0026](phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md) | Debug overlay and preset gallery                       |
 | [0036](phase-2-geometry-and-paint/0036-image-fills.md)                  | Image fills, and the two readings everybody gets wrong |
 | [0037](phase-2-geometry-and-paint/0037-picture-shapes.md)               | Picture shapes, and the border that is drawn outside   |
+| [0038](phase-2-geometry-and-paint/0038-gate-2.md)                       | Gate 2, and the two features the corpus never had      |
 
 ## Phase 3 — text
 

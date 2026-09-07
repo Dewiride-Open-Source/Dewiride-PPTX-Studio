@@ -76,8 +76,8 @@ const REPORTS = new Map<string, Report>(
 );
 
 describe('the validator against the corpus', () => {
-  it('reads all fifty-two committed decks', () => {
-    expect(DECKS).toHaveLength(52);
+  it('reads all fifty-four committed decks', () => {
+    expect(DECKS).toHaveLength(54);
   });
 
   it('finds nothing fatal in a single one of them', () => {

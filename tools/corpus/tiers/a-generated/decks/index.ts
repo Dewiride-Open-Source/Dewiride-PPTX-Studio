@@ -41,6 +41,8 @@ import { a40Unicode } from './packaging/a40-unicode.ts';
 import { a41A4 } from './deck/a41-a4.ts';
 import { a42CustomSize } from './deck/a42-custom-size.ts';
 import { a43KitchenSink } from './packaging/a43-kitchen-sink.ts';
+import { a44Transforms } from './basics/a44-transforms.ts';
+import { a45Backgrounds } from './deck/a45-backgrounds.ts';
 
 /**
  * The Tier A roster, in id order.
@@ -96,4 +98,6 @@ export const PROBE_DECKS: readonly ProbeDeck[] = [
   a41A4,
   a42CustomSize,
   a43KitchenSink,
+  a44Transforms,
+  a45Backgrounds,
 ];

@@ -1,6 +1,6 @@
 # Where the build has got to
 
-**36 of 108 sub-phases recorded, 3 of 13 gates closed.**
+**37 of 109 sub-phases recorded, 3 of 13 gates closed.**
 
 A sub-phase is done when it has an ADR, because that is when the working agreement says the
 record gets written. ⚠️ means done with something still on the record — the note says what.
@@ -13,7 +13,7 @@ same commit as its ADR.
 | --------------------------------------------------------------- | ---------- | -------------- |
 | [0 — Foundation and ground truth](#phase-0)                     | 8/8        | ✅ done        |
 | [1 — Byte-perfect round trip](#phase-1)                         | 6/6        | ✅ done        |
-| [2 — Geometry and paint](#phase-2)                              | 13/13      | ⚠️ done        |
+| [2 — Geometry and paint](#phase-2)                              | 14/14      | ✅ done        |
 | [3 — Text engine, viewer, fidelity scoreboard](#phase-3)        | 9/10       | ⬜ not started |
 | [4 — Tables and SmartArt](#phase-4)                             | 0/6        | ⬜ not started |
 | [5 — Select and move](#phase-5)                                 | 0/8        | ⬜ not started |
@@ -59,22 +59,23 @@ same commit as its ADR.
 
 ## Phase 2 — Geometry and paint
 
-| #          | sub-phase                                                                   | status  | record                                                                                                                                                                                                              |
-| ---------- | --------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2.1        | Preset codegen, all 187 shapes                                              | ✅ done | [0016](../adr/phase-2-geometry-and-paint/0016-preset-geometry-codegen.md)                                                                                                                                           |
-| 2.2        | Formula evaluator                                                           | ✅ done | [0017](../adr/phase-2-geometry-and-paint/0017-the-formula-evaluator.md)                                                                                                                                             |
-| 2.3        | Arc math                                                                    | ✅ done | [0018](../adr/phase-2-geometry-and-paint/0018-arc-math.md)                                                                                                                                                          |
-| 2.4        | Path emit and `custGeom` unification                                        | ✅ done | [0019](../adr/phase-2-geometry-and-paint/0019-path-emit-and-custgeom.md)                                                                                                                                            |
-| 2.5        | Adjust handles                                                              | ✅ done | [0020](../adr/phase-2-geometry-and-paint/0020-adjust-handles.md)                                                                                                                                                    |
-| 2.6        | Colour                                                                      | ✅ done | [0021](../adr/phase-2-geometry-and-paint/0021-colour.md)                                                                                                                                                            |
-| 2.7        | Gradients and patterns                                                      | ✅ done | [0022](../adr/phase-2-geometry-and-paint/0022-fills.md) — the off-centre path focus is SVG's focal radial, 17 probes at rms 0.53; @flip is inert on a gradient fill                                                 |
-| 2.8        | Lines and effects                                                           | ✅ done | [0023](../adr/phase-2-geometry-and-paint/0023-lines.md)                                                                                                                                                             |
-| 2.9        | Model: parse and resolve                                                    | ✅ done | [0024](../adr/phase-2-geometry-and-paint/0024-model-parse-and-resolve.md)                                                                                                                                           |
-| 2.10       | Renderers, geometry only                                                    | ✅ done | [0025](../adr/phase-2-geometry-and-paint/0025-renderers-geometry.md)                                                                                                                                                |
-| 2.11       | Debug overlay and 187-preset gallery                                        | ✅ done | [0026](../adr/phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md)                                                                                                                                      |
-| 2.12       | Image fills (`a:blipFill`)                                                  | ✅ done | [0036](../adr/phase-2-geometry-and-paint/0036-image-fills.md) — 63 probes, 14 refuted readings; a03-fills-02 8199 to 9378 bp                                                                                        |
-| 2.13       | Picture shapes (`p:pic`)                                                    | ✅ done | [0037](../adr/phase-2-geometry-and-paint/0037-picture-shapes.md) — 23 of 24 readings refuted at a full channel; a picture's border is drawn wholly outside it; b09-picture-01 8642 to 9776 bp                       |
-| **Gate 2** | A real deck rendered silent: fills, strokes, effects, nested rotated groups | ⚠️ done | [0026](../adr/phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md) — Closed with one shortfall on the record: no LibreOffice side-by-side. Cropped image fills arrived in 2.12, picture shapes in 2.13. |
+| #          | sub-phase                                                                   | status  | record                                                                                                                                                                                        |
+| ---------- | --------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.1        | Preset codegen, all 187 shapes                                              | ✅ done | [0016](../adr/phase-2-geometry-and-paint/0016-preset-geometry-codegen.md)                                                                                                                     |
+| 2.2        | Formula evaluator                                                           | ✅ done | [0017](../adr/phase-2-geometry-and-paint/0017-the-formula-evaluator.md)                                                                                                                       |
+| 2.3        | Arc math                                                                    | ✅ done | [0018](../adr/phase-2-geometry-and-paint/0018-arc-math.md)                                                                                                                                    |
+| 2.4        | Path emit and `custGeom` unification                                        | ✅ done | [0019](../adr/phase-2-geometry-and-paint/0019-path-emit-and-custgeom.md)                                                                                                                      |
+| 2.5        | Adjust handles                                                              | ✅ done | [0020](../adr/phase-2-geometry-and-paint/0020-adjust-handles.md)                                                                                                                              |
+| 2.6        | Colour                                                                      | ✅ done | [0021](../adr/phase-2-geometry-and-paint/0021-colour.md)                                                                                                                                      |
+| 2.7        | Gradients and patterns                                                      | ✅ done | [0022](../adr/phase-2-geometry-and-paint/0022-fills.md) — the off-centre path focus is SVG's focal radial, 17 probes at rms 0.53; @flip is inert on a gradient fill                           |
+| 2.8        | Lines and effects                                                           | ✅ done | [0023](../adr/phase-2-geometry-and-paint/0023-lines.md)                                                                                                                                       |
+| 2.9        | Model: parse and resolve                                                    | ✅ done | [0024](../adr/phase-2-geometry-and-paint/0024-model-parse-and-resolve.md)                                                                                                                     |
+| 2.10       | Renderers, geometry only                                                    | ✅ done | [0025](../adr/phase-2-geometry-and-paint/0025-renderers-geometry.md)                                                                                                                          |
+| 2.11       | Debug overlay and 187-preset gallery                                        | ✅ done | [0026](../adr/phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md)                                                                                                                |
+| 2.12       | Image fills (`a:blipFill`)                                                  | ✅ done | [0036](../adr/phase-2-geometry-and-paint/0036-image-fills.md) — 63 probes, 14 refuted readings; a03-fills-02 8199 to 9378 bp                                                                  |
+| 2.13       | Picture shapes (`p:pic`)                                                    | ✅ done | [0037](../adr/phase-2-geometry-and-paint/0037-picture-shapes.md) — 23 of 24 readings refuted at a full channel; a picture's border is drawn wholly outside it; b09-picture-01 8642 to 9776 bp |
+| 2.14       | Gate 2's side-by-side, and the corpus gaps it found                         | ✅ done | [0038](../adr/phase-2-geometry-and-paint/0038-gate-2.md) — no committed slide carried a rotation, a flip or a non-default background until a44 and a45; a03-fills-02 9378 to 9638 bp          |
+| **Gate 2** | A real deck rendered silent: fills, strokes, effects, nested rotated groups | ✅ done | [0038](../adr/phase-2-geometry-and-paint/0038-gate-2.md) — all nine named features carried by a committed slide and drawn beside PowerPoint's own rather than LibreOffice's; pnpm gate2       |
 
 <a id="phase-3"></a>
 
