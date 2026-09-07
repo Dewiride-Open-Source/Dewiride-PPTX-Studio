@@ -54,3 +54,16 @@ one — and because a test that has to stub a global is a test that can pass for
 Text (3.8), the overlay canvas and adjust-handle chrome (2.11), selection and gestures (Phase 5),
 and slide virtualization (12.1). The host is emptied on mount; anything a caller wants beside the
 slide is a sibling of the host, not a child of it.
+
+## The text layer
+
+`mountTextLayer` builds an HTML layer over the slide from the identical `TextBlock`
+`@pptx-studio/render-svg` emits: one div per shape, one per line, a span per piece, and the same
+rule rectangles. Real text nodes, so selection, an IME and a screen reader all work on them.
+
+There is one set of line boxes and both renderers read it, which is what stops them drifting. The
+one place the HTML layer is not exact is the baseline: a browser puts an inline baseline a
+half-leading plus an ascent below the line box, from font metrics it has rounded to whole pixels,
+so the `line-height` that reconciles the two lands within one CSS pixel and no closer. The SVG
+emitter, where a baseline is a coordinate, is exact — which is the right way round, since that is
+what thumbnails and export go through.

@@ -1,0 +1,1548 @@
+{
+  "$comment": "Experiment T7, sub-phase 3.7. Which typeface a run is drawn in when the named one is absent, and how absence is detected in a browser. Written by tools/ground-truth/fonts/substitution/analyse.ts.",
+  "experiment": "T7",
+  "subPhase": "3.7",
+  "adr": "docs/adr/phase-3-text/0033-font-substitution-and-the-guard.md",
+  "units": {
+    "width": "thousandths of a point, from TextRange2.BoundWidth",
+    "advance": "thousandths of a CSS pixel, from OffscreenCanvas.measureText"
+  },
+  "measuredOn": {
+    "application": "Microsoft PowerPoint",
+    "version": "16.0",
+    "platform": "Windows 11 Enterprise 10.0.26200",
+    "chromium": "151.0.7922.34"
+  },
+  "questions": [
+    {
+      "key": "absent-latin",
+      "question": "What does PowerPoint draw a Latin face it does not have in?",
+      "answer": "Calibri, whatever the name says.",
+      "scores": [
+        { "name": "always Calibri", "fits": 22, "total": 22 },
+        { "name": "the theme's minor Latin face", "fits": 20, "total": 22 },
+        { "name": "the style word in the name", "fits": 17, "total": 22 },
+        { "name": "always Arial", "fits": 0, "total": 22 }
+      ]
+    },
+    {
+      "key": "hints",
+      "question": "Do @panose, @pitchFamily and @charset change what an absent face becomes?",
+      "answer": "Only @charset does. @panose and @pitchFamily are ignored.",
+      "scores": [
+        { "name": "only @charset is read", "fits": 21, "total": 21 },
+        { "name": "all three ignored", "fits": 19, "total": 21 },
+        { "name": "@panose picks the family", "fits": 14, "total": 21 },
+        { "name": "@pitchFamily picks the family", "fits": 12, "total": 21 }
+      ]
+    },
+    {
+      "key": "substitute-metrics",
+      "question": "Is an absent face laid out with the substitute own metrics, or scaled?",
+      "answer": "The substitute own, exactly: every reading equals Calibri to the last digit.",
+      "scores": [
+        { "name": "exactly Calibri", "fits": 12, "total": 12 },
+        { "name": "exactly Arial", "fits": 1, "total": 12 },
+        { "name": "exactly Times New Roman", "fits": 0, "total": 12 },
+        { "name": "exactly Segoe UI", "fits": 0, "total": 12 }
+      ]
+    },
+    {
+      "key": "theme-latin-ref",
+      "question": "Which collection do +mj-lt and +mn-lt name?",
+      "answer": "+mj-lt is a:majorFont/a:latin and +mn-lt is a:minorFont/a:latin, substitution applied after.",
+      "scores": [
+        { "name": "major to majorFont, minor to minorFont", "fits": 8, "total": 8 },
+        { "name": "always the minor collection", "fits": 5, "total": 8 },
+        { "name": "the two collections swapped", "fits": 2, "total": 8 }
+      ]
+    },
+    {
+      "key": "com-reports",
+      "question": "Does TextRange2.Font.Name report the requested face or the drawn one?",
+      "answer": "The requested face, after theme resolution and before substitution.",
+      "scores": [
+        { "name": "the requested face, theme resolved", "fits": 159, "total": 159 },
+        { "name": "the face actually drawn", "fits": 75, "total": 159 }
+      ]
+    },
+    {
+      "key": "detector",
+      "question": "How is an absent family detected in the browser?",
+      "answer": "By measuring it stacked on all three generics: absent means equal to every one of them.",
+      "scores": [
+        { "name": "equal to all three anchors", "fits": 38, "total": 38 },
+        { "name": "equal to monospace alone", "fits": 37, "total": 38 },
+        { "name": "equal to serif alone", "fits": 36, "total": 38 },
+        { "name": "equal to sans-serif alone", "fits": 36, "total": 38 },
+        { "name": "the bare family differs from the browser default", "fits": 36, "total": 38 },
+        { "name": "document.fonts.check", "fits": 18, "total": 38 }
+      ]
+    }
+  ],
+  "powerpoint": {
+    "absentSubstitute": "Calibri",
+    "installedFamilyCount": 263,
+    "absent": [
+      { "id": "absent-00", "typeface": "Zzz Probe Plain", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-01", "typeface": "Zzz Probe Serif", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-02", "typeface": "Zzz Probe Sans", "drawn": ["Calibri"], "width": 230735 },
+      {
+        "id": "absent-03",
+        "typeface": "Zzz Probe Sans Serif",
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      { "id": "absent-04", "typeface": "Zzz Probe Mono", "drawn": ["Calibri"], "width": 230735 },
+      {
+        "id": "absent-05",
+        "typeface": "Zzz Probe Monospace",
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      { "id": "absent-06", "typeface": "Zzz Probe Gothic", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-07", "typeface": "Zzz Probe Mincho", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-08", "typeface": "Zzz Probe Song", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-09", "typeface": "Zzz Probe Black", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-10", "typeface": "Zzz Probe Light", "drawn": ["Calibri"], "width": 230735 },
+      {
+        "id": "absent-11",
+        "typeface": "Zzz Probe Condensed",
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      { "id": "absent-12", "typeface": "Zzz Probe Display", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-13", "typeface": "Zzz Probe Script", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-14", "typeface": "Zzz Probe Text", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-15", "typeface": "Zzz Probe Grotesk", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-16", "typeface": "Zzz Probe Roman", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-17", "typeface": "Zzz Probe Narrow", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-18", "typeface": "Zzz Probe Pro", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "absent-19", "typeface": "Zzz Probe UI", "drawn": ["Calibri"], "width": 230735 },
+      { "id": "theme-major-latin", "typeface": "+mj-lt", "drawn": ["Calibri"], "width": 230740 },
+      { "id": "theme-minor-latin", "typeface": "+mn-lt", "drawn": ["Calibri"], "width": 230740 }
+    ],
+    "installed": [
+      { "typeface": "Arial", "drawn": ["Arial"], "width": 250375 },
+      { "typeface": "Times New Roman", "drawn": ["Times New Roman"], "width": 231420 },
+      { "typeface": "Courier New", "drawn": ["Courier New"], "width": 308000 },
+      { "typeface": "Georgia", "drawn": ["Georgia"], "width": 256000 },
+      { "typeface": "Verdana", "drawn": ["Verdana"], "width": 286500 },
+      { "typeface": "Tahoma", "drawn": ["Tahoma"], "width": 250405 },
+      { "typeface": "Trebuchet MS", "drawn": ["Trebuchet MS"], "width": 252625 },
+      { "typeface": "Consolas", "drawn": ["Consolas"], "width": 282000 },
+      { "typeface": "Calibri", "drawn": ["Calibri"], "width": 230735 },
+      { "typeface": "Calibri Light", "drawn": ["Calibri Light"], "width": 227685 },
+      { "typeface": "Cambria", "drawn": ["Cambria"], "width": 244125 },
+      { "typeface": "Segoe UI", "drawn": ["Segoe UI"], "width": 253205 },
+      { "typeface": "MS Gothic", "drawn": ["MS Gothic"], "width": 256000 },
+      { "typeface": "Leelawadee UI", "drawn": ["Leelawadee UI"], "width": 253205 }
+    ],
+    "alias": [
+      { "typeface": "Helvetica", "drawn": ["Helvetica"], "width": 250375 },
+      { "typeface": "Times", "drawn": ["Times"], "width": 231420 },
+      { "typeface": "Courier", "drawn": ["Courier New"], "width": 308000 },
+      { "typeface": "MS Sans Serif", "drawn": ["Microsoft Sans Serif"], "width": 250125 }
+    ],
+    "charsetSubstitute": {
+      "0": "Calibri",
+      "2": "Calibri",
+      "-95": "Calibri",
+      "-78": "Arial",
+      "-128": "Yu Gothic"
+    },
+    "hints": [
+      {
+        "id": "hint-pf-0",
+        "panose": null,
+        "pitchFamily": 0,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-pf-2",
+        "panose": null,
+        "pitchFamily": 2,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-pf-17",
+        "panose": null,
+        "pitchFamily": 17,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-pf-18",
+        "panose": null,
+        "pitchFamily": 18,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-pf-34",
+        "panose": null,
+        "pitchFamily": 34,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-pf-49",
+        "panose": null,
+        "pitchFamily": 49,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-pf-50",
+        "panose": null,
+        "pitchFamily": 50,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-pf-66",
+        "panose": null,
+        "pitchFamily": 66,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-pf-82",
+        "panose": null,
+        "pitchFamily": 82,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-panose-serif",
+        "panose": "02020603050405020304",
+        "pitchFamily": null,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-panose-sans",
+        "panose": "020B0604020202020204",
+        "pitchFamily": null,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-panose-mono",
+        "panose": "02070309020205020404",
+        "pitchFamily": null,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-panose-script",
+        "panose": "03010101010101010101",
+        "pitchFamily": null,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-panose-zero",
+        "panose": "00000000000000000000",
+        "pitchFamily": null,
+        "charset": null,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-charset-0",
+        "panose": null,
+        "pitchFamily": null,
+        "charset": 0,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-charset-2",
+        "panose": null,
+        "pitchFamily": null,
+        "charset": 2,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-charset--95",
+        "panose": null,
+        "pitchFamily": null,
+        "charset": -95,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-charset--78",
+        "panose": null,
+        "pitchFamily": null,
+        "charset": -78,
+        "drawn": ["Arial"],
+        "width": 248360
+      },
+      {
+        "id": "hint-charset--128",
+        "panose": null,
+        "pitchFamily": null,
+        "charset": -128,
+        "drawn": ["Yu Gothic"],
+        "width": 259735
+      },
+      {
+        "id": "hint-all-mono",
+        "panose": "02070309020205020404",
+        "pitchFamily": 49,
+        "charset": 0,
+        "drawn": ["Calibri"],
+        "width": 230735
+      },
+      {
+        "id": "hint-all-serif",
+        "panose": "02020603050405020304",
+        "pitchFamily": 18,
+        "charset": 0,
+        "drawn": ["Calibri"],
+        "width": 230735
+      }
+    ],
+    "widths": [
+      {
+        "sz": 1200,
+        "text": "Hamburgefonstiv",
+        "absent": 86245,
+        "byFace": { "Calibri": 86245, "Arial": 93750, "Times New Roman": 86910, "Segoe UI": 94715 }
+      },
+      {
+        "sz": 1200,
+        "text": "iiiii",
+        "absent": 16500,
+        "byFace": { "Calibri": 16500, "Arial": 16500, "Times New Roman": 19875, "Segoe UI": 17625 }
+      },
+      {
+        "sz": 1200,
+        "text": "WWWWW",
+        "absent": 55875,
+        "byFace": { "Calibri": 55875, "Arial": 60250, "Times New Roman": 59875, "Segoe UI": 59500 }
+      },
+      {
+        "sz": 1200,
+        "text": "0123456789",
+        "absent": 64000,
+        "byFace": { "Calibri": 64000, "Arial": 69625, "Times New Roman": 63000, "Segoe UI": 68250 }
+      },
+      {
+        "sz": 3200,
+        "text": "Hamburgefonstiv",
+        "absent": 230735,
+        "byFace": {
+          "Calibri": 230735,
+          "Arial": 250375,
+          "Times New Roman": 231420,
+          "Segoe UI": 253205
+        }
+      },
+      {
+        "sz": 3200,
+        "text": "iiiii",
+        "absent": 44125,
+        "byFace": { "Calibri": 44125, "Arial": 44500, "Times New Roman": 52375, "Segoe UI": 47500 }
+      },
+      {
+        "sz": 3200,
+        "text": "WWWWW",
+        "absent": 149750,
+        "byFace": {
+          "Calibri": 149750,
+          "Arial": 160125,
+          "Times New Roman": 159250,
+          "Segoe UI": 158125
+        }
+      },
+      {
+        "sz": 3200,
+        "text": "0123456789",
+        "absent": 169750,
+        "byFace": {
+          "Calibri": 169750,
+          "Arial": 186375,
+          "Times New Roman": 168000,
+          "Segoe UI": 181250
+        }
+      },
+      {
+        "sz": 5400,
+        "text": "Hamburgefonstiv",
+        "absent": 388720,
+        "byFace": {
+          "Calibri": 388720,
+          "Arial": 423000,
+          "Times New Roman": 390525,
+          "Segoe UI": 426540
+        }
+      },
+      {
+        "sz": 5400,
+        "text": "iiiii",
+        "absent": 74125,
+        "byFace": { "Calibri": 74125, "Arial": 75000, "Times New Roman": 88500, "Segoe UI": 80375 }
+      },
+      {
+        "sz": 5400,
+        "text": "WWWWW",
+        "absent": 252250,
+        "byFace": {
+          "Calibri": 252250,
+          "Arial": 270000,
+          "Times New Roman": 268500,
+          "Segoe UI": 267250
+        }
+      },
+      {
+        "sz": 5400,
+        "text": "0123456789",
+        "absent": 286000,
+        "byFace": {
+          "Calibri": 286000,
+          "Arial": 315000,
+          "Times New Roman": 283500,
+          "Segoe UI": 306000
+        }
+      }
+    ],
+    "slots": [
+      {
+        "id": "slot-ea-absent",
+        "text": "日本語テキスト",
+        "faces": { "latin": { "typeface": "Arial" }, "ea": { "typeface": "Zzz Probe Plain" } },
+        "drawn": ["MS Gothic"],
+        "width": 232875
+      },
+      {
+        "id": "slot-ea-absent-charset",
+        "text": "日本語テキスト",
+        "faces": {
+          "latin": { "typeface": "Arial" },
+          "ea": { "typeface": "Zzz Probe Plain", "charset": -128 }
+        },
+        "drawn": ["Yu Gothic"],
+        "width": 232875
+      },
+      {
+        "id": "slot-cs-absent",
+        "text": "สวัสดี",
+        "faces": { "latin": { "typeface": "Arial" }, "cs": { "typeface": "Zzz Probe Plain" } },
+        "drawn": ["Yu Gothic"],
+        "width": 76375
+      },
+      {
+        "id": "slot-cs-absent-charset",
+        "text": "สวัสดี",
+        "faces": {
+          "latin": { "typeface": "Arial" },
+          "cs": { "typeface": "Zzz Probe Plain", "charset": -34 }
+        },
+        "drawn": ["Browallia New"],
+        "width": 76375
+      },
+      {
+        "id": "slot-sym-absent",
+        "text": "",
+        "faces": { "latin": { "typeface": "Arial" }, "sym": { "typeface": "Zzz Probe Plain" } },
+        "drawn": ["Browallia New"],
+        "width": 80875
+      },
+      {
+        "id": "slot-sym-absent-charset",
+        "text": "",
+        "faces": {
+          "latin": { "typeface": "Arial" },
+          "sym": { "typeface": "Zzz Probe Plain", "charset": 2 }
+        },
+        "drawn": ["Calibri"],
+        "width": 57625
+      },
+      {
+        "id": "slot-ea-present",
+        "text": "日本語テキスト",
+        "faces": { "latin": { "typeface": "Arial" }, "ea": { "typeface": "MS Gothic" } },
+        "drawn": ["MS Gothic"],
+        "width": 232875
+      },
+      {
+        "id": "slot-cs-present",
+        "text": "สวัสดี",
+        "faces": { "latin": { "typeface": "Arial" }, "cs": { "typeface": "Leelawadee UI" } },
+        "drawn": ["Leelawadee UI"],
+        "width": 76375
+      }
+    ],
+    "theme": [
+      {
+        "deck": "theme-present",
+        "id": "theme-major-latin",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "MS Gothic",
+          "minorCs": "Leelawadee UI"
+        },
+        "faces": { "latin": { "typeface": "+mj-lt" } },
+        "comName": "Georgia",
+        "drawn": ["Georgia"],
+        "width": 256000
+      },
+      {
+        "deck": "theme-present",
+        "id": "theme-minor-latin",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "MS Gothic",
+          "minorCs": "Leelawadee UI"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" } },
+        "comName": "Verdana",
+        "drawn": ["Verdana"],
+        "width": 286500
+      },
+      {
+        "deck": "theme-present",
+        "id": "theme-minor-ea",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "MS Gothic",
+          "minorCs": "Leelawadee UI"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "ea": { "typeface": "+mn-ea" } },
+        "comName": "Verdana",
+        "drawn": ["MS Gothic"],
+        "width": 235250
+      },
+      {
+        "deck": "theme-present",
+        "id": "theme-minor-cs",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "MS Gothic",
+          "minorCs": "Leelawadee UI"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-cs" } },
+        "comName": "Verdana",
+        "drawn": ["Leelawadee UI"],
+        "width": 78750
+      },
+      {
+        "deck": "theme-present",
+        "id": "theme-ea-as-latin",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "MS Gothic",
+          "minorCs": "Leelawadee UI"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "ea": { "typeface": "+mn-lt" } },
+        "comName": "Verdana",
+        "drawn": ["MS Gothic"],
+        "width": 235250
+      },
+      {
+        "deck": "theme-present",
+        "id": "theme-cs-as-latin",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "MS Gothic",
+          "minorCs": "Leelawadee UI"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-lt" } },
+        "comName": "Verdana",
+        "drawn": ["Verdana"],
+        "width": 78750
+      },
+      {
+        "deck": "theme-present",
+        "id": "theme-minor-cs-arabic",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "MS Gothic",
+          "minorCs": "Leelawadee UI"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-cs" } },
+        "comName": "Verdana",
+        "drawn": ["Arial"],
+        "width": 71755
+      },
+      {
+        "deck": "theme-present",
+        "id": "theme-cs-as-latin-arabic",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "MS Gothic",
+          "minorCs": "Leelawadee UI"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-lt" } },
+        "comName": "Verdana",
+        "drawn": ["Verdana"],
+        "width": 71755
+      },
+      {
+        "deck": "theme-empty",
+        "id": "theme-major-latin",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mj-lt" } },
+        "comName": "Georgia",
+        "drawn": ["Georgia"],
+        "width": 256005
+      },
+      {
+        "deck": "theme-empty",
+        "id": "theme-minor-latin",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" } },
+        "comName": "Verdana",
+        "drawn": ["Verdana"],
+        "width": 286505
+      },
+      {
+        "deck": "theme-empty",
+        "id": "theme-minor-ea",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "ea": { "typeface": "+mn-ea" } },
+        "comName": "Verdana",
+        "drawn": ["MS Gothic"],
+        "width": 235250
+      },
+      {
+        "deck": "theme-empty",
+        "id": "theme-minor-cs",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-cs" } },
+        "comName": "Verdana",
+        "drawn": ["Angsana New"],
+        "width": 63625
+      },
+      {
+        "deck": "theme-empty",
+        "id": "theme-ea-as-latin",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "ea": { "typeface": "+mn-lt" } },
+        "comName": "Verdana",
+        "drawn": ["MS Gothic"],
+        "width": 235250
+      },
+      {
+        "deck": "theme-empty",
+        "id": "theme-cs-as-latin",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-lt" } },
+        "comName": "Verdana",
+        "drawn": ["Verdana"],
+        "width": 78750
+      },
+      {
+        "deck": "theme-empty",
+        "id": "theme-minor-cs-arabic",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-cs" } },
+        "comName": "Verdana",
+        "drawn": ["Arial"],
+        "width": 71755
+      },
+      {
+        "deck": "theme-empty",
+        "id": "theme-cs-as-latin-arabic",
+        "themeFonts": {
+          "majorLatin": "Georgia",
+          "minorLatin": "Verdana",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-lt" } },
+        "comName": "Verdana",
+        "drawn": ["Verdana"],
+        "width": 71755
+      },
+      {
+        "deck": "theme-empty-alt",
+        "id": "theme-major-latin",
+        "themeFonts": {
+          "majorLatin": "Cambria",
+          "minorLatin": "Courier New",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mj-lt" } },
+        "comName": "Cambria",
+        "drawn": ["Cambria"],
+        "width": 244130
+      },
+      {
+        "deck": "theme-empty-alt",
+        "id": "theme-minor-latin",
+        "themeFonts": {
+          "majorLatin": "Cambria",
+          "minorLatin": "Courier New",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" } },
+        "comName": "Courier New",
+        "drawn": ["Courier New"],
+        "width": 308005
+      },
+      {
+        "deck": "theme-empty-alt",
+        "id": "theme-minor-ea",
+        "themeFonts": {
+          "majorLatin": "Cambria",
+          "minorLatin": "Courier New",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "ea": { "typeface": "+mn-ea" } },
+        "comName": "Courier New",
+        "drawn": ["Yu Gothic"],
+        "width": 243250
+      },
+      {
+        "deck": "theme-empty-alt",
+        "id": "theme-minor-cs",
+        "themeFonts": {
+          "majorLatin": "Cambria",
+          "minorLatin": "Courier New",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-cs" } },
+        "comName": "Courier New",
+        "drawn": ["Angsana New"],
+        "width": 71625
+      },
+      {
+        "deck": "theme-empty-alt",
+        "id": "theme-ea-as-latin",
+        "themeFonts": {
+          "majorLatin": "Cambria",
+          "minorLatin": "Courier New",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "ea": { "typeface": "+mn-lt" } },
+        "comName": "Courier New",
+        "drawn": ["Yu Gothic"],
+        "width": 243250
+      },
+      {
+        "deck": "theme-empty-alt",
+        "id": "theme-cs-as-latin",
+        "themeFonts": {
+          "majorLatin": "Cambria",
+          "minorLatin": "Courier New",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-lt" } },
+        "comName": "Courier New",
+        "drawn": ["Browallia New"],
+        "width": 90000
+      },
+      {
+        "deck": "theme-empty-alt",
+        "id": "theme-minor-cs-arabic",
+        "themeFonts": {
+          "majorLatin": "Cambria",
+          "minorLatin": "Courier New",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-cs" } },
+        "comName": "Courier New",
+        "drawn": ["Arial"],
+        "width": 79755
+      },
+      {
+        "deck": "theme-empty-alt",
+        "id": "theme-cs-as-latin-arabic",
+        "themeFonts": {
+          "majorLatin": "Cambria",
+          "minorLatin": "Courier New",
+          "minorEa": "",
+          "minorCs": ""
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-lt" } },
+        "comName": "Courier New",
+        "drawn": ["Courier New"],
+        "width": 115505
+      },
+      {
+        "deck": "theme-absent",
+        "id": "theme-major-latin",
+        "themeFonts": {
+          "majorLatin": "Zzz Probe Plain",
+          "minorLatin": "Zzz Probe Plain",
+          "minorEa": "Zzz Probe Plain",
+          "minorCs": "Zzz Probe Plain"
+        },
+        "faces": { "latin": { "typeface": "+mj-lt" } },
+        "comName": "Zzz Probe Plain",
+        "drawn": ["Calibri"],
+        "width": 230740
+      },
+      {
+        "deck": "theme-absent",
+        "id": "theme-minor-latin",
+        "themeFonts": {
+          "majorLatin": "Zzz Probe Plain",
+          "minorLatin": "Zzz Probe Plain",
+          "minorEa": "Zzz Probe Plain",
+          "minorCs": "Zzz Probe Plain"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" } },
+        "comName": "Zzz Probe Plain",
+        "drawn": ["Calibri"],
+        "width": 230740
+      },
+      {
+        "deck": "theme-absent",
+        "id": "theme-minor-ea",
+        "themeFonts": {
+          "majorLatin": "Zzz Probe Plain",
+          "minorLatin": "Zzz Probe Plain",
+          "minorEa": "Zzz Probe Plain",
+          "minorCs": "Zzz Probe Plain"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "ea": { "typeface": "+mn-ea" } },
+        "comName": "Zzz Probe Plain",
+        "drawn": ["MS Gothic"],
+        "width": 231250
+      },
+      {
+        "deck": "theme-absent",
+        "id": "theme-minor-cs",
+        "themeFonts": {
+          "majorLatin": "Zzz Probe Plain",
+          "minorLatin": "Zzz Probe Plain",
+          "minorEa": "Zzz Probe Plain",
+          "minorCs": "Zzz Probe Plain"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-cs" } },
+        "comName": "Zzz Probe Plain",
+        "drawn": ["Calibri"],
+        "width": 74750
+      },
+      {
+        "deck": "theme-absent",
+        "id": "theme-ea-as-latin",
+        "themeFonts": {
+          "majorLatin": "Zzz Probe Plain",
+          "minorLatin": "Zzz Probe Plain",
+          "minorEa": "Zzz Probe Plain",
+          "minorCs": "Zzz Probe Plain"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "ea": { "typeface": "+mn-lt" } },
+        "comName": "Zzz Probe Plain",
+        "drawn": ["MS Gothic"],
+        "width": 231250
+      },
+      {
+        "deck": "theme-absent",
+        "id": "theme-cs-as-latin",
+        "themeFonts": {
+          "majorLatin": "Zzz Probe Plain",
+          "minorLatin": "Zzz Probe Plain",
+          "minorEa": "Zzz Probe Plain",
+          "minorCs": "Zzz Probe Plain"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-lt" } },
+        "comName": "Zzz Probe Plain",
+        "drawn": ["Calibri"],
+        "width": 74750
+      },
+      {
+        "deck": "theme-absent",
+        "id": "theme-minor-cs-arabic",
+        "themeFonts": {
+          "majorLatin": "Zzz Probe Plain",
+          "minorLatin": "Zzz Probe Plain",
+          "minorEa": "Zzz Probe Plain",
+          "minorCs": "Zzz Probe Plain"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-cs" } },
+        "comName": "Zzz Probe Plain",
+        "drawn": ["Calibri"],
+        "width": 65880
+      },
+      {
+        "deck": "theme-absent",
+        "id": "theme-cs-as-latin-arabic",
+        "themeFonts": {
+          "majorLatin": "Zzz Probe Plain",
+          "minorLatin": "Zzz Probe Plain",
+          "minorEa": "Zzz Probe Plain",
+          "minorCs": "Zzz Probe Plain"
+        },
+        "faces": { "latin": { "typeface": "+mn-lt" }, "cs": { "typeface": "+mn-lt" } },
+        "comName": "Zzz Probe Plain",
+        "drawn": ["Calibri"],
+        "width": 65880
+      }
+    ]
+  },
+  "browser": {
+    "chromium": "151.0.7922.34",
+    "sizes": [100, 16],
+    "glyphs": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p",
+      "q",
+      "r",
+      "s",
+      "t",
+      "u",
+      "v",
+      "w",
+      "x",
+      "y",
+      "z",
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J",
+      "K",
+      "L",
+      "M",
+      "N",
+      "O",
+      "P",
+      "Q",
+      "R",
+      "S",
+      "T",
+      "U",
+      "V",
+      "W",
+      "X",
+      "Y",
+      "Z",
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "Hamburgefonstiv"
+    ],
+    "anchors": ["monospace", "serif", "sans-serif"],
+    "fingerprint": ["Hamburgefonstiv"],
+    "fingerprintSize": 1,
+    "characterFingerprint": null,
+    "characterFingerprintSize": null,
+    "distinctFamilies": 15,
+    "presentFamilies": 18,
+    "scaleFree": false,
+    "worstScaleDeviation": 0.111328,
+    "aliasClasses": [
+      ["Arial", "Helvetica"],
+      ["Times", "Times New Roman"],
+      ["Courier", "Courier New"]
+    ],
+    "anchorOnly": {
+      "monospace": [
+        54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980,
+        54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980,
+        54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980,
+        54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980,
+        54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 824707
+      ],
+      "serif": [
+        44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+        50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+        72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+        72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+        50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+      ],
+      "sans-serif": [
+        55615, 55615, 50000, 55615, 55615, 27783, 55615, 55615, 22217, 22217, 50000, 22217, 83301,
+        55615, 55615, 55615, 55615, 33301, 50000, 27783, 55615, 50000, 72217, 50000, 50000, 50000,
+        66699, 66699, 72217, 72217, 66699, 61084, 77783, 72217, 27783, 50000, 66699, 55615, 83301,
+        72217, 77783, 66699, 77783, 72217, 66699, 61084, 72217, 66699, 94385, 66699, 66699, 61084,
+        55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 755908
+      ]
+    },
+    "families": [
+      {
+        "family": "Zzz Probe Plain",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Serif",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Sans",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Sans Serif",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Mono",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Monospace",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Gothic",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Mincho",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Song",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Black",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Light",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Condensed",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Display",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Script",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Text",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Grotesk",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Roman",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Narrow",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe Pro",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Zzz Probe UI",
+        "absent": true,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": true, "serif": true, "sans-serif": true }
+      },
+      {
+        "family": "Arial",
+        "absent": false,
+        "check": true,
+        "bare": [
+          55615, 55615, 50000, 55615, 55615, 27783, 55615, 55615, 22217, 22217, 50000, 22217, 83301,
+          55615, 55615, 55615, 55615, 33301, 50000, 27783, 55615, 50000, 72217, 50000, 50000, 50000,
+          66699, 66699, 72217, 72217, 66699, 61084, 77783, 72217, 27783, 50000, 66699, 55615, 83301,
+          72217, 77783, 66699, 77783, 72217, 66699, 61084, 72217, 66699, 94385, 66699, 66699, 61084,
+          55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 755908
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": true }
+      },
+      {
+        "family": "Times New Roman",
+        "absent": false,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": false, "serif": true, "sans-serif": false }
+      },
+      {
+        "family": "Courier New",
+        "absent": false,
+        "check": true,
+        "bare": [
+          60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010,
+          60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010,
+          60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010,
+          60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010,
+          60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 900146
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Georgia",
+        "absent": false,
+        "check": true,
+        "bare": [
+          50391, 56006, 45410, 57422, 48340, 32520, 50928, 58203, 29297, 29199, 53564, 28613, 88086,
+          59082, 53906, 57129, 55957, 40967, 43213, 34521, 57520, 49658, 73730, 50488, 49219, 44385,
+          67090, 65381, 64209, 74902, 65332, 59912, 72510, 81494, 38965, 51758, 69434, 60352, 92725,
+          76709, 74414, 60986, 74414, 70166, 56104, 61865, 75635, 66650, 97559, 71045, 61523, 60156,
+          61377, 42969, 55859, 55176, 56494, 52832, 56592, 50244, 59619, 56592, 775928
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Verdana",
+        "absent": false,
+        "check": true,
+        "bare": [
+          60059, 62305, 52100, 62305, 59570, 35156, 62305, 63281, 27441, 34424, 59180, 27441, 97266,
+          63281, 60693, 62305, 62305, 42676, 52100, 39404, 63281, 59180, 81836, 59180, 59180, 52539,
+          68359, 68555, 69824, 77051, 63232, 57471, 77539, 75146, 42090, 45459, 69287, 55664, 84277,
+          74805, 78711, 60303, 78711, 69531, 68359, 61621, 73193, 68359, 98877, 68506, 61523, 68506,
+          63574, 63574, 63574, 63574, 63574, 63574, 63574, 63574, 63574, 63574, 859863
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Tahoma",
+        "absent": false,
+        "check": true,
+        "bare": [
+          52490, 55273, 46143, 55273, 52637, 31836, 55273, 55762, 22852, 28174, 49805, 22852, 83984,
+          55762, 54297, 55273, 55273, 36035, 44629, 33447, 55762, 49805, 74219, 49512, 49805, 44434,
+          59961, 58936, 60059, 67822, 56104, 52148, 66748, 67529, 37305, 41650, 58789, 49756, 77051,
+          66748, 70752, 55127, 70752, 62061, 55713, 58398, 65576, 59668, 90186, 58057, 57617, 55908,
+          54590, 54590, 54590, 54590, 54590, 54590, 54590, 54590, 54590, 54590, 750146
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Trebuchet MS",
+        "absent": false,
+        "check": true,
+        "bare": [
+          52539, 55713, 49512, 55713, 54541, 36963, 50195, 54639, 28516, 36670, 50439, 29492, 83008,
+          54639, 53662, 55713, 55713, 38867, 40479, 39648, 54639, 48975, 74414, 50098, 49316, 47461,
+          58984, 56592, 59814, 61328, 53564, 52490, 67627, 65430, 27832, 47656, 57568, 50635, 70947,
+          63818, 67383, 55762, 67578, 58203, 48096, 58057, 64844, 58740, 85205, 55664, 57031, 55029,
+          52441, 52441, 52441, 52441, 52441, 52441, 52441, 52441, 52441, 52441, 757813
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Consolas",
+        "absent": false,
+        "check": true,
+        "bare": [
+          54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980,
+          54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980,
+          54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980,
+          54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980,
+          54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 54980, 824707
+        ],
+        "anchorEqual": { "monospace": true, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Calibri",
+        "absent": false,
+        "check": true,
+        "bare": [
+          47900, 52539, 42285, 52539, 49756, 30518, 47070, 52539, 22949, 23926, 45459, 22949, 79883,
+          52539, 52734, 52539, 52539, 34863, 39111, 33496, 52539, 45166, 71484, 43311, 45264, 39502,
+          57861, 54395, 53320, 61523, 48828, 45947, 63086, 62305, 25195, 31885, 51953, 42041, 85498,
+          64551, 66211, 51660, 67285, 54297, 45947, 48730, 64160, 56738, 88965, 51904, 48730, 46826,
+          50684, 50684, 50684, 50684, 50684, 50684, 50684, 50684, 50684, 50684, 696338
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Calibri Light",
+        "absent": false,
+        "check": true,
+        "bare": [
+          47070, 51953, 42529, 51953, 49414, 29883, 46875, 51953, 22070, 22998, 44092, 22070, 79102,
+          51953, 52148, 51953, 51953, 34473, 38672, 32861, 51953, 43994, 69873, 41846, 44092, 39355,
+          56348, 53516, 53516, 60693, 48877, 45996, 62744, 61914, 24414, 31250, 50439, 41895, 84473,
+          63818, 65430, 50781, 66602, 53223, 45264, 48340, 63574, 55420, 88086, 50146, 46924, 46338,
+          50684, 50684, 50684, 50684, 50684, 50684, 50684, 50684, 50684, 50684, 686719
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Cambria",
+        "absent": false,
+        "check": true,
+        "bare": [
+          48828, 54736, 44092, 55469, 48779, 30273, 49414, 55176, 27783, 26611, 52441, 27148, 83203,
+          55811, 53076, 55615, 54688, 41357, 42969, 33838, 55225, 50391, 77441, 48340, 50391, 45459,
+          62305, 61133, 56250, 66162, 57520, 53662, 61084, 68652, 32422, 30664, 62939, 53662, 81543,
+          68066, 65332, 56787, 65332, 62109, 49609, 59277, 64795, 60352, 92139, 57129, 57031, 53760,
+          55371, 55371, 55371, 55371, 55371, 55371, 55371, 55371, 55371, 55371, 740430
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Segoe UI",
+        "absent": false,
+        "check": true,
+        "bare": [
+          50879, 58789, 46191, 58887, 52295, 31299, 58887, 56592, 24219, 24219, 49707, 24219, 86133,
+          56592, 58594, 58789, 58887, 34766, 42432, 33887, 56592, 47900, 72266, 45898, 48389, 45215,
+          64502, 57324, 61914, 70117, 50586, 48828, 68604, 70996, 26611, 35693, 58008, 47070, 89795,
+          74805, 75391, 56006, 75391, 59814, 53125, 52393, 68701, 62109, 93408, 58984, 55273, 57031,
+          53906, 53906, 53906, 53906, 53906, 53906, 53906, 53906, 53906, 53906, 764258
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "MS Gothic",
+        "absent": false,
+        "check": true,
+        "bare": [
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 750000
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Leelawadee UI",
+        "absent": false,
+        "check": true,
+        "bare": [
+          50879, 58789, 46191, 58887, 52295, 31299, 58887, 56592, 24219, 24219, 49707, 24219, 86133,
+          56592, 58594, 58789, 58887, 34766, 42432, 33887, 56592, 47900, 72266, 45898, 48389, 45215,
+          64502, 57324, 61914, 70117, 50586, 48828, 68604, 70996, 26611, 35693, 58008, 47070, 89795,
+          74805, 75391, 56006, 75391, 59814, 53125, 52393, 68701, 62109, 93408, 58984, 55273, 57031,
+          53906, 53906, 53906, 53906, 53906, 53906, 53906, 53906, 53906, 53906, 762939
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "Helvetica",
+        "absent": false,
+        "check": true,
+        "bare": [
+          55615, 55615, 50000, 55615, 55615, 27783, 55615, 55615, 22217, 22217, 50000, 22217, 83301,
+          55615, 55615, 55615, 55615, 33301, 50000, 27783, 55615, 50000, 72217, 50000, 50000, 50000,
+          66699, 66699, 72217, 72217, 66699, 61084, 77783, 72217, 27783, 50000, 66699, 55615, 83301,
+          72217, 77783, 66699, 77783, 72217, 66699, 61084, 72217, 66699, 94385, 66699, 66699, 61084,
+          55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 755908
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": true }
+      },
+      {
+        "family": "Times",
+        "absent": false,
+        "check": true,
+        "bare": [
+          44385, 50000, 44385, 50000, 44385, 33301, 50000, 50000, 27783, 27783, 50000, 27783, 77783,
+          50000, 50000, 50000, 50000, 33301, 38916, 27783, 50000, 50000, 72217, 50000, 50000, 44385,
+          72217, 66699, 66699, 72217, 61084, 55615, 72217, 72217, 33301, 38916, 72217, 61084, 88916,
+          72217, 72217, 55615, 72217, 66699, 55615, 61084, 72217, 72217, 94385, 72217, 72217, 61084,
+          50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 50000, 698047
+        ],
+        "anchorEqual": { "monospace": false, "serif": true, "sans-serif": false }
+      },
+      {
+        "family": "Courier",
+        "absent": false,
+        "check": true,
+        "bare": [
+          60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010,
+          60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010,
+          60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010,
+          60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010,
+          60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 60010, 900146
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      },
+      {
+        "family": "MS Sans Serif",
+        "absent": false,
+        "check": true,
+        "bare": [
+          55615, 55615, 50000, 55615, 55615, 27783, 55615, 55615, 22803, 22803, 50000, 22803, 83301,
+          55615, 55615, 55615, 55615, 33301, 50000, 27783, 55615, 50000, 72217, 50000, 50000, 50000,
+          66699, 66699, 72217, 72217, 66699, 61084, 77783, 72217, 27783, 50000, 66699, 55615, 83301,
+          72217, 77783, 66699, 77783, 72217, 66699, 61084, 72217, 66699, 94385, 66699, 66699, 61084,
+          55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 55615, 756494
+        ],
+        "anchorEqual": { "monospace": false, "serif": false, "sans-serif": false }
+      }
+    ]
+  }
+}

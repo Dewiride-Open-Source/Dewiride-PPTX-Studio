@@ -153,3 +153,24 @@ returns the placed tree on its own, for a caller that wants to hit-test or draw 
 - **A `path="rect"` or `path="shape"` gradient** is emitted as an ellipse rather than as concentric
   rectangles. SVG has no primitive for a Chebyshev ramp, and an ellipse inscribed in the shape is
   much closer than a circle. Named as an open question rather than as a solved one.
+
+## Text
+
+Real `<text>` and `<tspan>`, never `foreignObject` — which taints a canvas and is dropped inside an
+`<img>` by Safari. One `<text>` per line and one `<tspan>` per run, and no `x` on the tspans: a
+line is shaped as one string and a run boundary splits only the drawing call, so a tspan carrying
+its own position would lose the kern that crosses it.
+
+The text of a shape is a **sibling** of its geometry, not a child. `flipH` mirrors the outline and
+leaves the glyphs alone, so text cannot sit inside the group that carries the mirror; `flipV` turns
+the whole block half a revolution about the frame centre. Measured 20 of 20 in experiment T8, where
+counter-flipping both axes — which is what the plan assumed — fits 10.
+
+The baseline sits at the typeface's own ascent-to-descent share of the 1.2 line box, which is not
+the CSS half-leading model every browser implements: that fits 9 of 36 and is out by a fifth of a
+line on Courier New. Underlines and strikethroughs are drawn as geometry rather than asked for with
+`text-decoration`, because Chromium's own decoration agrees with PowerPoint on none of eight faces
+and CSS cannot place a strikethrough at all.
+
+`corpus/ground-truth/text-rendering.json`, and
+[ADR 0034](../../docs/adr/phase-3-text/0034-text-in-both-renderers.md).

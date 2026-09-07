@@ -59,3 +59,50 @@ export function readBmp(bytes: Uint8Array): Bitmap {
 export function hex(rgb: readonly [number, number, number]): string {
   return rgb.map((c) => c.toString(16).padStart(2, '0').toUpperCase()).join('');
 }
+
+/** The smallest rectangle holding every pixel darker than `threshold`, or `null`. */
+export interface InkBox {
+  readonly left: number;
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+}
+
+/**
+ * Where the ink is, in pixels, inclusive on every edge.
+ *
+ * The probe slides are white on a light grey reference rectangle, so a single
+ * darkness threshold separates drawn glyphs from everything else.
+ */
+export function inkBox(bitmap: Bitmap, threshold = 200): InkBox | null {
+  let left = bitmap.width;
+  let top = bitmap.height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < bitmap.height; y++) {
+    for (let x = 0; x < bitmap.width; x++) {
+      const [r, g, b] = bitmap.pixel(x, y);
+      if (r >= threshold && g >= threshold && b >= threshold) continue;
+      if (x < left) left = x;
+      if (x > right) right = x;
+      if (y < top) top = y;
+      if (y > bottom) bottom = y;
+    }
+  }
+  return right < 0 ? null : { left, top, right, bottom };
+}
+
+/** Every column that holds ink, as a sorted list. For finding a rule under a word. */
+export function inkRows(bitmap: Bitmap, threshold = 200): readonly number[] {
+  const rows: number[] = [];
+  for (let y = 0; y < bitmap.height; y++) {
+    for (let x = 0; x < bitmap.width; x++) {
+      const [r, g, b] = bitmap.pixel(x, y);
+      if (r < threshold || g < threshold || b < threshold) {
+        rows.push(y);
+        break;
+      }
+    }
+  }
+  return rows;
+}

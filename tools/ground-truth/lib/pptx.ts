@@ -50,7 +50,7 @@ export const CLR_SCHEME = {
   folHlink: '954F72',
 } as const;
 
-function theme(): string {
+function theme(fonts: FontScheme): string {
   // dk1/lt1 are written as sysClr with @lastClr, exactly as PowerPoint writes
   // them, because that is the shape a renderer has to cope with: the resolver
   // prefers @lastClr and only falls back to the system colour name.
@@ -66,8 +66,8 @@ function theme(): string {
     `<a:folHlink><a:srgbClr val="${CLR_SCHEME.folHlink}"/></a:folHlink>`,
   ].join('');
 
-  const font = (kind: 'major' | 'minor', latin: string): string =>
-    `<a:${kind}Font><a:latin typeface="${latin}"/><a:ea typeface=""/><a:cs typeface=""/></a:${kind}Font>`;
+  const font = (kind: 'major' | 'minor', latin: string, ea: string, cs: string): string =>
+    `<a:${kind}Font><a:latin typeface="${latin}"/><a:ea typeface="${ea}"/><a:cs typeface="${cs}"/></a:${kind}Font>`;
 
   // Exactly three entries in each list. PowerPoint is not forgiving about this:
   // `bgRef/@idx` and `fillRef/@idx` are 1-based indices into these lists and a
@@ -89,7 +89,10 @@ function theme(): string {
     `<a:theme xmlns:a="${NS_A}" name="PPTX Studio Ground Truth">` +
     '<a:themeElements>' +
     `<a:clrScheme name="Ground Truth">${scheme}</a:clrScheme>` +
-    `<a:fontScheme name="Ground Truth">${font('major', 'Calibri Light')}${font('minor', 'Calibri')}</a:fontScheme>` +
+    `<a:fontScheme name="Ground Truth">` +
+    font('major', fonts.majorLatin, fonts.majorEa, fonts.majorCs) +
+    font('minor', fonts.minorLatin, fonts.minorEa, fonts.minorCs) +
+    '</a:fontScheme>' +
     '<a:fmtScheme name="Ground Truth">' +
     `<a:fillStyleLst>${fill(0)}${fill(1)}${fill(2)}</a:fillStyleLst>` +
     `<a:lnStyleLst>${line(6350)}${line(12700)}${line(19050)}</a:lnStyleLst>` +
@@ -201,6 +204,26 @@ function rels(entries: readonly { id: string; type: string; target: string }[]):
   );
 }
 
+/** The theme's `a:fontScheme`. An empty name is what a stock Office theme writes. */
+export interface FontScheme {
+  readonly majorLatin: string;
+  readonly majorEa: string;
+  readonly majorCs: string;
+  readonly minorLatin: string;
+  readonly minorEa: string;
+  readonly minorCs: string;
+}
+
+/** What every deck this project wrote before T7 used. */
+export const DEFAULT_FONT_SCHEME: FontScheme = {
+  majorLatin: 'Calibri Light',
+  majorEa: '',
+  majorCs: '',
+  minorLatin: 'Calibri',
+  minorEa: '',
+  minorCs: '',
+};
+
 /** One embedded font: the four optional slots, each pointing at a `.fntdata` part. */
 export interface EmbeddedFont {
   readonly typeface: string;
@@ -225,6 +248,8 @@ export interface BuildOptions {
    * which a resolver that runs `dk1` through the map looks correct.
    */
   readonly clrMap?: ClrMapAttrs;
+  /** Defaults to `DEFAULT_FONT_SCHEME`. */
+  readonly fontScheme?: FontScheme;
 }
 
 export function buildPptx(options: BuildOptions): Uint8Array {
@@ -339,7 +364,7 @@ export function buildPptx(options: BuildOptions): Uint8Array {
     },
     { name: 'ppt/presentation.xml', bytes: utf8(presentation) },
     { name: 'ppt/_rels/presentation.xml.rels', bytes: utf8(rels(presRels)) },
-    { name: 'ppt/theme/theme1.xml', bytes: utf8(theme()) },
+    { name: 'ppt/theme/theme1.xml', bytes: utf8(theme(options.fontScheme ?? DEFAULT_FONT_SCHEME)) },
     {
       name: 'ppt/slideMasters/slideMaster1.xml',
       bytes: utf8(slideMaster(options.clrMap ?? IDENTITY_CLR_MAP)),

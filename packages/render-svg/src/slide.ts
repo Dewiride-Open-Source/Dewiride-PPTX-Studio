@@ -18,6 +18,7 @@ import { layoutSheet, layoutSlide, type Placed } from './layout.js';
 import { element, serializeSvg, type SvgElement } from './node.js';
 import { Defs, fillAttributes } from './paint.js';
 import { shapeNodes } from './shape.js';
+import { createTextEngine, type TextOptions } from './text/draw.js';
 import type { Box } from './transform.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -44,6 +45,14 @@ export interface RenderOptions {
   readonly inline?: boolean;
   /** Draw the master's and layout's shapes beneath the sheet's own. Default true. */
   readonly inherited?: boolean;
+  /**
+   * How to draw text, or `false` to draw none.
+   *
+   * Text needs a measuring surface, so a caller with no `OffscreenCanvas` - a
+   * Node script, a test asserting geometry alone - turns it off rather than
+   * getting a throw from a package it did not know it was using.
+   */
+  readonly text?: TextOptions | false;
 }
 
 let counter = 0;
@@ -90,7 +99,8 @@ export function slideNode(sheet: Sheet, size: SlideSize, options: RenderOptions 
   const defs = new Defs(options.idPrefix ?? nextPrefix());
   const placed = options.inherited === false ? layoutSheet(sheet) : layoutSlide(sheet);
   const background = backgroundNode(sheet, size, defs);
-  const shapes = placed.flatMap((shape) => shapeNodes(shape, defs));
+  const engine = options.text === false ? null : createTextEngine(options.text ?? {});
+  const shapes = placed.flatMap((shape) => shapeNodes(shape, defs, engine));
 
   // The defs are collected while the shapes are built, so the node has to be
   // asked for afterwards - and it goes first, because a `url(#...)` reference

@@ -44,7 +44,8 @@
   "dependencies": {
     "@pptx-studio/geometry": "workspace:^",
     "@pptx-studio/model": "workspace:^",
-    "@pptx-studio/paint": "workspace:^"
+    "@pptx-studio/paint": "workspace:^",
+    "@pptx-studio/text": "workspace:^"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

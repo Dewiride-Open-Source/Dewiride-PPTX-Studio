@@ -44,6 +44,31 @@ export {
 } from './lines/line-model.js';
 
 export {
+  FACE_BOX_PX,
+  baselineDrop,
+  baselineShare,
+  createFaceBoxProbe,
+  type FaceBox,
+  type FaceBoxProbe,
+} from './lines/baseline.js';
+
+export {
+  APPROXIMATE_FACE_RULES,
+  MEASURED_FACE_RULES,
+  decoratedStretches,
+  faceRules,
+  hasFaceRules,
+  strikeRules,
+  underlineRules,
+  type DrawnRule,
+  type FaceRules,
+  type RuleMetrics,
+  type RulePattern,
+  type Strike,
+  type Underline,
+} from './runs/decoration.js';
+
+export {
   BUILT_IN_KINSOKU,
   HANGING_PUNCTUATION,
   kinsokuInForce,
@@ -85,11 +110,13 @@ export {
 
 export {
   createCanvasMeasurer,
+  createMeasuringContext,
   cssFamily,
   cssFont,
   cssLetterSpacing,
   kerningEnabled,
   type Advance,
+  type MeasuringContext,
   type RunFont,
   type TextMeasurer,
 } from './runs/measure.js';
@@ -176,3 +203,28 @@ export {
   type VertOverflow,
   type VerticalText,
 } from './frames/frame.js';
+
+export {
+  anchoredStack,
+  createFontProbe,
+  fontFingerprint,
+  isFontAvailable,
+  metricsAgree,
+  ANCHORS,
+  FINGERPRINT_PX,
+  FINGERPRINT_TEXT,
+  type FontProbe,
+} from './fonts/presence.js';
+
+export {
+  fontStack,
+  substituteFor,
+  verifySubstitute,
+  LAST_RESORT_FAMILIES,
+  LAST_RESORT_GENERIC,
+  POWERPOINT_LAST_RESORT,
+  SUBSTITUTES,
+  type Substitute,
+} from './fonts/substitute.js';
+
+export { fontReport, substitutedFonts, type FontFinding, type FontStatus } from './fonts/report.js';

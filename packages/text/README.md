@@ -335,3 +335,77 @@ measures, but where the space goes when `spcFirstLastPara` is on, since the bloc
 taller without the first line moving off the frame top. Alignment is 3.6's too: T5 shows a centred
 paragraph moves the bullet with the text, so the bullet is part of the aligned line, but its probes
 carry a marker run that contaminates the width and nothing quantitative is claimed.
+
+## Which typeface a run actually gets
+
+Sub-phase 3.7, experiment T7: 159 probes, six questions, each fitting exactly one candidate.
+[`corpus/ground-truth/font-substitution.json`](../../corpus/ground-truth/font-substitution.json) and
+[ADR 0033](../../docs/adr/phase-3-text/0033-font-substitution-and-the-guard.md).
+
+**PowerPoint draws every absent Latin face in Calibri**, whatever the name says — 22 of 22 against
+17 for a reading that takes the style word out of the name, and 20 for one that falls back to the
+theme's own minor font, which is right only because that theme's minor font _is_ Calibri. It lays
+the substitute out with Calibri's own metrics, exactly, in all 12 width comparisons.
+
+**Chromium's last resort is its `serif`, not Calibri.** That is the whole reason `fontStack` exists:
+a run set in `"Missing Face", sans-serif` renders in Times New Roman where the deck's author saw
+Calibri, which changes every advance, every line break and every autofit decision in the box.
+
+**Of the three hints `a:latin` carries, only `@charset` is read.** Nine `pitchFamily` values across
+every GDI family and five PANOSE strings — including Courier New's, on a probe that also says
+`pitchFamily="49"` — moved the answer not at all. `charset="-128"` gives Yu Gothic and `"-78"` gives
+Arial. The map is in the fixture as data; five points do not make a rule.
+
+**`document.fonts.check` is not a detector.** Asked about 38 families it said yes to all 38,
+including the 20 that do not exist: 18 of 38 as a detector, and every mistake in the direction that
+matters. A family is absent when it measures identically to **all three** of `monospace`, `serif`
+and `sans-serif` stacked behind it — 38 of 38, where any single anchor scores 36–37 because the
+browser resolves each generic to a real face and so calls that face missing.
+
+**The fingerprint is a word, not three glyphs.** An exhaustive search over 62 characters found no
+set of three or fewer that separates as many families as the whole pool does: Segoe UI and
+Leelawadee UI returned the same advance for every single character and differ only over a word. It
+is also only comparable at one size — advances are not linear in size, by up to 11.1%.
+
+`metricCompatible` in the table is a claim its designer makes; `metricsAgree` is the measurement.
+The three pairs this machine could confirm are `Arial = Helvetica`, `Times = Times New Roman` and
+`Courier = Courier New` — two names for one file, which is what the flag is supposed to mean.
+
+## The baseline, and the two rules a run draws (3.8)
+
+puts the baseline inside a line box at the typeface's own ascent-to-descent share of
+it. That is not the CSS half-leading model every browser implements — measured across eight faces and
+four sizes, this reading fits 36 of 36 and CSS fits 9, out by a fifth of a line on Courier New.
+
+\
+An underline and a strikethrough are geometry rather than : Chromium draws every
+face at 0.05em below the baseline and 0.1em thick, which matches PowerPoint on none of the eight
+faces measured, and CSS has no way to place a strikethrough at all. The per-face table is generated
+from the fixture by ; a face nobody measured makes
+throw, and is there to be reached for on purpose.
+
+, and
+[ADR 0034](../../docs/adr/phase-3-text/0034-text-in-both-renderers.md).
+
+## The baseline, and the two rules a run draws (3.8)
+
+`baselineDrop` puts the baseline inside a line box at the typeface's own ascent-to-descent share of
+it. That is not the CSS half-leading model every browser implements — measured across eight faces
+and four sizes, this reading fits 36 of 36 and CSS fits 9, out by a fifth of a line on Courier New.
+
+```ts
+import { baselineDrop, createFaceBoxProbe, faceRules, underlineRules } from '@pptx-studio/text';
+
+const probe = createFaceBoxProbe();
+baselineDrop(1.2 * 32, probe.box('Arial')); // 31.11pt below the top of the line box
+underlineRules('sng', 32, faceRules('Arial')); // [{ top: 3.30, thickness: 2.40, ... }]
+```
+
+An underline and a strikethrough are geometry rather than `text-decoration`: Chromium draws every
+face at 0.05em below the baseline and 0.1em thick, which matches PowerPoint on none of the eight
+faces measured, and CSS has no way to place a strikethrough at all. The per-face table is generated
+from the fixture by `tools/ground-truth/render/text/write-tables.ts`; a face nobody measured makes
+`faceRules` throw, and `APPROXIMATE_FACE_RULES` is there to be reached for on purpose.
+
+`corpus/ground-truth/text-rendering.json`, and
+[ADR 0034](../../docs/adr/phase-3-text/0034-text-in-both-renderers.md).

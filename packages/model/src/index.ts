@@ -131,6 +131,7 @@ export {
   type Spacing,
   type Strike,
   type TextAlign,
+  type TextAnchor,
   type TextBody,
   type TextBreak,
   type TextContent,
@@ -146,6 +147,7 @@ export {
   type ThemeFontRef,
   type Typeface,
   type Underline,
+  type VerticalText,
 } from './text.js';
 
 export {
@@ -191,3 +193,10 @@ export {
 } from './resolve/body.js';
 
 export { parseBodyProps, parseBodyPropsChild } from './parse/body.js';
+
+export {
+  requestedTypefaces,
+  resolveTypeface,
+  resolveTypefaceOf,
+  type ScriptSlot,
+} from './resolve/typeface.js';

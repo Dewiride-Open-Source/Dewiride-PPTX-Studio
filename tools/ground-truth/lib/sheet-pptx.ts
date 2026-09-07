@@ -221,6 +221,10 @@ export interface ShapeSpec {
   readonly name: string;
   /** Absent means the shape states no geometry, which is the whole subject. */
   readonly rect?: Rect | undefined;
+  /** `a:xfrm/@rot` in sixtieths of a degree. Needs `rect`. */
+  readonly rot?: number | undefined;
+  readonly flipH?: boolean | undefined;
+  readonly flipV?: boolean | undefined;
   /** Raw `p:ph` attributes, e.g. `type="body" idx="1"`. `''` is a bare `<p:ph/>`. */
   readonly ph?: string | undefined;
   /** A whole fill element. Absent writes nothing, which is not the same as `<a:noFill/>`. */
@@ -241,10 +245,14 @@ export interface ShapeSpec {
 
 export function shape(spec: ShapeSpec): string {
   const geom = `<a:prstGeom prst="${spec.prst ?? 'rect'}"><a:avLst/></a:prstGeom>`;
+  const turn =
+    (spec.rot === undefined || spec.rot === 0 ? '' : ` rot="${String(spec.rot)}"`) +
+    (spec.flipH === true ? ' flipH="1"' : '') +
+    (spec.flipV === true ? ' flipV="1"' : '');
   const xfrm =
     spec.rect === undefined
       ? ''
-      : `<a:xfrm><a:off x="${String(emu(spec.rect.x, spec.name))}" y="${String(emu(spec.rect.y, spec.name))}"/>` +
+      : `<a:xfrm${turn}><a:off x="${String(emu(spec.rect.x, spec.name))}" y="${String(emu(spec.rect.y, spec.name))}"/>` +
         `<a:ext cx="${String(emu(spec.rect.w, spec.name))}" cy="${String(emu(spec.rect.h, spec.name))}"/></a:xfrm>`;
   const ph = spec.ph === undefined ? '' : spec.ph === '' ? '<p:ph/>' : `<p:ph ${spec.ph}/>`;
   return (

@@ -8,8 +8,13 @@
  * goes, what `a:grpFill` reaches for - lives there and was measured in
  * experiment C6.
  *
- * Sub-phase 2.10 draws geometry. Text is 3.8, the overlay canvas and the
- * adjust-handle chrome are 2.11, and virtualization is 12.1.
+ * Sub-phase 3.8 adds `mountTextLayer`: an HTML layer over that `<svg>`, built
+ * from the identical `TextBlock` the SVG emitter draws, so the two cannot
+ * disagree about a line box. Real text nodes, for the selection, the IME and the
+ * screen reader an SVG `<text>` cannot give.
+ *
+ * The overlay canvas and the adjust-handle chrome are 2.11, and virtualization
+ * is 12.1.
  */
 
 export {
@@ -35,3 +40,11 @@ export {
   type MountedOverlay,
   type OverlayMountOptions,
 } from './overlay.js';
+
+export {
+  mountTextLayer,
+  type LayerBlock,
+  type LayerSize,
+  type MountedTextLayer,
+  type TextLayerOptions,
+} from './text/layer.js';

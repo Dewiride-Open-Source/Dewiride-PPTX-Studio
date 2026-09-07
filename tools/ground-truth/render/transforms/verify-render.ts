@@ -3,7 +3,7 @@
  *
  * ```
  * pnpm build
- * node tools/ground-truth/render/verify-render.ts <dir>
+ * node tools/ground-truth/render/transforms/verify-render.ts <dir>
  * ```
  *
  * The other sub-phases end by exporting a file and opening it in the real
@@ -34,7 +34,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { REPO_ROOT as ROOT } from '../../repo/root.ts';
+import { REPO_ROOT as ROOT } from '../../../repo/root.ts';
 
 import { chromium } from 'playwright';
 
@@ -166,6 +166,9 @@ for (const deck of inputs.decks) {
         width: fixture.exportPixels.w,
         height: fixture.exportPixels.h,
         idPrefix: `${deck.deck}-${String(index)}`,
+        // C6 samples geometry, and this runs in Node where there is no canvas
+        // to measure with. Text is T8's question and has its own verifier.
+        text: false,
       });
     } catch (error) {
       errors.push(`${deck.deck} slide ${String(index + 1)}: ${String(error)}`);

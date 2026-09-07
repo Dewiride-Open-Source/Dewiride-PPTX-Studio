@@ -224,7 +224,7 @@ repaired.
 
 Third sub-phase running that the cheapest thing in this directory was the highest-yield.
 
-**Ask PowerPoint in writing, first** — `tools/ground-truth/render/author.ps1`, then unzip what it saved. `a:xfrm`
+**Ask PowerPoint in writing, first** — `tools/ground-truth/render/transforms/author.ps1`, then unzip what it saved. `a:xfrm`
 carries `@rot`, `@flipH` and `@flipV` and says nothing about the order they compose in, and the two
 readings are not equivalent: for any reflection `F R(t) F = R(-t)`, so they differ by the **sign of
 the angle**. Hand PowerPoint a shape already rotated 30 degrees, ask it to mirror the shape, and read
@@ -237,11 +237,11 @@ probe existed — along with what a group resize writes (the group's `ext`, and 
 **Then measure what a group does.**
 
 ```bash
-node tools/ground-truth/render/build-deck.ts <dir>
-powershell -File tools/ground-truth/render/read.ps1 -Dir <dir>
-node tools/ground-truth/render/analyse.ts <dir> --fixture corpus/ground-truth/transforms.json
+node tools/ground-truth/render/transforms/build-deck.ts <dir>
+powershell -File tools/ground-truth/render/transforms/read.ps1 -Dir <dir>
+node tools/ground-truth/render/transforms/analyse.ts <dir> --fixture corpus/ground-truth/transforms.json
 npx prettier --write corpus/ground-truth/transforms.json
-pnpm build && node tools/ground-truth/render/verify-render.ts <dir>
+pnpm build && node tools/ground-truth/render/transforms/verify-render.ts <dir>
 ```
 
 The measurement is C5's again and cheaper still: a leaf inside a group has no slide position of its
@@ -369,7 +369,9 @@ paint/                   -> packages/paint
   lines/                 C4  - 213 probes: dashes, caps, joins, arrowheads
 
 model/                   -> packages/model.   C5  - 114 probes: matching, inheritance
-render/                  -> packages/render-*. C6 - 65 probes: group maps, turns, compositing
+render/                  -> packages/render-*
+  transforms/            C6  - 65 probes: group maps, turns, compositing
+  text/                  T8  - 160 probes: the turn, the baseline, alignment, rules
 
 text/                    -> packages/text
   cascade/               T1  - which of the nine claimed sources is read, in what order
@@ -378,6 +380,11 @@ text/                    -> packages/text
   autofit/               T4  - 3521 probes: the ladder, and what a last line measures
   bullets/               T5  - 6849 probes: 41 schemes, PUA bullets, fields, script runs
   frames/                T6  - anchors, insets, vertical text, a:br, endParaRPr
+
+fonts/                   -> packages/text/src/fonts, packages/fonts
+  format/                A   - what PowerPoint writes into ppt/fonts/*.fntdata
+  embedding/             B   - whether PowerPoint renders an EOT we built
+  substitution/          T7  - 159 probes: which face a run is actually drawn in
 
 fixtures.test.ts         the committed answers, as assertions CI can run
 ```
@@ -396,6 +403,54 @@ Every experiment has the same six files, and only the ones it needs:
 `analyse.ts` throws rather than emitting a fixture it cannot fit perfectly. That is the point of
 the whole directory: a model that scores 46 of 46 is a finding, and one that scores 45 is a
 question nobody has answered yet.
+
+### T8 — where the glyphs go _(added in 3.8)_
+
+3.1 to 3.7 settled where a _line_ goes. T8 asks the drawing questions: which way a mirrored shape's
+text faces, where in the line box the baseline sits, what an underline is a fraction of.
+
+```bash
+node tools/ground-truth/render/text/build-deck.ts <dir>
+powershell -File tools/ground-truth/render/text/read.ps1 -Dir <dir>
+node tools/ground-truth/render/text/measure-in-browser.ts <dir>
+node tools/ground-truth/render/text/analyse.ts <dir> --fixture corpus/ground-truth/text-rendering.json
+node tools/ground-truth/render/text/write-tables.ts
+pnpm build && node tools/ground-truth/render/text/verify-render.ts <dir>
+```
+
+The instrument is the EMF, and further into it than any experiment before: `EMR_EXTTEXTOUTW` under
+`TA_BASELINE` gives the baseline as a number, the world transform in force gives the angle and its
+determinant says whether the glyphs are mirrored, and `offDx` gives every character's advance.
+
+Three things about the rig are worth copying rather than rediscovering:
+
+- **Track `EMR_SAVEDC` and `EMR_RESTOREDC`.** Without them the world transform accumulates across
+  drawing calls and every text record after the first reports an origin twice too far from the page
+  corner. It looks like a finding.
+- **A rotated frame must fit the page.** The first run put a 600 x 240pt frame near the top left;
+  turned 90 degrees it hangs off the slide, and four probes exported no ink at all — which reads as
+  "PowerPoint drew nothing" rather than "the export clipped it". The turn questions now use a
+  400 x 160 frame centred on the slide, whose half-diagonal fits at every angle.
+- **Off a quadrant there is no text record.** PowerPoint draws the glyphs as filled paths, so a 30
+  degree probe's angle has to be fitted from where the ink's centre landed - and the ink box's
+  _extents_ are the same at an angle and its negation, so it is the offset from the frame centre
+  that separates 30 degrees from 330.
+
+`verify-render.ts` is the other half, and the one that matters: it loads the same seven packages
+through `opc` and `model` in a real Chromium, lays each probe out with `render-svg`, and compares
+every line box against the one PowerPoint reported. 415 of 423 land within a tenth of a point; the
+eight that do not are the left edge of a centred or right-aligned line, carrying T2's measured
+browser disagreement whole.
+
+## Where an experiment reads the browser too
+
+`fonts/substitution/measure-in-browser.ts` (T7), `text/metrics/measure-in-browser.ts` (T2) and
+`render/text/measure-in-browser.ts` (T8) ask Chromium the same questions PowerPoint answered,
+because for anything the product measures at run time the browser's answer is the one that ships.
+T7's whole detector question can only be scored there: PowerPoint has no opinion about whether
+`document.fonts.check` works. T8's decoration question is the same shape from the other side — it
+reads Chromium's own `text-decoration` off a screenshot, and the answer is that it agrees with
+PowerPoint on none of eight faces, which is why both rules are drawn as geometry.
 
 ## Driving PowerPoint
 

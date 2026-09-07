@@ -9,6 +9,12 @@
  * on it. Merging a shape's paths into one `d` cannot render any of those, which
  * is why `@pptx-studio/geometry` hands over a list and this keeps it a list.
  *
+ * ## Text is a sibling, and that is not a stylistic choice either
+ *
+ * A `flipH` mirrors the outline and leaves the glyphs alone - measured 20 of 20
+ * in T8 - so the text cannot sit inside the group that carries the mirror. It
+ * gets its own group with its own turn, emitted beside this one.
+ *
  * ## The transform, and why the mirror is innermost
  *
  * SVG applies a transform list right to left, so
@@ -30,6 +36,7 @@ import {
 } from './paint.js';
 import { element, type SvgElement, type SvgNode } from './node.js';
 import type { Placed } from './layout.js';
+import { shapeTextNodes, type TextEngine } from './text/draw.js';
 import { frameTransform, type Box } from './transform.js';
 
 /** Identifying attributes, so a caller can hit-test and a human can read a diff. */
@@ -65,19 +72,26 @@ function drawablePaths(placed: Placed): readonly ResolvedPath[] {
  * is never painted** - it exists to be asked for by a child's `a:grpFill` - so
  * a group emits a `<g>` for structure and nothing that puts ink down.
  */
-export function shapeNodes(placed: Placed, defs: Defs): readonly SvgNode[] {
+export function shapeNodes(
+  placed: Placed,
+  defs: Defs,
+  text: TextEngine | null = null,
+): readonly SvgNode[] {
   if (placed.shape.kind === 'grpSp') {
     return [
       element(
         'g',
         identity(placed),
-        placed.children.flatMap((child) => shapeNodes(child, defs)),
+        placed.children.flatMap((child) => shapeNodes(child, defs, text)),
       ),
     ];
   }
 
+  // The shape's own group carries the mirror a `flipH` asks for and text is
+  // never mirrored, so the text group is a sibling and not a child.
+  const glyphs = text === null ? [] : shapeTextNodes(placed, text);
   const paths = drawablePaths(placed);
-  if (paths.length === 0) return [];
+  if (paths.length === 0) return glyphs;
 
   const box: Box = { x: 0, y: 0, cx: placed.frame.cx, cy: placed.frame.cy };
   const fillBox = localFillBox(placed);
@@ -129,5 +143,6 @@ export function shapeNodes(placed: Placed, defs: Defs): readonly SvgNode[] {
       { ...identity(placed), ...(transform === '' ? {} : { transform }), ...filter },
       children,
     ),
+    ...glyphs,
   ];
 }

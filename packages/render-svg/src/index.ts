@@ -33,13 +33,21 @@
  * cases, so `render.test.ts` re-derives every one of these rather than
  * comparing against a sentence.
  *
+ * ## Text, added in 3.8
+ *
+ * Real `<text>` and `<tspan>`, never `foreignObject`, in a group that is a
+ * **sibling** of the shape's own - because `flipH` mirrors the outline and
+ * leaves the glyphs alone, while `flipV` turns the whole block half a
+ * revolution. Measured 20 of 20 in experiment T8, where counter-flipping both
+ * axes fits 10. The baseline sits at the typeface's own ascent-to-descent share
+ * of the line box, which the CSS model every browser implements gets wrong on
+ * 27 of 36 rows. `corpus/ground-truth/text-rendering.json`.
+ *
  * ## What it does not do yet
  *
- * Text. A `p:txBody` is not read, so a text box renders as its outline and
- * nothing else - that is sub-phase 3.8 and it is deliberate: measure-equals-
- * render needs the text engine, and half a text engine is worse than none.
- * `a:blipFill` paints nothing, `p:graphicFrame` draws nothing, and a compound
- * stroke draws as a single rail.
+ * Bullets are resolved and not drawn, four of the seven `@vert` values throw
+ * rather than draw approximately, `a:blipFill` paints nothing,
+ * `p:graphicFrame` draws nothing, and a compound stroke draws as a single rail.
  */
 
 export { RenderError, RENDER_ERROR_CODES, isRenderError, type RenderErrorCode } from './errors.js';
@@ -87,6 +95,41 @@ export {
 } from './paint.js';
 
 export { shapeNodes } from './shape.js';
+
+export {
+  approximateRules,
+  createTextEngine,
+  shapeTextNodes,
+  textBlockOf,
+  type TextEngine,
+  type TextOptions,
+} from './text/draw.js';
+
+export { textNodes } from './text/emit.js';
+
+export {
+  SHIFT_SIZE_RATIO,
+  SMALL_CAPS_RATIO,
+  alignOffset,
+  capStretches,
+  layoutText,
+  stretches,
+  strutHeight,
+  textTurn,
+  type LayoutTextOptions,
+  type PieceRule,
+  type TextBlock,
+  type TextLine,
+  type TextPiece,
+} from './text/layout.js';
+
+export {
+  resolveText,
+  type ResolvedFrame,
+  type ResolvedParagraph,
+  type ResolvedRun,
+  type ResolvedText,
+} from './text/resolve.js';
 
 export {
   renderSlide,

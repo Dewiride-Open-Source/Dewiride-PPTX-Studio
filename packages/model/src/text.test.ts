@@ -35,7 +35,9 @@ import {
   textLevels,
   type TextContext,
 } from './resolve/text.js';
-import { themeFontRef } from './text.js';
+import { themeFontRef, type Typeface } from './text.js';
+import { requestedTypefaces, resolveTypeface } from './resolve/typeface.js';
+import type { FontScheme } from './types.js';
 import type { Paragraph, Sheet, TextContent } from './index.js';
 
 /* -------------------------------------------------------------------------- */
@@ -1109,5 +1111,46 @@ describe('parsing', () => {
     });
     expect(withEmpty.txStyles).toBeDefined();
     expect(withEmpty.txStyles?.body).toBeUndefined();
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* the theme reference on a typeface (3.7)                                    */
+/* -------------------------------------------------------------------------- */
+
+describe('resolveTypeface', () => {
+  const scheme: FontScheme = {
+    name: 'T7',
+    major: { latin: 'Georgia', ea: 'MS Gothic', cs: null },
+    minor: { latin: 'Verdana', ea: '', cs: 'Leelawadee UI' },
+  };
+
+  it('sends +mj- to the major collection and +mn- to the minor one', () => {
+    expect(resolveTypeface('+mj-lt', scheme)).toBe('Georgia');
+    expect(resolveTypeface('+mn-lt', scheme)).toBe('Verdana');
+    expect(resolveTypeface('+mj-ea', scheme)).toBe('MS Gothic');
+    expect(resolveTypeface('+mn-cs', scheme)).toBe('Leelawadee UI');
+  });
+
+  it('leaves a real typeface name alone, including one that starts with a plus', () => {
+    expect(resolveTypeface('Calibri', scheme)).toBe('Calibri');
+    expect(resolveTypeface('+mn', scheme)).toBe('+mn');
+  });
+
+  it('is undefined when the collection entry is empty or absent', () => {
+    expect(resolveTypeface('+mn-ea', scheme)).toBeUndefined();
+    expect(resolveTypeface('+mj-cs', scheme)).toBeUndefined();
+  });
+
+  it('collects what a set of runs asks for, dropping what the theme leaves empty', () => {
+    const font = (typeface: string): Typeface => ({
+      typeface,
+      panose: undefined,
+      pitchFamily: undefined,
+      charset: undefined,
+    });
+    expect(
+      requestedTypefaces([font('+mj-lt'), font('Arial'), font('+mn-ea'), undefined], scheme),
+    ).toEqual(['Georgia', 'Arial']);
   });
 });

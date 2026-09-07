@@ -2,7 +2,7 @@
  * Experiment C6, step 3 - score the candidate models against the readings.
  *
  * ```
- * node tools/ground-truth/render/analyse.ts <dir> [--fixture corpus/ground-truth/transforms.json]
+ * node tools/ground-truth/render/transforms/analyse.ts <dir> [--fixture corpus/ground-truth/transforms.json]
  * ```
  *
  * Nothing here asserts a sentence. Four candidate rules for the child
@@ -17,8 +17,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { hex, readBmp } from '../lib/bmp.ts';
-import { entry, readZip } from '../lib/zip.ts';
+import { hex, readBmp } from '../../lib/bmp.ts';
+import { entry, readZip } from '../../lib/zip.ts';
 import type { Frame, Rect, Sample, TransformProbe } from './probes.ts';
 
 /* -------------------------------------------------------------------------- */
@@ -27,7 +27,9 @@ import type { Frame, Rect, Sample, TransformProbe } from './probes.ts';
 
 const dirArg = process.argv[2];
 if (dirArg === undefined)
-  throw new Error('usage: tools/ground-truth/render/analyse.ts <dir> [--fixture <path>]');
+  throw new Error(
+    'usage: tools/ground-truth/render/transforms/analyse.ts <dir> [--fixture <path>]',
+  );
 // Narrowed into its own binding: the closures below are compiled before the
 // check runs, so a `string | undefined` captured from `process.argv` stays one.
 const dir: string = dirArg;
@@ -948,7 +950,7 @@ try {
   };
 } catch {
   console.log(
-    '  (no authored decks in the directory - run tools/ground-truth/render/author.ps1 for those)',
+    '  (no authored decks in the directory - run tools/ground-truth/render/transforms/author.ps1 for those)',
   );
 }
 
@@ -979,7 +981,7 @@ const flipVerdict =
 
 const fixture = {
   experiment: 'C6 - group transforms, flip order and a:grpFill',
-  generatedBy: 'tools/ground-truth/render/analyse.ts',
+  generatedBy: 'tools/ground-truth/render/transforms/analyse.ts',
   slidePoints: inputs.slidePoints,
   emuPerPoint: inputs.emuPerPoint,
   exportPixels: inputs.exportPixels,

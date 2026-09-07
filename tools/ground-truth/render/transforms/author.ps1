@@ -1,6 +1,6 @@
 # Experiment C6, step 0 - ask PowerPoint to author the transforms.
 #
-#   powershell -File tools/ground-truth/render/author.ps1 -Dir <work-dir>
+#   powershell -File tools/ground-truth/render/transforms/author.ps1 -Dir <work-dir>
 #
 # The cheapest half of every ground-truth sub-phase so far, and the highest
 # yield per line: before building a single probe, get the format's own author to
@@ -28,7 +28,7 @@
 # gives its own arithmetic for the composition, in numbers, in a file.
 #
 # Two decks come out of this: `pp-groups.pptx` with the groups intact and
-# `pp-ungrouped.pptx` after ungrouping the same shapes. `tools/ground-truth/render/analyse.ts`
+# `pp-ungrouped.pptx` after ungrouping the same shapes. `tools/ground-truth/render/transforms/analyse.ts`
 # reads both.
 #
 # Writes only into -Dir. Attaches to a running PowerPoint if there is one and

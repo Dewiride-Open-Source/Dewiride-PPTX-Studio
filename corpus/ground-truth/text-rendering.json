@@ -1,0 +1,1976 @@
+{
+  "$comment": "Experiment T8: what a renderer must know to draw text where PowerPoint draws it. Regenerate with tools/ground-truth/render/text/analyse.ts. Lengths are points unless a field says otherwise.",
+  "experiment": "T8",
+  "subPhase": "3.8",
+  "adr": "docs/adr/phase-3-text/0034-text-in-both-renderers.md",
+  "units": {
+    "slidePoints": { "width": 960, "height": 540 },
+    "exportPixels": { "width": 1920, "height": 1080 },
+    "emfLogicalUnitsPerInch": 600
+  },
+  "measuredOn": { "probes": 160, "packages": 7, "everyPackageOpenedWithoutRepair": true },
+  "questions": {
+    "flip": {
+      "asks": "what a flipped shape does to its text",
+      "answer": "flipH-ignored-flipV-turns",
+      "says": "flipH does nothing to the text; flipV turns the whole block 180 degrees; neither mirrors",
+      "rows": 20,
+      "scores": {
+        "flipH-ignored-flipV-turns": "20/20",
+        "both-flips-ignored": "10/20",
+        "both-flips-turn": "10/20",
+        "flipV-ignored-flipH-turns": "10/20",
+        "text-mirrors-with-shape": "5/20"
+      }
+    },
+    "rotation": {
+      "asks": "the angle the glyphs are drawn at",
+      "answer": "upright-drops-the-shape-turn",
+      "says": "the text turns by the shape rotation plus a:bodyPr/@rot, and @upright=\"1\" drops the shape rotation",
+      "rows": 19,
+      "scores": {
+        "upright-drops-the-shape-turn": "19/19",
+        "always-the-sum": "15/19",
+        "shape-rotation-only": "11/19",
+        "body-rotation-only": "10/19",
+        "text-never-turns": "7/19"
+      }
+    },
+    "upright-box": {
+      "asks": "the rectangle a:bodyPr/@upright lays the text out in",
+      "answer": "extents-swap-on-a-quadrant",
+      "says": "the frame's own extents, swapped when the rotation snaps to 90 or 270, centred on the frame",
+      "rows": 5,
+      "scores": {
+        "extents-swap-on-a-quadrant": "5/5",
+        "never-swapped": "3/5",
+        "always-swapped": "2/5",
+        "rotated-bounding-box": "4/5"
+      }
+    },
+    "line-box": {
+      "asks": "which run sets the height of a line holding several sizes",
+      "answer": "the-largest-run",
+      "says": "the line box is 1.2 times the largest size on the line, whatever the order",
+      "rows": 36,
+      "scores": {
+        "the-largest-run": "36/36",
+        "the-first-run": "34/36",
+        "the-last-run": "34/36",
+        "the-smallest-run": "32/36"
+      }
+    },
+    "baseline": {
+      "asks": "how far below the top of the line box the baseline sits",
+      "answer": "font-box-share",
+      "says": "the line box is split between ascent and descent in the face's own proportion",
+      "rows": 36,
+      "scores": {
+        "font-box-share": "36/36",
+        "autofit-coefficient": "24/36",
+        "css-half-leading": "9/36",
+        "ascent-from-the-top": "1/36",
+        "ink-box-share": "0/36",
+        "four-fifths-of-the-box": "12/36"
+      }
+    },
+    "line-advance": {
+      "asks": "how far below one line the next one sits",
+      "answer": "one-line-box",
+      "says": "the next line's top is exactly this line's box below this line's top",
+      "rows": 9,
+      "scores": {
+        "one-line-box": "9/9",
+        "the-next-line-box": "8/9",
+        "the-em-and-no-leading": "0/9"
+      }
+    },
+    "align": {
+      "asks": "where each line starts inside the content box",
+      "answer": "anchor-without-the-trailing-space",
+      "says": "a justifying alignment starts at the left edge; ctr and r anchor the line less whatever spaces it ends with",
+      "rows": 21,
+      "scores": {
+        "anchor-without-the-trailing-space": "21/21",
+        "anchor-the-whole-line": "19/21",
+        "centre-is-left": "15/21",
+        "anchor-the-stretched-width": "19/21"
+      }
+    },
+    "justify": {
+      "asks": "which lines a justifying alignment stretches",
+      "answer": "dist-stretches-the-last-line",
+      "says": "just, justLow and thaiDist leave the last line alone; dist stretches every line",
+      "rows": 21,
+      "scores": {
+        "dist-stretches-the-last-line": "21/21",
+        "every-justify-spares-the-last": "19/21",
+        "every-justify-stretches-everything": "15/21",
+        "nothing-stretches": "15/21"
+      }
+    },
+    "trailing-space": {
+      "asks": "whether a trailing space counts towards the width an alignment anchors",
+      "answer": "trailing-space-hangs",
+      "says": "alignment uses the width without the trailing spaces, which hang past the edge",
+      "rows": 6,
+      "scores": { "trailing-space-hangs": "6/6", "trailing-space-counts": "2/6" }
+    },
+    "decoration-scale": {
+      "asks": "whether a rule keeps its place when the size changes",
+      "answer": "proportional-to-the-size",
+      "says": "offset and thickness are both fractions of the em, so a rule scales with the text",
+      "rows": 18,
+      "scores": { "proportional-to-the-size": "18/18", "a-fixed-length": "6/18" }
+    },
+    "decoration-face": {
+      "asks": "whether either cheap way of placing a rule reproduces PowerPoint",
+      "answer": "none-of-these",
+      "says": "neither: the browser's own text-decoration is in the wrong place for every face, and one offset does not fit eight faces, so the offsets are a measured table",
+      "rows": 16,
+      "scores": {
+        "the-browser-already-agrees": "0/16",
+        "one-offset-for-every-face": "4/16",
+        "the-browser-thickness-agrees": "0/16"
+      }
+    },
+    "decoration-extent": {
+      "asks": "whether an underline runs under the spaces a line ends with",
+      "answer": "the-rule-stops-at-the-last-glyph",
+      "says": "the spaces a line ends with are not underlined",
+      "rows": 3,
+      "scores": { "the-rule-stops-at-the-last-glyph": "3/3", "the-rule-covers-the-spaces": "0/3" }
+    },
+    "baseline-shift": {
+      "asks": "how far a:rPr/@baseline moves a run and at what size it is drawn",
+      "answer": "percent-of-the-stated-size",
+      "says": "the run rises by @baseline per cent of the size it asked for, drawn at two thirds of it",
+      "rows": 4,
+      "scores": {
+        "percent-of-the-stated-size": "4/4",
+        "percent-of-the-drawn-size": "0/4",
+        "percent-of-the-line-box": "0/4",
+        "shifted-runs-keep-their-size": "0/4"
+      }
+    },
+    "caps": {
+      "asks": "what a:rPr/@cap draws, and at what size",
+      "answer": "small-caps-are-four-fifths",
+      "says": "cap=\"all\" uppercases at the full size; cap=\"small\" uppercases the lowercase at four fifths of it",
+      "rows": 3,
+      "scores": {
+        "small-caps-are-four-fifths": "3/3",
+        "small-caps-are-three-quarters": "2/3",
+        "caps-change-only-the-glyphs": "2/3"
+      }
+    },
+    "runs": {
+      "asks": "whether a run boundary changes the advances either side of it",
+      "answer": "the-line-is-shaped-whole",
+      "says": "a run boundary splits the drawing calls and nothing else: the kern crosses it",
+      "rows": 6,
+      "scores": { "the-line-is-shaped-whole": "6/6", "each-run-is-shaped-alone": "4/6" }
+    }
+  },
+  "refuted": ["decoration-face"],
+  "powerpoint": {
+    "flip": {
+      "answer": "flipH-ignored-flipV-turns",
+      "rows": [
+        {
+          "probe": "flip-r0-none",
+          "rot": 0,
+          "flipH": false,
+          "flipV": false,
+          "extraTurn": 0,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r0-h",
+          "rot": 0,
+          "flipH": true,
+          "flipV": false,
+          "extraTurn": 0,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r0-v",
+          "rot": 0,
+          "flipH": false,
+          "flipV": true,
+          "extraTurn": 180,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r0-hv",
+          "rot": 0,
+          "flipH": true,
+          "flipV": true,
+          "extraTurn": 180,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r30-none",
+          "rot": 30,
+          "flipH": false,
+          "flipV": false,
+          "extraTurn": 0,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r30-h",
+          "rot": 30,
+          "flipH": true,
+          "flipV": false,
+          "extraTurn": 0,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r30-v",
+          "rot": 30,
+          "flipH": false,
+          "flipV": true,
+          "extraTurn": 180,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r30-hv",
+          "rot": 30,
+          "flipH": true,
+          "flipV": true,
+          "extraTurn": 180,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r90-none",
+          "rot": 90,
+          "flipH": false,
+          "flipV": false,
+          "extraTurn": 0,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r90-h",
+          "rot": 90,
+          "flipH": true,
+          "flipV": false,
+          "extraTurn": 0,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r90-v",
+          "rot": 90,
+          "flipH": false,
+          "flipV": true,
+          "extraTurn": 180,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r90-hv",
+          "rot": 90,
+          "flipH": true,
+          "flipV": true,
+          "extraTurn": 180,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r180-none",
+          "rot": 180,
+          "flipH": false,
+          "flipV": false,
+          "extraTurn": 0,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r180-h",
+          "rot": 180,
+          "flipH": true,
+          "flipV": false,
+          "extraTurn": 0,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r180-v",
+          "rot": 180,
+          "flipH": false,
+          "flipV": true,
+          "extraTurn": 180,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r180-hv",
+          "rot": 180,
+          "flipH": true,
+          "flipV": true,
+          "extraTurn": 180,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r270-none",
+          "rot": 270,
+          "flipH": false,
+          "flipV": false,
+          "extraTurn": 0,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r270-h",
+          "rot": 270,
+          "flipH": true,
+          "flipV": false,
+          "extraTurn": 0,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r270-v",
+          "rot": 270,
+          "flipH": false,
+          "flipV": true,
+          "extraTurn": 180,
+          "mirrored": false
+        },
+        {
+          "probe": "flip-r270-hv",
+          "rot": 270,
+          "flipH": true,
+          "flipV": true,
+          "extraTurn": 180,
+          "mirrored": false
+        }
+      ]
+    },
+    "rotation": [
+      { "probe": "rot-0-unset", "rot": 0, "upright": false, "bodyRot": 0, "angle": 0 },
+      { "probe": "rot-0-down", "rot": 0, "upright": false, "bodyRot": 0, "angle": 0 },
+      { "probe": "rot-0-up", "rot": 0, "upright": true, "bodyRot": 0, "angle": 0 },
+      { "probe": "rot-30-unset", "rot": 30, "upright": false, "bodyRot": 0, "angle": 30 },
+      { "probe": "rot-30-down", "rot": 30, "upright": false, "bodyRot": 0, "angle": 30 },
+      { "probe": "rot-30-up", "rot": 30, "upright": true, "bodyRot": 0, "angle": 0 },
+      { "probe": "rot-90-unset", "rot": 90, "upright": false, "bodyRot": 0, "angle": 90 },
+      { "probe": "rot-90-down", "rot": 90, "upright": false, "bodyRot": 0, "angle": 90 },
+      { "probe": "rot-90-up", "rot": 90, "upright": true, "bodyRot": 0, "angle": 0 },
+      { "probe": "rot-180-unset", "rot": 180, "upright": false, "bodyRot": 0, "angle": 180 },
+      { "probe": "rot-180-down", "rot": 180, "upright": false, "bodyRot": 0, "angle": 180 },
+      { "probe": "rot-180-up", "rot": 180, "upright": true, "bodyRot": 0, "angle": 0 },
+      { "probe": "rot-270-unset", "rot": 270, "upright": false, "bodyRot": 0, "angle": 270 },
+      { "probe": "rot-270-down", "rot": 270, "upright": false, "bodyRot": 0, "angle": 270 },
+      { "probe": "rot-270-up", "rot": 270, "upright": true, "bodyRot": 0, "angle": 0 },
+      { "probe": "rot-body-30", "rot": 0, "upright": false, "bodyRot": 30, "angle": 30 },
+      { "probe": "rot-body-90", "rot": 0, "upright": false, "bodyRot": 90, "angle": 90 },
+      { "probe": "rot-body-neg30", "rot": 0, "upright": false, "bodyRot": -30, "angle": 330 },
+      { "probe": "rot-both-30-45", "rot": 30, "upright": false, "bodyRot": 45, "angle": 75 }
+    ],
+    "uprightBox": [
+      { "probe": "rot-0-up", "rot": 0, "boxLeft": 280 },
+      { "probe": "rot-30-up", "rot": 30, "boxLeft": 280 },
+      { "probe": "rot-90-up", "rot": 90, "boxLeft": 400 },
+      { "probe": "rot-180-up", "rot": 180, "boxLeft": 280 },
+      { "probe": "rot-270-up", "rot": 270, "boxLeft": 400 }
+    ],
+    "baseline": {
+      "answer": "font-box-share",
+      "rows": [
+        {
+          "probe": "base-Arial-12",
+          "face": "Arial",
+          "size": 12,
+          "sizes": [12],
+          "lineHeight": 14.4,
+          "drop": 11.64,
+          "share": 0.808333
+        },
+        {
+          "probe": "base-Arial-18",
+          "face": "Arial",
+          "size": 18,
+          "sizes": [18],
+          "lineHeight": 21.6,
+          "drop": 17.52,
+          "share": 0.811111
+        },
+        {
+          "probe": "base-Arial-32",
+          "face": "Arial",
+          "size": 32,
+          "sizes": [32],
+          "lineHeight": 38.4,
+          "drop": 31.08,
+          "share": 0.809375
+        },
+        {
+          "probe": "base-Arial-54",
+          "face": "Arial",
+          "size": 54,
+          "sizes": [54],
+          "lineHeight": 64.8,
+          "drop": 52.56,
+          "share": 0.811111
+        },
+        {
+          "probe": "base-TimesNewRoman-12",
+          "face": "Times New Roman",
+          "size": 12,
+          "sizes": [12],
+          "lineHeight": 14.4,
+          "drop": 11.64,
+          "share": 0.808333
+        },
+        {
+          "probe": "base-TimesNewRoman-18",
+          "face": "Times New Roman",
+          "size": 18,
+          "sizes": [18],
+          "lineHeight": 21.6,
+          "drop": 17.4,
+          "share": 0.805556
+        },
+        {
+          "probe": "base-TimesNewRoman-32",
+          "face": "Times New Roman",
+          "size": 32,
+          "sizes": [32],
+          "lineHeight": 38.4,
+          "drop": 30.96,
+          "share": 0.80625
+        },
+        {
+          "probe": "base-TimesNewRoman-54",
+          "face": "Times New Roman",
+          "size": 54,
+          "sizes": [54],
+          "lineHeight": 64.8,
+          "drop": 52.2,
+          "share": 0.805556
+        },
+        {
+          "probe": "base-Verdana-12",
+          "face": "Verdana",
+          "size": 12,
+          "sizes": [12],
+          "lineHeight": 14.4,
+          "drop": 11.88,
+          "share": 0.825
+        },
+        {
+          "probe": "base-Verdana-18",
+          "face": "Verdana",
+          "size": 18,
+          "sizes": [18],
+          "lineHeight": 21.6,
+          "drop": 17.88,
+          "share": 0.827778
+        },
+        {
+          "probe": "base-Verdana-32",
+          "face": "Verdana",
+          "size": 32,
+          "sizes": [32],
+          "lineHeight": 38.4,
+          "drop": 31.8,
+          "share": 0.828125
+        },
+        {
+          "probe": "base-Verdana-54",
+          "face": "Verdana",
+          "size": 54,
+          "sizes": [54],
+          "lineHeight": 64.8,
+          "drop": 53.64,
+          "share": 0.827778
+        },
+        {
+          "probe": "base-CourierNew-12",
+          "face": "Courier New",
+          "size": 12,
+          "sizes": [12],
+          "lineHeight": 14.4,
+          "drop": 10.56,
+          "share": 0.733333
+        },
+        {
+          "probe": "base-CourierNew-18",
+          "face": "Courier New",
+          "size": 18,
+          "sizes": [18],
+          "lineHeight": 21.6,
+          "drop": 15.84,
+          "share": 0.733333
+        },
+        {
+          "probe": "base-CourierNew-32",
+          "face": "Courier New",
+          "size": 32,
+          "sizes": [32],
+          "lineHeight": 38.4,
+          "drop": 28.2,
+          "share": 0.734375
+        },
+        {
+          "probe": "base-CourierNew-54",
+          "face": "Courier New",
+          "size": 54,
+          "sizes": [54],
+          "lineHeight": 64.8,
+          "drop": 47.64,
+          "share": 0.735185
+        },
+        {
+          "probe": "base-Georgia-12",
+          "face": "Georgia",
+          "size": 12,
+          "sizes": [12],
+          "lineHeight": 14.4,
+          "drop": 11.64,
+          "share": 0.808333
+        },
+        {
+          "probe": "base-Georgia-18",
+          "face": "Georgia",
+          "size": 18,
+          "sizes": [18],
+          "lineHeight": 21.6,
+          "drop": 17.4,
+          "share": 0.805556
+        },
+        {
+          "probe": "base-Georgia-32",
+          "face": "Georgia",
+          "size": 32,
+          "sizes": [32],
+          "lineHeight": 38.4,
+          "drop": 30.96,
+          "share": 0.80625
+        },
+        {
+          "probe": "base-Georgia-54",
+          "face": "Georgia",
+          "size": 54,
+          "sizes": [54],
+          "lineHeight": 64.8,
+          "drop": 52.32,
+          "share": 0.807407
+        },
+        {
+          "probe": "base-Tahoma-12",
+          "face": "Tahoma",
+          "size": 12,
+          "sizes": [12],
+          "lineHeight": 14.4,
+          "drop": 11.88,
+          "share": 0.825
+        },
+        {
+          "probe": "base-Tahoma-18",
+          "face": "Tahoma",
+          "size": 18,
+          "sizes": [18],
+          "lineHeight": 21.6,
+          "drop": 17.88,
+          "share": 0.827778
+        },
+        {
+          "probe": "base-Tahoma-32",
+          "face": "Tahoma",
+          "size": 32,
+          "sizes": [32],
+          "lineHeight": 38.4,
+          "drop": 31.8,
+          "share": 0.828125
+        },
+        {
+          "probe": "base-Tahoma-54",
+          "face": "Tahoma",
+          "size": 54,
+          "sizes": [54],
+          "lineHeight": 64.8,
+          "drop": 53.76,
+          "share": 0.82963
+        },
+        {
+          "probe": "base-Calibri-12",
+          "face": "Calibri",
+          "size": 12,
+          "sizes": [12],
+          "lineHeight": 14.4,
+          "drop": 11.28,
+          "share": 0.783333
+        },
+        {
+          "probe": "base-Calibri-18",
+          "face": "Calibri",
+          "size": 18,
+          "sizes": [18],
+          "lineHeight": 21.6,
+          "drop": 16.8,
+          "share": 0.777778
+        },
+        {
+          "probe": "base-Calibri-32",
+          "face": "Calibri",
+          "size": 32,
+          "sizes": [32],
+          "lineHeight": 38.4,
+          "drop": 30,
+          "share": 0.78125
+        },
+        {
+          "probe": "base-Calibri-54",
+          "face": "Calibri",
+          "size": 54,
+          "sizes": [54],
+          "lineHeight": 64.8,
+          "drop": 50.52,
+          "share": 0.77963
+        },
+        {
+          "probe": "base-Consolas-12",
+          "face": "Consolas",
+          "size": 12,
+          "sizes": [12],
+          "lineHeight": 14.4,
+          "drop": 11.28,
+          "share": 0.783333
+        },
+        {
+          "probe": "base-Consolas-18",
+          "face": "Consolas",
+          "size": 18,
+          "sizes": [18],
+          "lineHeight": 21.6,
+          "drop": 16.92,
+          "share": 0.783333
+        },
+        {
+          "probe": "base-Consolas-32",
+          "face": "Consolas",
+          "size": 32,
+          "sizes": [32],
+          "lineHeight": 38.4,
+          "drop": 30.12,
+          "share": 0.784375
+        },
+        {
+          "probe": "base-Consolas-54",
+          "face": "Consolas",
+          "size": 54,
+          "sizes": [54],
+          "lineHeight": 64.8,
+          "drop": 50.88,
+          "share": 0.785185
+        },
+        {
+          "probe": "base-mixed-small-large",
+          "face": "Arial",
+          "size": 44,
+          "sizes": [18, 44],
+          "lineHeight": 52.8,
+          "drop": 42.84,
+          "share": 0.811364
+        },
+        {
+          "probe": "base-mixed-large-small",
+          "face": "Arial",
+          "size": 44,
+          "sizes": [44, 18],
+          "lineHeight": 52.8,
+          "drop": 42.84,
+          "share": 0.811364
+        },
+        {
+          "probe": "base-mixed-small-large-small",
+          "face": "Arial",
+          "size": 36,
+          "sizes": [12, 36, 12],
+          "lineHeight": 43.2,
+          "drop": 35.04,
+          "share": 0.811111
+        },
+        {
+          "probe": "base-mixed-large-small-large",
+          "face": "Arial",
+          "size": 30,
+          "sizes": [30, 14, 30],
+          "lineHeight": 36,
+          "drop": 29.16,
+          "share": 0.81
+        }
+      ]
+    },
+    "lineAdvance": [
+      {
+        "probe": "base-two-sizes#0",
+        "gap": 21.6,
+        "lineHeight": 21.600000381469727,
+        "nextHeight": 52.79999923706055
+      },
+      {
+        "probe": "base-two-lines#0",
+        "gap": 38.4,
+        "lineHeight": 38.400001525878906,
+        "nextHeight": 38.400001525878906
+      },
+      {
+        "probe": "align-wrap-l#0",
+        "gap": 28.8,
+        "lineHeight": 28.799999237060547,
+        "nextHeight": 28.799999237060547
+      },
+      {
+        "probe": "align-wrap-ctr#0",
+        "gap": 28.8,
+        "lineHeight": 28.799999237060547,
+        "nextHeight": 28.799999237060547
+      },
+      {
+        "probe": "align-wrap-r#0",
+        "gap": 28.8,
+        "lineHeight": 28.799999237060547,
+        "nextHeight": 28.799999237060547
+      },
+      {
+        "probe": "align-wrap-just#0",
+        "gap": 28.8,
+        "lineHeight": 28.799999237060547,
+        "nextHeight": 28.799999237060547
+      },
+      {
+        "probe": "align-wrap-justLow#0",
+        "gap": 28.8,
+        "lineHeight": 28.799999237060547,
+        "nextHeight": 28.799999237060547
+      },
+      {
+        "probe": "align-wrap-dist#0",
+        "gap": 28.8,
+        "lineHeight": 28.799999237060547,
+        "nextHeight": 28.799999237060547
+      },
+      {
+        "probe": "align-wrap-thaiDist#0",
+        "gap": 28.8,
+        "lineHeight": 28.799999237060547,
+        "nextHeight": 28.799999237060547
+      }
+    ],
+    "align": [
+      {
+        "probe": "align-one-l",
+        "algn": "l",
+        "line": 0,
+        "lastLine": true,
+        "offset": 0,
+        "width": 128.255,
+        "naturalWidth": 128.255,
+        "anchorWidth": 128.255
+      },
+      {
+        "probe": "align-wrap-l",
+        "algn": "l",
+        "line": 0,
+        "lastLine": false,
+        "offset": 0,
+        "width": 564.75,
+        "naturalWidth": 564.75,
+        "anchorWidth": 558.125
+      },
+      {
+        "probe": "align-wrap-l",
+        "algn": "l",
+        "line": 1,
+        "lastLine": true,
+        "offset": 0,
+        "width": 92.255,
+        "naturalWidth": 92.255,
+        "anchorWidth": 92.255
+      },
+      {
+        "probe": "align-one-ctr",
+        "algn": "ctr",
+        "line": 0,
+        "lastLine": true,
+        "offset": 235.875,
+        "width": 128.255,
+        "naturalWidth": 128.255,
+        "anchorWidth": 128.255
+      },
+      {
+        "probe": "align-wrap-ctr",
+        "algn": "ctr",
+        "line": 0,
+        "lastLine": false,
+        "offset": 20.938,
+        "width": 564.75,
+        "naturalWidth": 564.75,
+        "anchorWidth": 558.125
+      },
+      {
+        "probe": "align-wrap-ctr",
+        "algn": "ctr",
+        "line": 1,
+        "lastLine": true,
+        "offset": 253.878,
+        "width": 92.255,
+        "naturalWidth": 92.255,
+        "anchorWidth": 92.255
+      },
+      {
+        "probe": "align-one-r",
+        "algn": "r",
+        "line": 0,
+        "lastLine": true,
+        "offset": 471.75,
+        "width": 128.255,
+        "naturalWidth": 128.255,
+        "anchorWidth": 128.255
+      },
+      {
+        "probe": "align-wrap-r",
+        "algn": "r",
+        "line": 0,
+        "lastLine": false,
+        "offset": 41.875,
+        "width": 564.75,
+        "naturalWidth": 564.75,
+        "anchorWidth": 558.125
+      },
+      {
+        "probe": "align-wrap-r",
+        "algn": "r",
+        "line": 1,
+        "lastLine": true,
+        "offset": 507.75,
+        "width": 92.255,
+        "naturalWidth": 92.255,
+        "anchorWidth": 92.255
+      },
+      {
+        "probe": "align-one-just",
+        "algn": "just",
+        "line": 0,
+        "lastLine": true,
+        "offset": 0,
+        "width": 128.255,
+        "naturalWidth": 128.255,
+        "anchorWidth": 128.255
+      },
+      {
+        "probe": "align-wrap-just",
+        "algn": "just",
+        "line": 0,
+        "lastLine": false,
+        "offset": 0,
+        "width": 606.625,
+        "naturalWidth": 564.75,
+        "anchorWidth": 558.125
+      },
+      {
+        "probe": "align-wrap-just",
+        "algn": "just",
+        "line": 1,
+        "lastLine": true,
+        "offset": 0,
+        "width": 92.255,
+        "naturalWidth": 92.255,
+        "anchorWidth": 92.255
+      },
+      {
+        "probe": "align-one-justLow",
+        "algn": "justLow",
+        "line": 0,
+        "lastLine": true,
+        "offset": 0,
+        "width": 128.255,
+        "naturalWidth": 128.255,
+        "anchorWidth": 128.255
+      },
+      {
+        "probe": "align-wrap-justLow",
+        "algn": "justLow",
+        "line": 0,
+        "lastLine": false,
+        "offset": 0,
+        "width": 606.625,
+        "naturalWidth": 564.75,
+        "anchorWidth": 558.125
+      },
+      {
+        "probe": "align-wrap-justLow",
+        "algn": "justLow",
+        "line": 1,
+        "lastLine": true,
+        "offset": 0,
+        "width": 92.255,
+        "naturalWidth": 92.255,
+        "anchorWidth": 92.255
+      },
+      {
+        "probe": "align-one-dist",
+        "algn": "dist",
+        "line": 0,
+        "lastLine": true,
+        "offset": 0,
+        "width": 600.005,
+        "naturalWidth": 128.255,
+        "anchorWidth": 128.255
+      },
+      {
+        "probe": "align-wrap-dist",
+        "algn": "dist",
+        "line": 0,
+        "lastLine": false,
+        "offset": 0,
+        "width": 606.625,
+        "naturalWidth": 564.75,
+        "anchorWidth": 558.125
+      },
+      {
+        "probe": "align-wrap-dist",
+        "algn": "dist",
+        "line": 1,
+        "lastLine": true,
+        "offset": 0,
+        "width": 600.005,
+        "naturalWidth": 92.255,
+        "anchorWidth": 92.255
+      },
+      {
+        "probe": "align-one-thaiDist",
+        "algn": "thaiDist",
+        "line": 0,
+        "lastLine": true,
+        "offset": 0,
+        "width": 128.255,
+        "naturalWidth": 128.255,
+        "anchorWidth": 128.255
+      },
+      {
+        "probe": "align-wrap-thaiDist",
+        "algn": "thaiDist",
+        "line": 0,
+        "lastLine": false,
+        "offset": 0,
+        "width": 606.625,
+        "naturalWidth": 564.75,
+        "anchorWidth": 558.125
+      },
+      {
+        "probe": "align-wrap-thaiDist",
+        "algn": "thaiDist",
+        "line": 1,
+        "lastLine": true,
+        "offset": 0,
+        "width": 92.255,
+        "naturalWidth": 92.255,
+        "anchorWidth": 92.255
+      }
+    ],
+    "trailingSpace": [
+      {
+        "probe": "align-trail-ctr-bare",
+        "algn": "ctr",
+        "spaces": 0,
+        "offset": 235.875,
+        "bareWidth": 128.255,
+        "ownWidth": 128.255
+      },
+      {
+        "probe": "align-trail-r-bare",
+        "algn": "r",
+        "spaces": 0,
+        "offset": 471.75,
+        "bareWidth": 128.255,
+        "ownWidth": 128.255
+      },
+      {
+        "probe": "align-trail-ctr-one-space",
+        "algn": "ctr",
+        "spaces": 1,
+        "offset": 235.875,
+        "bareWidth": 128.255,
+        "ownWidth": 134.88
+      },
+      {
+        "probe": "align-trail-r-one-space",
+        "algn": "r",
+        "spaces": 1,
+        "offset": 471.75,
+        "bareWidth": 128.255,
+        "ownWidth": 134.88
+      },
+      {
+        "probe": "align-trail-ctr-three-spaces",
+        "algn": "ctr",
+        "spaces": 3,
+        "offset": 235.875,
+        "bareWidth": 128.255,
+        "ownWidth": 148.13
+      },
+      {
+        "probe": "align-trail-r-three-spaces",
+        "algn": "r",
+        "spaces": 3,
+        "offset": 471.75,
+        "bareWidth": 128.255,
+        "ownWidth": 148.13
+      }
+    ],
+    "decorationFace": [
+      {
+        "probe": "dec-face-u-Arial",
+        "kind": "u",
+        "face": "Arial",
+        "size": 120,
+        "offsetEm": 0.103,
+        "thicknessEm": 0.075,
+        "chromiumOffsetEm": 0.05,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-s-Arial",
+        "kind": "s",
+        "face": "Arial",
+        "size": 120,
+        "offsetEm": -0.2595,
+        "thicknessEm": 0.05,
+        "chromiumOffsetEm": -0.35,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-u-TimesNewRoman",
+        "kind": "u",
+        "face": "Times New Roman",
+        "size": 120,
+        "offsetEm": 0.109,
+        "thicknessEm": 0.05,
+        "chromiumOffsetEm": 0.05,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-s-TimesNewRoman",
+        "kind": "s",
+        "face": "Times New Roman",
+        "size": 120,
+        "offsetEm": -0.257667,
+        "thicknessEm": 0.05,
+        "chromiumOffsetEm": -0.35,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-u-Verdana",
+        "kind": "u",
+        "face": "Verdana",
+        "size": 120,
+        "offsetEm": 0.086167,
+        "thicknessEm": 0.058333,
+        "chromiumOffsetEm": 0.05,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-s-Verdana",
+        "kind": "s",
+        "face": "Verdana",
+        "size": 120,
+        "offsetEm": -0.334667,
+        "thicknessEm": 0.058333,
+        "chromiumOffsetEm": -0.39,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-u-CourierNew",
+        "kind": "u",
+        "face": "Courier New",
+        "size": 120,
+        "offsetEm": 0.234667,
+        "thicknessEm": 0.041667,
+        "chromiumOffsetEm": 0.05,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-s-CourierNew",
+        "kind": "s",
+        "face": "Courier New",
+        "size": 120,
+        "offsetEm": -0.257,
+        "thicknessEm": 0.05,
+        "chromiumOffsetEm": -0.33,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-u-Georgia",
+        "kind": "u",
+        "face": "Georgia",
+        "size": 120,
+        "offsetEm": 0.086167,
+        "thicknessEm": 0.05,
+        "chromiumOffsetEm": 0.05,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-s-Georgia",
+        "kind": "s",
+        "face": "Georgia",
+        "size": 120,
+        "offsetEm": -0.293,
+        "thicknessEm": 0.05,
+        "chromiumOffsetEm": -0.36,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-u-Tahoma",
+        "kind": "u",
+        "face": "Tahoma",
+        "size": 120,
+        "offsetEm": 0.084167,
+        "thicknessEm": 0.0625,
+        "chromiumOffsetEm": 0.05,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-s-Tahoma",
+        "kind": "s",
+        "face": "Tahoma",
+        "size": 120,
+        "offsetEm": -0.336667,
+        "thicknessEm": 0.0625,
+        "chromiumOffsetEm": -0.38,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-u-Calibri",
+        "kind": "u",
+        "face": "Calibri",
+        "size": 120,
+        "offsetEm": 0.114,
+        "thicknessEm": 0.066667,
+        "chromiumOffsetEm": 0.05,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-s-Calibri",
+        "kind": "s",
+        "face": "Calibri",
+        "size": 120,
+        "offsetEm": -0.2485,
+        "thicknessEm": 0.066667,
+        "chromiumOffsetEm": -0.37,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-u-Consolas",
+        "kind": "u",
+        "face": "Consolas",
+        "size": 120,
+        "offsetEm": 0.127833,
+        "thicknessEm": 0.070833,
+        "chromiumOffsetEm": 0.05,
+        "chromiumThicknessEm": 0.1
+      },
+      {
+        "probe": "dec-face-s-Consolas",
+        "kind": "s",
+        "face": "Consolas",
+        "size": 120,
+        "offsetEm": -0.251333,
+        "thicknessEm": 0.05,
+        "chromiumOffsetEm": -0.36,
+        "chromiumThicknessEm": 0.1
+      }
+    ],
+    "decorationExtent": [
+      { "id": "one", "overhang": 1.5, "spaces": 1, "spaceAdvance": 0 },
+      { "id": "three", "overhang": 1.5, "spaces": 3, "spaceAdvance": 0 },
+      { "id": "georgia", "overhang": -0.5, "spaces": 1, "spaceAdvance": 0 }
+    ],
+    "decoration": [
+      {
+        "probe": "dec-u-sng-18",
+        "face": "Arial",
+        "size": 18,
+        "glyphRight": 215.5,
+        "rules": [
+          {
+            "offset": 1.98,
+            "thickness": 1.5,
+            "left": 120,
+            "right": 215.5,
+            "offsetEm": 0.11,
+            "thicknessEm": 0.08333
+          }
+        ]
+      },
+      {
+        "probe": "dec-u-sng-40",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": 332.5,
+        "rules": [
+          {
+            "offset": 4.12,
+            "thickness": 3,
+            "left": 120,
+            "right": 333,
+            "offsetEm": 0.1031,
+            "thicknessEm": 0.07508
+          }
+        ]
+      },
+      {
+        "probe": "dec-u-sng-66",
+        "face": "Arial",
+        "size": 66,
+        "glyphRight": 470.5,
+        "rules": [
+          {
+            "offset": 6.8,
+            "thickness": 5,
+            "left": 120,
+            "right": 472,
+            "offsetEm": 0.10303,
+            "thicknessEm": 0.07576
+          }
+        ]
+      },
+      {
+        "probe": "dec-u-dbl-18",
+        "face": "Arial",
+        "size": 18,
+        "glyphRight": 215.5,
+        "rules": [
+          {
+            "offset": 0.48,
+            "thickness": 1,
+            "left": 120,
+            "right": 215.5,
+            "offsetEm": 0.02667,
+            "thicknessEm": 0.05556
+          },
+          {
+            "offset": 2.48,
+            "thickness": 1,
+            "left": 120,
+            "right": 215.5,
+            "offsetEm": 0.13778,
+            "thicknessEm": 0.05556
+          }
+        ]
+      },
+      {
+        "probe": "dec-u-dbl-40",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": 332.5,
+        "rules": [
+          {
+            "offset": 1.12,
+            "thickness": 1.5,
+            "left": 120,
+            "right": 333,
+            "offsetEm": 0.02803,
+            "thicknessEm": 0.03754
+          },
+          {
+            "offset": 5.62,
+            "thickness": 1.5,
+            "left": 120,
+            "right": 333,
+            "offsetEm": 0.14064,
+            "thicknessEm": 0.03754
+          }
+        ]
+      },
+      {
+        "probe": "dec-u-dbl-66",
+        "face": "Arial",
+        "size": 66,
+        "glyphRight": 470.5,
+        "rules": [
+          {
+            "offset": 1.8,
+            "thickness": 2.5,
+            "left": 120,
+            "right": 472,
+            "offsetEm": 0.02727,
+            "thicknessEm": 0.03788
+          },
+          {
+            "offset": 9.3,
+            "thickness": 2.5,
+            "left": 120,
+            "right": 472,
+            "offsetEm": 0.14091,
+            "thicknessEm": 0.03788
+          }
+        ]
+      },
+      {
+        "probe": "dec-u-heavy-18",
+        "face": "Arial",
+        "size": 18,
+        "glyphRight": 215.5,
+        "rules": [
+          {
+            "offset": 0.48,
+            "thickness": 2.5,
+            "left": 120,
+            "right": 215.5,
+            "offsetEm": 0.02667,
+            "thicknessEm": 0.13889
+          }
+        ]
+      },
+      {
+        "probe": "dec-u-heavy-40",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": 332.5,
+        "rules": [
+          {
+            "offset": 1.12,
+            "thickness": 4.5,
+            "left": 120,
+            "right": 333,
+            "offsetEm": 0.02803,
+            "thicknessEm": 0.11261
+          }
+        ]
+      },
+      {
+        "probe": "dec-u-heavy-66",
+        "face": "Arial",
+        "size": 66,
+        "glyphRight": 470.5,
+        "rules": [
+          {
+            "offset": 1.8,
+            "thickness": 7.5,
+            "left": 120,
+            "right": 472,
+            "offsetEm": 0.02727,
+            "thicknessEm": 0.11364
+          }
+        ]
+      },
+      { "probe": "dec-u-dotted-18", "face": "Arial", "size": 18, "glyphRight": null, "rules": [] },
+      {
+        "probe": "dec-u-dotted-40",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": null,
+        "rules": []
+      },
+      { "probe": "dec-u-dotted-66", "face": "Arial", "size": 66, "glyphRight": null, "rules": [] },
+      { "probe": "dec-u-wavy-18", "face": "Arial", "size": 18, "glyphRight": null, "rules": [] },
+      { "probe": "dec-u-wavy-40", "face": "Arial", "size": 39.96, "glyphRight": null, "rules": [] },
+      { "probe": "dec-u-wavy-66", "face": "Arial", "size": 66, "glyphRight": null, "rules": [] },
+      {
+        "probe": "dec-u-words-18",
+        "face": "Arial",
+        "size": 18,
+        "glyphRight": 215.5,
+        "rules": [
+          {
+            "offset": 1.98,
+            "thickness": 1.5,
+            "left": 120,
+            "right": 215.5,
+            "offsetEm": 0.11,
+            "thicknessEm": 0.08333
+          }
+        ]
+      },
+      {
+        "probe": "dec-u-words-40",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": 332.5,
+        "rules": [
+          {
+            "offset": 4.12,
+            "thickness": 3,
+            "left": 120,
+            "right": 333,
+            "offsetEm": 0.1031,
+            "thicknessEm": 0.07508
+          }
+        ]
+      },
+      {
+        "probe": "dec-u-words-66",
+        "face": "Arial",
+        "size": 66,
+        "glyphRight": 470.5,
+        "rules": [
+          {
+            "offset": 6.8,
+            "thickness": 5,
+            "left": 120,
+            "right": 472,
+            "offsetEm": 0.10303,
+            "thicknessEm": 0.07576
+          }
+        ]
+      },
+      { "probe": "dec-u-dash-18", "face": "Arial", "size": 18, "glyphRight": null, "rules": [] },
+      { "probe": "dec-u-dash-40", "face": "Arial", "size": 39.96, "glyphRight": null, "rules": [] },
+      { "probe": "dec-u-dash-66", "face": "Arial", "size": 66, "glyphRight": null, "rules": [] },
+      {
+        "probe": "dec-s-sngStrike-18",
+        "face": "Arial",
+        "size": 18,
+        "glyphRight": 215.5,
+        "rules": [
+          {
+            "offset": -4.52,
+            "thickness": 1,
+            "left": 120,
+            "right": 215.5,
+            "offsetEm": -0.25111,
+            "thicknessEm": 0.05556
+          }
+        ]
+      },
+      {
+        "probe": "dec-s-sngStrike-40",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": 332.5,
+        "rules": [
+          {
+            "offset": -10.38,
+            "thickness": 2,
+            "left": 120,
+            "right": 333,
+            "offsetEm": -0.25976,
+            "thicknessEm": 0.05005
+          }
+        ]
+      },
+      {
+        "probe": "dec-s-sngStrike-66",
+        "face": "Arial",
+        "size": 66,
+        "glyphRight": 470.5,
+        "rules": [
+          {
+            "offset": -17.2,
+            "thickness": 3.5,
+            "left": 120,
+            "right": 472,
+            "offsetEm": -0.26061,
+            "thicknessEm": 0.05303
+          }
+        ]
+      },
+      {
+        "probe": "dec-s-dblStrike-18",
+        "face": "Arial",
+        "size": 18,
+        "glyphRight": 215.5,
+        "rules": [
+          {
+            "offset": -5.52,
+            "thickness": 1,
+            "left": 120,
+            "right": 215.5,
+            "offsetEm": -0.30667,
+            "thicknessEm": 0.05556
+          },
+          {
+            "offset": -3.52,
+            "thickness": 1,
+            "left": 120,
+            "right": 215.5,
+            "offsetEm": -0.19556,
+            "thicknessEm": 0.05556
+          }
+        ]
+      },
+      {
+        "probe": "dec-s-dblStrike-40",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": 332.5,
+        "rules": [
+          {
+            "offset": -12.38,
+            "thickness": 2,
+            "left": 120,
+            "right": 333,
+            "offsetEm": -0.30981,
+            "thicknessEm": 0.05005
+          },
+          {
+            "offset": -8.38,
+            "thickness": 2,
+            "left": 120,
+            "right": 333,
+            "offsetEm": -0.20971,
+            "thicknessEm": 0.05005
+          }
+        ]
+      },
+      {
+        "probe": "dec-s-dblStrike-66",
+        "face": "Arial",
+        "size": 66,
+        "glyphRight": 470,
+        "rules": [
+          {
+            "offset": -20.7,
+            "thickness": 3.5,
+            "left": 120,
+            "right": 472,
+            "offsetEm": -0.31364,
+            "thicknessEm": 0.05303
+          },
+          {
+            "offset": -13.7,
+            "thickness": 3.5,
+            "left": 120,
+            "right": 472,
+            "offsetEm": -0.20758,
+            "thicknessEm": 0.05303
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-u-Arial",
+        "face": "Arial",
+        "size": 120,
+        "glyphRight": 421.5,
+        "rules": [
+          {
+            "offset": 12.36,
+            "thickness": 9,
+            "left": 120,
+            "right": 426.5,
+            "offsetEm": 0.103,
+            "thicknessEm": 0.075
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-s-Arial",
+        "face": "Arial",
+        "size": 120,
+        "glyphRight": 418.5,
+        "rules": [
+          {
+            "offset": -31.14,
+            "thickness": 6,
+            "left": 120,
+            "right": 426.5,
+            "offsetEm": -0.2595,
+            "thicknessEm": 0.05
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-u-TimesNewRoman",
+        "face": "Times New Roman",
+        "size": 120,
+        "glyphRight": 413,
+        "rules": [
+          {
+            "offset": 13.08,
+            "thickness": 6,
+            "left": 120,
+            "right": 413,
+            "offsetEm": 0.109,
+            "thicknessEm": 0.05
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-s-TimesNewRoman",
+        "face": "Times New Roman",
+        "size": 120,
+        "glyphRight": 404,
+        "rules": [
+          {
+            "offset": -30.92,
+            "thickness": 6,
+            "left": 120,
+            "right": 413,
+            "offsetEm": -0.25767,
+            "thicknessEm": 0.05
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-u-Verdana",
+        "face": "Verdana",
+        "size": 120,
+        "glyphRight": 447.5,
+        "rules": [
+          {
+            "offset": 10.34,
+            "thickness": 7,
+            "left": 120,
+            "right": 457.5,
+            "offsetEm": 0.08617,
+            "thicknessEm": 0.05833
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-s-Verdana",
+        "face": "Verdana",
+        "size": 120,
+        "glyphRight": 447.5,
+        "rules": [
+          {
+            "offset": -40.16,
+            "thickness": 7,
+            "left": 120,
+            "right": 457.5,
+            "offsetEm": -0.33467,
+            "thicknessEm": 0.05833
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-u-CourierNew",
+        "face": "Courier New",
+        "size": 120,
+        "glyphRight": 473,
+        "rules": [
+          {
+            "offset": 28.16,
+            "thickness": 5,
+            "left": 120,
+            "right": 479.5,
+            "offsetEm": 0.23467,
+            "thicknessEm": 0.04167
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-s-CourierNew",
+        "face": "Courier New",
+        "size": 120,
+        "glyphRight": 463.5,
+        "rules": [
+          {
+            "offset": -30.84,
+            "thickness": 6,
+            "left": 120,
+            "right": 479.5,
+            "offsetEm": -0.257,
+            "thicknessEm": 0.05
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-u-Georgia",
+        "face": "Georgia",
+        "size": 120,
+        "glyphRight": 432.5,
+        "rules": [
+          {
+            "offset": 10.34,
+            "thickness": 6,
+            "left": 120,
+            "right": 433.5,
+            "offsetEm": 0.08617,
+            "thicknessEm": 0.05
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-s-Georgia",
+        "face": "Georgia",
+        "size": 120,
+        "glyphRight": 423,
+        "rules": [
+          {
+            "offset": -35.16,
+            "thickness": 6,
+            "left": 120,
+            "right": 433.5,
+            "offsetEm": -0.293,
+            "thicknessEm": 0.05
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-u-Tahoma",
+        "face": "Tahoma",
+        "size": 120,
+        "glyphRight": 408,
+        "rules": [
+          {
+            "offset": 10.1,
+            "thickness": 7.5,
+            "left": 120,
+            "right": 415,
+            "offsetEm": 0.08417,
+            "thicknessEm": 0.0625
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-s-Tahoma",
+        "face": "Tahoma",
+        "size": 120,
+        "glyphRight": 408,
+        "rules": [
+          {
+            "offset": -40.4,
+            "thickness": 7.5,
+            "left": 120,
+            "right": 415,
+            "offsetEm": -0.33667,
+            "thicknessEm": 0.0625
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-u-Calibri",
+        "face": "Calibri",
+        "size": 120,
+        "glyphRight": 392,
+        "rules": [
+          {
+            "offset": 13.68,
+            "thickness": 8,
+            "left": 120,
+            "right": 400,
+            "offsetEm": 0.114,
+            "thicknessEm": 0.06667
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-s-Calibri",
+        "face": "Calibri",
+        "size": 120,
+        "glyphRight": 392,
+        "rules": [
+          {
+            "offset": -29.82,
+            "thickness": 8,
+            "left": 120,
+            "right": 400,
+            "offsetEm": -0.2485,
+            "thicknessEm": 0.06667
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-u-Consolas",
+        "face": "Consolas",
+        "size": 120,
+        "glyphRight": 440.5,
+        "rules": [
+          {
+            "offset": 15.34,
+            "thickness": 8.5,
+            "left": 120,
+            "right": 449.5,
+            "offsetEm": 0.12783,
+            "thicknessEm": 0.07083
+          }
+        ]
+      },
+      {
+        "probe": "dec-face-s-Consolas",
+        "face": "Consolas",
+        "size": 120,
+        "glyphRight": 440.5,
+        "rules": [
+          {
+            "offset": -30.16,
+            "thickness": 6,
+            "left": 120,
+            "right": 449.5,
+            "offsetEm": -0.25133,
+            "thicknessEm": 0.05
+          }
+        ]
+      },
+      {
+        "probe": "dec-trail-one",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": 220.5,
+        "rules": [
+          {
+            "offset": 4.12,
+            "thickness": 3,
+            "left": 120,
+            "right": 222,
+            "offsetEm": 0.1031,
+            "thicknessEm": 0.07508
+          }
+        ]
+      },
+      {
+        "probe": "dec-trail-one-bare",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": 220.5,
+        "rules": [
+          {
+            "offset": 4.12,
+            "thickness": 3,
+            "left": 120,
+            "right": 222,
+            "offsetEm": 0.1031,
+            "thicknessEm": 0.07508
+          }
+        ]
+      },
+      {
+        "probe": "dec-trail-three",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": 220.5,
+        "rules": [
+          {
+            "offset": 4.12,
+            "thickness": 3,
+            "left": 120,
+            "right": 222,
+            "offsetEm": 0.1031,
+            "thicknessEm": 0.07508
+          }
+        ]
+      },
+      {
+        "probe": "dec-trail-three-bare",
+        "face": "Arial",
+        "size": 39.96,
+        "glyphRight": 220.5,
+        "rules": [
+          {
+            "offset": 4.12,
+            "thickness": 3,
+            "left": 120,
+            "right": 222,
+            "offsetEm": 0.1031,
+            "thicknessEm": 0.07508
+          }
+        ]
+      },
+      {
+        "probe": "dec-trail-georgia",
+        "face": "Georgia",
+        "size": 39.96,
+        "glyphRight": 224.5,
+        "rules": [
+          {
+            "offset": 3.24,
+            "thickness": 2,
+            "left": 120,
+            "right": 224,
+            "offsetEm": 0.08108,
+            "thicknessEm": 0.05005
+          }
+        ]
+      },
+      {
+        "probe": "dec-trail-georgia-bare",
+        "face": "Georgia",
+        "size": 39.96,
+        "glyphRight": 224.5,
+        "rules": [
+          {
+            "offset": 3.24,
+            "thickness": 2,
+            "left": 120,
+            "right": 224,
+            "offsetEm": 0.08108,
+            "thicknessEm": 0.05005
+          }
+        ]
+      }
+    ],
+    "shift": [
+      {
+        "probe": "shift-up30000",
+        "percent": 30,
+        "statedSize": 32.04,
+        "drawnSize": 21.36,
+        "rise": 9.6,
+        "sizeRatio": 0.66667
+      },
+      {
+        "probe": "shift-up50000",
+        "percent": 50,
+        "statedSize": 32.04,
+        "drawnSize": 21.36,
+        "rise": 15.96,
+        "sizeRatio": 0.66667
+      },
+      {
+        "probe": "shift-down25000",
+        "percent": -25,
+        "statedSize": 32.04,
+        "drawnSize": 21.36,
+        "rise": -7.92,
+        "sizeRatio": 0.66667
+      },
+      {
+        "probe": "shift-up100000",
+        "percent": 100,
+        "statedSize": 32.04,
+        "drawnSize": 21.36,
+        "rise": 32.04,
+        "sizeRatio": 0.66667
+      }
+    ],
+    "caps": [
+      {
+        "probe": "shift-cap-none",
+        "cap": "none",
+        "statedSize": 32.04,
+        "drawn": [{ "text": "Hamburg fox", "size": 32.04 }]
+      },
+      {
+        "probe": "shift-cap-small",
+        "cap": "small",
+        "statedSize": 32.04,
+        "drawn": [
+          { "text": "H", "size": 32.04 },
+          { "text": "AMBURG", "size": 25.56 },
+          { "text": "FOX", "size": 25.56 }
+        ]
+      },
+      {
+        "probe": "shift-cap-all",
+        "cap": "all",
+        "statedSize": 32.04,
+        "drawn": [{ "text": "HAMBURG FOX", "size": 32.04 }]
+      }
+    ],
+    "runs": [
+      { "probe": "runs-whole-unset", "records": 1, "advances": [197, 197, 210, 302, 222] },
+      { "probe": "runs-split-unset", "records": 1, "advances": [197, 197, 210, 302, 222] },
+      { "probe": "runs-colored-unset", "records": 2, "advances": [197, 197, 210, 302, 222] },
+      { "probe": "runs-whole-off", "records": 1, "advances": [222, 222, 222, 314, 222] },
+      { "probe": "runs-split-off", "records": 1, "advances": [222, 222, 222, 314, 222] },
+      { "probe": "runs-colored-off", "records": 2, "advances": [222, 222, 222, 314, 222] }
+    ],
+    "letterSpacing": {
+      "plain": [197, 197, 210, 302, 222],
+      "spaced": [230, 230, 243, 335, 255],
+      "addedPerCharacter": [33, 33, 33, 33, 33]
+    }
+  },
+  "browser": {
+    "chromium": "151.0.7922.34",
+    "ladderPx": 1000,
+    "faces": {
+      "Arial": { "ascent": 0.905, "descent": 0.212, "baselineShare": 0.810206 },
+      "Times New Roman": { "ascent": 0.891, "descent": 0.216, "baselineShare": 0.804878 },
+      "Verdana": { "ascent": 1.005, "descent": 0.21, "baselineShare": 0.82716 },
+      "Courier New": { "ascent": 0.833, "descent": 0.3, "baselineShare": 0.735216 },
+      "Georgia": { "ascent": 0.917, "descent": 0.219, "baselineShare": 0.807218 },
+      "Tahoma": { "ascent": 1, "descent": 0.207, "baselineShare": 0.8285 },
+      "Calibri": { "ascent": 0.952, "descent": 0.269, "baselineShare": 0.779689 },
+      "Consolas": { "ascent": 0.92, "descent": 0.251, "baselineShare": 0.785653 }
+    },
+    "sizes": [12, 18, 32, 54]
+  }
+}

@@ -20,12 +20,18 @@ export type RenderErrorCode =
   /** A group tree nests deeper than `MAX_GROUP_DEPTH`. Hostile input. */
   | 'RENDER_GROUP_DEPTH'
   /** The host handed `mount` something that is not an element. */
-  | 'RENDER_NO_HOST';
+  | 'RENDER_NO_HOST'
+  /** An `a:bodyPr` attribute that is not a length or an angle. */
+  | 'RENDER_TEXT_FRAME'
+  /** A text direction this package lays out but does not yet draw. */
+  | 'RENDER_TEXT_UNSUPPORTED';
 
 export const RENDER_ERROR_CODES: readonly RenderErrorCode[] = [
   'RENDER_UNKNOWN_PRESET',
   'RENDER_GROUP_DEPTH',
   'RENDER_NO_HOST',
+  'RENDER_TEXT_FRAME',
+  'RENDER_TEXT_UNSUPPORTED',
 ];
 
 export class RenderError extends Error {

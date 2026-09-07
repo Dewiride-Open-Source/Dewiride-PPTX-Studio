@@ -179,11 +179,15 @@ export interface TextMeasurer {
  * browser that matters and are not always in the checked-in types. Declaring the
  * exact surface used keeps `strict` honest without widening anything to `any`.
  */
-interface MeasuringContext {
+export interface MeasuringContext {
   font: string;
   letterSpacing: string;
   fontKerning: string;
-  measureText(text: string): { readonly width: number };
+  measureText(text: string): {
+    readonly width: number;
+    readonly fontBoundingBoxAscent: number;
+    readonly fontBoundingBoxDescent: number;
+  };
 }
 interface MeasuringCanvas {
   getContext(id: '2d'): MeasuringContext | null;
@@ -191,14 +195,12 @@ interface MeasuringCanvas {
 type OffscreenCanvasCtor = new (width: number, height: number) => MeasuringCanvas;
 
 /**
- * A measurer over a 1x1 `OffscreenCanvas`.
+ * The one place in the package that acquires a measuring surface.
  *
- * The canvas is never drawn to, so its size is irrelevant and one pixel is
- * enough. One context is kept for the life of the measurer: setting `font` is
- * cheap, creating a context is not, and a slide asks for thousands of
- * measurements.
+ * The font guard and the baseline need a context too, and two routes to a
+ * measurement are two measurements.
  */
-export function createCanvasMeasurer(): TextMeasurer {
+export function createMeasuringContext(): MeasuringContext {
   const ctor = (globalThis as { OffscreenCanvas?: OffscreenCanvasCtor }).OffscreenCanvas;
   if (ctor === undefined) {
     throw new TextError(
@@ -210,6 +212,19 @@ export function createCanvasMeasurer(): TextMeasurer {
   if (ctx === null) {
     throw new TextError('TEXT_NO_CANVAS', 'OffscreenCanvas gave no 2d context');
   }
+  return ctx;
+}
+
+/**
+ * A measurer over a 1x1 `OffscreenCanvas`.
+ *
+ * The canvas is never drawn to, so its size is irrelevant and one pixel is
+ * enough. One context is kept for the life of the measurer: setting `font` is
+ * cheap, creating a context is not, and a slide asks for thousands of
+ * measurements.
+ */
+export function createCanvasMeasurer(): TextMeasurer {
+  const ctx = createMeasuringContext();
 
   return {
     measure(text: string, font: RunFont): Advance {

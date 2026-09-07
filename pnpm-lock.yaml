@@ -335,6 +335,9 @@ importers:
       '@pptx-studio/paint':
         specifier: workspace:^
         version: link:../paint
+      '@pptx-studio/text':
+        specifier: workspace:^
+        version: link:../text
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: 'catalog:'

@@ -37,6 +37,8 @@ export type TextErrorCode =
    * get a plausible number from here without having asked for one.
    */
   | 'TEXT_FACE_METRICS'
+  /** An `@u` or `@strike` value that is not in its ST_ simple type. */
+  | 'TEXT_DECORATION'
   /** An `a:buAutoNum/@type` that is not one of the 41 schemes PowerPoint accepts. */
   | 'TEXT_AUTONUMBER_SCHEME'
   /**

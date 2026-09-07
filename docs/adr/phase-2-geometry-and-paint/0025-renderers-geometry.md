@@ -3,8 +3,8 @@
 **Sub-phase 2.10.** Status: accepted. Supersedes nothing; **corrects one line of the approved plan's
 5.3** and adds two findings the plan does not mention.
 
-Experiment: **C6**, `tools/ground-truth/{tools/ground-truth/render/author.ps1, transforms.ts,
-tools/ground-truth/render/build-deck.ts, tools/ground-truth/render/read.ps1, tools/ground-truth/render/analyse.ts}`.
+Experiment: **C6**, `tools/ground-truth/{tools/ground-truth/render/transforms/author.ps1, transforms.ts,
+tools/ground-truth/render/transforms/build-deck.ts, tools/ground-truth/render/transforms/read.ps1, tools/ground-truth/render/transforms/analyse.ts}`.
 Fixture: `corpus/ground-truth/transforms.json` — 65 probes across 15 packages, 54 bitmap samples,
 plus two decks PowerPoint authored itself.
 
@@ -30,7 +30,7 @@ It wrote `rot="19800000" flipH="1"`. Minus thirty. Again at 45, 120 and 200 degr
 the vertical axis. Both flips together left the angle unchanged, which is the same fact from the
 other side — `flipH flipV` is a half turn and rotations commute.
 
-`tools/ground-truth/render/author.ps1` is 250 lines and settled the sub-phase's central question, plus four others,
+`tools/ground-truth/render/transforms/author.ps1` is 250 lines and settled the sub-phase's central question, plus four others,
 before a probe existed. Third sub-phase running that the cheapest thing in the directory was the
 highest-yield: **ask the format's author in writing, first.**
 
