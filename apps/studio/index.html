@@ -301,9 +301,10 @@
         code <code>pptx-studio inspect</code> and <code>pptx-studio roundtrip</code> run.
       </p>
       <p class="lead">
-        Slides are drawn too, as of sub-phase 2.11 — geometry, fills, gradients, patterns, strokes,
-        effects and nested rotated groups, with a debug overlay on any shape you click. Text is not
-        laid out yet: a text box renders as its outline, and the text engine is Phase 3. See also
+        Slides are drawn too — geometry, fills, gradients, patterns, strokes, effects and nested
+        rotated groups, with a debug overlay on any shape you click, and text laid out and drawn as
+        real <code>&lt;text&gt;</code>: the cascade, line breaking, autofit, bullets, anchoring and
+        the baseline PowerPoint itself puts the glyphs on. See also
         <a href="./gallery.html">the 187 preset shapes</a>, with their adjust handles live.
       </p>
 
@@ -318,7 +319,7 @@
     </main>
 
     <footer>
-      Pre-alpha. Gate 1 of
+      Pre-alpha, at sub-phase 3.8 of the plan. Gate 1 of
       <a href="https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio">PPTX Studio</a>: a
       package is read, described, and handed back with its charts, SmartArt, animations, OLE objects
       and macros intact — because parts nobody edited are copied out of the source archive still

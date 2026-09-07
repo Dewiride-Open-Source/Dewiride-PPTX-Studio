@@ -301,6 +301,57 @@ asserts the hex each emitter writes.
   `measuredEnd` already ends before the space run a line broke at, which 3.3 established and this
   had duplicated. Deleted, and the comment now cites 3.3 rather than restating it.
 
+### Half the corpus threw, and `verify-render` could not have caught it
+
+Every probe deck T8 authors names a typeface on every run, so the seven decks the verifier reads
+never asked what happens when none does. Half the corpus does: `a08-bullets` reaches its ninth
+outline level under a master that declares five, and no source below that level names a face. The
+resolver returned the empty string, `cssFamily` refused to quote it, and the slide did not draw.
+
+The answer was already measured and had been left in the fixture. Six of T1's probes reach a cascade
+that names no typeface - `font-silent` was built for exactly this question - and all six came back
+as the theme's **minor** face. Two more say the built-in styles name one too: a title placeholder at
+level 1 under a master with no `p:txStyles` drew in the major face, a body placeholder in the minor.
+3.1 recorded the sizes those probes produced and not the faces, so the table shipped with four
+columns where the measurement had five.
+
+So `BuiltinLevel` gained a `typeface`, derived in `write-tables.ts` from the same probe rows rather
+than typed in, and `resolveLatinTypeface` joined `resolveSize` as a resolver that cannot return
+`undefined`. Past the first title level PowerPoint reported no face at all, which is recorded as
+`null` and falls to the floor - the one part of this that is a choice rather than a reading, and it
+is open question 10.
+
+Two lessons, both about where the check was pointed. A verifier that reads only the decks its own
+experiment authored is testing the experiment. And a resolver that hands a renderer an empty string
+has already lost: the throw belongs where the cascade runs out, naming the run, not three files
+later at a CSS shorthand.
+
+### The layout read `wrapText`'s indices in the wrong units
+
+`breakOpportunities` says what it returns in its own header - "positions are code point indices" -
+and `wrapText` works over `toCodePoints(input.text)`. This layout took the `start` and `end` it got
+back and used them to index the joined string, whose offsets it had built from `cell.text.length`.
+Those two spaces are the same string right up until a character outside the basic multilingual plane,
+and then they diverge by one per astral character.
+
+Found by the first sweep of 3.9's harness, on `a40-unicode` slide 2, as
+`URIError: URI malformed` - `encodeURIComponent` refusing a lone surrogate. The emitted markup held
+`\ud83d` with no low half, and Chromium's own `DOMParser` rejected the document: **`render-svg` was
+emitting text that is not well-formed XML.** Reduced to six characters it is
+`wrapText({ text: '𝕏𝕏 abc', … })` returning `{ start: 0, end: 3 }`, which is `'𝕏𝕏 '` by code point
+and `'𝕏\ud835'` by code unit.
+
+Malformed output was the loud half. The quiet half is that `rangeMeasurer` measured the wrong
+substring, so **every line break in a paragraph containing an astral character was decided on a
+width that belonged to different text** - and `render-dom` builds on the same node tree, so both
+renderers had it.
+
+The fix is that a `Cell` now carries its code points and every offset and slice in the pass counts
+in them, which is the space the breaker already worked in. The lesson is narrower than the last
+one: an index is a measurement in units, and a function that returns one should be read for which
+units before its result is used as an offset. The four call sites had no test that could tell the
+two apart because every one of them ran on Latin text.
+
 ---
 
 ## Open questions
@@ -327,8 +378,12 @@ asserts the hex each emitter writes.
    view mode; the edit mode that re-runs the ladder belongs to 6.4.
 8. **A run's `a:ln` and `a:effectLst` are parsed and ignored.** Outlined and shadowed text draws as
    plain fill.
-9. **`packages/validate` has no rule for an `@u` or `@strike` outside its simple type**, nor for an
-   `a:bodyPr/@rot` outside `ST_Angle`.
-10. **The HTML layer's baseline is within one CSS pixel and not exact**, because Chromium rounds a
+9. **A built-in title level past the first names no typeface**, so a hand-written master with a
+   level-2 title draws in the minor face. PowerPoint's object model reports no face for those rows,
+   which is why the table records `null`; what it actually paints is unmeasured, and a bitmap of that
+   slide would settle it.
+10. **`packages/validate` has no rule for an `@u` or `@strike` outside its simple type**, nor for an
+    `a:bodyPr/@rot` outside `ST_Angle`.
+11. **The HTML layer's baseline is within one CSS pixel and not exact**, because Chromium rounds a
     font's ascent before laying a line out. Whether a `transform` on each line could close it without
     a per-line DOM measurement is untried.

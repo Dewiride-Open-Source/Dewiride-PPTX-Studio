@@ -173,6 +173,7 @@ export {
   resolveBulletKind,
   resolveBulletSize,
   resolveIndent,
+  resolveLatinTypeface,
   resolveMarginLeft,
   resolveParagraph,
   resolveRun,

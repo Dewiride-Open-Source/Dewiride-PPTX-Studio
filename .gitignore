@@ -12,6 +12,10 @@ playwright-report/
 test-results/
 **/__screenshots__/
 
+# the fidelity harness writes its report here; the committed half is the
+# oracle under corpus/ground-truth/render/fidelity/
+/fidelity/
+
 # local scratch
 /tmp/
 *.local

@@ -31,6 +31,7 @@ import {
   resolveMarginLeft,
   resolveParagraph,
   resolveRun,
+  resolveLatinTypeface,
   resolveSize,
   textLevels,
   type TextContext,
@@ -936,6 +937,116 @@ describe('the sources that are not sources', () => {
   });
 });
 
+/** The face a probe measured, as the theme reference that produced it. */
+function reference(id: string): string | null {
+  const face = fixture.probes.find((probe) => probe.id === id)?.measured.font;
+  if (face === undefined) throw new Error(`no probe ${id}`);
+  if (face === MAJOR) return '+mj-lt';
+  if (face === MINOR) return '+mn-lt';
+  if (face === '') return null;
+  throw new Error(`${id} measured ${face}`);
+}
+
+describe('the typeface when the cascade names none', () => {
+  const silent = [
+    'font-silent',
+    'order-9-none-ph',
+    'order-9-none-plain',
+    'otherstyle-slide',
+    'otherstyle-layout',
+    'otherstyle-master',
+  ];
+
+  it('is the theme minor on every probe that reaches a silent cascade', () => {
+    for (const id of silent) expect(reference(id)).toBe('+mn-lt');
+    expect(TEXT_FLOOR.typeface).toBe('+mn-lt');
+  });
+
+  it('resolves a paragraph past the last level a master declares', () => {
+    // A paragraph at a level no source declares, which is a corpus deck's
+    // ninth outline level under a master that stops at five.
+    const sheets = chain(
+      {
+        shapes: [
+          spXml({
+            name: 'probe',
+            paragraphs: ['<a:p><a:pPr lvl="8"/><a:r><a:t>x</a:t></a:r></a:p>'],
+          }),
+        ],
+      },
+      {},
+      {
+        shapes: masterShapes(),
+        txStyles:
+          '<p:txStyles><p:bodyStyle><a:lvl1pPr><a:defRPr sz="1800"><a:latin typeface="+mn-lt"/></a:defRPr></a:lvl1pPr></p:bodyStyle></p:txStyles>',
+      },
+    );
+    const shape = shapeNamed(sheets.slide, 'probe');
+    const context: TextContext = { sheet: sheets.slide, shape, defaultTextStyle: undefined };
+    const paragraph = firstParagraph(sheets.slide, 'probe');
+    const resolved = resolveLatinTypeface(context, paragraph, firstRun(paragraph));
+    expect(resolved.value).toBe(MINOR);
+    expect(resolved.explicit).toBe(false);
+  });
+
+  it('falls to the floor on a built-in title level that names none', () => {
+    // PowerPoint reported no face at all past the first title level, which is
+    // the measurement and not a gap in it; the floor is what a renderer draws.
+    expect(BUILTIN_TEXT_STYLES.title[0]?.typeface).toBe('+mj-lt');
+    expect(BUILTIN_TEXT_STYLES.title[1]?.typeface).toBeNull();
+    const sheets = chain(
+      {
+        shapes: [
+          spXml({
+            name: 'probe',
+            ph: 'type="title" idx="0"',
+            paragraphs: ['<a:p><a:pPr lvl="1"/><a:r><a:t>x</a:t></a:r></a:p>'],
+          }),
+        ],
+      },
+      {},
+      { shapes: masterShapes() },
+    );
+    const shape = shapeNamed(sheets.slide, 'probe');
+    const context: TextContext = { sheet: sheets.slide, shape, defaultTextStyle: undefined };
+    const paragraph = firstParagraph(sheets.slide, 'probe');
+    expect(resolveLatinTypeface(context, paragraph, firstRun(paragraph)).value).toBe(MINOR);
+  });
+
+  it('follows a run that names a face, and one that names the major collection', () => {
+    const sheets = chain(
+      {
+        shapes: [
+          spXml({
+            name: 'named',
+            paragraphs: [
+              '<a:p><a:r><a:rPr><a:latin typeface="Courier New"/></a:rPr><a:t>x</a:t></a:r></a:p>',
+            ],
+          }),
+          spXml({
+            name: 'major',
+            paragraphs: [
+              '<a:p><a:r><a:rPr><a:latin typeface="+mj-lt"/></a:rPr><a:t>x</a:t></a:r></a:p>',
+            ],
+          }),
+        ],
+      },
+      {},
+      { shapes: masterShapes() },
+    );
+    const face = (name: string): string => {
+      const shape = shapeNamed(sheets.slide, name);
+      const context: TextContext = { sheet: sheets.slide, shape, defaultTextStyle: undefined };
+      const paragraph = firstParagraph(sheets.slide, name);
+      return resolveLatinTypeface(context, paragraph, firstRun(paragraph)).value;
+    };
+    // Both fixture rows: font-explicit measured Courier New, font-major the
+    // theme's major face.
+    expect(face('named')).toBe('Courier New');
+    expect(face('major')).toBe(MAJOR);
+  });
+});
+
 describe("PowerPoint's own text styles, for a master that declares none", () => {
   it('matches the committed table, level for level', () => {
     for (const bucket of ['title', 'body', 'other'] as const) {
@@ -947,6 +1058,7 @@ describe("PowerPoint's own text styles, for a master that declares none", () => 
           marL: level.marLEmu,
           indent: level.indentEmu,
           bullet: level.bullet,
+          typeface: reference(`builtin-${bucket === 'other' ? 'plain' : bucket}-${String(i)}`),
         });
       }
     }

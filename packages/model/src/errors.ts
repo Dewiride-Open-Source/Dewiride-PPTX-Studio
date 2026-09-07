@@ -62,7 +62,8 @@ export type ModelErrorCode =
    */
   | 'MODEL_TEXT_BULLET'
   /** A paragraph level that is not an integer. */
-  | 'MODEL_TEXT_LEVEL';
+  | 'MODEL_TEXT_LEVEL'
+  | 'MODEL_TEXT_TYPEFACE';
 
 export class ModelError extends Error {
   override readonly name = 'ModelError';
@@ -109,4 +110,5 @@ export const MODEL_ERROR_CODES: readonly ModelErrorCode[] = [
   'MODEL_TEXT_ATTR',
   'MODEL_TEXT_FIELD',
   'MODEL_TEXT_LEVEL',
+  'MODEL_TEXT_TYPEFACE',
 ];

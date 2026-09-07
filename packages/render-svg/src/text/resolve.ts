@@ -18,8 +18,8 @@ import {
   resolveMarginLeft,
   resolveParagraph,
   resolveRun,
+  resolveLatinTypeface,
   resolveSize,
-  resolveTypefaceOf,
   resolveVertical,
   resolveWrap,
   type Caps,
@@ -31,8 +31,6 @@ import {
   type TextAnchor,
   type TextBody,
   type TextContent,
-  type FontScheme,
-  type Sheet,
   type TextContext,
   type Underline,
   type VerticalText,
@@ -129,26 +127,6 @@ function colorOf(fill: Fill | undefined, context: ColorContext): Rgba | null {
  * Only the Latin slot: splitting a run by script is `splitScriptRuns`, and it
  * happens at layout time where the characters are.
  */
-function typefaceOf(
-  context: TextContext,
-  paragraph: Paragraph,
-  run: TextContent | undefined,
-): string {
-  const latin = resolveRun(context, paragraph, run, (props) => props.latin);
-  if (latin === undefined) return '';
-  const scheme = fontSchemeOf(context.sheet);
-  if (scheme === null) return latin.value.typeface;
-  return resolveTypefaceOf(latin.value, scheme) ?? '';
-}
-
-/** The theme's font scheme, which only a master carries directly. */
-function fontSchemeOf(sheet: Sheet): FontScheme | null {
-  for (let at: Sheet | null = sheet; at !== null; at = at.parent) {
-    if (at.theme !== null) return at.theme.fonts;
-  }
-  return null;
-}
-
 function runOf(
   context: TextContext,
   paragraph: Paragraph,
@@ -163,7 +141,7 @@ function runOf(
   return {
     text,
     font: {
-      family: typefaceOf(context, paragraph, content),
+      family: resolveLatinTypeface(context, paragraph, content).value,
       sz,
       bold: ask((props) => props.b),
       italic: ask((props) => props.i),

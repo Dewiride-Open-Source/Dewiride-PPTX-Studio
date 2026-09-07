@@ -27,6 +27,7 @@ import {
   frameAxes,
   lineAdvance,
   strikeRules,
+  toCodePoints,
   underlineRules,
   wrapText,
   type Box,
@@ -231,6 +232,8 @@ interface Cell {
   readonly run: ResolvedRun;
   readonly sizeRatio: number;
   readonly text: string;
+  /** `text` by code point, because `wrapText` returns code point indices. */
+  readonly points: readonly string[];
   readonly source: string;
 }
 
@@ -239,7 +242,13 @@ function cellsOf(paragraph: ResolvedParagraph): readonly Cell[] {
   for (const run of paragraph.runs) {
     for (const stretch of capStretches(run.text, run.caps)) {
       if (stretch.text.length === 0) continue;
-      out.push({ run, sizeRatio: stretch.sizeRatio, text: stretch.text, source: run.text });
+      out.push({
+        run,
+        sizeRatio: stretch.sizeRatio,
+        text: stretch.text,
+        points: toCodePoints(stretch.text),
+        source: run.text,
+      });
     }
   }
   return out;
@@ -263,7 +272,7 @@ function rangeMeasurer(
   let at = 0;
   for (const cell of cells) {
     starts.push(at);
-    at += cell.text.length;
+    at += cell.points.length;
   }
   return {
     text,
@@ -271,12 +280,12 @@ function rangeMeasurer(
       let width = 0;
       cells.forEach((cell, index) => {
         const start = starts[index] ?? 0;
-        const end = start + cell.text.length;
+        const end = start + cell.points.length;
         const lo = Math.max(from, start);
         const hi = Math.min(to, end);
         if (hi <= lo) return;
         width += measurer.measure(
-          cell.text.slice(lo - start, hi - start),
+          cell.points.slice(lo - start, hi - start).join(''),
           pieceFont(cell.run, cell.sizeRatio, scale),
         ).width;
       });
@@ -300,12 +309,12 @@ function piecesOf(
   let at = 0;
   for (const cell of cells) {
     const start = at;
-    const end = at + cell.text.length;
+    const end = at + cell.points.length;
     at = end;
     const lo = Math.max(from, start);
     const hi = Math.min(to, end);
     if (hi <= lo) continue;
-    const text = cell.text.slice(lo - start, hi - start);
+    const text = cell.points.slice(lo - start, hi - start).join('');
     const font = pieceFont(cell.run, cell.sizeRatio, scale);
     const widthPt = measure(lo, hi);
     const sizeOfPiece = font.sz / 100;

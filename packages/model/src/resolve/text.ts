@@ -48,6 +48,8 @@
 
 import { ModelError } from '../errors.js';
 import { inheritanceChain, normalizePlaceholder } from './placeholder.js';
+import { themeOf } from './resolve.js';
+import { resolveTypeface } from './typeface.js';
 import { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from '../builtin-text-styles.js';
 import {
   type BulletAutoNum,
@@ -61,6 +63,7 @@ import {
   type ParaProps,
   type RunProps,
   type TextContent,
+  themeFontRef,
 } from '../text.js';
 import type { Origin, Resolved, Shape, Sheet } from '../types.js';
 
@@ -313,6 +316,48 @@ export function resolveSize(
   const found = resolveRun(context, paragraph, run, (props) => props.sz);
   if (found !== undefined) return found;
   return floorResolved(context, paragraph, (level) => level.sz);
+}
+
+/**
+ * The Latin typeface of a run, with any theme reference followed.
+ *
+ * The second resolver that cannot return `undefined`: a run has to be drawn in
+ * some face, and the face when nothing named one is measured rather than
+ * chosen - the theme's minor, on all six probes reaching a silent cascade.
+ */
+export function resolveLatinTypeface(
+  context: TextContext,
+  paragraph: Paragraph,
+  run: TextContent | undefined,
+): Resolved<string> {
+  const scheme = themeOf(context.sheet)?.fonts ?? null;
+  /** A name a source gave, with a theme reference followed where one can be. */
+  const faceOf = (typeface: string): string | undefined => {
+    if (themeFontRef(typeface) === null) return typeface;
+    return scheme === null ? undefined : resolveTypeface(typeface, scheme);
+  };
+
+  const named = resolveRun(context, paragraph, run, (props) => props.latin);
+  if (named !== undefined) {
+    const face = faceOf(named.value.typeface);
+    if (face !== undefined) return { ...named, value: face };
+  }
+  const floor = floorOf(context, paragraph.level);
+  const reference = floor.typeface ?? TEXT_FLOOR.typeface;
+  const face = reference === null ? undefined : faceOf(reference);
+  if (face === undefined) {
+    throw new ModelError(
+      'MODEL_TEXT_TYPEFACE',
+      'no source in the cascade names a typeface, and the theme names none either',
+    );
+  }
+  return {
+    value: face,
+    origin: floor === TEXT_FLOOR ? 'schemaDefault' : 'builtin',
+    explicit: false,
+    sheet: null,
+    shape: null,
+  };
 }
 
 /** `@marL` in EMU. Measured to be 0 when nothing declares it, not 347663. */

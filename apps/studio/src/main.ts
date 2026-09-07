@@ -547,7 +547,7 @@ function render(result: CensusResult): void {
   // dropped one came for. Everything below it is the package, not the deck.
   if (source !== null) {
     const read = source.read;
-    output.append(section('Slides — geometry only, no text yet', slidesView(read)));
+    output.append(section('Slides', slidesView(read)));
   }
   output.append(
     renderExport(),

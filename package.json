@@ -31,10 +31,11 @@
     "roundtrip": "node tools/corpus/roundtrip/check-roundtrip.ts",
     "gate1": "node tools/gate1/run-gate1.ts",
     "pkg:qa": "turbo run pkg:qa",
-    "check": "pnpm structure && pnpm layering && pnpm references && pnpm corpus && pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm roundtrip && pnpm pkg:qa && pnpm test",
+    "check": "pnpm structure && pnpm layering && pnpm references && pnpm corpus && pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm roundtrip && pnpm fidelity && pnpm pkg:qa && pnpm test",
     "changeset": "changeset",
     "version-packages": "changeset version && pnpm install --lockfile-only",
-    "browsers": "playwright install chromium"
+    "browsers": "playwright install chromium",
+    "fidelity": "node tools/fidelity/fidelity.ts"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

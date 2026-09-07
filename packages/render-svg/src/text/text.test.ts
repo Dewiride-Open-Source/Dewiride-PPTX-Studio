@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseSheet, type Sheet } from '@pptx-studio/model';
+import { parseSheet, parseTheme, type Sheet } from '@pptx-studio/model';
 import { parseXmlString } from '@pptx-studio/xml';
 
 import fixture from '../../../../corpus/ground-truth/text-rendering.json' with { type: 'json' };
@@ -565,6 +565,43 @@ const SP_TREE_HEAD =
   '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/>' +
   '<a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>';
 
+/** A theme naming both collections, which every real slide can reach. */
+const THEME_XML =
+  `<a:theme ${NS} name="T"><a:themeElements><a:clrScheme name="T">` +
+  [
+    'dk1',
+    'lt1',
+    'dk2',
+    'lt2',
+    'accent1',
+    'accent2',
+    'accent3',
+    'accent4',
+    'accent5',
+    'accent6',
+    'hlink',
+    'folHlink',
+  ]
+    .map((slot) => `<a:${slot}><a:srgbClr val="123456"/></a:${slot}>`)
+    .join('') +
+  '</a:clrScheme><a:fontScheme name="T">' +
+  '<a:majorFont><a:latin typeface="Georgia"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont>' +
+  '<a:minorFont><a:latin typeface="Verdana"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont>' +
+  '</a:fontScheme><a:fmtScheme name="T"><a:fillStyleLst/><a:lnStyleLst/><a:effectStyleLst/>' +
+  '<a:bgFillStyleLst/></a:fmtScheme></a:themeElements></a:theme>';
+
+const CLR_MAP =
+  '<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" ' +
+  'accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" ' +
+  'folHlink="folHlink"/>';
+
+/** The master a slide inherits from, which is where the theme hangs. */
+function masterSheet(): Sheet {
+  const xml = `<p:sldMaster ${NS}><p:cSld name="master">${SP_TREE_HEAD}</p:spTree></p:cSld>${CLR_MAP}</p:sldMaster>`;
+  const theme = parseTheme(parseXmlString(THEME_XML).root, '/ppt/theme/theme1.xml');
+  return { ...parseSheet(parseXmlString(xml).root, '/ppt/slideMaster1.xml'), parent: null, theme };
+}
+
 /** One slide holding one text shape, parsed the way a real package is. */
 function slideWithText(txBody: string): Sheet {
   const xml =
@@ -575,7 +612,11 @@ function slideWithText(txBody: string): Sheet {
     txBody +
     '</p:sp></p:spTree></p:cSld>' +
     '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>';
-  return { ...parseSheet(parseXmlString(xml).root, '/ppt/slide.xml'), parent: null, theme: null };
+  return {
+    ...parseSheet(parseXmlString(xml).root, '/ppt/slide.xml'),
+    parent: masterSheet(),
+    theme: null,
+  };
 }
 
 describe('resolveText', () => {
@@ -601,6 +642,17 @@ describe('resolveText', () => {
     expect(run?.color?.r).toBeCloseTo(192 / 255, 6);
     expect(run?.color?.g).toBe(0);
     expect(run?.color?.b).toBe(0);
+  });
+
+  it('draws a run no source names a face for in the theme minor', () => {
+    // Measured on six probes; ADR 0034. Before it, a paragraph past the last
+    // level a master declares resolved to no face and threw at the CSS shorthand.
+    const placed = layoutSheet(
+      slideWithText(
+        '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>Alpha</a:t></a:r></a:p></p:txBody>',
+      ),
+    )[0];
+    expect(resolveText(placed as Placed)?.paragraphs[0]?.runs[0]?.font.family).toBe('Verdana');
   });
 
   it('gives a shape with no text body nothing at all', () => {
@@ -743,5 +795,73 @@ describe('the two renderers over one layout', () => {
       expect(lines[index]?.attrs['x']).toBe(line.leftPt);
       expect(lines[index]?.attrs['y']).toBe(line.baselinePt);
     });
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* astral characters                                                          */
+/* -------------------------------------------------------------------------- */
+
+/** A code unit that is half of a surrogate pair and has lost the other half. */
+function loneSurrogates(text: string): readonly string[] {
+  const lone: string[] = [];
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = text.charCodeAt(i + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) i += 1;
+      else lone.push(code.toString(16));
+    } else if (code >= 0xdc00 && code <= 0xdfff) lone.push(code.toString(16));
+  }
+  return lone;
+}
+
+/** U+1D54F, four of them, which need eight code units and count as four points. */
+const ASTRAL = '\u{1D54F}\u{1D54F}\u{1D54F}\u{1D54F}';
+
+describe('text outside the basic multilingual plane', () => {
+  it('never emits half of a surrogate pair, which is not well-formed XML', () => {
+    const block = laid(body([paragraph([run(`${ASTRAL} alpha bravo charlie delta`)])]), {
+      widthPt: 120,
+    });
+    for (const line of block.lines) {
+      for (const piece of line.pieces) expect(loneSurrogates(piece.text)).toEqual([]);
+    }
+  });
+
+  it('draws every character the run holds, and no character twice', () => {
+    const source = `${ASTRAL} alpha bravo charlie delta`;
+    const block = laid(body([paragraph([run(source)])]), { widthPt: 120 });
+    const drawn = block.lines.flatMap((line) => line.pieces.map((piece) => piece.text)).join('');
+    // A break consumes its space, so the spaces are what the two sides differ by.
+    expect([...drawn].filter((c) => c !== ' ').join('')).toBe(
+      [...source].filter((c) => c !== ' ').join(''),
+    );
+  });
+
+  it('starts the second run where the first one ends, counted in code points', () => {
+    // Two runs, so the offset between cells is load-bearing: read in code units
+    // the second run starts past the end of the line and is never drawn.
+    const block = laid(body([paragraph([run(ASTRAL), run('beta')])]), { widthPt: 4000 });
+    const pieces = block.lines[0]?.pieces ?? [];
+    expect(pieces.map((piece) => piece.text)).toEqual([ASTRAL, 'beta']);
+  });
+
+  it('measures each piece over the characters it actually draws', () => {
+    // `flatMeasurer` charges one point per code unit per hundredth of a point, so
+    // the four astral characters are eight units at 32pt and `beta` is four.
+    const block = laid(body([paragraph([run(ASTRAL), run('beta')])]), { widthPt: 4000 });
+    const pieces = block.lines[0]?.pieces ?? [];
+    expect(pieces.map((piece) => piece.widthPt)).toEqual([8 * 32, 4 * 32]);
+    expect(block.lines[0]?.widthPt).toBe(12 * 32);
+  });
+
+  it('draws the whole run on a line wide enough not to wrap', () => {
+    // The line box `wrapText` returns ends at a code point index. Read as a code
+    // unit index it stops short by one per astral character, truncating the tail.
+    const source = `${ASTRAL} beta`;
+    const block = laid(body([paragraph([run(source)])]), { widthPt: 4000 });
+    expect(block.lines.length).toBe(1);
+    expect(block.lines[0]?.pieces.map((piece) => piece.text).join('')).toBe(source);
   });
 });

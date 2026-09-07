@@ -26,5 +26,6 @@
 *.mp4  binary
 *.wav  binary
 *.bin  binary
+*.grids binary
 
 pnpm-lock.yaml -diff linguist-generated=true

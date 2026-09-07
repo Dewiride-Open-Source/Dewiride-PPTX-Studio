@@ -1,11 +1,9 @@
 /**
  * The dropped deck, drawn.
  *
- * Gate 2's demo: geometry, fills, gradients, patterns, strokes, effects and
- * nested rotated groups, with every shape selectable and the 2.11 debug overlay
- * on whichever one is selected. Text is deliberately absent - a `p:txBody`
- * renders as its outline and nothing else, because the text engine is 3.8 and
- * half of one is worse than none.
+ * Geometry, fills, gradients, patterns, strokes, effects and nested rotated
+ * groups, with every shape selectable and the 2.11 debug overlay on whichever
+ * one is selected, and the text drawn over it as real `<text>`.
  *
  * ## Why this runs on the main thread while the census runs in a Worker
  *
@@ -18,7 +16,7 @@
  */
 
 import { PartStore } from '@pptx-studio/opc';
-import { loadDocument, type Sheet } from '@pptx-studio/model';
+import { loadDocument, type ListStyle, type Sheet } from '@pptx-studio/model';
 import { mountOverlay, mountSlide, type MountedOverlay } from '@pptx-studio/render-dom';
 import { flatten, type Placed, type SlideSize } from '@pptx-studio/render-svg';
 
@@ -38,6 +36,8 @@ const EMU_PER_POINT = 12700;
 interface Deck {
   readonly slides: readonly Sheet[];
   readonly size: SlideSize;
+  /** The text cascade's seventh source, which lives on `ppt/presentation.xml`. */
+  readonly defaultTextStyle: ListStyle | undefined;
   readonly problems: readonly { message: string }[];
 }
 
@@ -112,6 +112,7 @@ export function slidesView(read: () => Promise<ArrayBuffer>): HTMLElement {
       width: STAGE_PX,
       height,
       idPrefix: `slide${String(current.slide)}`,
+      text: { defaultTextStyle: current.deck.defaultTextStyle },
     });
     const all = flatten(mounted.placed);
 
@@ -151,6 +152,7 @@ export function slidesView(read: () => Promise<ArrayBuffer>): HTMLElement {
           width: 132,
           height: Math.round((132 * current.deck.size.cy) / current.deck.size.cx),
           idPrefix: `thumb${String(index)}`,
+          text: { defaultTextStyle: current.deck.defaultTextStyle },
         });
       } catch (error) {
         // One slide the renderer cannot draw must not take the deck with it.
@@ -180,6 +182,7 @@ export function slidesView(read: () => Promise<ArrayBuffer>): HTMLElement {
       const deck: Deck = {
         slides: document_.slides,
         size: document_.slideSize,
+        defaultTextStyle: document_.defaultTextStyle,
         problems: document_.problems,
       };
       if (deck.slides.length === 0) {

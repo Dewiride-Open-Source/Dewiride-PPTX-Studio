@@ -22,7 +22,14 @@ interface BuiltinLevel {
   bullet: boolean;
 }
 
+interface Probe {
+  id: string;
+  measured: { font: string };
+}
+
 interface Fixture {
+  themeFonts: { major: string; minor: string };
+  probes: Probe[];
   model: {
     floor: { szHundredths: number; marLEmu: number; indentEmu: number };
     builtinTextStyles: {
@@ -39,15 +46,51 @@ const fixture = JSON.parse(
 
 const { floor, builtinTextStyles } = fixture.model;
 
+const measuredFont = new Map(fixture.probes.map((probe) => [probe.id, probe.measured.font]));
+
+/** A measured face name as the theme reference that produced it, or null for none. */
+function reference(id: string): string | null {
+  const face = measuredFont.get(id);
+  if (face === undefined) throw new Error(`no probe ${id}`);
+  if (face === fixture.themeFonts.major) return '+mj-lt';
+  if (face === fixture.themeFonts.minor) return '+mn-lt';
+  // PowerPoint reporting no face at all is the measurement rather than a gap in
+  // it: that level of the built-in style names none. ADR 0034.
+  if (face === '') return null;
+  throw new Error(`${id} measured ${JSON.stringify(face)}, which is neither theme face`);
+}
+
+/** The six probes that reach a silent cascade, cross-checked against each other. */
+const FLOOR_FACE_PROBES = [
+  'font-silent',
+  'order-9-none-ph',
+  'order-9-none-plain',
+  'otherstyle-slide',
+  'otherstyle-layout',
+  'otherstyle-master',
+];
+
+const floorFace = ((): string => {
+  const seen = new Set(FLOOR_FACE_PROBES.map((id) => reference(id)));
+  if (seen.size !== 1) throw new Error(`the silent probes disagree: ${[...seen].join(', ')}`);
+  const only = [...seen][0];
+  if (only === null || only === undefined) throw new Error('the silent probes named no face');
+  return only;
+})();
+
 function bucket(name: 'title' | 'body' | 'other'): string {
   const levels = builtinTextStyles[name];
   if (levels.length !== 9) throw new Error(`${name} has ${String(levels.length)} levels, not 9`);
+  const probe = name === 'other' ? 'plain' : name;
   const rows = levels
-    .map(
-      (l) =>
+    .map((l, index) => {
+      const face = reference(`builtin-${probe}-${String(index)}`);
+      return (
         `    { sz: ${String(l.szHundredths)}, marL: ${String(l.marLEmu)}, ` +
-        `indent: ${String(l.indentEmu)}, bullet: ${String(l.bullet)} },`,
-    )
+        `indent: ${String(l.indentEmu)}, bullet: ${String(l.bullet)}, ` +
+        `typeface: ${face === null ? 'null' : `'${face}'`} },`
+      );
+    })
     .join('\n');
   return `  ${name}: [\n${rows}\n  ],`;
 }
@@ -71,9 +114,8 @@ const source = `/**
  * alternative is a placeholder resolving to no size at all, and because a
  * measured answer costs one deck.
  *
- * Only the three properties 3.1 resolves are recorded. \`bullet\` says whether
- * PowerPoint drew one, which is what 3.5 will need to reproduce; the glyph and
- * its font belong to that sub-phase and are in the fixture, not here.
+ * \`bullet\` says whether PowerPoint drew one, which is what 3.5 reproduces; the
+ * glyph and its font belong to that sub-phase and are in the fixture, not here.
  */
 
 /** One level of a built-in list style. */
@@ -85,6 +127,14 @@ export interface BuiltinLevel {
   /** EMU, as \`a:lvlNpPr/@indent\` holds it. Negative is a hanging indent. */
   readonly indent: number;
   readonly bullet: boolean;
+  /**
+   * The theme reference this level names, or \`null\` where it names none.
+   *
+   * A reference and not a face, because the built-in styles are the same
+   * whatever theme a package carries: \`+mj-lt\` measured as the theme's major
+   * face and \`+mn-lt\` as its minor.
+   */
+  readonly typeface: string | null;
 }
 
 /** The three buckets, nine levels each, level 1 first. */
@@ -114,12 +164,15 @@ ${bucket('other')}
  * 27-point hanging indent nothing asked for, and blocks the inherited value on
  * top of it, because a default that has been written down cannot be told from a
  * declaration.
+ *
+ * The typeface is the minor face on all ${String(FLOOR_FACE_PROBES.length)} probes that reach a silent cascade.
  */
 export const TEXT_FLOOR: BuiltinLevel = {
   sz: ${String(floor.szHundredths)},
   marL: ${String(floor.marLEmu)},
   indent: ${String(floor.indentEmu)},
   bullet: false,
+  typeface: '${floorFace}',
 };
 `;
 

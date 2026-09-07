@@ -17,9 +17,8 @@
  * alternative is a placeholder resolving to no size at all, and because a
  * measured answer costs one deck.
  *
- * Only the three properties 3.1 resolves are recorded. `bullet` says whether
- * PowerPoint drew one, which is what 3.5 will need to reproduce; the glyph and
- * its font belong to that sub-phase and are in the fixture, not here.
+ * `bullet` says whether PowerPoint drew one, which is what 3.5 reproduces; the
+ * glyph and its font belong to that sub-phase and are in the fixture, not here.
  */
 
 /** One level of a built-in list style. */
@@ -31,6 +30,14 @@ export interface BuiltinLevel {
   /** EMU, as `a:lvlNpPr/@indent` holds it. Negative is a hanging indent. */
   readonly indent: number;
   readonly bullet: boolean;
+  /**
+   * The theme reference this level names, or `null` where it names none.
+   *
+   * A reference and not a face, because the built-in styles are the same
+   * whatever theme a package carries: `+mj-lt` measured as the theme's major
+   * face and `+mn-lt` as its minor.
+   */
+  readonly typeface: string | null;
 }
 
 /** The three buckets, nine levels each, level 1 first. */
@@ -40,37 +47,37 @@ export const BUILTIN_TEXT_STYLES: {
   readonly other: readonly BuiltinLevel[];
 } = {
   title: [
-    { sz: 4400, marL: 0, indent: 0, bullet: false },
-    { sz: 1800, marL: 0, indent: 0, bullet: false },
-    { sz: 1800, marL: 0, indent: 0, bullet: false },
-    { sz: 1800, marL: 0, indent: 0, bullet: false },
-    { sz: 1800, marL: 0, indent: 0, bullet: false },
-    { sz: 1800, marL: 0, indent: 0, bullet: false },
-    { sz: 1800, marL: 0, indent: 0, bullet: false },
-    { sz: 1800, marL: 0, indent: 0, bullet: false },
-    { sz: 1800, marL: 0, indent: 0, bullet: false },
+    { sz: 4400, marL: 0, indent: 0, bullet: false, typeface: '+mj-lt' },
+    { sz: 1800, marL: 0, indent: 0, bullet: false, typeface: null },
+    { sz: 1800, marL: 0, indent: 0, bullet: false, typeface: null },
+    { sz: 1800, marL: 0, indent: 0, bullet: false, typeface: null },
+    { sz: 1800, marL: 0, indent: 0, bullet: false, typeface: null },
+    { sz: 1800, marL: 0, indent: 0, bullet: false, typeface: null },
+    { sz: 1800, marL: 0, indent: 0, bullet: false, typeface: null },
+    { sz: 1800, marL: 0, indent: 0, bullet: false, typeface: null },
+    { sz: 1800, marL: 0, indent: 0, bullet: false, typeface: null },
   ],
   body: [
-    { sz: 2800, marL: 228600, indent: -228600, bullet: true },
-    { sz: 2400, marL: 685800, indent: -228600, bullet: true },
-    { sz: 2000, marL: 1143000, indent: -228600, bullet: true },
-    { sz: 1800, marL: 1600200, indent: -228600, bullet: true },
-    { sz: 1800, marL: 2057400, indent: -228600, bullet: true },
-    { sz: 1800, marL: 2514600, indent: -228600, bullet: true },
-    { sz: 1800, marL: 2971800, indent: -228600, bullet: true },
-    { sz: 1800, marL: 3429000, indent: -228600, bullet: true },
-    { sz: 1800, marL: 3886200, indent: -228600, bullet: true },
+    { sz: 2800, marL: 228600, indent: -228600, bullet: true, typeface: '+mn-lt' },
+    { sz: 2400, marL: 685800, indent: -228600, bullet: true, typeface: '+mn-lt' },
+    { sz: 2000, marL: 1143000, indent: -228600, bullet: true, typeface: '+mn-lt' },
+    { sz: 1800, marL: 1600200, indent: -228600, bullet: true, typeface: '+mn-lt' },
+    { sz: 1800, marL: 2057400, indent: -228600, bullet: true, typeface: '+mn-lt' },
+    { sz: 1800, marL: 2514600, indent: -228600, bullet: true, typeface: '+mn-lt' },
+    { sz: 1800, marL: 2971800, indent: -228600, bullet: true, typeface: '+mn-lt' },
+    { sz: 1800, marL: 3429000, indent: -228600, bullet: true, typeface: '+mn-lt' },
+    { sz: 1800, marL: 3886200, indent: -228600, bullet: true, typeface: '+mn-lt' },
   ],
   other: [
-    { sz: 1800, marL: 0, indent: 0, bullet: false },
-    { sz: 1800, marL: 457200, indent: 0, bullet: false },
-    { sz: 1800, marL: 914400, indent: 0, bullet: false },
-    { sz: 1800, marL: 1371600, indent: 0, bullet: false },
-    { sz: 1800, marL: 1828800, indent: 0, bullet: false },
-    { sz: 1800, marL: 2286000, indent: 0, bullet: false },
-    { sz: 1800, marL: 2743200, indent: 0, bullet: false },
-    { sz: 1800, marL: 3200400, indent: 0, bullet: false },
-    { sz: 1800, marL: 3657600, indent: 0, bullet: false },
+    { sz: 1800, marL: 0, indent: 0, bullet: false, typeface: '+mn-lt' },
+    { sz: 1800, marL: 457200, indent: 0, bullet: false, typeface: '+mn-lt' },
+    { sz: 1800, marL: 914400, indent: 0, bullet: false, typeface: '+mn-lt' },
+    { sz: 1800, marL: 1371600, indent: 0, bullet: false, typeface: '+mn-lt' },
+    { sz: 1800, marL: 1828800, indent: 0, bullet: false, typeface: '+mn-lt' },
+    { sz: 1800, marL: 2286000, indent: 0, bullet: false, typeface: '+mn-lt' },
+    { sz: 1800, marL: 2743200, indent: 0, bullet: false, typeface: '+mn-lt' },
+    { sz: 1800, marL: 3200400, indent: 0, bullet: false, typeface: '+mn-lt' },
+    { sz: 1800, marL: 3657600, indent: 0, bullet: false, typeface: '+mn-lt' },
   ],
 };
 
@@ -90,10 +97,13 @@ export const BUILTIN_TEXT_STYLES: {
  * 27-point hanging indent nothing asked for, and blocks the inherited value on
  * top of it, because a default that has been written down cannot be told from a
  * declaration.
+ *
+ * The typeface is the minor face on all 6 probes that reach a silent cascade.
  */
 export const TEXT_FLOOR: BuiltinLevel = {
   sz: 1800,
   marL: 0,
   indent: 0,
   bullet: false,
+  typeface: '+mn-lt',
 };

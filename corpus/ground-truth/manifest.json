@@ -128,6 +128,942 @@
       "addedIn": "0.7"
     },
     {
+      "id": "fidelity-a01-minimal",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a01-minimal.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "c9ba978786cec82914dd22a1b98af3f54ab6c6ef91e31d35718f14812a316d96",
+      "bytes": 12275,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a01-minimal, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a02-placeholders",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a02-placeholders.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "3e45efc9a1566d2dfc6ba7d7398e83e4d4876fb2120bcef69b0478f3f47e676b",
+      "bytes": 36828,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a02-placeholders, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a03-fills",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a03-fills.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "3cbbc4b6eeab94d143b7c3773cdfce178823e1d83ba8bff9cc68760cc8b9f628",
+      "bytes": 36807,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a03-fills, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a04-effects",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a04-effects.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "17bc5d7fc2f2d75df3dff86388574903915b73286fde2256c4556d663e99eb67",
+      "bytes": 36813,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a04-effects, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a05-geometry",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a05-geometry.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "73196a4c9b876ee96829713f58e3bf5dd1289cbb755476ec78360b49af887394",
+      "bytes": 36816,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a05-geometry, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a06-lines",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a06-lines.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "102f44c7b954a609ab5ca1a7c0d3090f60a4c9aea4d5d3506452560d9e82438c",
+      "bytes": 36807,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a06-lines, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a07-text-cascade",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a07-text-cascade.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "0069ba606562b5c4dac324537712f6c37ece441387ef21b4727ae622dc88271e",
+      "bytes": 36828,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a07-text-cascade, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a08-bullets",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a08-bullets.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "27c265a4ac8f636bae28a0b1f62f05dd39fb5789f5d3704327530e98643605ae",
+      "bytes": 36813,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a08-bullets, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a09-fields",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a09-fields.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "3d909890388a789b257ca334c2e9672d373fd03c7d399c9a28113211dd98c1d3",
+      "bytes": 36810,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a09-fields, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a10-rtl-cjk",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a10-rtl-cjk.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "a87c6dfedc15fdb74b5cc6b495f5dbee150adc9e3d2bf76d09aa984b2731befb",
+      "bytes": 36813,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a10-rtl-cjk, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a11-autofit",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a11-autofit.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "dff929418e80a012f1f8c33c18e0575398521975db6b6ec17348a78a78e881da",
+      "bytes": 36813,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a11-autofit, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a12-masters",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a12-masters.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "6c273bfd62b89c0a590e309df0b7578a11b057ff0da0f9157a05e5a2bcb635ef",
+      "bytes": 36813,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a12-masters, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a13-sections",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a13-sections.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "b1580a2d73ed143e5a509e6a1116b675330ec7d4b69776aabd8dddb6e418f180",
+      "bytes": 49086,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a13-sections, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a14-notes",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a14-notes.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "fb4715a19516ac0518d849bc82b46c375a815499f87499f497c54afca7facc63",
+      "bytes": 36807,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a14-notes, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a15-comments",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a15-comments.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "1e9df00ae278ce31d013a5062ed4f2b81fe674d0030f216b0648632ad65a7fe7",
+      "bytes": 36816,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a15-comments, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a16-transitions",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a16-transitions.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "f8d81750312cb4b1b13222283f8c3b8aaa71f9ee41942c7f96c6e795fe102c7b",
+      "bytes": 36825,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a16-transitions, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a17-animations",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a17-animations.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "b1641422cac69bd3a889cd9f71e3ac8b163d1c78ebd9a5d42a3a2151b0c6baef",
+      "bytes": 36822,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a17-animations, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a18-slide-sizes",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a18-slide-sizes.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "a3ad2b338f0135ce565358d39658721fda38d9a687f3de2071c931235241335e",
+      "bytes": 48705,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a18-slide-sizes, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a19-decorative",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a19-decorative.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "ff35336dcaadecc064254f9cb88f6142912f505a3b7e38a9c713d11c7dfdb02c",
+      "bytes": 36822,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a19-decorative, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a20-tables",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a20-tables.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "1395b644df583857167689ff84f368ee3ce8e1c9518e3d4f94e94c391dd9e932",
+      "bytes": 36810,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a20-tables, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a21-charts",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a21-charts.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "b557fa01e769056e53b6ae418e77c178517ccd672f427cf8f37b5dacfe1790f8",
+      "bytes": 36810,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a21-charts, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a22-chartex",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a22-chartex.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "0ea8cad3d6033c7b1faee5bb6865c7f66d7937bcc2c81229c345d26ff19b097b",
+      "bytes": 36813,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a22-chartex, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a23-smartart",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a23-smartart.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "e87347143e21394d187cdb8a550b7dbfa0c8af1c165f16d5c67adf68cbaa292f",
+      "bytes": 36816,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a23-smartart, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a24-media",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a24-media.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "4a1f6a6b48dc87d410e3def08b0f3a39bd2374011050407e0bf7586057282c72",
+      "bytes": 36807,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a24-media, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a25-svg-blips",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a25-svg-blips.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "112c1d13aac4e9ddd792944c99aada905596aead741c41227ab0f4740cdfceac",
+      "bytes": 36819,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a25-svg-blips, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a26-ole",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a26-ole.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "fd609708c0541d96fc646c8c98ec50462e47fb6193f3a27897c9f9674489b9f2",
+      "bytes": 36801,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a26-ole, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a27-ink",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a27-ink.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "70ff5794880a36d66dda87fb2e42dd64dee7479e7bfa32a31218fac252fa37f7",
+      "bytes": 36801,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a27-ink, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a29-math",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a29-math.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "ee4abc6c51f4598e3740bf2f8ae9c22043441b1bf49e03039008fef64ee45bf6",
+      "bytes": 36804,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a29-math, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a30-vml",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a30-vml.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "beb6c9956f59bed8eee00164e20bef63f5db14826ce3955ad82f9b35b2f79440",
+      "bytes": 36801,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a30-vml, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a31-embedded-fonts",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a31-embedded-fonts.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "a7eadf3836a0e2902c7fe1632cd8d830225d8defae648da906d903b87cb9d967",
+      "bytes": 36834,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a31-embedded-fonts, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a33-thumbnail",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a33-thumbnail.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "f428b6209e03d61f11d4338a0042636cb2519176d7e45db831a5ab8eeb46dd11",
+      "bytes": 36819,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a33-thumbnail, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a34-extlst",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a34-extlst.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "4c98a3f55d02e96b04af3f454c626dc360cff3fb667173cd1f57361d99f55ac6",
+      "bytes": 36810,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a34-extlst, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a35-zip-shapes",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a35-zip-shapes.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "7e9ccee2a12d263d71c899b7ca58003aab20772795ee4140ec226027e41bb441",
+      "bytes": 36822,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a35-zip-shapes, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a36-spaced-tags",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a36-spaced-tags.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "599fbe158a8674f9678d4ec5a49cc423b5f437d9efd40f929477bf76f7ccc350",
+      "bytes": 36825,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a36-spaced-tags, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a37-mce",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a37-mce.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "71f9068a1fda3afde70ddebfc39b338329d9bd11ad3d8a8ecc0ab8938ca3fd4a",
+      "bytes": 36801,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a37-mce, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a38-degenerate",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a38-degenerate.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "ea653fbbbe4314557a6c22dc806a791c6f55f9ede8bc5af88c410cb330414165",
+      "bytes": 36822,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a38-degenerate, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a39-large-ids",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a39-large-ids.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "2ffd84df45d78a6ddc9998d6597a7bb56a3de6afa3d65d86ed4809b49f5253c3",
+      "bytes": 36819,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a39-large-ids, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a40-unicode",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a40-unicode.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "957d737a244ddc18c95670ca309b99c3c384d49ce0bdeb18eab2f2615ad5f842",
+      "bytes": 36813,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a40-unicode, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a41-a4",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a41-a4.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "e9acc9b66b9d659840e2e09d186f96bf017094bdf6ec27a8e6f91a2d8a51ed65",
+      "bytes": 45438,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a41-a4, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-a42-custom-size",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/a42-custom-size.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "27642e8cf4826875f7ea19cfceeb64ab992a94fbe7264ecc1b6423b185d8855a",
+      "bytes": 115665,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of a42-custom-size, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-b01-blank",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/b01-blank.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "9b4d9ac2f76429afd161acc0aa45236c75738b2b08c959bee96758f6f1dc260b",
+      "bytes": 12273,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of b01-blank, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-b02-layouts",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/b02-layouts.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "c7e8bf7e176779667e687d034d9044c19eb729cc0e4098a4eaa0f2e8779ab50e",
+      "bytes": 134965,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of b02-layouts, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-b03-text",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/b03-text.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "500790e576db74371ac0e20b33fabd8b9571b7945422841dba96ee5c871d111e",
+      "bytes": 36804,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of b03-text, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-b04-table",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/b04-table.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "3fe33bc77a8ccb7914896dcecee70b3fb5a4f2df5d92024f9ac5eabf849c94c8",
+      "bytes": 12273,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of b04-table, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-b05-chart",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/b05-chart.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "5682b9fe3346c37aa0d4276ad9cb245b1b86fb75f3a1de116932a5bcb1082a69",
+      "bytes": 24540,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of b05-chart, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-b06-smartart",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/b06-smartart.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "0cbcdbe184f01cec653c2e0f8c0614e675de4a198d4c373bf4bd47fde0bfd83e",
+      "bytes": 36816,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of b06-smartart, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-b07-ole",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/b07-ole.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "956bb9eedcb972bcb61c7fbf0625692b2a89956ef1d8abe8ab9285a91a71d8e6",
+      "bytes": 12271,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of b07-ole, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-b08-transitions",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/b08-transitions.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "8c23b025ad8e5e568daa10a8ef70cfb547f8b540b4a757b75112feb90d0bf1ea",
+      "bytes": 61371,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of b08-transitions, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-b09-picture",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/b09-picture.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "c1911982c669a8f147acd6b37f3a42746ec1fa618b157a88b836c7e6403e25a5",
+      "bytes": 24544,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of b09-picture, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-c01-opc-writer",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/grids/c01-opc-writer.ppt.grids",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "18a33b9ac2f50c491d999b4e6ecd317a123ca55d936711f8e5a788aa751d1439",
+      "bytes": 12278,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "PowerPoint's own rendering of every slide of c01-opc-writer, as luma and decimated chroma cell means at 960 pixels wide. The reference half of sub-phase 3.9's score.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-expected-win32-x64",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/expected.win32-x64.json",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "b2f4559e2e4858263cd85196915b11a26c526c909eb89055d7735998c6575c5c",
+      "bytes": 32028,
+      "tags": ["fidelity", "baseline", "render"],
+      "description": "The digest of our own raster for every slide on win32-x64, and the font environment it was recorded in. This is the gate: a slide that rasterises differently here has changed, and no tolerance is involved in saying so.",
+      "recipe": {
+        "tool": "tools/fidelity/fidelity.ts",
+        "args": ["--record"]
+      },
+      "addedIn": "3.9"
+    },
+    {
+      "id": "fidelity-oracle",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/oracle.json",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "08b4842304d712c603594de9c2fdf8aa266512c0620f4eb646dcafed784ce1d0",
+      "bytes": 22631,
+      "tags": ["fidelity", "oracle", "render"],
+      "description": "The index of the fidelity oracle: which slide each grid belongs to, and how far PowerPoint disagreed with its own second rendering of the same slide, which is the noise floor of every number scored against it.",
+      "recipe": {
+        "tool": "tools/ground-truth/render/fidelity/analyse.ts",
+        "args": ["<dir>", "--capture"]
+      },
+      "addedIn": "3.9"
+    },
+    {
       "id": "fills",
       "kind": "fixture",
       "storage": "committed",
