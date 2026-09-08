@@ -65,7 +65,10 @@ try {
   for (const slide of [...run.slides].sort((a, b) => a.meanBp - b.meanBp)) {
     const worst = slide.regions[0];
     const region =
-      worst === undefined ? '-' : `${String(worst.cells)} cells @ maxD ${String(worst.maxD)}`;
+      worst === undefined
+        ? '-'
+        : `${String(worst.cells)} cells @ maxD ${String(worst.maxD)}` +
+          (worst.shapes.length === 0 ? '' : ` in ${worst.shapes.join(', ')}`);
     process.stdout.write(
       `  ${slide.key.padEnd(24)} ${String(slide.meanBp).padStart(6)} ` +
         `${String(slide.maxD).padStart(5)}  ${region}\n`,

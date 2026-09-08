@@ -20,12 +20,13 @@ import { join } from 'node:path';
 
 import type { Page } from 'playwright';
 
+import { regionShapes } from '../fidelity/blame.ts';
 import { FidelityError } from '../fidelity/errors.ts';
 import { gridSvg, heatmapSvg } from '../fidelity/heatmap.ts';
 import { decodeGridSet } from '../fidelity/metric/grid.ts';
 import type { Grid } from '../fidelity/metric/reduce.ts';
 import { differenceOf, regionsOf, scoreOf, type Region } from '../fidelity/metric/score.ts';
-import { openHarness } from '../fidelity/raster/browser.ts';
+import { openHarness, servedUrl } from '../fidelity/raster/browser.ts';
 import { injectHarness, renderSlide, slideMarkup } from '../fidelity/raster/render.ts';
 import { fidelityProbes, slideKey } from '../ground-truth/render/fidelity/probes.ts';
 import { repoPath } from '../repo/root.ts';
@@ -37,10 +38,18 @@ const ORACLE = repoPath('corpus/ground-truth/render/fidelity');
 /** The floor a region has to reach to be worth ranking, in levels of 255. */
 const REGION_FLOOR = 16;
 
+/** How many shapes a region names before the cell coordinates are clearer. */
+const NAMES_PER_REGION = 2;
+
 export interface GateOptions {
   readonly out: string;
   /** A directory of PowerPoint's own PNGs, when one has just been captured. */
   readonly capture: string | null;
+}
+
+/** A region, and the shapes its bounding box crosses. ADR 0035. */
+export interface NamedRegion extends Region {
+  readonly shapes: readonly string[];
 }
 
 export interface SlideReport {
@@ -52,7 +61,7 @@ export interface SlideReport {
   readonly meanBp: number;
   readonly maxD: number;
   readonly hist: readonly number[];
-  readonly regions: readonly Region[];
+  readonly regions: readonly NamedRegion[];
   /** Our renderer's SVG, at full resolution. */
   readonly oursSvg: string;
   /** PowerPoint's, reconstructed from the committed grid it is scored against. */
@@ -166,7 +175,7 @@ export async function runGate2(options: GateOptions): Promise<GateRun> {
   const facts: SlideFacts[] = [];
   try {
     for (const probe of probes) {
-      for (const raw of await scanDeck(harness.page, `/${probe.path}`, MARKUP_PATTERNS)) {
+      for (const raw of await scanDeck(harness.page, servedUrl(probe.path), MARKUP_PATTERNS)) {
         facts.push({ ...raw, key: slideKey(probe.id, raw.slide), deck: probe.id });
       }
     }
@@ -213,8 +222,8 @@ export async function runGate2(options: GateOptions): Promise<GateRun> {
       let raster;
       let markup;
       try {
-        raster = await renderSlide(harness.page, `/${probe.path}`, slide.slide - 1);
-        markup = await slideMarkup(harness.page, `/${probe.path}`, slide.slide - 1);
+        raster = await renderSlide(harness.page, servedUrl(probe.path), slide.slide - 1);
+        markup = await slideMarkup(harness.page, servedUrl(probe.path), slide.slide - 1);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         notDrawn.push({ key, reason: (message.split('\n')[0] ?? message).trim() });
@@ -233,7 +242,12 @@ export async function runGate2(options: GateOptions): Promise<GateRun> {
         meanBp: score.meanBp,
         maxD: score.maxD,
         hist: score.hist,
-        regions: regionsOf(difference, theirs.width, theirs.height, REGION_FLOOR).slice(0, 5),
+        regions: regionsOf(difference, theirs.width, theirs.height, REGION_FLOOR)
+          .slice(0, 5)
+          .map((region) => ({
+            ...region,
+            shapes: regionShapes(region, theirs.cell, raster.shapes, NAMES_PER_REGION),
+          })),
         oursSvg: markup.markup,
         theirsSvg: gridSvg(theirs),
         theirsPng: capturedPng(options.capture, key),

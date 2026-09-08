@@ -121,10 +121,17 @@ export async function probeEnvironment(
  * Compare a measured environment against the one a baseline was recorded in.
  *
  * Throws on the first disagreement rather than collecting them: a machine whose
- * fonts have moved cannot produce a comparable number for *any* slide, so
- * carrying on to score 149 of them would only produce a longer wrong answer.
+ * fonts or browser have moved cannot produce a comparable number for *any*
+ * slide, so carrying on would only produce a longer wrong answer.
  */
 export function assertSameEnvironment(measured: Environment, recorded: Environment): void {
+  if (measured.chromium !== recorded.chromium) {
+    throw new FidelityError(
+      'FID_BROWSER_CHANGED',
+      `the baseline was recorded through ${recorded.chromium} and this is ${measured.chromium}`,
+      measured.chromium,
+    );
+  }
   const byName = new Map(recorded.faces.map((face) => [face.family, face]));
   for (const face of measured.faces) {
     const was = byName.get(face.family);

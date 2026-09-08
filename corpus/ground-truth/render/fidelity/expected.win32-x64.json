@@ -157,6 +157,10 @@
       "rasterSha256": "63104d5ff149f4ec36c096d9967f599073bb9f2d532dcec1003fa8ac549b3c95",
       "svgSha256": "44b77296895d3beebfde8db26731923c9cee23861da41cf9d6ac685f1807a059"
     },
+    "a10-rtl-cjk-03": {
+      "rasterSha256": "2de66d587a3494d8966401e8cdaf11d88027f00889f695992b25b21a7678d6ae",
+      "svgSha256": "f40c2796cbf76a9a174756c1f70b68a15189f70c343703c6db8298ade0a9a6a3"
+    },
     "a11-autofit-01": {
       "rasterSha256": "446a3ba3b7008f0edf03d1934248630ec60d8c2a75e63e41087ef99bda1e1bad",
       "svgSha256": "e2404bed0dd54aedaec5b7bcdba0560a0a007ec26a24019c5b1ee6425421552a"
@@ -584,6 +588,14 @@
     "b02-layouts-09": {
       "rasterSha256": "4d9dca24f1932b6a17c657866c65b84fb11615ecce5455d28b6caa9d645e22f9",
       "svgSha256": "2c46da0bda18e298bb3ccf734c6623b25c831e8a2b88eff9fc907bc66eca48af"
+    },
+    "b02-layouts-10": {
+      "rasterSha256": "a026de44e9e125098d25e11d133d2263efd13b571e7c59a92f78363f8805ce66",
+      "svgSha256": "f67a02bd7e3db92e2e81dc8828e4377a13faed57a5d6c4d961cafa826b1d81ba"
+    },
+    "b02-layouts-11": {
+      "rasterSha256": "f275daf3789e7b7efcc3cdfd6af68a6d0d37f42a4b51114b64124fdafa55a8f7",
+      "svgSha256": "e375ba14846d186a9ad33c2cd535a65ad0dcc8c94f58dac0c47eddebeed6903c"
     },
     "b03-text-01": {
       "rasterSha256": "4c94d2642eb2b0d23c6bfc31de5f61414bc30732096eee2947f75c1fe2cdbc35",

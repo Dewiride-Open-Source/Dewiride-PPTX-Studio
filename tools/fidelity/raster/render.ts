@@ -9,6 +9,7 @@
 
 import type { Page } from 'playwright';
 
+import { boxOf, type PlacedBox, type ShapeBox } from '../blame.ts';
 import { FidelityError } from '../errors.ts';
 import { reduceRgba, type Grid } from '../metric/reduce.ts';
 
@@ -74,6 +75,19 @@ export function geometryOf(cx: number, cy: number): Geometry {
   };
 }
 
+/** A shape as `layoutSlide` places it: slide EMU, and an unrotated extent. */
+interface PlacedProbe {
+  readonly shape: { readonly cNvPrId: number; readonly name: string };
+  readonly frame: {
+    readonly x: number;
+    readonly y: number;
+    readonly cx: number;
+    readonly cy: number;
+    /** Degrees, clockwise, normalised to `[0, 360)`. */
+    readonly rot: number;
+  };
+}
+
 /** What the harness page exposes on `globalThis.pptx`, as narrowly as it is used. */
 interface PptxApi {
   readonly opc: {
@@ -92,7 +106,11 @@ interface PptxApi {
       defaultTextStyle: unknown;
     };
   };
-  readonly rsvg: { renderSlide: (sheet: unknown, size: unknown, options: unknown) => string };
+  readonly rsvg: {
+    renderSlide: (sheet: unknown, size: unknown, options: unknown) => string;
+    layoutSlide: (sheet: unknown) => readonly PlacedProbe[];
+    flatten: (placed: readonly PlacedProbe[]) => readonly PlacedProbe[];
+  };
 }
 
 export interface DrawnSlide {
@@ -100,14 +118,12 @@ export interface DrawnSlide {
   /** The height the SVG was asked for, from the deck's own aspect ratio. */
   readonly drawHeight: number;
   readonly partName: string;
+  /** Every shape drawn, in paint order, scaled to raster pixels. */
+  readonly shapes: readonly PlacedBox[];
 }
 
 /** The shape `drawSlide` has once it is a property of the page's `globalThis`. */
-type DrawSlide = (input: {
-  url: string;
-  index: number;
-  width: number;
-}) => Promise<{ markup: string; drawHeight: number; partName: string }>;
+type DrawSlide = (input: { url: string; index: number; width: number }) => Promise<DrawnSlide>;
 
 /**
  * One slide, as the SVG our renderer emits for it.
@@ -143,7 +159,21 @@ export async function drawSlide(input: {
     },
     text: { defaultTextStyle: document_.defaultTextStyle },
   });
-  return { markup, drawHeight, partName: sheet.partName };
+
+  // Scaled here and turned into a box in `boxOf`, which is testable: this
+  // body is stringified into the page and can hold no arithmetic worth a test.
+  const scale = input.width / size.cx;
+  const shapes = api.rsvg.flatten(api.rsvg.layoutSlide(sheet)).map((placed) => ({
+    id: placed.shape.cNvPrId,
+    name: placed.shape.name,
+    x: placed.frame.x * scale,
+    y: placed.frame.y * scale,
+    cx: placed.frame.cx * scale,
+    cy: placed.frame.cy * scale,
+    rot: placed.frame.rot,
+  }));
+
+  return { markup, drawHeight, partName: sheet.partName, shapes };
 }
 
 /**
@@ -169,6 +199,8 @@ export interface SlideRaster {
   readonly svgSha256: string;
   /** The CSS families this slide was drawn in, taken from the markup itself. */
   readonly families: readonly string[];
+  /** Every shape drawn, in paint order, boxed in raster pixels. */
+  readonly shapes: readonly ShapeBox[];
   readonly geometry: Geometry;
 }
 
@@ -192,6 +224,7 @@ export async function renderSlide(
       const drawn = await draw({ url, index, width });
       const markup = drawn.markup;
       const drawHeight = drawn.drawHeight;
+      const shapes = drawn.shapes;
       const padWidth = Math.ceil(width / cell) * cell;
       const padHeight = Math.ceil(drawHeight / cell) * cell;
 
@@ -237,6 +270,7 @@ export async function renderSlide(
         rasterSha256: await hex(pixels),
         svgSha256: await hex(new TextEncoder().encode(markup)),
         families: [...families],
+        shapes,
         natural,
         drawHeight,
       };
@@ -267,6 +301,7 @@ export async function renderSlide(
     rasterSha256: result.rasterSha256,
     svgSha256: result.svgSha256,
     families: result.families,
+    shapes: result.shapes.map((placed) => boxOf(placed)),
     geometry,
   };
 }

@@ -83,11 +83,71 @@ jobs:
       - name: Test
         run: pnpm test
 
+  # The one record a runner is allowed to make, and it is not a gate.
+  #
+  # `pnpm fidelity` gates the SHA-256 of our own raster against a baseline
+  # recorded per platform, and a baseline has to be recorded on the platform it
+  # gates. Only `expected.win32-x64.json` exists, so this job exists to write
+  # `expected.linux-x64.json` once, by hand, on the runner CI actually uses.
+  #
+  # It never runs on a push or a pull request, it uploads rather than commits,
+  # and `--bootstrap` is refused the moment a baseline for the platform exists -
+  # so this cannot become the thing that turns a red gate green. A person
+  # downloads the artifact, reads it, and commits it; that commit is the review.
+  #
+  # Both files are uploaded because `--record` also claims the new fixture in
+  # `corpus/ground-truth/manifest.json`, and `pnpm corpus` refuses a file under
+  # `corpus/` that no entry claims.
+  record-fidelity-baseline:
+    name: record the linux fidelity baseline
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # The harness loads the packages as built ESM through an import map, so
+      # there has to be a `dist`.
+      - name: Build
+        run: pnpm build
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Refuses outright if a linux-x64 baseline is already committed.
+      - name: Record
+        run: pnpm fidelity --record --bootstrap
+
+      - name: Report
+        run: cat fidelity/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: fidelity-baseline-linux-x64
+          path: |
+            corpus/ground-truth/render/fidelity/expected.linux-x64.json
+            corpus/ground-truth/manifest.json
+          if-no-files-found: error
+
   # Phase 1's whole claim, on its own, in about a minute.
   #
-  # `check` already runs this - `pnpm roundtrip` is one of its steps, and
-  # `tools/corpus/roundtrip/roundtrip.test.ts` asserts it again from source. So this job
-  # gates nothing that was not gated already, and it is still worth its minute:
+  # `check` already asserts it from source - `tools/corpus/roundtrip/roundtrip.test.ts`
+  # runs under `pnpm test`. So this job gates nothing that was not gated
+  # already, and it is still worth its minute:
   # it is the number the README carries, and putting it behind a Chromium
   # install means the one result anybody wants from a pull request arrives last.
   # Same reasoning that already puts `layering` and `corpus` first inside

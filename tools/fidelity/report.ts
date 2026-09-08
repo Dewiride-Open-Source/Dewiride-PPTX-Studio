@@ -8,7 +8,8 @@
  * everyone to ignore the report. ADR 0035.
  */
 
-import type { SlideScore } from './metric/score.ts';
+import type { Blame } from './blame.ts';
+import { agreementBp, type SlideScore } from './metric/score.ts';
 
 export interface SlideResult {
   readonly key: string;
@@ -19,6 +20,8 @@ export interface SlideResult {
   readonly svgSha256: string;
   /** Set when the recorded digest for this slide disagrees with this run. */
   readonly changed: boolean;
+  /** The difference split over the shapes that painted it, worst first. */
+  readonly blame: readonly Blame[];
 }
 
 export interface RunReport {
@@ -40,7 +43,7 @@ export function corpusMeanBp(slides: readonly SlideResult[]): number {
     sumD += slide.score.sumD;
     cells += slide.score.cells;
   }
-  return 10000 - Math.floor((20000 * sumD + 255 * cells) / (510 * cells));
+  return agreementBp(sumD, cells);
 }
 
 /**
@@ -65,6 +68,7 @@ export function scoresJson(report: RunReport): string {
         meanBp: slide.score.meanBp,
         maxD: slide.score.maxD,
         hist: slide.score.hist,
+        blame: slide.blame.slice(0, BLAMED_PER_SLIDE),
         rasterSha256: slide.rasterSha256,
         svgSha256: slide.svgSha256,
       })),
@@ -72,6 +76,45 @@ export function scoresJson(report: RunReport): string {
     null,
     2,
   )}\n`;
+}
+
+/** How many shapes a slide is broken down into, in the report and the file. */
+const BLAMED_PER_SLIDE = 3;
+
+/** How far down the worst-first list the shape breakdown is printed. */
+const LOCALISED_SLIDES = 10;
+
+/** How many shapes the corpus-wide ranking names. */
+const WORST_SHAPES = 12;
+
+interface BlamedShape {
+  readonly key: string;
+  readonly blamed: Blame;
+  /** Agreement over the shape's own area, so size does not decide the rank. */
+  readonly meanBp: number;
+}
+
+/**
+ * The shapes drawn furthest from PowerPoint, over their own area.
+ *
+ * Ranked per cell the shape owns rather than by total difference, because a
+ * slide-sized diagram nobody has built yet outweighs every real defect in the
+ * corpus put together and would be the whole table otherwise.
+ */
+function worstShapes(slides: readonly SlideResult[], limit: number): readonly BlamedShape[] {
+  const rows: BlamedShape[] = [];
+  for (const slide of slides) {
+    for (const blamed of slide.blame) {
+      rows.push({ key: slide.key, blamed, meanBp: agreementBp(blamed.sumD, blamed.covered) });
+    }
+  }
+  rows.sort(
+    (a, b) =>
+      a.meanBp - b.meanBp ||
+      b.blamed.maxD - a.blamed.maxD ||
+      (a.key < b.key ? -1 : a.key > b.key ? 1 : 0),
+  );
+  return rows.slice(0, limit);
 }
 
 function worstFirst(slides: readonly SlideResult[]): readonly SlideResult[] {
@@ -119,6 +162,42 @@ export function reportMarkdown(report: RunReport): string {
     const differing = slide.score.cells - (slide.score.hist[0] ?? 0);
     lines.push(
       `| ${slide.key} | ${String(slide.score.meanBp)} | ${String(slide.score.maxD)} | ${String(differing)} |`,
+    );
+  }
+
+  lines.push(
+    '',
+    '### Where the difference is',
+    '',
+    'Every differing cell, attributed to the shape that painted it last.',
+    '',
+    '| slide | shape | cells | maxD | share |',
+    '| --- | --- | ---: | ---: | ---: |',
+  );
+  for (const slide of worst.slice(0, LOCALISED_SLIDES)) {
+    for (const blamed of slide.blame.slice(0, BLAMED_PER_SLIDE)) {
+      const share = Math.round((1000 * blamed.sumD) / slide.score.sumD) / 10;
+      lines.push(
+        `| ${slide.key} | ${blamed.name} | ${String(blamed.cells)} | ` +
+          `${String(blamed.maxD)} | ${share.toFixed(1)}% |`,
+      );
+    }
+  }
+
+  lines.push(
+    '',
+    '### Worst-drawn shapes in the corpus',
+    '',
+    "Agreement over each shape's own area, so a small shape drawn badly outranks a",
+    'large one drawn nearly right.',
+    '',
+    '| shape | slide | meanBp | maxD | cells |',
+    '| --- | --- | ---: | ---: | ---: |',
+  );
+  for (const row of worstShapes(report.slides, WORST_SHAPES)) {
+    lines.push(
+      `| ${row.blamed.name} | ${row.key} | ${String(row.meanBp)} | ` +
+        `${String(row.blamed.maxD)} | ${String(row.blamed.cells)}/${String(row.blamed.covered)} |`,
     );
   }
 
