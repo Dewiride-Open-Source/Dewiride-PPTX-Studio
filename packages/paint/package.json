@@ -1,6 +1,6 @@
 {
   "name": "@pptx-studio/paint",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "DrawingML paint: colour spaces, the transform chain, theme and clrMap resolution",
   "license": "Apache-2.0",
   "type": "module",
@@ -29,6 +29,7 @@
   "files": [
     "dist",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE",
     "NOTICE"
   ],

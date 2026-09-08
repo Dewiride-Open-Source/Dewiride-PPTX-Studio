@@ -1,6 +1,6 @@
 {
   "name": "@pptx-studio/validate",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "The repair firewall: the rules a .pptx must not break, checked before bytes are handed over",
   "license": "Apache-2.0",
   "type": "module",
@@ -28,6 +28,7 @@
   "files": [
     "dist",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE",
     "NOTICE"
   ],
