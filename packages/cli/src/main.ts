@@ -4,6 +4,8 @@ import { isOpcError } from '@pptx-studio/opc';
 import { isValidateError } from '@pptx-studio/validate';
 import { BISECT_DEFAULTS, runBisect, type BisectOptions } from './bisect.js';
 import { INSPECT_DEFAULTS, runInspect, type InspectOptions } from './inspect.js';
+import { isRenderError } from './render/errors.js';
+import { RENDER_DEFAULTS, runRender, type RenderOptions } from './render/render.js';
 import { runRoundTrip, type RoundTripOptions } from './roundtrip.js';
 import { runValidate, type ValidateOptions } from './validate.js';
 
@@ -29,9 +31,7 @@ interface PlannedVerb {
 }
 
 const PLANNED: readonly PlannedVerb[] = [
-  { name: 'render', summary: 'render slides to SVG or PNG without a browser', phase: '3.10' },
   { name: 'resolve', summary: 'show where a resolved property came from', phase: '7.x' },
-  { name: 'fidelity', summary: 'score a render against a reference', phase: '3.9' },
 ];
 
 function version(): string {
@@ -58,7 +58,20 @@ function usage(): string {
     '  inspect          what is inside a package: parts, relationships, features',
     '  validate         the must-not-break rules, with the part and the XPath',
     '  roundtrip        read a deck, write it back, and prove nothing moved',
+    '  render           draw slides as SVG, with no browser and no LibreOffice',
     '  bisect           narrow a broken deck to the change that breaks it',
+    '',
+    'render options:',
+    '  --slide <n>      one slide, 1-based; every slide by default',
+    '  --width <px>     the SVG width attribute; the height follows the aspect',
+    '  --out <path>     a directory, or a file when rendering one slide',
+    '  --font-dir <d>   look for fonts here first; repeatable',
+    '  --no-system-fonts   do not look in this platform own font directories',
+    '  --no-text        draw geometry only, and ask no font questions',
+    '  --json           what was drawn, and which face drew each typeface',
+    '  --quiet          no summary after writing',
+    '',
+    '  With no --out the markup goes to stdout, which is one slide worth doing.',
     '',
     'inspect options:',
     '  --json           the census as JSON, for a script or for committing as a fixture',
@@ -97,8 +110,9 @@ function usage(): string {
     '  -v, --version    print the version',
     '',
     'Exit status is 1 when inspect finds a structural error, when validate finds',
-    'anything fatal, when roundtrip finds a difference, or when bisect localizes',
-    'one. 0 otherwise. Warnings and notes never fail a command.',
+    'anything fatal, when roundtrip finds a difference, when render cannot draw,',
+    'or when bisect localizes one. 0 otherwise. Warnings and notes never fail a',
+    'command.',
     '',
     'Not built yet:',
     planned,
@@ -123,6 +137,9 @@ export function main(argv: readonly string[], streams: Streams = CONSOLE_STREAMS
     parsed = parseArgs({
       args: [...argv],
       allowPositionals: true,
+      // `--no-text` and `--no-system-fonts` are the only way to spell turning a
+      // defaulted-true flag off, and parseArgs rejects them without this.
+      allowNegative: true,
       options: {
         json: { type: 'boolean', default: false },
         explain: { type: 'boolean', default: false },
@@ -133,6 +150,11 @@ export function main(argv: readonly string[], streams: Streams = CONSOLE_STREAMS
         out: { type: 'string' },
         write: { type: 'string' },
         oracle: { type: 'string' },
+        slide: { type: 'string' },
+        width: { type: 'string' },
+        'font-dir': { type: 'string', multiple: true },
+        'system-fonts': { type: 'boolean', default: true },
+        text: { type: 'boolean', default: true },
         command: { type: 'string' },
         'max-runs': { type: 'string' },
         timeout: { type: 'string' },
@@ -176,6 +198,7 @@ export function main(argv: readonly string[], streams: Streams = CONSOLE_STREAMS
     command !== 'inspect' &&
     command !== 'validate' &&
     command !== 'roundtrip' &&
+    command !== 'render' &&
     command !== 'bisect'
   ) {
     streams.err('unknown command: ' + command + '\n\n' + usage());
@@ -228,6 +251,44 @@ export function main(argv: readonly string[], streams: Streams = CONSOLE_STREAMS
             error.message +
             '\n',
         );
+      } else if (isOpcError(error)) {
+        streams.err('pptx-studio: ' + error.code + ': ' + error.message + '\n');
+      } else {
+        streams.err('pptx-studio: ' + describe(error) + '\n');
+      }
+      return 1;
+    }
+  }
+
+  if (command === 'render') {
+    const slide = values.slide === undefined ? null : Number.parseInt(values.slide, 10);
+    if (slide !== null && (!Number.isFinite(slide) || slide < 1)) {
+      streams.err('--slide wants a positive integer, got ' + String(values.slide) + '\n');
+      return 2;
+    }
+    const width = positiveInteger(values.width, RENDER_DEFAULTS.width);
+    if (width === null) {
+      streams.err('--width wants a positive integer, got ' + String(values.width) + '\n');
+      return 2;
+    }
+    const options: RenderOptions = {
+      slide,
+      width,
+      out: values.out ?? null,
+      fontDirs: values['font-dir'] ?? [],
+      systemFonts: values['system-fonts'] !== false,
+      text: values.text !== false,
+      json: values.json === true,
+      quiet: values.quiet === true,
+    };
+    try {
+      return runRender(file, options, streams.out);
+    } catch (error) {
+      // A render fails for a reason the caller can act on - a font directory
+      // that is not there, a typeface nothing can stand in for, a slide the
+      // deck does not have - so the code is worth more than the sentence.
+      if (isRenderError(error)) {
+        streams.err('pptx-studio: ' + error.code + ': ' + error.message + '\n');
       } else if (isOpcError(error)) {
         streams.err('pptx-studio: ' + error.code + ': ' + error.message + '\n');
       } else {

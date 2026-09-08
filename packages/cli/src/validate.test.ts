@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { REPO_ROOT } from '../../../tools/repo/root.ts';
 import { main, type Streams } from './main.js';
 
 /**
@@ -19,7 +19,7 @@ import { main, type Streams } from './main.js';
  * command nobody could put in a script.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../../..');
+const ROOT = REPO_ROOT;
 
 function streams(): { streams: Streams; out: () => string; err: () => string } {
   const outParts: string[] = [];

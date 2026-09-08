@@ -174,12 +174,12 @@ describe('the command line itself', () => {
   });
 
   it('names the sub-phase that brings a verb it does not have yet', () => {
-    // This said `bisect` until 1.5 built it, which is the way this test is
-    // supposed to fail: a verb that arrives has to be taken off the list, and
-    // the list is what the failure points at.
+    // This said `bisect` until 1.5 built it and `render` until 3.10, which is the
+    // way this test is supposed to fail: a verb that arrives has to be taken
+    // off the list, and the list is what the failure points at.
     const io = streams();
-    expect(main(['render', 'deck.pptx'], io.streams)).toBe(2);
-    expect(io.err()).toContain('sub-phase 3.10');
+    expect(main(['resolve', 'deck.pptx'], io.streams)).toBe(2);
+    expect(io.err()).toContain('sub-phase 7.x');
     expect(io.err()).not.toContain('unknown command');
   });
 

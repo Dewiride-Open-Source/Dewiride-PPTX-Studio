@@ -1,8 +1,8 @@
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { REPO_ROOT } from '../../../tools/repo/root.ts';
 import type { RoundTripReport } from '@pptx-studio/writer';
 import { main, type Streams } from './main.js';
 import { formatRoundTrip, type RoundTripStats } from './roundtrip.js';
@@ -21,7 +21,7 @@ import { formatRoundTrip, type RoundTripStats } from './roundtrip.js';
  * handing back a broken file unchanged is preservation working, not failing.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../../..');
+const ROOT = REPO_ROOT;
 let directory: string;
 
 function streams(): { streams: Streams; out: () => string; err: () => string } {

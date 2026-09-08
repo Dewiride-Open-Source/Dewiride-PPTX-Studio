@@ -442,6 +442,37 @@ every line box against the one PowerPoint reported. 415 of 423 land within a ten
 eight that do not are the left edge of a centred or right-aligned line, carrying T2's measured
 browser disagreement whole.
 
+### T13 — what a font-table reader must do to agree with the browser _(added in 3.10)_
+
+The only experiment here that never opens PowerPoint. `pptx-studio render` measures text in Node,
+where there is no canvas, so it reads the face's own tables instead — and every one of those reads
+has more than one plausible source. **No real font can say which is right**, because a real font's
+`hhea`, `usWin` and `sTypo` metrics are the same numbers. So the probes are seven fonts built to
+disagree with themselves on purpose, loaded into Chromium as data URIs under family names that exist
+nowhere.
+
+```bash
+node tools/ground-truth/fonts/metrics/measure-in-browser.ts <dir>
+pnpm build   # analyse scores the built reader, which is what an npm install gets
+node tools/ground-truth/fonts/metrics/analyse.ts <dir> --fixture corpus/ground-truth/font-metrics.json
+```
+
+Three answers, each with every rival scored:
+
+- The font bounding box is **`OS/2.usWinAscent`/`usWinDescent`**, and **`sTypoAscender`/`sTypoDescender`
+  when `fsSelection` bit 7 is set** — 14/14, where reading either pair alone scores 12 and `hhea`,
+  which is the first thing anyone reaches for, scores 10.
+- Pair kerning comes from **GPOS when the font has a `kern` feature, and the legacy `kern` table
+  otherwise** — 42/42. The font that carries both, saying −200 in one and −100 in the other, is the
+  only probe that can separate them: preferring the legacy table scores 36.
+- A width is **each glyph advance truncated to 1/65536 px, plus each kern adjustment rounded to the
+  same step** — 252/252, against 88 for exact float arithmetic. The advance is linear in size to
+  within 1.04e-4 px, which is what makes a table reader viable at all: the browser does not hint it.
+
+`analyse.ts` throws rather than emit a fixture where two readings tie, and it scores the reader in
+`packages/cli/dist` rather than a copy of its logic, so the fixture is a statement about the shipped
+code.
+
 ## Where an experiment reads the browser too
 
 `fonts/substitution/measure-in-browser.ts` (T7), `text/metrics/measure-in-browser.ts` (T2) and
@@ -451,6 +482,9 @@ T7's whole detector question can only be scored there: PowerPoint has no opinion
 `document.fonts.check` works. T8's decoration question is the same shape from the other side — it
 reads Chromium's own `text-decoration` off a screenshot, and the answer is that it agrees with
 PowerPoint on none of eight faces, which is why both rules are drawn as geometry.
+
+T13 goes further and asks **only** the browser. Its subject is what a second measurement engine has
+to do to agree with the first, and PowerPoint is not a party to that question.
 
 ## Driving PowerPoint
 

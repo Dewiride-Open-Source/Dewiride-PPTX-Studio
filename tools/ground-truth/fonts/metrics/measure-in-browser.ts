@@ -1,0 +1,144 @@
+/**
+ * Experiment T13, step 1 - ask Chromium what it reads out of a font.
+ *
+ * ```
+ * node tools/ground-truth/fonts/metrics/measure-in-browser.ts <work-dir>
+ * ```
+ *
+ * The fonts are built here and loaded as data URIs, so nothing on this machine
+ * is read and the answer cannot be an installed face answering for the probe -
+ * every family name is one that exists nowhere. ADR 0042.
+ */
+
+import { writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+
+import { chromium } from 'playwright';
+
+import { BOX_PX, SIZES, STRINGS, probeFonts } from './probes.ts';
+
+/*
+ * `page.evaluate` runs in Chromium; `tools/` is compiled with `types: ["node"]`
+ * and no DOM library, so the surface used is declared rather than imported.
+ */
+interface Ctx2D {
+  font: string;
+  letterSpacing: string;
+  fontKerning: string;
+  measureText(text: string): {
+    readonly width: number;
+    readonly fontBoundingBoxAscent: number;
+    readonly fontBoundingBoxDescent: number;
+  };
+}
+interface CanvasLike {
+  getContext(id: '2d'): Ctx2D | null;
+}
+interface FontFaceLike {
+  load(): Promise<FontFaceLike>;
+}
+declare const OffscreenCanvas: new (w: number, h: number) => CanvasLike;
+declare const FontFace: new (family: string, source: string) => FontFaceLike;
+declare const document: { fonts: { add(face: FontFaceLike): void } };
+
+interface Job {
+  readonly fonts: readonly { id: string; family: string; base64: string }[];
+  readonly strings: readonly string[];
+  readonly sizes: readonly number[];
+  readonly boxPx: number;
+}
+
+const dir = process.argv[2];
+if (dir === undefined) throw new Error('usage: measure-in-browser.ts <work-dir>');
+const work = resolve(dir);
+
+const fonts = probeFonts();
+const job: Job = {
+  fonts: fonts.map((f) => ({ id: f.id, family: f.family, base64: f.base64 })),
+  strings: STRINGS,
+  sizes: SIZES,
+  boxPx: BOX_PX,
+};
+
+// No PINNED_ARGS here: `--disable-remote-fonts` would refuse every probe.
+const browser = await chromium.launch();
+try {
+  const page = await browser.newPage();
+  const measured = await page.evaluate(async (j: Job) => {
+    const ctx = new OffscreenCanvas(8, 8).getContext('2d');
+    if (ctx === null) throw new Error('no 2d context on an OffscreenCanvas');
+
+    const out: {
+      id: string;
+      loaded: boolean;
+      widths: Record<string, Record<string, number>>;
+      box: { ascent: number; descent: number };
+    }[] = [];
+
+    for (const font of j.fonts) {
+      const face = new FontFace(font.family, `url(data:font/ttf;base64,${font.base64})`);
+      let loaded = true;
+      try {
+        document.fonts.add(await face.load());
+      } catch {
+        loaded = false;
+      }
+
+      const widths: Record<string, Record<string, number>> = {};
+      for (const px of j.sizes) {
+        ctx.font = `${String(px)}px "${font.family}"`;
+        ctx.letterSpacing = '0px';
+        ctx.fontKerning = 'normal';
+        const row: Record<string, number> = {};
+        for (const text of j.strings) row[text] = ctx.measureText(text).width;
+        widths[String(px)] = row;
+      }
+
+      ctx.font = `${String(j.boxPx)}px "${font.family}"`;
+      const metrics = ctx.measureText('AH');
+      out.push({
+        id: font.id,
+        loaded,
+        widths,
+        box: {
+          ascent: metrics.fontBoundingBoxAscent,
+          descent: metrics.fontBoundingBoxDescent,
+        },
+      });
+    }
+    return out;
+  }, job);
+
+  const unloaded = measured.filter((m) => !m.loaded).map((m) => m.id);
+  if (unloaded.length > 0) {
+    throw new Error(`chromium refused these probe fonts: ${unloaded.join(', ')}`);
+  }
+
+  writeFileSync(
+    join(work, 'browser-metrics.json'),
+    `${JSON.stringify(
+      {
+        chromium: browser.version(),
+        boxPx: BOX_PX,
+        sizes: SIZES,
+        strings: STRINGS,
+        fonts: fonts.map((f) => ({ id: f.id, asks: f.asks, family: f.family, spec: f.spec })),
+        measured,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  console.log(`chromium ${browser.version()}`);
+  for (const row of measured) {
+    const at100 = row.widths['100'] ?? {};
+    console.log(
+      `${row.id.padEnd(16)} box ${String(row.box.ascent)}/${String(row.box.descent)}` +
+        `  A=${String(at100['A'])} V=${String(at100['V'])} AV=${String(at100['AV'])}`,
+    );
+  }
+  console.log(`\nwrote ${join(work, 'browser-metrics.json')}`);
+} finally {
+  await browser.close();
+}

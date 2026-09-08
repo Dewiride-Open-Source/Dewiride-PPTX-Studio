@@ -1,7 +1,6 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import {
   deflatedEntry,
   passthroughEntry,
@@ -11,6 +10,7 @@ import {
 } from '@pptx-studio/opc';
 import type { BisectResult } from '@pptx-studio/writer';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { REPO_ROOT } from '../../../tools/repo/root.ts';
 import { formatBisect, oracleScriptPath, type BisectStats } from './bisect.js';
 import { main, type Streams } from './main.js';
 
@@ -29,7 +29,7 @@ import { main, type Streams } from './main.js';
  * the script it shells out to is where the code thinks it is.
  */
 
-const ROOT = resolve(fileURLToPath(import.meta.url), '../../../..');
+const ROOT = REPO_ROOT;
 const DECK = join(ROOT, 'corpus', 'decks', 'a31-embedded-fonts.pptx');
 
 let directory: string;

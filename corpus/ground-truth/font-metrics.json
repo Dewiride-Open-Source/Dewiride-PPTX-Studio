@@ -1,0 +1,701 @@
+{
+  "$comment": "Experiment T13: what a font-table reader must do to agree with the browser it is standing in for. Regenerate with tools/ground-truth/fonts/metrics/analyse.ts. The fonts are built by tools/ground-truth/lib/truetype.ts and exist nowhere else, so no installed face can answer for a probe.",
+  "experiment": "T13",
+  "subPhase": "3.10",
+  "adr": "docs/adr/phase-3-text/0042-rendering-without-a-browser.md",
+  "chromium": "151.0.7922.34",
+  "probes": [
+    {
+      "id": "plain",
+      "asks": "is the advance linear in size, or does the browser hint it"
+    },
+    {
+      "id": "split",
+      "asks": "which table the font bounding box comes from"
+    },
+    {
+      "id": "split-usetypo",
+      "asks": "whether fsSelection bit 7 moves the box to the typo metrics"
+    },
+    {
+      "id": "kern-only",
+      "asks": "whether a legacy kern table is honoured at all"
+    },
+    {
+      "id": "gpos-only",
+      "asks": "whether GPOS PairPos is honoured at all"
+    },
+    {
+      "id": "astral",
+      "asks": "which cmap subtable a reader must prefer when a font has two"
+    },
+    {
+      "id": "kern-and-gpos",
+      "asks": "which one wins when both are present and they disagree"
+    }
+  ],
+  "fonts": [
+    {
+      "id": "plain",
+      "family": "PptxStudio Plain",
+      "spec": {
+        "familyName": "PptxStudio Plain",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 800,
+        "winDescent": 200,
+        "typoAscender": 800,
+        "typoDescender": -200,
+        "advance": 600,
+        "spaceAdvance": 400
+      },
+      "base64": "AAEAAAAKAIAAAwAgT1MvMmFaXQEAAACsAAAAYGNtYXAAewA8AAABDAAAADRnbHlmGhoyAAAAAUAAAAFEaGVhZGFsQz4AAAKEAAAANmhoZWEFegGbAAACvAAAACRobXR4FqgCvAAAAuAAAAAobG9jYQAABngAAAMIAAAALG1heHAADAAGAAADNAAAACJuYW1lD8AjCAAAA1gAAADYcG9zdP+fADIAAAQwAAAAIAAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAEAAIABIAyD/OAAAAyAAyAAAAAEAAAAAAfQCvAAAAAAAAAAAAAEAAwABAAAADAAEACgAAAAGAAQAAQACACAASP//AAAAIABB////4f/BAAEAAAAAAAAAAQA8AAACHAL4AAMAAAEBAQEAPAHgAAD+IAAAAAAC+AAAAAAAAQBQAAACCABkAAMAAAEBAQEAUAG4AAD+SAAAAAAAZAAAAAAAAQBQAAACCADIAAMAAAEBAQEAUAG4AAD+SAAAAAAAyAAAAAAAAQBQAAACCAEsAAMAAAEBAQEAUAG4AAD+SAAAAAABLAAAAAAAAQBQAAACCAGQAAMAAAEBAQEAUAG4AAD+SAAAAAABkAAAAAAAAQBQAAACCAH0AAMAAAEBAQEAUAG4AAD+SAAAAAAB9AAAAAAAAQBQAAACCAJYAAMAAAEBAQEAUAG4AAD+SAAAAAACWAAAAAAAAQBQAAACCAK8AAMAAAEBAQEAUAG4AAD+SAAAAAACvAAAAAAAAQBQAAACCAMgAAMAAAEBAQEAUAG4AAD+SAAAAAADIAAAAAAAAQAAAAEAAJPGj5tfDzz1AAAD6AAAAAAAAAAAAAAAAAAAAAAAAP84AlgDIAAAAAgAAgABAAAAAAABAAADIP84AAACWAAAAAACWAABAAAAAAAAAAAAAAAAAAAACgJYADwBkAAAAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFAAAAAAAAAAJAAAACQAAABIAAAAbAAAAJAAAAC0AAAA2AAAAPwAAAEgAAABRAABAAAACgAEAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAQgADAAEECQABACAAAAADAAEECQACAA4AIAADAAEECQADACoALgADAAEECQAEACAAWAADAAEECQAGAB4AeABQAHAAdAB4AFMAdAB1AGQAaQBvACAAUABsAGEAaQBuAFIAZQBnAHUAbABhAHIAUABwAHQAeABTAHQAdQBkAGkAbwAgAFAAbABhAGkAbgAgADIAMAAyADYAUABwAHQAeABTAHQAdQBkAGkAbwAgAFAAbABhAGkAbgBQAHAAdAB4AFMAdAB1AGQAaQBvAFAAbABhAGkAbgADAAAAAAAA/5wAMgAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "split",
+      "family": "PptxStudio Split",
+      "spec": {
+        "familyName": "PptxStudio Split",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 900,
+        "winDescent": 300,
+        "typoAscender": 700,
+        "typoDescender": -100,
+        "advance": 600,
+        "spaceAdvance": 400
+      },
+      "base64": "AAEAAAAKAIAAAwAgT1MvMmFaXckAAACsAAAAYGNtYXAAewA8AAABDAAAADRnbHlmGhoyAAAAAUAAAAFEaGVhZGFsQz4AAAKEAAAANmhoZWEFegGbAAACvAAAACRobXR4FqgCvAAAAuAAAAAobG9jYQAABngAAAMIAAAALG1heHAADAAGAAADNAAAACJuYW1lD/AjOAAAA1gAAADYcG9zdP+fADIAAAQwAAAAIAAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAEAAIABIArz/nAAAA4QBLAAAAAEAAAAAAfQCvAAAAAAAAAAAAAEAAwABAAAADAAEACgAAAAGAAQAAQACACAASP//AAAAIABB////4f/BAAEAAAAAAAAAAQA8AAACHAL4AAMAAAEBAQEAPAHgAAD+IAAAAAAC+AAAAAAAAQBQAAACCABkAAMAAAEBAQEAUAG4AAD+SAAAAAAAZAAAAAAAAQBQAAACCADIAAMAAAEBAQEAUAG4AAD+SAAAAAAAyAAAAAAAAQBQAAACCAEsAAMAAAEBAQEAUAG4AAD+SAAAAAABLAAAAAAAAQBQAAACCAGQAAMAAAEBAQEAUAG4AAD+SAAAAAABkAAAAAAAAQBQAAACCAH0AAMAAAEBAQEAUAG4AAD+SAAAAAAB9AAAAAAAAQBQAAACCAJYAAMAAAEBAQEAUAG4AAD+SAAAAAACWAAAAAAAAQBQAAACCAK8AAMAAAEBAQEAUAG4AAD+SAAAAAACvAAAAAAAAQBQAAACCAMgAAMAAAEBAQEAUAG4AAD+SAAAAAADIAAAAAAAAQAAAAEAAJNmjatfDzz1AAAD6AAAAAAAAAAAAAAAAAAAAAAAAP84AlgDIAAAAAgAAgABAAAAAAABAAADIP84AAACWAAAAAACWAABAAAAAAAAAAAAAAAAAAAACgJYADwBkAAAAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFAAAAAAAAAAJAAAACQAAABIAAAAbAAAAJAAAAC0AAAA2AAAAPwAAAEgAAABRAABAAAACgAEAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAQgADAAEECQABACAAAAADAAEECQACAA4AIAADAAEECQADACoALgADAAEECQAEACAAWAADAAEECQAGAB4AeABQAHAAdAB4AFMAdAB1AGQAaQBvACAAUwBwAGwAaQB0AFIAZQBnAHUAbABhAHIAUABwAHQAeABTAHQAdQBkAGkAbwAgAFMAcABsAGkAdAAgADIAMAAyADYAUABwAHQAeABTAHQAdQBkAGkAbwAgAFMAcABsAGkAdABQAHAAdAB4AFMAdAB1AGQAaQBvAFMAcABsAGkAdAADAAAAAAAA/5wAMgAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "split-usetypo",
+      "family": "PptxStudio Split UseTypo",
+      "spec": {
+        "familyName": "PptxStudio Split UseTypo",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 900,
+        "winDescent": 300,
+        "typoAscender": 700,
+        "typoDescender": -100,
+        "advance": 600,
+        "spaceAdvance": 400,
+        "useTypoMetrics": true
+      },
+      "base64": "AAEAAAAKAIAAAwAgT1MvMmFaXkkAAACsAAAAYGNtYXAAewA8AAABDAAAADRnbHlmGhoyAAAAAUAAAAFEaGVhZGFsQz4AAAKEAAAANmhoZWEFegGbAAACvAAAACRobXR4FqgCvAAAAuAAAAAobG9jYQAABngAAAMIAAAALG1heHAADAAGAAADNAAAACJuYW1lFp0o/QAAA1gAAAEWcG9zdP+fADIAAARwAAAAIAAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAMAAIABIArz/nAAAA4QBLAAAAAEAAAAAAfQCvAAAAAAAAAAAAAEAAwABAAAADAAEACgAAAAGAAQAAQACACAASP//AAAAIABB////4f/BAAEAAAAAAAAAAQA8AAACHAL4AAMAAAEBAQEAPAHgAAD+IAAAAAAC+AAAAAAAAQBQAAACCABkAAMAAAEBAQEAUAG4AAD+SAAAAAAAZAAAAAAAAQBQAAACCADIAAMAAAEBAQEAUAG4AAD+SAAAAAAAyAAAAAAAAQBQAAACCAEsAAMAAAEBAQEAUAG4AAD+SAAAAAABLAAAAAAAAQBQAAACCAGQAAMAAAEBAQEAUAG4AAD+SAAAAAABkAAAAAAAAQBQAAACCAH0AAMAAAEBAQEAUAG4AAD+SAAAAAAB9AAAAAAAAQBQAAACCAJYAAMAAAEBAQEAUAG4AAD+SAAAAAACWAAAAAAAAQBQAAACCAK8AAMAAAEBAQEAUAG4AAD+SAAAAAACvAAAAAAAAQBQAAACCAMgAAMAAAEBAQEAUAG4AAD+SAAAAAADIAAAAAAAAQAAAAEAAIYMgKNfDzz1AAAD6AAAAAAAAAAAAAAAAAAAAAAAAP84AlgDIAAAAAgAAgABAAAAAAABAAADIP84AAACWAAAAAACWAABAAAAAAAAAAAAAAAAAAAACgJYADwBkAAAAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFAAAAAAAAAAJAAAACQAAABIAAAAbAAAAJAAAAC0AAAA2AAAAPwAAAEgAAABRAABAAAACgAEAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAQgADAAEECQABADAAAAADAAEECQACAA4AMAADAAEECQADADoAPgADAAEECQAEADAAeAADAAEECQAGACwAqABQAHAAdAB4AFMAdAB1AGQAaQBvACAAUwBwAGwAaQB0ACAAVQBzAGUAVAB5AHAAbwBSAGUAZwB1AGwAYQByAFAAcAB0AHgAUwB0AHUAZABpAG8AIABTAHAAbABpAHQAIABVAHMAZQBUAHkAcABvACAAMgAwADIANgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAUwBwAGwAaQB0ACAAVQBzAGUAVAB5AHAAbwBQAHAAdAB4AFMAdAB1AGQAaQBvAFMAcABsAGkAdABVAHMAZQBUAHkAcABvAAAAAwAAAAAAAP+cADIAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "id": "kern-only",
+      "family": "PptxStudio Kern",
+      "spec": {
+        "familyName": "PptxStudio Kern",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 800,
+        "winDescent": 200,
+        "typoAscender": 800,
+        "typoDescender": -200,
+        "advance": 600,
+        "spaceAdvance": 400,
+        "kern": [
+          {
+            "left": "A",
+            "right": "B",
+            "adjust": -200
+          }
+        ]
+      },
+      "base64": "AAEAAAALAIAAAwAwT1MvMmFaXQEAAAC8AAAAYGNtYXAAewA8AAABHAAAADRnbHlmGhoyAAAAAVAAAAFEaGVhZGFsQz4AAAKUAAAANmhoZWEFegGbAAACzAAAACRobXR4FqgCvAAAAvAAAAAoa2VybgAK/1AAAAMYAAAAGGxvY2EAAAZ4AAADMAAAACxtYXhwAAwABgAAA1wAAAAibmFtZQ76IigAAAOAAAAA0HBvc3T/nwAyAAAEUAAAACAABAJYAZAABQAAAooCvP9qAMgBkAEsAGT/zgGQASwAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAUFhTVABAACAASAMg/zgAAAMgAMgAAAABAAAAAAH0ArwAAAAAAAAAAAABAAMAAQAAAAwABAAoAAAABgAEAAEAAgAgAEj//wAAACAAQf///+H/wQABAAAAAAAAAAEAPAAAAhwC+AADAAABAQEBADwB4AAA/iAAAAAAAvgAAAAAAAEAUAAAAggAZAADAAABAQEBAFABuAAA/kgAAAAAAGQAAAAAAAEAUAAAAggAyAADAAABAQEBAFABuAAA/kgAAAAAAMgAAAAAAAEAUAAAAggBLAADAAABAQEBAFABuAAA/kgAAAAAASwAAAAAAAEAUAAAAggBkAADAAABAQEBAFABuAAA/kgAAAAAAZAAAAAAAAEAUAAAAggB9AADAAABAQEBAFABuAAA/kgAAAAAAfQAAAAAAAEAUAAAAggCWAADAAABAQEBAFABuAAA/kgAAAAAAlgAAAAAAAEAUAAAAggCvAADAAABAQEBAFABuAAA/kgAAAAAArwAAAAAAAEAUAAAAggDIAADAAABAQEBAFABuAAA/kgAAAAAAyAAAAAAAAEAAAABAAAp1hwdXw889QAAA+gAAAAAAAAAAAAAAAAAAAAAAAD/OAJYAyAAAAAIAAIAAQAAAAAAAQAAAyD/OAAAAlgAAAAAAlgAAQAAAAAAAAAAAAAAAAAAAAoCWAA8AZAAAAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFACWABQAAAAAQAAABQAAQABAAYAAAAAAAIAA/84AAAAAAAAACQAAAAkAAAASAAAAGwAAACQAAAAtAAAANgAAAD8AAABIAAAAUQAAQAAAAoABAABAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAEIAAwABBAkAAQAeAAAAAwABBAkAAgAOAB4AAwABBAkAAwAoACwAAwABBAkABAAeAFQAAwABBAkABgAcAHIAUABwAHQAeABTAHQAdQBkAGkAbwAgAEsAZQByAG4AUgBlAGcAdQBsAGEAcgBQAHAAdAB4AFMAdAB1AGQAaQBvACAASwBlAHIAbgAgADIAMAAyADYAUABwAHQAeABTAHQAdQBkAGkAbwAgAEsAZQByAG4AUABwAHQAeABTAHQAdQBkAGkAbwBLAGUAcgBuAAMAAAAAAAD/nAAyAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "id": "gpos-only",
+      "family": "PptxStudio Gpos",
+      "spec": {
+        "familyName": "PptxStudio Gpos",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 800,
+        "winDescent": 200,
+        "typoAscender": 800,
+        "typoDescender": -200,
+        "advance": 600,
+        "spaceAdvance": 400,
+        "gpos": [
+          {
+            "left": "A",
+            "right": "B",
+            "adjust": -200
+          }
+        ]
+      },
+      "base64": "AAEAAAALAIAAAwAwR1BPU682vxcAAAC8AAAAUE9TLzJhWl0BAAABDAAAAGBjbWFwAHsAPAAAAWwAAAA0Z2x5ZhoaMgAAAAGgAAABRGhlYWRhbEM+AAAC5AAAADZoaGVhBXoBmwAAAxwAAAAkaG10eBaoArwAAANAAAAAKGxvY2EAAAZ4AAADaAAAACxtYXhwAAwABgAAA5QAAAAibmFtZQ7eImgAAAO4AAAA0HBvc3T/nwAyAAAEiAAAACAAAQAAAAoAHgAsAAFERkxUAAgABAAAAAD//wABAAAAAWtlcm4ACAAAAAEAAAABAAQAAgAAAAEACAABABIABAAAAAEADAABAAP/OAABAAEAAgAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAEAAIABIAyD/OAAAAyAAyAAAAAEAAAAAAfQCvAAAAAAAAAAAAAEAAwABAAAADAAEACgAAAAGAAQAAQACACAASP//AAAAIABB////4f/BAAEAAAAAAAAAAQA8AAACHAL4AAMAAAEBAQEAPAHgAAD+IAAAAAAC+AAAAAAAAQBQAAACCABkAAMAAAEBAQEAUAG4AAD+SAAAAAAAZAAAAAAAAQBQAAACCADIAAMAAAEBAQEAUAG4AAD+SAAAAAAAyAAAAAAAAQBQAAACCAEsAAMAAAEBAQEAUAG4AAD+SAAAAAABLAAAAAAAAQBQAAACCAGQAAMAAAEBAQEAUAG4AAD+SAAAAAABkAAAAAAAAQBQAAACCAH0AAMAAAEBAQEAUAG4AAD+SAAAAAAB9AAAAAAAAQBQAAACCAJYAAMAAAEBAQEAUAG4AAD+SAAAAAACWAAAAAAAAQBQAAACCAK8AAMAAAEBAQEAUAG4AAD+SAAAAAACvAAAAAAAAQBQAAACCAMgAAMAAAEBAQEAUAG4AAD+SAAAAAADIAAAAAAAAQAAAAEAAO/Lvo5fDzz1AAAD6AAAAAAAAAAAAAAAAAAAAAAAAP84AlgDIAAAAAgAAgABAAAAAAABAAADIP84AAACWAAAAAACWAABAAAAAAAAAAAAAAAAAAAACgJYADwBkAAAAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFAAAAAAAAAAJAAAACQAAABIAAAAbAAAAJAAAAC0AAAA2AAAAPwAAAEgAAABRAABAAAACgAEAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAQgADAAEECQABAB4AAAADAAEECQACAA4AHgADAAEECQADACgALAADAAEECQAEAB4AVAADAAEECQAGABwAcgBQAHAAdAB4AFMAdAB1AGQAaQBvACAARwBwAG8AcwBSAGUAZwB1AGwAYQByAFAAcAB0AHgAUwB0AHUAZABpAG8AIABHAHAAbwBzACAAMgAwADIANgBQAHAAdAB4AFMAdAB1AGQAaQBvACAARwBwAG8AcwBQAHAAdAB4AFMAdAB1AGQAaQBvAEcAcABvAHMAAwAAAAAAAP+cADIAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "id": "astral",
+      "family": "PptxStudio Astral",
+      "spec": {
+        "familyName": "PptxStudio Astral",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 800,
+        "winDescent": 200,
+        "typoAscender": 800,
+        "typoDescender": -200,
+        "advance": 600,
+        "spaceAdvance": 400,
+        "astral": 131072
+      },
+      "base64": "AAEAAAAKAIAAAwAgT1MvMmFaXQEAAACsAAAAYGNtYXAAjgGQAAABDAAAAHBnbHlmGhoyAAAAAXwAAAFEaGVhZGFsQz4AAALAAAAANmhoZWEFegGbAAAC+AAAACRobXR4FqgCvAAAAxwAAAAobG9jYQAABngAAANEAAAALG1heHAADAAGAAADcAAAACJuYW1lEHokMAAAA5QAAADgcG9zdP+fADIAAAR0AAAAIAAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAEAAIABIAyD/OAAAAyAAyAAAAAEAAAAAAfQCvAAAAAAAAAAAAAIAAwABAAAAFAADAAoAAAA8AAQAKAAAAAYABAABAAIAIABI//8AAAAgAEH////h/8EAAQAAAAAAAAAMAAAAAAA0AAAAAAAAAAMAAAAgAAAAIAAAAAEAAABBAAAASAAAAAIAAgAAAAIAAAAAAAIAAQA8AAACHAL4AAMAAAEBAQEAPAHgAAD+IAAAAAAC+AAAAAAAAQBQAAACCABkAAMAAAEBAQEAUAG4AAD+SAAAAAAAZAAAAAAAAQBQAAACCADIAAMAAAEBAQEAUAG4AAD+SAAAAAAAyAAAAAAAAQBQAAACCAEsAAMAAAEBAQEAUAG4AAD+SAAAAAABLAAAAAAAAQBQAAACCAGQAAMAAAEBAQEAUAG4AAD+SAAAAAABkAAAAAAAAQBQAAACCAH0AAMAAAEBAQEAUAG4AAD+SAAAAAAB9AAAAAAAAQBQAAACCAJYAAMAAAEBAQEAUAG4AAD+SAAAAAACWAAAAAAAAQBQAAACCAK8AAMAAAEBAQEAUAG4AAD+SAAAAAACvAAAAAAAAQBQAAACCAMgAAMAAAEBAQEAUAG4AAD+SAAAAAADIAAAAAAAAQAAAAEAAJIsiHdfDzz1AAAD6AAAAAAAAAAAAAAAAAAAAAAAAP84AlgDIAAAAAgAAgABAAAAAAABAAADIP84AAACWAAAAAACWAABAAAAAAAAAAAAAAAAAAAACgJYADwBkAAAAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFAAAAAAAAAAJAAAACQAAABIAAAAbAAAAJAAAAC0AAAA2AAAAPwAAAEgAAABRAABAAAACgAEAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAQgADAAEECQABACIAAAADAAEECQACAA4AIgADAAEECQADACwAMAADAAEECQAEACIAXAADAAEECQAGACAAfgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAQQBzAHQAcgBhAGwAUgBlAGcAdQBsAGEAcgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAQQBzAHQAcgBhAGwAIAAyADAAMgA2AFAAcAB0AHgAUwB0AHUAZABpAG8AIABBAHMAdAByAGEAbABQAHAAdAB4AFMAdAB1AGQAaQBvAEEAcwB0AHIAYQBsAAMAAAAAAAD/nAAyAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "id": "kern-and-gpos",
+      "family": "PptxStudio Both",
+      "spec": {
+        "familyName": "PptxStudio Both",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 800,
+        "winDescent": 200,
+        "typoAscender": 800,
+        "typoDescender": -200,
+        "advance": 600,
+        "spaceAdvance": 400,
+        "kern": [
+          {
+            "left": "A",
+            "right": "B",
+            "adjust": -200
+          }
+        ],
+        "gpos": [
+          {
+            "left": "A",
+            "right": "B",
+            "adjust": -100
+          }
+        ]
+      },
+      "base64": "AAEAAAAMAIAAAwBAR1BPU6+avxcAAADMAAAAUE9TLzJhWl0BAAABHAAAAGBjbWFwAHsAPAAAAXwAAAA0Z2x5ZhoaMgAAAAGwAAABRGhlYWRhbEM+AAAC9AAAADZoaGVhBXoBmwAAAywAAAAkaG10eBaoArwAAANQAAAAKGtlcm4ACv9QAAADeAAAABhsb2NhAAAGeAAAA5AAAAAsbWF4cAAMAAYAAAO8AAAAIm5hbWUO3iI4AAAD4AAAANBwb3N0/58AMgAABLAAAAAgAAEAAAAKAB4ALAABREZMVAAIAAQAAAAA//8AAQAAAAFrZXJuAAgAAAABAAAAAQAEAAIAAAABAAgAAQASAAQAAAABAAwAAQAD/5wAAQABAAIABAJYAZAABQAAAooCvP9qAMgBkAEsAGT/zgGQASwAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAUFhTVABAACAASAMg/zgAAAMgAMgAAAABAAAAAAH0ArwAAAAAAAAAAAABAAMAAQAAAAwABAAoAAAABgAEAAEAAgAgAEj//wAAACAAQf///+H/wQABAAAAAAAAAAEAPAAAAhwC+AADAAABAQEBADwB4AAA/iAAAAAAAvgAAAAAAAEAUAAAAggAZAADAAABAQEBAFABuAAA/kgAAAAAAGQAAAAAAAEAUAAAAggAyAADAAABAQEBAFABuAAA/kgAAAAAAMgAAAAAAAEAUAAAAggBLAADAAABAQEBAFABuAAA/kgAAAAAASwAAAAAAAEAUAAAAggBkAADAAABAQEBAFABuAAA/kgAAAAAAZAAAAAAAAEAUAAAAggB9AADAAABAQEBAFABuAAA/kgAAAAAAfQAAAAAAAEAUAAAAggCWAADAAABAQEBAFABuAAA/kgAAAAAAlgAAAAAAAEAUAAAAggCvAADAAABAQEBAFABuAAA/kgAAAAAArwAAAAAAAEAUAAAAggDIAADAAABAQEBAFABuAAA/kgAAAAAAyAAAAAAAAEAAAABAACDh0kwXw889QAAA+gAAAAAAAAAAAAAAAAAAAAAAAD/OAJYAyAAAAAIAAIAAQAAAAAAAQAAAyD/OAAAAlgAAAAAAlgAAQAAAAAAAAAAAAAAAAAAAAoCWAA8AZAAAAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFACWABQAAAAAQAAABQAAQABAAYAAAAAAAIAA/84AAAAAAAAACQAAAAkAAAASAAAAGwAAACQAAAAtAAAANgAAAD8AAABIAAAAUQAAQAAAAoABAABAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAEIAAwABBAkAAQAeAAAAAwABBAkAAgAOAB4AAwABBAkAAwAoACwAAwABBAkABAAeAFQAAwABBAkABgAcAHIAUABwAHQAeABTAHQAdQBkAGkAbwAgAEIAbwB0AGgAUgBlAGcAdQBsAGEAcgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAQgBvAHQAaAAgADIAMAAyADYAUABwAHQAeABTAHQAdQBkAGkAbwAgAEIAbwB0AGgAUABwAHQAeABTAHQAdQBkAGkAbwBCAG8AdABoAAMAAAAAAAD/nAAyAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    }
+  ],
+  "browser": {
+    "sizes": [8, 12, 16, 32, 100, 1000],
+    "strings": ["A", "B", "AB", "AC", "ABCDEFGH", "A B"],
+    "boxPx": 1000,
+    "rows": [
+      {
+        "id": "plain",
+        "box": {
+          "ascent": 800,
+          "descent": 200
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 9.5999755859375,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 38.39990234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 14.399993896484375,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 57.5999755859375,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 19.199981689453125,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 76.7999267578125,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 38.399993896484375,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 153.5999755859375,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 120,
+            "AC": 120,
+            "ABCDEFGH": 480,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1200,
+            "AC": 1200,
+            "ABCDEFGH": 4800,
+            "A B": 1600
+          }
+        }
+      },
+      {
+        "id": "split",
+        "box": {
+          "ascent": 900,
+          "descent": 300
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 9.5999755859375,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 38.39990234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 14.399993896484375,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 57.5999755859375,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 19.199981689453125,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 76.7999267578125,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 38.399993896484375,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 153.5999755859375,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 120,
+            "AC": 120,
+            "ABCDEFGH": 480,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1200,
+            "AC": 1200,
+            "ABCDEFGH": 4800,
+            "A B": 1600
+          }
+        }
+      },
+      {
+        "id": "split-usetypo",
+        "box": {
+          "ascent": 700,
+          "descent": 100
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 9.5999755859375,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 38.39990234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 14.399993896484375,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 57.5999755859375,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 19.199981689453125,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 76.7999267578125,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 38.399993896484375,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 153.5999755859375,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 120,
+            "AC": 120,
+            "ABCDEFGH": 480,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1200,
+            "AC": 1200,
+            "ABCDEFGH": 4800,
+            "A B": 1600
+          }
+        }
+      },
+      {
+        "id": "kern-only",
+        "box": {
+          "ascent": 800,
+          "descent": 200
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 7.999969482421875,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 36.799896240234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 12,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 55.199981689453125,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 15.999984741210938,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 73.59992980957031,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 32,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 147.19998168945312,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 100,
+            "AC": 120,
+            "ABCDEFGH": 460,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1000,
+            "AC": 1200,
+            "ABCDEFGH": 4600,
+            "A B": 1600
+          }
+        }
+      },
+      {
+        "id": "gpos-only",
+        "box": {
+          "ascent": 800,
+          "descent": 200
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 7.999969482421875,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 36.799896240234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 12,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 55.199981689453125,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 15.999984741210938,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 73.59992980957031,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 32,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 147.19998168945312,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 100,
+            "AC": 120,
+            "ABCDEFGH": 460,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1000,
+            "AC": 1200,
+            "ABCDEFGH": 4600,
+            "A B": 1600
+          }
+        }
+      },
+      {
+        "id": "astral",
+        "box": {
+          "ascent": 800,
+          "descent": 200
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 9.5999755859375,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 38.39990234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 14.399993896484375,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 57.5999755859375,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 19.199981689453125,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 76.7999267578125,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 38.399993896484375,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 153.5999755859375,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 120,
+            "AC": 120,
+            "ABCDEFGH": 480,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1200,
+            "AC": 1200,
+            "ABCDEFGH": 4800,
+            "A B": 1600
+          }
+        }
+      },
+      {
+        "id": "kern-and-gpos",
+        "box": {
+          "ascent": 800,
+          "descent": 200
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 8.799972534179688,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 37.59989929199219,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 13.199996948242188,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 56.39997863769531,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 17.5999755859375,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 75.19992065429688,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 35.19999694824219,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 150.3999786376953,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 110,
+            "AC": 120,
+            "ABCDEFGH": 470,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1100,
+            "AC": 1200,
+            "ABCDEFGH": 4700,
+            "A B": 1600
+          }
+        }
+      }
+    ]
+  },
+  "measurements": {
+    "widths": 252,
+    "boxes": 14
+  },
+  "faceBox": {
+    "$comment": "The ascent and descent a browser reports for a face. Every real font sets hhea and usWin to the same numbers, so only a font built to disagree can say which was read.",
+    "answer": "usWin, or sTypo when fsSelection bit 7 is set",
+    "scores": [
+      {
+        "model": "hhea.ascender/descender",
+        "fits": 10,
+        "of": 14,
+        "worst": 100
+      },
+      {
+        "model": "OS/2.usWinAscent/usWinDescent",
+        "fits": 12,
+        "of": 14,
+        "worst": 200
+      },
+      {
+        "model": "OS/2.sTypoAscender/sTypoDescender",
+        "fits": 12,
+        "of": 14,
+        "worst": 200
+      },
+      {
+        "model": "usWin, or sTypo when fsSelection bit 7 is set",
+        "fits": 14,
+        "of": 14,
+        "worst": 0
+      }
+    ]
+  },
+  "kerning": {
+    "$comment": "A font may carry pair adjustments in a legacy kern table, in GPOS, or in both. The third probe sets them to different values, which is the only way to find out which one loses.",
+    "answer": "GPOS when present, else the kern table",
+    "scores": [
+      {
+        "model": "the legacy kern table only",
+        "fits": 30,
+        "of": 42,
+        "worst": 200
+      },
+      {
+        "model": "GPOS PairPos only",
+        "fits": 36,
+        "of": 42,
+        "worst": 200
+      },
+      {
+        "model": "GPOS when present, else the kern table",
+        "fits": 42,
+        "of": 42,
+        "worst": 0
+      },
+      {
+        "model": "the kern table when present, else GPOS",
+        "fits": 36,
+        "of": 42,
+        "worst": 100
+      },
+      {
+        "model": "neither",
+        "fits": 24,
+        "of": 42,
+        "worst": 200
+      }
+    ]
+  },
+  "width": {
+    "$comment": "Whether an advance is linear in size - that is, unhinted - and how the browser quantises it. The linear reading is what matters on a slide; the quantisation is what lets the reader's test assert equality instead of a tolerance.",
+    "answer": "advance truncated, kern rounded, both at 1/65536 px",
+    "linearWithinPx": 0.00010375976562215783,
+    "scores": [
+      {
+        "model": "exact float, no quantisation",
+        "fits": 88,
+        "of": 252,
+        "worst": 0.00010375976562215783
+      },
+      {
+        "model": "advance and kern truncated at 1/65536 px",
+        "fits": 244,
+        "of": 252,
+        "worst": 0.0000152587890625
+      },
+      {
+        "model": "advance and kern rounded at 1/65536 px",
+        "fits": 154,
+        "of": 252,
+        "worst": 0.0001220703125
+      },
+      {
+        "model": "advance truncated, kern rounded, both at 1/65536 px",
+        "fits": 252,
+        "of": 252,
+        "worst": 0
+      },
+      {
+        "model": "the whole string quantised once at 1/65536 px",
+        "fits": 168,
+        "of": 252,
+        "worst": 0.000091552734375
+      }
+    ]
+  }
+}

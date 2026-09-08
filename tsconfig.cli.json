@@ -5,9 +5,18 @@
     "noEmit": true,
     "lib": ["ES2023"],
     "types": ["node"],
+    // The test files reach tools/repo/root.ts for the workspace root, which is
+    // the only sanctioned way to name a repo-relative path. noEmit is set, so
+    // nothing here is ever compiled with a .ts specifier in it.
+    "allowImportingTsExtensions": true,
     "paths": {
       "@pptx-studio/census": ["./packages/census/src/index.ts"],
+      "@pptx-studio/geometry": ["./packages/geometry/src/index.ts"],
+      "@pptx-studio/model": ["./packages/model/src/index.ts"],
       "@pptx-studio/opc": ["./packages/opc/src/index.ts"],
+      "@pptx-studio/paint": ["./packages/paint/src/index.ts"],
+      "@pptx-studio/render-svg": ["./packages/render-svg/src/index.ts"],
+      "@pptx-studio/text": ["./packages/text/src/index.ts"],
       "@pptx-studio/validate": ["./packages/validate/src/index.ts"],
       "@pptx-studio/writer": ["./packages/writer/src/index.ts"],
       "@pptx-studio/xml": ["./packages/xml/src/index.ts"]

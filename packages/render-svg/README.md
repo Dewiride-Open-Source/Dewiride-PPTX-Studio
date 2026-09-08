@@ -2,6 +2,28 @@
 
 A slide to SVG: transforms, geometry, fills, strokes and effects, as a string.
 
+```ts
+import { PartStore } from '@pptx-studio/opc';
+import { loadDocument } from '@pptx-studio/model';
+import { renderSlide } from '@pptx-studio/render-svg';
+
+const store = PartStore.open(bytes);
+const deck = loadDocument(store);
+const svg = renderSlide(deck.slides[0], deck.slideSize, { width: 1920 });
+```
+
+**A string, and only a string.** Nothing here touches the DOM, so the same call
+works in a tab, in a Web Worker and in Node. Text is the one part that needs to
+measure something: pass `text: false` for geometry alone, pass a `measurer` of
+your own, or let it default to `OffscreenCanvas`. `@pptx-studio/cli` supplies a
+measurer that reads the font's own tables, which is how `pptx-studio render`
+draws text in Node with no browser at all — see
+[ADR 0042](../../docs/adr/phase-3-text/0042-rendering-without-a-browser.md).
+
+Pictures need an `r:embed` resolved against the rels of the part the fill was
+written in, which only the caller can do; pass `media` and they are embedded as
+`data:` URIs so the document stands alone.
+
 Sub-phase 2.10. Everything below was measured against Microsoft PowerPoint rather than argued from
 the standard; the fixture is `corpus/ground-truth/transforms.json`, the experiment is C6 in
 `tools/ground-truth/`, and the reasoning is `docs/adr/phase-2-geometry-and-paint/0025-renderers-geometry.md`.
