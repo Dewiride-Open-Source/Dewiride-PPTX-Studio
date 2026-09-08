@@ -114,8 +114,10 @@ CLI silently falls back to the legacy token path.
 Caveat found during research: pnpm 11 replaced the npm CLI publish fallback with a native
 implementation, and OIDC publishing that worked under pnpm 10 now fails with a 404
 (pnpm/pnpm#11513). Until that is fixed, the release workflow installs and builds with pnpm but runs
-the publish step through the npm CLI (>= 11.5.1). The release workflow is a stub until 3.10; this
-note exists so the trap is not rediscovered then.
+the publish step through the npm CLI (>= 11.5.1).
+
+3.10 published the first eleven packages and settled the shape of the workflow that does it — see
+[ADR 0042](../phase-3-text/0042-rendering-without-a-browser.md).
 
 Trusted-publisher configurations created after 2026-05-20 must explicitly select at least one
 allowed action when registered on npmjs.com.

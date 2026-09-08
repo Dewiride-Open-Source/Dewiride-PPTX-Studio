@@ -70,6 +70,21 @@ pnpm changeset
 Pick the packages, pick the bump, and write the entry for someone reading the changelog rather than
 for someone reading the diff. Changes confined to `tools/`, `docs/` or CI do not need one.
 
+## Releases
+
+A release is dispatched by hand and never by a push. From the repository's **Actions** tab, run the
+**Release** workflow against `main` and type `publish` in the confirm box; every package with a
+pending changeset goes out at once, and the version commit and its tags land on `main` directly.
+
+The job refuses to run on a commit CI has not already passed, and refuses to run with nothing
+pending — so if it stops before building, the fix is to wait for CI or to add a changeset. Nothing
+publishes on merge, so a pull request landing on `main` is never a release.
+
+Publishing authenticates through npm trusted publishing (OIDC), which is configured per package on
+npmjs.com against this repository and `release.yml`. There is no npm token anywhere in this
+repository, and adding one would be a regression rather than a fix: with `NODE_AUTH_TOKEN` set the
+npm CLI takes the legacy path and silently drops the provenance attestation.
+
 ## Commits and pull requests
 
 Conventional-commit prefixes (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`) are
