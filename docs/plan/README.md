@@ -247,9 +247,3 @@ Open across sub-phases, and not owned by any of them.
 Four text sub-phases each identified rules that belong in the repair firewall and none were added: `p:kinsoku/@lang`, three `bodyPr` rules, `@panose` shape, and `@u`/`@strike` simple types.
 
 Raised in: ADR 0029, ADR 0032, ADR 0033, ADR 0034.
-
-### The `@pptx-studio` npm scope and GitHub org are unclaimed
-
-The plan names this the first action on approval. 3.10 built everything a release needs - the workflow publishes with OIDC provenance and no token, every package carries the licence and the notice, and a changeset takes the eleven publishable packages to 0.1.0 - but the scope does not exist, so none of it has met the registry.
-
-Raised in: the plan, ADR 0042.
