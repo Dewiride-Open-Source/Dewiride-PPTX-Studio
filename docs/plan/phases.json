@@ -209,9 +209,8 @@
         {
           "id": "3.6",
           "title": "Anchors, insets, vertical text",
-          "adr": "phase-3-text/0039-upright-glyphs-in-vertical-text.md",
-          "note": "the two WordArt directions stay refused because their per-glyph column is unmeasured, so `a10-rtl-cjk-03` is still a gap",
-          "result": "`eaVert` and `mongolianVert` draw, standing the `a:ea` slot upright and turning everything beside it; the insets now turn with the frame, which `vert-ins-vert` had been catching unread"
+          "adr": "phase-3-text/0040-the-wordart-column.md",
+          "result": "every `ST_TextVerticalType` draws: the WordArt cell is seven sixths of the font box and square, exact on 7 of 9 faces, so the corpus scores 155 of 155 slides with none refused. Two bugs the fixtures had been catching unread: the insets did not turn with the frame, and `mongolianVert` stacked its columns in reverse"
         },
         {
           "id": "3.7",

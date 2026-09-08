@@ -444,3 +444,57 @@ export function uprightPen(cell: {
     acrossPt: (lineHeightPt + advancePt) / 2,
   };
 }
+
+/** Seven sixths, the share of the font box a WordArt cell takes. ADR 0040. */
+const CELL_OF_FONT_BOX = 7 / 6;
+
+/**
+ * The square cell a WordArt column stacks one character in.
+ *
+ * Seven sixths of the font box, on 7 of the 9 faces measured to within four
+ * ten-thousandths of the em; the pitch down the column is the same number, so
+ * the cell is square. ADR 0040.
+ */
+export function wordArtCell(
+  sizePt: number,
+  face: { readonly ascent: number; readonly descent: number },
+): number {
+  const box = face.ascent + face.descent;
+  if (!Number.isFinite(sizePt) || sizePt < 0 || !Number.isFinite(box) || box <= 0) {
+    throw new TextError(
+      'TEXT_FRAME',
+      `a face box of ${String(box)} at ${String(sizePt)}pt is not a WordArt cell`,
+      String(sizePt),
+    );
+  }
+  return CELL_OF_FONT_BOX * box * sizePt;
+}
+
+/**
+ * Where a glyph stacked in a WordArt cell is drawn from.
+ *
+ * Its baseline sits the face's descent up from its own cell's bottom edge, and
+ * its advance box is centred across the whole column rather than across that
+ * cell - the two differ only where a column mixes sizes, and `sizes-Arial` puts
+ * a 12pt glyph 12.36pt in where its own cell would put it 2.16pt in. ADR 0040.
+ */
+export function stackedPen(cell: {
+  readonly sizePt: number;
+  readonly advancePt: number;
+  readonly cellPt: number;
+  readonly columnPt: number;
+  readonly descent: number;
+}): UprightPen {
+  const { sizePt, advancePt, cellPt, columnPt, descent } = cell;
+  if (!Number.isFinite(advancePt) || advancePt < 0 || !Number.isFinite(cellPt) || cellPt <= 0) {
+    throw new TextError(
+      'TEXT_FRAME',
+      `a glyph of ${String(advancePt)}pt in a cell of ${String(cellPt)}pt is not a stacked cell`,
+      String(cellPt),
+    );
+  }
+  return {
+    alongPt: cellPt - descent * sizePt,
+    acrossPt: (columnPt + advancePt) / 2,
+  };
+}

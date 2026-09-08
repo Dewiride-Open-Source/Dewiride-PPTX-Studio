@@ -6,9 +6,12 @@ import { parseXmlString } from '@pptx-studio/xml';
 
 import fixture from '../../../../corpus/ground-truth/text-rendering.json' with { type: 'json' };
 import frames from '../../../../corpus/ground-truth/frames.json' with { type: 'json' };
+import columns from '../../../../corpus/ground-truth/wordart-columns.json' with { type: 'json' };
 import { layoutSheet, type Placed } from '../layout.js';
 import { RenderError } from '../errors.js';
 import { serializeSvg, type SvgElement, type SvgNode } from '../node.js';
+
+import type { FaceBox, RunFont } from '@pptx-studio/text';
 
 import { textNodes } from './emit.js';
 import {
@@ -513,10 +516,21 @@ describe('layoutText', () => {
     expect(rules[1]?.leftPt).toBeCloseTo(3 * 32, 10);
   });
 
-  it('refuses a direction it lays out but cannot draw', () => {
-    expect(() => laid(body([paragraph([run('a')])], { vertical: 'wordArtVert' }))).toThrow(
-      RenderError,
-    );
+  it('draws every ST_TextVerticalType there is', () => {
+    for (const vert of [
+      'horz',
+      'vert',
+      'vert270',
+      'wordArtVert',
+      'eaVert',
+      'mongolianVert',
+      'wordArtVertRtl',
+    ]) {
+      const block = laid(
+        body([paragraph([run('a')])], { vertical: vert as ResolvedFrame['vertical'] }),
+      );
+      expect(block.lines.length, vert).toBe(1);
+    }
   });
 
   it('gives a vertical frame the swapped extents and a quarter turn', () => {
@@ -893,6 +907,7 @@ interface FrameProbe {
     readonly dLeft: number | null;
     readonly dTop: number | null;
     readonly frame?: unknown;
+    readonly lineLefts?: unknown;
   };
   readonly drew?: readonly string[] | undefined;
 }
@@ -909,9 +924,14 @@ function length(row: Readonly<Record<string, unknown>>, key: string): number {
   return typeof value === 'number' ? value : 0;
 }
 
-const frameProbes = (frames.probes as readonly unknown[] as readonly FrameProbe[]).filter(
+const allFrameProbes = frames.probes as readonly unknown[] as readonly FrameProbe[];
+
+const frameProbes = allFrameProbes.filter(
   (probe) => probe.family === 'vert' && !probe.id.startsWith('vert-wrap-'),
 );
+
+/** The probes that wrap, which are the only ones with more than one line. */
+const wrapProbes = allFrameProbes.filter((probe) => probe.id.startsWith('vert-wrap-'));
 
 /** The along-axis advance of each script's probe string, from its `horz` row. */
 const PROBE_ADVANCE: Readonly<Record<string, number>> = { latin: 49, cjk: 99 };
@@ -922,8 +942,16 @@ const PROBE_SIZE = 1800;
 /** The insets of the `vert-ins-*` probes, asymmetric on both axes. */
 const PROBE_INSETS = { left: 13, top: 20, right: 3, bottom: 5 };
 
-/** The directions this package draws, which is what the probes are filtered to. */
-const DRAWN = ['horz', 'vert', 'vert270', 'eaVert', 'mongolianVert'];
+/** Every `ST_TextVerticalType`, all of which this package now draws. */
+const DRAWN = [
+  'horz',
+  'vert',
+  'vert270',
+  'wordArtVert',
+  'eaVert',
+  'mongolianVert',
+  'wordArtVertRtl',
+];
 
 /** A measurer answering with the advance PowerPoint measured for the probe. */
 function probeMeasurer(
@@ -966,6 +994,50 @@ function screenCorner(
   return { leftPt: Math.min(...xs), topPt: Math.min(...ys) };
 }
 
+/**
+ * A wrapped probe, given an em of advance per glyph so that it wraps at all.
+ *
+ * The assertion this feeds is which way the lines step, not where they land, so
+ * the count need not be PowerPoint's - only more than one.
+ */
+function laidWrapProbe(probe: FrameProbe): TextBlock {
+  const text = 'W'.repeat(20);
+  return layoutText(
+    body([paragraph([run(text, { font: { family: probeFace(probe), sz: PROBE_SIZE } })])], {
+      vertical: word(probe.frame, 'vert', 'horz') as ResolvedFrame['vertical'],
+      anchor: 't',
+      insets: { left: 0, top: 0, right: 0, bottom: 0 },
+      wrap: 'square',
+    }),
+    {
+      widthPt: probe.box[0] ?? 0,
+      heightPt: probe.box[1] ?? 0,
+      rot: 0,
+      flipH: false,
+      flipV: false,
+      measurer: { measure: (part: string) => ({ width: [...part].length * (PROBE_SIZE / 100) }) },
+      faceBox: probeFaceBox(probe),
+      rulesFor: () => flatRules,
+    },
+  );
+}
+
+/** The near edge of every line on the slide, in the order the block lists them. */
+function screenLefts(block: TextBlock, widthPt: number, heightPt: number): number[] {
+  const radians = (block.turnDeg * Math.PI) / 180;
+  const cos = Math.round(Math.cos(radians));
+  const sin = Math.round(Math.sin(radians));
+  const halfX = widthPt / 2;
+  const halfY = heightPt / 2;
+  return block.lines.map((line) => {
+    const xs = [
+      [line.leftPt, line.topPt],
+      [line.leftPt + line.widthPt, line.topPt + line.heightPt],
+    ].map(([x, y]) => halfX + ((x ?? 0) - halfX) * cos - ((y ?? 0) - halfY) * sin);
+    return Math.min(...xs);
+  });
+}
+
 function vertical(text: string, frame: Partial<ResolvedFrame>, advancePt: number): TextBlock {
   return layoutText(
     body([paragraph([run(text, { font: { family: 'Yu Gothic', sz: PROBE_SIZE } })])], {
@@ -986,7 +1058,27 @@ function vertical(text: string, frame: Partial<ResolvedFrame>, advancePt: number
   );
 }
 
-function laidProbe(probe: FrameProbe): TextBlock {
+/** The face a T6 probe was set in, which its deck chose from the probe's script. */
+function probeFace(probe: FrameProbe): string {
+  const named = probe.vars['face'];
+  if (typeof named === 'string') return named;
+  return word(probe.vars, 'script', 'latin') === 'cjk' ? 'MS Gothic' : 'Arial';
+}
+
+/** T11's browser metrics for that face, so a stacked cell is the real one. */
+function probeFaceBox(probe: FrameProbe): { box: () => FaceBox } {
+  const metrics = columnFaces.get(probeFace(probe));
+  if (metrics === undefined) return flatFaceBox;
+  return {
+    box: (): FaceBox => ({
+      ascent: metrics.ascent,
+      descent: metrics.descent,
+      ideographic: 0.12,
+    }),
+  };
+}
+
+function laidProbe(probe: FrameProbe, wrap: ResolvedFrame['wrap'] = 'none'): TextBlock {
   const text = (probe.drew ?? []).join('');
   return layoutText(
     body([paragraph([run(text, { font: { family: 'Yu Gothic', sz: PROBE_SIZE } })])], {
@@ -998,7 +1090,7 @@ function laidProbe(probe: FrameProbe): TextBlock {
         right: length(probe.frame, 'rIns'),
         bottom: length(probe.frame, 'bIns'),
       },
-      wrap: 'none',
+      wrap,
     }),
     {
       widthPt: probe.box[0] ?? 0,
@@ -1007,7 +1099,7 @@ function laidProbe(probe: FrameProbe): TextBlock {
       flipH: false,
       flipV: false,
       measurer: probeMeasurer(PROBE_ADVANCE[word(probe.vars, 'script', 'latin')] ?? 49, text),
-      faceBox: flatFaceBox,
+      faceBox: probeFaceBox(probe),
       rulesFor: () => flatRules,
     },
   );
@@ -1034,6 +1126,28 @@ describe('a turned frame, against experiment T6', () => {
       }
     }
     expect(misses).toStrictEqual([]);
+  });
+
+  it('steps its lines the way PowerPoint steps them, in every wrapped direction', () => {
+    // The block's own corner is the same whichever end the first line sits at,
+    // so only the step between two lines separates them. `vert` walks inward
+    // from the far edge and `mongolianVert` outward from zero.
+    const wrapped = wrapProbes.filter(
+      (probe) =>
+        DRAWN.includes(word(probe.frame, 'vert', 'horz')) &&
+        Array.isArray(probe.measured.lineLefts) &&
+        (probe.measured.lineLefts as number[]).length >= 2,
+    );
+    expect(wrapped.length).toBeGreaterThanOrEqual(5);
+    for (const probe of wrapped) {
+      const block = laidWrapProbe(probe);
+      expect(block.lines.length, probe.id).toBeGreaterThanOrEqual(2);
+      const mine = screenLefts(block, probe.box[0] ?? 0, probe.box[1] ?? 0);
+      const measured = probe.measured.lineLefts as number[];
+      expect(Math.sign((mine[1] ?? 0) - (mine[0] ?? 0)), probe.id).toBe(
+        Math.sign((measured[1] ?? 0) - (measured[0] ?? 0)),
+      );
+    }
   });
 
   it('is 17pt out on `vert-ins-vert` if the insets do not turn with the frame', () => {
@@ -1070,11 +1184,19 @@ describe('a turned frame, against experiment T6', () => {
     }
   });
 
-  it('refuses the directions whose glyph cell nobody measured', () => {
-    for (const vert of ['wordArtVert', 'wordArtVertRtl']) {
-      expect(() => vertical('Wxyz', { vertical: vert as ResolvedFrame['vertical'] }, 49)).toThrow(
-        RenderError,
-      );
+  it('turns the block a quarter for every direction but the horizontal one', () => {
+    for (const vert of [
+      'horz',
+      'vert',
+      'vert270',
+      'wordArtVert',
+      'eaVert',
+      'mongolianVert',
+      'wordArtVertRtl',
+    ]) {
+      const block = vertical('Wxyz', { vertical: vert as ResolvedFrame['vertical'] }, 49);
+      const quarter = { horz: 0, vert270: 270 }[vert] ?? 90;
+      expect(block.turnDeg, vert).toBe(quarter);
     }
   });
 });
@@ -1153,5 +1275,250 @@ describe('upright East Asian glyphs', () => {
         },
       ),
     ).toThrow(RenderError);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* the WordArt column, against experiment T11                                 */
+/* -------------------------------------------------------------------------- */
+
+interface ColumnGlyph {
+  readonly glyph: string;
+  readonly penXPt: number;
+  readonly penYPt: number;
+}
+
+interface ColumnProbe {
+  readonly id: string;
+  readonly family: string;
+  readonly vert: string;
+  readonly text: string;
+  readonly paragraphs: number;
+  readonly wrap: string;
+  readonly secondRun: { readonly text: string; readonly sizePt: number } | null;
+  readonly face: string;
+  readonly sizePt: number;
+  readonly boundWidthPt: number;
+  readonly columns: readonly (readonly ColumnGlyph[])[];
+}
+
+interface ColumnFace {
+  readonly face: string;
+  readonly ascent: number;
+  readonly descent: number;
+  readonly advances: Readonly<Record<string, number>>;
+}
+
+/** The frame every T11 probe was drawn in. */
+const T11_FRAME = { widthPt: 220, heightPt: 240 };
+
+/**
+ * A twelfth of a point: two logical units of the stream the pens were read from.
+ *
+ * PowerPoint writes a pen as a whole logical unit, so no reading is finer, and a
+ * tolerance below this would be asserting the rounding rather than the rule.
+ */
+const PEN_PT = 2 / columns.unitsPerPoint;
+
+/** What PowerPoint's own pens stray from a uniform stack, as a fraction of the em. */
+const PEN_JITTER_EM = columns.penJitterEm;
+
+/** What PowerPoint's own cell strays from seven sixths of the box, per cell. */
+const CELL_ROUNDING_EM = columns.cellRoundingEm;
+
+/**
+ * How far a pen may sit from where the cell puts it, this many cells down.
+ *
+ * PowerPoint rounds the cell before it stacks, so the gap grows with the cells
+ * above; the fixture measures both that rounding and what its pens stray from a
+ * stack of equal cells, and neither is a number this file chose.
+ */
+function allowedPt(sizePt: number, cellsAbove: number): number {
+  return PEN_PT + (CELL_ROUNDING_EM + PEN_JITTER_EM) * sizePt * (cellsAbove + 1);
+}
+
+const columnProbes = columns.probes as readonly ColumnProbe[];
+const columnFaces = new Map(
+  (columns.browser as readonly ColumnFace[]).map((row) => [row.face, row] as const),
+);
+
+/** The faces whose own font box is the box PowerPoint measured the column from. */
+const FITTING_FACES = new Set(
+  (columns.axes as readonly { face: string; columnError: number }[])
+    .filter((row) => Math.abs(row.columnError) <= 0.005)
+    .map((row) => row.face),
+);
+
+function columnMetrics(face: string): ColumnFace {
+  const metrics = columnFaces.get(face);
+  if (metrics === undefined) throw new Error(`T11 measured no browser metrics for ${face}`);
+  return metrics;
+}
+
+/** The advance the browser measured, summed over the code points asked for. */
+function columnAdvance(metrics: ColumnFace, part: string, sizePt: number): number {
+  let width = 0;
+  for (const glyph of [...part]) width += (metrics.advances[glyph] ?? 0) * sizePt;
+  return width;
+}
+
+function wordArtBlock(probe: ColumnProbe): TextBlock {
+  const metrics = columnMetrics(probe.face);
+  const runs = [run(probe.text, { font: { family: probe.face, sz: probe.sizePt * 100 } })];
+  if (probe.secondRun !== null) {
+    runs.push(
+      run(probe.secondRun.text, {
+        font: { family: probe.face, sz: probe.secondRun.sizePt * 100 },
+      }),
+    );
+  }
+  const paragraphs = Array.from({ length: probe.paragraphs }, () => paragraph(runs));
+  return layoutText(
+    body(paragraphs, {
+      vertical: probe.vert as ResolvedFrame['vertical'],
+      anchor: 't',
+      insets: { left: 0, top: 0, right: 0, bottom: 0 },
+      wrap: probe.wrap as ResolvedFrame['wrap'],
+    }),
+    {
+      widthPt: T11_FRAME.widthPt,
+      heightPt: T11_FRAME.heightPt,
+      rot: 0,
+      flipH: false,
+      flipV: false,
+      measurer: {
+        // The run's own size, not the probe's: a mixed-size column has two.
+        measure: (part: string, font: RunFont): { width: number } => ({
+          width: columnAdvance(metrics, part, font.sz / 100),
+        }),
+      },
+      faceBox: {
+        box: (): FaceBox => ({
+          ascent: metrics.ascent,
+          descent: metrics.descent,
+          ideographic: 0,
+        }),
+      },
+      rulesFor: () => flatRules,
+    },
+  );
+}
+
+/** A point inside a laid-out block, put on the slide by the block's own turn. */
+function screenPoint(block: TextBlock, xPt: number, yPt: number): { xPt: number; yPt: number } {
+  const radians = (block.turnDeg * Math.PI) / 180;
+  const cos = Math.round(Math.cos(radians));
+  const sin = Math.round(Math.sin(radians));
+  const halfX = T11_FRAME.widthPt / 2;
+  const halfY = T11_FRAME.heightPt / 2;
+  return {
+    xPt: halfX + (xPt - halfX) * cos - (yPt - halfY) * sin,
+    yPt: halfY + (xPt - halfX) * sin + (yPt - halfY) * cos,
+  };
+}
+
+/**
+ * The pen each glyph is drawn from, one array per column.
+ *
+ * A line of the turned layout is a column on the slide, and PowerPoint draws its
+ * columns in paragraph order too, so the two line up without being sorted.
+ */
+function drawnColumns(block: TextBlock): { glyph: string; xPt: number; yPt: number }[][] {
+  return block.lines.map((line) =>
+    line.pieces.flatMap((piece) =>
+      piece.upright.map((glyph) => ({
+        glyph: glyph.text,
+        ...screenPoint(
+          block,
+          line.leftPt + glyph.alongPt - piece.risePt,
+          line.topPt + glyph.acrossPt,
+        ),
+      })),
+    ),
+  );
+}
+
+describe('a WordArt column, against experiment T11', () => {
+  const fitting = columnProbes.filter(
+    (probe) => probe.vert !== 'horz' && FITTING_FACES.has(probe.face),
+  );
+
+  it('has probes on both sides of the font-box boundary, or it proves nothing', () => {
+    expect(FITTING_FACES.size).toBeGreaterThanOrEqual(6);
+    expect(columnProbes.length - fitting.length).toBeGreaterThanOrEqual(6);
+    expect([...FITTING_FACES]).not.toContain('Yu Gothic');
+  });
+
+  it('draws every glyph where PowerPoint drew it, on every face whose box is its own', () => {
+    let worst = 0;
+    for (const probe of fitting) {
+      const drawn = drawnColumns(wordArtBlock(probe));
+      expect(
+        drawn.map((column) => column.map((pen) => pen.glyph).join('')),
+        probe.id,
+      ).toStrictEqual(probe.columns.map((column) => column.map((glyph) => glyph.glyph).join('')));
+      drawn.forEach((column, index) => {
+        column.forEach((pen, at) => {
+          const want = probe.columns[index]?.[at];
+          expect(want, `${probe.id} [${String(index)}][${String(at)}]`).toBeDefined();
+          const dx = Math.abs(pen.xPt - (want?.penXPt ?? 0));
+          const dy = Math.abs(pen.yPt - (want?.penYPt ?? 0));
+          const allowed = allowedPt(probe.sizePt, at);
+          worst = Math.max(worst, dx, dy);
+          expect(dx, `${probe.id} x ${pen.glyph}`).toBeLessThanOrEqual(allowed);
+          expect(dy, `${probe.id} y ${pen.glyph}`).toBeLessThanOrEqual(allowed);
+        });
+      });
+    }
+    expect(worst).toBeLessThanOrEqual(allowedPt(28, 9));
+  });
+
+  it('breaks the column on the cell and not on the word', () => {
+    for (const probe of columnProbes) {
+      if (probe.family !== 'break' || !FITTING_FACES.has(probe.face)) continue;
+      const block = wordArtBlock(probe);
+      expect(block.lines.length, probe.id).toBe(probe.columns.length);
+      const drew = block.lines.map((line) =>
+        line.pieces.reduce((sum, piece) => sum + piece.upright.length, 0),
+      );
+      expect(drew, probe.id).toStrictEqual(probe.columns.map((column) => column.length));
+    }
+  });
+
+  it('stacks `wordArtVert` from the left edge and `wordArtVertRtl` from the right', () => {
+    for (const probe of columnProbes) {
+      if (probe.columns.length < 2 || !FITTING_FACES.has(probe.face)) continue;
+      const drawn = drawnColumns(wordArtBlock(probe));
+      const first = drawn[0]?.[0]?.xPt ?? NaN;
+      const last = drawn.at(-1)?.[0]?.xPt ?? NaN;
+      if (probe.vert === 'wordArtVert') {
+        expect(first, probe.id).toBeLessThan(last);
+      } else {
+        expect(first, probe.id).toBeGreaterThan(last);
+      }
+    }
+  });
+
+  it('is more than a point out if the cell is the horizontal line height instead', () => {
+    // 1.2 of the em is what a horizontal line advances by, and it is the reading
+    // anyone writes first. The probe that separates them is any face at all.
+    const probe = columnProbes.find((row) => row.id === 'cell-Arial-28');
+    expect(probe).toBeDefined();
+    if (probe === undefined) return;
+    const metrics = columnMetrics(probe.face);
+    const cellPt = (7 / 6) * (metrics.ascent + metrics.descent) * probe.sizePt;
+    const rival = 1.2 * probe.sizePt;
+    expect(Math.abs(cellPt - rival)).toBeGreaterThan(1);
+  });
+
+  it('turns every stacked glyph back out of the line, in the emitted SVG', () => {
+    const probe = columnProbes.find((row) => row.id === 'cell-Arial-18');
+    expect(probe).toBeDefined();
+    if (probe === undefined) return;
+    const frame = { x: 0, y: 0, cx: T11_FRAME.widthPt, cy: T11_FRAME.heightPt };
+    const svg = textNodes(wordArtBlock(probe), frame)
+      .map((node) => serializeSvg(node))
+      .join('');
+    expect(svg.match(/rotate\(-90 /g)?.length).toBe([...probe.text].length);
   });
 });

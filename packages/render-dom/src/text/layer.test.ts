@@ -383,3 +383,45 @@ describe('an eaVert frame, in the HTML layer', () => {
     expect(line?.children[0]?.textContent).toBe(CJK);
   });
 });
+
+describe('a WordArt column, in the HTML layer', () => {
+  const LATIN = 'Wxyz';
+
+  function stacked(vertical: ResolvedFrame['vertical']): TextBlock {
+    return laid([paragraph([run(LATIN, { font: { family: 'Arial', sz: 2800 } })])], {
+      vertical,
+      insets: { left: 0, top: 0, right: 0, bottom: 0 },
+      wrap: 'none',
+    });
+  }
+
+  it('draws one element per glyph in both WordArt directions', () => {
+    for (const vertical of ['wordArtVert', 'wordArtVertRtl'] as const) {
+      const layer = mountTextLayer(host(), [entry(stacked(vertical))], {
+        widthPt: 960,
+        heightPt: 540,
+      });
+      const line = layer.element(7)?.children[0];
+      expect(line?.children.length, vertical).toBe([...LATIN].length);
+      expect(
+        [...(line?.children ?? [])].map((el) => el.textContent),
+        vertical,
+      ).toStrictEqual([...LATIN]);
+    }
+  });
+
+  it('puts each stacked glyph pen where the SVG emitter puts it', () => {
+    const block = stacked('wordArtVert');
+    const glyphs = block.lines[0]?.pieces[0]?.upright ?? [];
+    expect(glyphs.length).toBe([...LATIN].length);
+    const layer = mountTextLayer(host(), [entry(block)], { widthPt: 960, heightPt: 540 });
+    const elements = [...(layer.element(7)?.children[0]?.children ?? [])] as HTMLElement[];
+    glyphs.forEach((glyph, index) => {
+      const el = elements[index];
+      const size = (block.lines[0]?.pieces[0]?.font.sz ?? 0) / 100;
+      expect(el?.style.transform).toBe('rotate(-90deg)');
+      expect(el?.style.left).toBe(`${String(Math.round(glyph.alongPt * 1000) / 1000)}px`);
+      expect(el?.style.top).toBe(`${String(Math.round((glyph.acrossPt - size) * 1000) / 1000)}px`);
+    });
+  });
+});

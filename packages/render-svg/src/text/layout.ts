@@ -27,11 +27,13 @@ import {
   frameAxes,
   lineAdvance,
   scriptSlotOf,
+  stackedPen,
   turnedInsets,
   strikeRules,
   toCodePoints,
   underlineRules,
   uprightPen,
+  wordArtCell,
   wrapText,
   type Box,
   type DrawnRule,
@@ -44,6 +46,7 @@ import {
   type RunFont,
   type ScriptSlot,
   type TextMeasurer,
+  type VerticalText,
 } from '@pptx-studio/text';
 import type { Rgba } from '@pptx-studio/paint';
 
@@ -188,9 +191,6 @@ const JUSTIFYING = new Set(['just', 'justLow', 'dist', 'thaiDist']);
 /** The one alignment that stretches the last line of a paragraph too. */
 const JUSTIFIES_LAST = new Set(['dist']);
 
-/** The directions this package lays out and draws. */
-const DRAWN_DIRECTIONS = new Set(['horz', 'vert', 'vert270', 'eaVert', 'mongolianVert']);
-
 /**
  * The quarter each direction turns the block, and the axes it is laid out on.
  *
@@ -200,13 +200,22 @@ const DRAWN_DIRECTIONS = new Set(['horz', 'vert', 'vert270', 'eaVert', 'mongolia
  * is `vert` and `eaVert`; `vert270` sends top to left and left to bottom, which
  * is its own pair; `mongolianVert` runs downward like `vert` but stacks from the
  * other side, so it turns with `vert` and anchors from the opposite edge.
+ *
+ * `backwards` is that other side: the quarter turn sends the first line to the
+ * right, and these three put it on the left - `vert-wrap-mongolianVert` and
+ * `vert-wrap-wordArtVert` step their lines outward from zero where
+ * `vert-wrap-vert` steps inward from the far edge. ADR 0040.
  */
-const TURNS: Readonly<Record<string, { quarter: number; anchorFrom: Edge }>> = {
-  horz: { quarter: 0, anchorFrom: 'top' },
-  vert: { quarter: 90, anchorFrom: 'top' },
-  eaVert: { quarter: 90, anchorFrom: 'top' },
-  vert270: { quarter: 270, anchorFrom: 'top' },
-  mongolianVert: { quarter: 90, anchorFrom: 'bottom' },
+const TURNS: Readonly<
+  Record<VerticalText, { quarter: number; anchorFrom: Edge; backwards: boolean }>
+> = {
+  horz: { quarter: 0, anchorFrom: 'top', backwards: false },
+  vert: { quarter: 90, anchorFrom: 'top', backwards: false },
+  eaVert: { quarter: 90, anchorFrom: 'top', backwards: false },
+  vert270: { quarter: 270, anchorFrom: 'top', backwards: false },
+  mongolianVert: { quarter: 90, anchorFrom: 'bottom', backwards: true },
+  wordArtVert: { quarter: 90, anchorFrom: 'bottom', backwards: true },
+  wordArtVertRtl: { quarter: 90, anchorFrom: 'top', backwards: false },
 };
 
 function turn(value: number): number {
@@ -521,21 +530,14 @@ function spacingPoints(spacing: LineSpacing, sizePt: number): number {
  */
 export function layoutText(text: ResolvedText, options: LayoutTextOptions): TextBlock {
   const { frame } = text;
-  if (!DRAWN_DIRECTIONS.has(frame.vertical)) {
-    throw new RenderError(
-      'RENDER_TEXT_UNSUPPORTED',
-      `a:bodyPr/@vert="${frame.vertical}" is laid out but not yet drawn`,
-      frame.vertical,
-    );
-  }
-
   const measurer = options.measurer ?? createCanvasMeasurer();
   const faceBox = options.faceBox ?? createFaceBoxProbe();
   const { turnDeg, boxPt } = textTurn(frame, options);
 
   const axes = frameAxes(frame.vertical);
   const uprightGlyphs = axes.verticalFace;
-  const { quarter, anchorFrom } = TURNS[frame.vertical] ?? { quarter: 0, anchorFrom: 'top' };
+  const stackedGlyphs = axes.stackedGlyphs;
+  const { quarter, anchorFrom, backwards } = TURNS[frame.vertical];
   const swapped = quarter !== 0;
   const laidOut: Box = swapped
     ? {
@@ -569,8 +571,10 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
     if (index > 0) cursor += spacingPoints(paragraph.spaceBefore, lineSizeOf(cells, scale));
 
     const wrapWidth = frame.wrap === 'none' ? UNWRAPPED_WIDTH_PT : column.widthPt - marginLeft;
-    const boxes =
-      whole.length === 0
+    const cellsPt = stackedGlyphs ? stackedCells(cells, scale, faceBox) : [];
+    const boxes = stackedGlyphs
+      ? stackedBoxes(cellsPt, wrapWidth)
+      : whole.length === 0
         ? [{ start: 0, end: 0, measuredEnd: 0 }]
         : wrapText({
             text: whole,
@@ -591,12 +595,16 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
       );
       const size = sizePt === 0 ? (paragraph.endRun.font.sz * scale) / 100 : sizePt;
       // `lineAdvance` takes the size in hundredths, as `a:rPr/@sz` writes it.
-      const heightPt =
-        lineAdvance(size * 100, paragraph.lineSpacing) * (1 - frame.lineSpaceReduction);
+      const lineCells = stackedGlyphs ? cellsPt.slice(box.start, box.end) : [];
+      const heightPt = stackedGlyphs
+        ? Math.max(0, ...lineCells)
+        : lineAdvance(size * 100, paragraph.lineSpacing) * (1 - frame.lineSpaceReduction);
       const face = faceBox.box(dominantFamily(pieces, paragraph));
       // `measuredEnd` already ends before the spaces a line breaks at (3.3),
       // and an alignment does not count them either - 21 of 21.
-      const anchorWidth = measure(box.start, box.measuredEnd);
+      const anchorWidth = stackedGlyphs
+        ? lineCells.reduce((sum, cell) => sum + cell, 0)
+        : measure(box.start, box.measuredEnd);
       const indent = lineIndex === 0 ? firstIndent : 0;
       const lastLine = lineIndex === boxes.length - 1;
       const stretched = stretches(paragraph.align, lastLine);
@@ -608,11 +616,19 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
         heightPt,
         baselinePt: cursor + drop,
         leftPt: marginLeft + indent + offset,
-        widthPt: stretched ? available : widthPt,
+        widthPt: stretched ? available : stackedGlyphs ? anchorWidth : widthPt,
         sizePt: size,
         strutPt: strutHeight(drop, face, size),
         wordSpacingPt: stretched ? wordSpacing(pieces, available, anchorWidth) : 0,
-        pieces: uprightGlyphs ? stoodUpright(pieces, heightPt, measurer, faceBox) : pieces,
+        pieces: stackedPieces({
+          pieces,
+          lineCells,
+          heightPt,
+          measurer,
+          faceBox,
+          stackedGlyphs,
+          uprightGlyphs,
+        }),
       });
       cursor += heightPt;
     });
@@ -641,17 +657,128 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
   return {
     turnDeg: turn(turnDeg + quarter),
     boxPt: laidOut,
-    lines: kept.map((line) => ({
-      ...line,
-      topPt: line.topPt + origin.topPt + laidOut.topPt,
-      baselinePt: line.baselinePt + origin.topPt + laidOut.topPt,
-      leftPt: line.leftPt + origin.leftPt + laidOut.leftPt,
-    })),
+    lines: kept.map((line) => {
+      const topPt = backwards ? cursor - line.topPt - line.heightPt : line.topPt;
+      return {
+        ...line,
+        topPt: topPt + origin.topPt + laidOut.topPt,
+        baselinePt: topPt + (line.baselinePt - line.topPt) + origin.topPt + laidOut.topPt,
+        leftPt: line.leftPt + origin.leftPt + laidOut.leftPt,
+      };
+    }),
   };
 }
 
 function baselineShareOf(face: FaceBox): number {
   return face.ascent / (face.ascent + face.descent);
+}
+
+/**
+ * The cell each code point of a paragraph is stacked in, in reading order.
+ *
+ * The cell belongs to the run, not to the paragraph: `sizes-Arial` stacks its
+ * 12pt run at 15.6pt and its 28pt run at 36.36 in the one column. ADR 0040.
+ */
+function stackedCells(
+  cells: readonly Cell[],
+  scale: number,
+  faceBox: FaceBoxProbe,
+): readonly number[] {
+  const out: number[] = [];
+  for (const cell of cells) {
+    const sizePt = (cell.run.font.sz * scale) / 100;
+    const cellPt = wordArtCell(sizePt, faceBox.box(cell.run.font.family));
+    for (let at = 0; at < cell.points.length; at += 1) out.push(cellPt);
+  }
+  return out;
+}
+
+/**
+ * One box per column: a WordArt column holds as many cells as it has room for.
+ *
+ * The break falls on the cell and not on a word - `Wxyzabcdefghijklmnop` comes
+ * back as ten and ten with the frame ten cells deep. ADR 0040.
+ */
+function stackedBoxes(
+  cellsPt: readonly number[],
+  availablePt: number,
+): readonly { start: number; end: number; measuredEnd: number }[] {
+  if (cellsPt.length === 0) return [{ start: 0, end: 0, measuredEnd: 0 }];
+  const out: { start: number; end: number; measuredEnd: number }[] = [];
+  let start = 0;
+  let usedPt = 0;
+  cellsPt.forEach((cellPt, at) => {
+    if (usedPt + cellPt > availablePt && at > start) {
+      out.push({ start, end: at, measuredEnd: at });
+      start = at;
+      usedPt = 0;
+    }
+    usedPt += cellPt;
+  });
+  out.push({ start, end: cellsPt.length, measuredEnd: cellsPt.length });
+  return out;
+}
+
+/** The pieces of a line, given per-glyph pens where the direction needs them. */
+function stackedPieces(options: {
+  readonly pieces: readonly TextPiece[];
+  readonly lineCells: readonly number[];
+  readonly heightPt: number;
+  readonly measurer: TextMeasurer;
+  readonly faceBox: FaceBoxProbe;
+  readonly stackedGlyphs: boolean;
+  readonly uprightGlyphs: boolean;
+}): readonly TextPiece[] {
+  const { pieces, lineCells, heightPt, measurer, faceBox } = options;
+  if (options.stackedGlyphs) {
+    return stoodInColumn(pieces, lineCells, heightPt, measurer, faceBox);
+  }
+  if (options.uprightGlyphs) return stoodUpright(pieces, heightPt, measurer, faceBox);
+  return pieces;
+}
+
+/**
+ * Every glyph of a WordArt line given a square cell of its own, drawn upright.
+ *
+ * The cell belongs to the face and not to the character in it - 4 of 4 mixed
+ * runs stack at one pitch - so the advance the measurer returns places the glyph
+ * across the column and never along it. ADR 0040.
+ */
+function stoodInColumn(
+  pieces: readonly TextPiece[],
+  lineCells: readonly number[],
+  columnPt: number,
+  measurer: TextMeasurer,
+  faceBox: FaceBoxProbe,
+): readonly TextPiece[] {
+  let alongPt = 0;
+  let at = 0;
+  return pieces.map((piece) => {
+    if (piece.rules.length > 0) {
+      throw new RenderError(
+        'RENDER_TEXT_UNSUPPORTED',
+        'an underline or strikethrough on a WordArt column is not measured',
+        piece.text,
+      );
+    }
+    const sizePt = piece.font.sz / 100;
+    const face = faceBox.box(piece.font.family);
+    const glyphs: UprightGlyph[] = [];
+    for (const glyph of toCodePoints(piece.text)) {
+      const advancePt = measurer.measure(glyph, piece.font).width;
+      const cellPt = lineCells[at] ?? wordArtCell(sizePt, face);
+      at += 1;
+      const pen = stackedPen({ sizePt, advancePt, cellPt, columnPt, descent: face.descent });
+      glyphs.push({
+        text: glyph,
+        alongPt: alongPt + pen.alongPt,
+        acrossPt: pen.acrossPt,
+        strutPt: strutHeight(sizePt, face, sizePt),
+      });
+      alongPt += cellPt;
+    }
+    return { ...piece, upright: glyphs };
+  });
 }
 
 /**

@@ -70,3 +70,4 @@ date.
 | [0034](phase-3-text/0034-text-in-both-renderers.md)           | Text in both renderers                                            |
 | [0035](phase-3-text/0035-the-fidelity-harness.md)             | The fidelity harness                                              |
 | [0039](phase-3-text/0039-upright-glyphs-in-vertical-text.md)  | Upright glyphs in vertical text, and the insets that never turned |
+| [0040](phase-3-text/0040-the-wordart-column.md)               | The WordArt column, and the lines that stacked the wrong way      |
