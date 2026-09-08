@@ -1,6 +1,6 @@
 {
   "name": "@pptx-studio/xml",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Byte-preserving XML tokenizer and serializer for OOXML",
   "license": "Apache-2.0",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@pptx-studio/model",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "The document model: sheets, the inheritance chain, and the resolver everything else reads",
   "license": "Apache-2.0",
   "type": "module",

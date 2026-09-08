@@ -1,6 +1,6 @@
 {
   "name": "@pptx-studio/writer",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Export a .pptx: dirty-part-only serialization, media GC, prepare hooks, the repair firewall",
   "license": "Apache-2.0",
   "type": "module",

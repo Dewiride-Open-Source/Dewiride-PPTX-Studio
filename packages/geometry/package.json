@@ -1,6 +1,6 @@
 {
   "name": "@pptx-studio/geometry",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "DrawingML preset and custom geometry: the 187 preset shapes, the formula evaluator, arcs",
   "license": "Apache-2.0",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@pptx-studio/census",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "What is inside a .pptx: parts, relationship graph, and a feature census",
   "license": "Apache-2.0",
   "type": "module",
