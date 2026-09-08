@@ -97,7 +97,17 @@ function check(file: string, text: string): Problem[] {
 const files = trackedFiles().filter((f) => SCANNED.test(f));
 const problems: Problem[] = [];
 for (const file of files) {
-  problems.push(...check(file, await readFile(join(ROOT, file), 'utf8')));
+  // Git still lists a file that has been deleted but not yet staged, and an
+  // unhandled ENOENT here reports a stack trace instead of the one thing the
+  // reader needs to know, which is `git add` that deletion.
+  let text: string;
+  try {
+    text = await readFile(join(ROOT, file), 'utf8');
+  } catch {
+    problems.push({ file, line: 0, target: file, why: 'git tracks it and it is not on disk' });
+    continue;
+  }
+  problems.push(...check(file, text));
 }
 
 if (problems.length > 0) {
