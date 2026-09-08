@@ -60,8 +60,21 @@ jobs:
       - name: Corpus provenance
         run: pnpm corpus
 
+      - name: Structure
+        run: pnpm structure
+
+      - name: References
+        run: pnpm references
+
       - name: Format
         run: pnpm format:check
+
+      # Before Lint and Typecheck, and not after them. Both are type-aware and
+      # resolve a workspace package through its `exports` to `dist/index.d.ts`,
+      # so on a clean checkout they see an unresolvable type rather than a real
+      # one and report every use of it as `any`.
+      - name: Build
+        run: pnpm build
 
       - name: Lint
         run: pnpm lint
@@ -69,16 +82,23 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Build
-        run: pnpm build
-
       - name: Package QA (publint + are-the-types-wrong)
         run: pnpm pkg:qa
 
       # The core suite runs in real Chromium, not jsdom. Under jsdom a `node:*`
       # import resolves and the leak stays invisible until a user opens a tab.
+      # The fidelity gate and Gate 2 need the same browser, so they share it.
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
+
+      # The SHA-256 of our own raster against `expected.linux-x64.json`. It
+      # stops rather than scores if this runner's fonts or browser have moved
+      # from the ones the baseline was recorded through.
+      - name: Fidelity
+        run: pnpm fidelity
+
+      - name: Gate 2
+        run: pnpm gate2
 
       - name: Test
         run: pnpm test

@@ -1082,6 +1082,24 @@
       "addedIn": "3.9"
     },
     {
+      "id": "fidelity-expected-linux-x64",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/expected.linux-x64.json",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "8b653cd7e3ccc444201daa580fb867927df23f927cab93cf0f512e3d0036b173",
+      "bytes": 33903,
+      "tags": ["fidelity", "baseline", "render"],
+      "description": "The digest of our own raster for every slide on linux-x64, and the font environment it was recorded in. This is the gate: a slide that rasterises differently here has changed, and no tolerance is involved in saying so.",
+      "recipe": {
+        "tool": "tools/fidelity/fidelity.ts",
+        "args": ["--record"]
+      },
+      "addedIn": "3.9"
+    },
+    {
       "id": "fidelity-expected-win32-x64",
       "kind": "fixture",
       "storage": "committed",

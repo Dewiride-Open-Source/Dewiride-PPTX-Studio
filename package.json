@@ -33,7 +33,7 @@
     "gate1": "node tools/gate1/run-gate1.ts",
     "gate2": "node tools/gate2/run-gate2.ts",
     "pkg:qa": "turbo run pkg:qa",
-    "check": "pnpm structure && pnpm layering && pnpm references && pnpm corpus && pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm roundtrip && pnpm fidelity && pnpm gate2 && pnpm pkg:qa && pnpm test",
+    "check": "pnpm structure && pnpm layering && pnpm references && pnpm corpus && pnpm format:check && pnpm build && pnpm lint && pnpm typecheck && pnpm roundtrip && pnpm fidelity && pnpm gate2 && pnpm pkg:qa && pnpm test",
     "changeset": "changeset",
     "version-packages": "changeset version && pnpm install --lockfile-only",
     "browsers": "playwright install chromium",
