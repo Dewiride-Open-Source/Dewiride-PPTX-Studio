@@ -138,6 +138,30 @@ gives three errors in that file, and putting it back removes them. Build now run
 before Lint in both, and the steps `pnpm check` had that CI did not — structure,
 references, fidelity, Gate 2 — are in the job.
 
+### And behind that, three tests that asserted a machine
+
+With Lint fixed, CI reached `Test` for the first time and three of 3.7's failed.
+All three asserted something about **this machine's fonts** rather than about the
+code:
+
+- `isFontAvailable('monospace')` was asserted **false**, because Windows has no
+  face by that name. The rule under test is that a family is quoted so it cannot
+  be read as the CSS generic — and fontconfig _does_ define `monospace`. The
+  quoting is what is asserted now.
+- `fontReport` returns PowerPoint's last resort for a missing face **where the
+  machine has it**, and `''` where it does not. The test hardcoded the first
+  branch; it asserts both now, so neither can rot.
+- `isTheSameFace` separated a real face from a substitute on **one** string at
+  5%, justified by a measurement taken where the only substitution was the
+  probe's own. It does not generalise: a fontconfig machine resolves `Impact` to
+  something within 5% on `hamburg` and 18% out on `kernpairs`. It now requires
+  every string the fixture records — the same reason this harness's environment
+  gate does not trust an advance on its own.
+
+None of the three was a defect in the code it covers. All three were tests that
+could only ever have passed where they were written, and one machine cannot tell
+you that.
+
 ## Where the difference is
 
 0035's open question 6: "`maxD` and `meanBp` are reported per slide, but nothing
@@ -212,10 +236,12 @@ drift is not periodic — it grows as the capture recedes — and stays recorded
 
 ## Verification
 
-- **CI runs the gate.** `pnpm fidelity` is a step of the `check` job, against
-  `expected.linux-x64.json` recorded on the same runner, alongside `pnpm
-structure`, `pnpm references` and `pnpm gate2` — four steps `pnpm check` had
-  and CI did not.
+- **CI is green, and runs the gate.** `pnpm fidelity` is a step of the `check`
+  job, against `expected.linux-x64.json` recorded on the same runner, alongside
+  `pnpm structure`, `pnpm references` and `pnpm gate2` — four steps `pnpm check`
+  had and CI did not. On the runner it scores **155 slides, 0 not drawn, corpus
+  mean 9760 bp**, against 9768 here; the eight points are the worse substitution
+  there, and they are reported rather than gated.
 - **`pnpm references` earned its place on its first CI run**: `tools/bench/README.md`
   linked to `CLAUDE.md`, which is gitignored, so the link resolved here and
   nowhere else. A check that only ever runs on the machine that wrote the file
