@@ -3,8 +3,8 @@
 Sub-phase 0.8's verification: **parse a 200 MB / 300-slide deck in a browser tab
 and record the timing.**
 
-There was no such deck to hand, and [`CLAUDE.md`](../../CLAUDE.md) says not to go
-looking for one on the machine this runs on. So it is generated, from a recipe,
+There was no such deck to hand, and `CLAUDE.md` says not to go looking for one on
+the machine this runs on. So it is generated, from a recipe,
 deterministically — the same recipe writes the same bytes, which is what lets
 [`corpus/bench/manifest.json`](../../corpus/bench/manifest.json) pin a SHA-256
 against a file far too large to commit.

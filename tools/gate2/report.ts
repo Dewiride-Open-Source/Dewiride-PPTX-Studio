@@ -109,7 +109,10 @@ function slideCard(slide: SlideReport, theirsSrc: string, theirsNote: string): s
           .map(
             (region) =>
               `${String(region.cells)} cells @ maxD ${String(region.maxD)} ` +
-              `[${region.bbox.join(',')}]`,
+              `[${region.bbox.join(',')}]` +
+              (region.shapes.length === 0
+                ? ''
+                : ` &mdash; ${escapeHtml(region.shapes.join(', '))}`),
           )
           .join('<br>')}</code></td>`;
   return `<section class="slide">

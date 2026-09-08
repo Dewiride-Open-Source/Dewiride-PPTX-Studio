@@ -2,8 +2,9 @@
  * The fidelity harness.
  *
  * ```
- * pnpm fidelity            score the corpus and check the gate
- * pnpm fidelity --record   write this machine's expected digests and font lock
+ * pnpm fidelity          score the corpus and check the gate
+ * pnpm fidelity --record  write this machine's first baseline and font lock
+ * pnpm fidelity --record --why '<reason>' --expect <n>   rewrite one that exists
  * ```
  *
  * Two questions, kept apart because only one of them has an exact answer.
@@ -19,12 +20,13 @@ import { join } from 'node:path';
 import { fidelityProbes, slideKey } from '../ground-truth/render/fidelity/probes.ts';
 import { repoPath } from '../repo/root.ts';
 
+import { blameOf } from './blame.ts';
 import { FidelityError } from './errors.ts';
 import { claimFixtures } from './fixtures.ts';
 import { decodeGridSet } from './metric/grid.ts';
 import type { Grid } from './metric/reduce.ts';
 import { differenceOf, scoreOf } from './metric/score.ts';
-import { openHarness } from './raster/browser.ts';
+import { openHarness, servedUrl } from './raster/browser.ts';
 import {
   assertSameEnvironment,
   familiesDrawn,
@@ -32,6 +34,13 @@ import {
   type Environment,
 } from './raster/fonts.ts';
 import { injectHarness, renderSlide, type SlideRaster } from './raster/render.ts';
+import {
+  assertBaselineCovers,
+  assertExpectedCount,
+  assertMayRecord,
+  baselineGaps,
+  parseRecordArgs,
+} from './record.ts';
 import {
   corpusMeanBp,
   reportMarkdown,
@@ -46,7 +55,8 @@ const OUT = repoPath('fidelity');
 /** Which recorded lock and digest set this machine is compared against. */
 const ENV_ID = `${process.platform}-${process.arch}`;
 
-const record = process.argv.includes('--record');
+const args = parseRecordArgs(process.argv.slice(2));
+const record = args.record;
 
 interface Expected {
   readonly environment: Environment;
@@ -60,6 +70,24 @@ interface Oracle {
 
 const oracle = JSON.parse(readFileSync(join(FIXTURES, 'oracle.json'), 'utf8')) as Oracle;
 const oracleKeys = new Set(oracle.records.map((row) => row.key));
+
+/* ------------------------------------------ the baseline, and leave to write it */
+
+const expectedPath = join(FIXTURES, `expected.${ENV_ID}.json`);
+let expected: Expected | null = null;
+try {
+  expected = JSON.parse(readFileSync(expectedPath, 'utf8')) as Expected;
+} catch {
+  if (!record) {
+    throw new FidelityError(
+      'FID_ENV_UNKNOWN',
+      `no expected.${ENV_ID}.json; this machine has never recorded a baseline`,
+      ENV_ID,
+    );
+  }
+}
+
+assertMayRecord(args, { inCi: process.env['CI'] !== undefined, hasBaseline: expected !== null });
 
 /* --------------------------------------------------------------- the render */
 
@@ -76,8 +104,22 @@ for (const probe of fidelityProbes()) {
       throw new FidelityError('FID_ORACLE_MISSING', `no committed oracle grid for ${key}`, key);
     }
     try {
-      rendered.set(key, await renderSlide(harness.page, `/${probe.path}`, slide - 1));
+      const raster = await renderSlide(harness.page, servedUrl(probe.path), slide - 1);
+      // A baseline is only worth recording if what it records is stable, so the
+      // digest is taken twice on the one run that writes it down.
+      if (record) {
+        const again = await renderSlide(harness.page, servedUrl(probe.path), slide - 1);
+        if (again.rasterSha256 !== raster.rasterSha256) {
+          throw new FidelityError(
+            'FID_RASTER_NONDETERMINISTIC',
+            `${key} rasterised twice in one run and did not agree with itself`,
+            key,
+          );
+        }
+      }
+      rendered.set(key, raster);
     } catch (error) {
+      if (error instanceof FidelityError) throw error;
       // A direction the renderer refuses is a recorded gap, not a score of
       // zero: scoring a slide we did not draw would report a number for
       // something that never happened.
@@ -93,21 +135,11 @@ await harness.close();
 
 /* ---------------------------------------------------------- the environment */
 
-const expectedPath = join(FIXTURES, `expected.${ENV_ID}.json`);
-let expected: Expected | null = null;
-try {
-  expected = JSON.parse(readFileSync(expectedPath, 'utf8')) as Expected;
-} catch {
-  if (!record) {
-    throw new FidelityError(
-      'FID_ENV_UNKNOWN',
-      `no expected.${ENV_ID}.json; this machine has never recorded a baseline`,
-      ENV_ID,
-    );
-  }
+const gaps = baselineGaps(Object.keys(expected?.slides ?? {}), rendered.keys());
+if (expected !== null) {
+  assertSameEnvironment(environment, expected.environment);
+  if (!record) assertBaselineCovers(gaps);
 }
-
-if (expected !== null) assertSameEnvironment(environment, expected.environment);
 
 /* ------------------------------------------------------------- the scoring */
 
@@ -128,7 +160,8 @@ function oracleGridFor(deck: string, key: string): Grid {
 const results: SlideResult[] = [];
 for (const [key, raster] of rendered) {
   const deck = key.slice(0, key.lastIndexOf('-'));
-  const score = scoreOf(differenceOf(raster.grid, oracleGridFor(deck, key)));
+  const difference = differenceOf(raster.grid, oracleGridFor(deck, key));
+  const score = scoreOf(difference);
   const was = expected?.slides[key];
   results.push({
     key,
@@ -138,8 +171,17 @@ for (const [key, raster] of rendered) {
     rasterSha256: raster.rasterSha256,
     svgSha256: raster.svgSha256,
     changed: was !== undefined && was.rasterSha256 !== raster.rasterSha256,
+    blame: blameOf(
+      difference,
+      raster.grid.width,
+      raster.grid.height,
+      raster.grid.cell,
+      raster.shapes,
+    ),
   });
 }
+
+const changed = results.filter((slide) => slide.changed);
 
 const report: RunReport = {
   envId: ENV_ID,
@@ -154,6 +196,7 @@ writeFileSync(join(OUT, 'scores.json'), scoresJson(report));
 writeFileSync(join(OUT, 'report.md'), reportMarkdown(report));
 
 if (record) {
+  assertExpectedCount(args, changed.length + gaps.unrecorded.length + gaps.vanished.length);
   writeFileSync(
     expectedPath,
     `${JSON.stringify(
@@ -179,7 +222,11 @@ if (record) {
         `The digest of our own raster for every slide on ${ENV_ID}, and the font environment it ` +
         'was recorded in. This is the gate: a slide that rasterises differently here has changed, ' +
         'and no tolerance is involved in saying so.',
-      recipe: { tool: 'tools/fidelity/fidelity.ts', args: ['--record'] },
+      // The flags that decide the output, not the justification for it.
+      recipe: {
+        tool: 'tools/fidelity/fidelity.ts',
+        args: args.bootstrap ? ['--record', '--bootstrap'] : ['--record'],
+      },
     },
   ]);
 }
@@ -194,7 +241,14 @@ console.log(
     `(oracle noise floor ${String(report.noiseFloorBp)} bp)`,
 );
 
-const changed = results.filter((slide) => slide.changed);
+if (gaps.vanished.length > 0) {
+  throw new FidelityError(
+    'FID_RENDER_CHANGED',
+    `${String(gaps.vanished.length)} recorded slide(s) are no longer drawn: ` +
+      gaps.vanished.join(', '),
+  );
+}
+
 if (changed.length > 0) {
   throw new FidelityError(
     'FID_RENDER_CHANGED',

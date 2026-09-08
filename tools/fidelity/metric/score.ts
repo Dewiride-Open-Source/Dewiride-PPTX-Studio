@@ -40,6 +40,17 @@ export interface SlideScore {
   readonly hist: readonly number[];
 }
 
+/**
+ * Agreement over `cells` cells summing to `sumD`, in basis points.
+ *
+ * Integer arithmetic rounded half up, so two machines cannot round it
+ * differently, and the one place the ratio is spelled out.
+ */
+export function agreementBp(sumD: number, cells: number): number {
+  if (cells === 0) return 10000;
+  return 10000 - Math.floor((20000 * sumD + 255 * cells) / (510 * cells));
+}
+
 /** The per-cell difference of two grids, as luma cells in row-major order. */
 export function differenceOf(ours: Grid, theirs: Grid): readonly number[] {
   if (
@@ -87,9 +98,7 @@ export function scoreOf(difference: readonly number[]): SlideScore {
     hist[bucket] = (hist[bucket] ?? 0) + 1;
   }
 
-  const denominator = 510 * cells;
-  const meanBp = 10000 - Math.floor((20000 * sumD + 255 * cells) / denominator);
-  return { cells, sumD, meanBp, maxD, hist };
+  return { cells, sumD, meanBp: agreementBp(sumD, cells), maxD, hist };
 }
 
 /**

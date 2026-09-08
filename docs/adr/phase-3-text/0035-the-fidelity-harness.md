@@ -219,25 +219,30 @@ compared to each other. The report names every substituted face for exactly this
 
 ## Open questions
 
-1. **There is no `expected.linux-x64.json`, so CI cannot run the gate.** The baseline for a platform
-   has to be recorded on that platform, and this machine is Windows. Until a one-off
-   `workflow_dispatch` run records it, `pnpm fidelity` is a developer gate and not a CI one. The
-   `FID_ENV_UNKNOWN` throw is what stops a Linux run from silently recording its own baseline and
-   calling it agreement.
+> Questions 1, 3, 4 and 6 are answered in
+> [0041](0041-what-the-harness-was-not-gating.md), which also records a hole in
+> the gate that none of these named. 2, 5 and 7 stand.
+
+1. ~~**There is no `expected.linux-x64.json`, so CI cannot run the gate.**~~ **Recorded**, by
+   exactly the one-off `workflow_dispatch` run this describes, and CI now runs the gate. The
+   `--bootstrap` lock in [0041](0041-what-the-harness-was-not-gating.md) is what lets a runner write
+   a platform its first baseline without becoming able to rewrite one.
 2. **The pinned Chromium flags are unverified where they matter.** They change nothing on win32-x64.
    Whether they are sufficient on a Linux runner is exactly what question 1 would answer.
-3. **`a03-fills-02` scores 8199 bp and nothing in the plan explains it.** Every other slide in the
-   worst ten is a content type no phase has built. Fills are built and measured. This is either a
-   real defect in 2.7 or a rasteriser difference on gradients, and the harness cannot tell which
-   without a per-region diff against the oracle.
-4. **The noise floor measures the rasteriser, not the content.** Both exports of a slide land in the
-   same second, so a clock-bearing field contributes nothing to the recorded floor, and
-   `a09-fields-02`'s oracle encodes a moment in time. A second capture deliberately delayed past a
-   minute boundary would measure it.
+3. ~~**`a03-fills-02` scores 8199 bp and nothing in the plan explains it.**~~ **Answered, and
+   neither way round.** Slide 2 is the image-fill probe slide and image fills were not drawn at
+   all; [2.12](../phase-2-geometry-and-paint/0036-image-fills.md) took it to 9378 and
+   [2.14](../phase-2-geometry-and-paint/0038-gate-2.md) to 9638. The per-region diff this asked for
+   is [0041](0041-what-the-harness-was-not-gating.md), and it finds a third bad shape on the slide
+   that 0038 missed.
+4. ~~**The noise floor measures the rasteriser, not the content.**~~ **Measured** in
+   [0041](0041-what-the-harness-was-not-gating.md): two exports 91 seconds apart move 31 cells at
+   maxD 6 and 0 bp, against the rasteriser's 245 cells at maxD 47. The content term does not move
+   the floor.
 5. **The score is blind to compensating sub-cell errors** — text one pixel left and a rule one pixel
    right inside the same 8x8 cell. This is intrinsic to any spatial pooling and is not eliminated;
    the exact raster gate still catches it, because the gate does not pool.
-6. **`maxD` and `meanBp` are reported per slide, but nothing yet localises _where_ on a slide.**
-   `regionsOf` exists and is tested; nothing calls it in the report. A reviewer gets a number and a
-   slide, not a region and a shape name.
+6. ~~**`maxD` and `meanBp` are reported per slide, but nothing yet localises _where_ on a slide.**~~
+   **Built** in [0041](0041-what-the-harness-was-not-gating.md): every differing cell is charged to
+   the shape that painted it, and Gate 2's regions name theirs.
 7. **149 slides is not the world.** Every deck in it is one we wrote.

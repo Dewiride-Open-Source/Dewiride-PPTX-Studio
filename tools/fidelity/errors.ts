@@ -21,10 +21,12 @@ export type FidelityErrorCode =
   | 'FID_FONT_COVERAGE_CHANGED'
   /** No environment lock matches this machine, so nothing may be compared. */
   | 'FID_ENV_UNKNOWN'
-  /** The same slide rasterised twice in one run did not agree with itself. */
+  /** A slide rasterised twice while recording did not agree with itself. */
   | 'FID_RASTER_NONDETERMINISTIC'
-  /** PowerPoint exported the same slide twice and the bytes differed. */
-  | 'FID_ORACLE_NONDETERMINISTIC'
+  /** The browser is not the one the baseline was recorded through. */
+  | 'FID_BROWSER_CHANGED'
+  /** A slide was scored against a baseline that has no digest for it. */
+  | 'FID_BASELINE_INCOMPLETE'
   /** An oracle PNG carries a colour profile, so decoding it is not portable. */
   | 'FID_ORACLE_COLOR_MANAGED'
   /** A slide named in the manifest has no committed oracle grid. */
@@ -45,7 +47,8 @@ export const FIDELITY_ERROR_CODES: readonly FidelityErrorCode[] = [
   'FID_FONT_COVERAGE_CHANGED',
   'FID_ENV_UNKNOWN',
   'FID_RASTER_NONDETERMINISTIC',
-  'FID_ORACLE_NONDETERMINISTIC',
+  'FID_BROWSER_CHANGED',
+  'FID_BASELINE_INCOMPLETE',
   'FID_ORACLE_COLOR_MANAGED',
   'FID_ORACLE_MISSING',
   'FID_RENDER_CHANGED',
