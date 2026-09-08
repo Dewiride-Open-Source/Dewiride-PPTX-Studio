@@ -193,9 +193,18 @@ importers:
       '@pptx-studio/census':
         specifier: workspace:^
         version: link:../census
+      '@pptx-studio/model':
+        specifier: workspace:^
+        version: link:../model
       '@pptx-studio/opc':
         specifier: workspace:^
         version: link:../opc
+      '@pptx-studio/render-svg':
+        specifier: workspace:^
+        version: link:../render-svg
+      '@pptx-studio/text':
+        specifier: workspace:^
+        version: link:../text
       '@pptx-studio/validate':
         specifier: workspace:^
         version: link:../validate

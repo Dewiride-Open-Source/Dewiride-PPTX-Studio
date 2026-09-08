@@ -21,3 +21,26 @@ export {
   type InspectOptions,
   type InspectResult,
 } from './inspect.js';
+
+export {
+  renderDeck,
+  runRender,
+  RENDER_DEFAULTS,
+  DEFAULT_WIDTH,
+  type RenderOptions,
+  type RenderResult,
+  type RenderedSlide,
+} from './render/render.js';
+
+export { indexFonts, systemFontDirectories, type FontLibrary } from './render/faces.js';
+
+export { createFontMeasurer, type FaceUse, type FontMeasurer } from './render/measure.js';
+
+export { facesIn, type Face } from './render/sfnt.js';
+
+export {
+  RenderError,
+  RENDER_ERROR_CODES,
+  isRenderError,
+  type RenderErrorCode,
+} from './render/errors.js';

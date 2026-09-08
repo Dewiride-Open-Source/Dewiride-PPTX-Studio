@@ -230,7 +230,10 @@
         },
         {
           "id": "3.10",
-          "title": "First npm release: `render-svg` and `cli render`"
+          "title": "First npm release: `render-svg` and `cli render`",
+          "adr": "phase-3-text/0042-rendering-without-a-browser.md",
+          "result": "the plan called this a release and it was really a measurement: `render-svg` was already a pure string function that ran in Node, but text needed a canvas and there is none, so `pptx-studio render` reads the font own tables instead. That is a second measurement engine, and no real font can say what the first one does - Arial `hhea.ascender` and its `OS/2.usWinAscent` are both 1854 - so T13 built seven fonts that disagree with themselves on purpose and asked Chromium. The face box is `usWin`, or `sTypo` where `fsSelection` bit 7 is set (14/14, against 10/14 for `hhea`, which is what everybody writes first); pair kerning is GPOS where the font has a `kern` feature and the legacy table otherwise (42/42, against 36/42 for preferring the legacy one, which is the cheaper parse and wrong on every font carrying both); a width is each advance truncated and each kern rounded at 1/65536 px (252/252, against 88/252 for exact floats). The advance is linear in size to within 1.04e-4 px, which is the finding the whole approach rests on: the browser does not hint it. The reader reproduces all 252 widths exactly and 19 of 19 mutants die. Running the release path found that changesets/action renamed its four inputs, so Release had been red on every push to main since 0.1, and that no package carried a LICENSE or a NOTICE, which Apache-2.0 4(a) and 4(d) require and ours is not decorative - it carries POI attribution for the 187 presets",
+          "note": "published nothing: the `@pptx-studio` npm scope is unclaimed, so the workflow, the changeset and the licence files are ready and untested against the registry. No PNG - rasterising means shipping a rasteriser, and the point of the verb is that it needs nothing but Node. No shaping, so Arabic and Devanagari measure wide"
         }
       ],
       "gate": {
@@ -605,19 +608,14 @@
   ],
   "carried": [
     {
-      "title": "CI cannot run the fidelity gate",
-      "detail": "A baseline for a platform has to be recorded on that platform and this machine is Windows, so there is no `expected.linux-x64.json`. One `workflow_dispatch` run fixes it. Turborepo inputs for the task are deferred until then.",
-      "raisedIn": ["ADR 0035, open questions 1 and 2"]
-    },
-    {
       "title": "`packages/validate` is still at 1.2's 29 rules",
       "detail": "Four text sub-phases each identified rules that belong in the repair firewall and none were added: `p:kinsoku/@lang`, three `bodyPr` rules, `@panose` shape, and `@u`/`@strike` simple types.",
       "raisedIn": ["ADR 0029", "ADR 0032", "ADR 0033", "ADR 0034"]
     },
     {
       "title": "The `@pptx-studio` npm scope and GitHub org are unclaimed",
-      "detail": "The plan names this the first action on approval. Every package is version 0.0.0 and publishable, so 3.10 is now blocked on it.",
-      "raisedIn": ["the plan"]
+      "detail": "The plan names this the first action on approval. 3.10 built everything a release needs - the workflow publishes with OIDC provenance and no token, every package carries the licence and the notice, and a changeset takes the eleven publishable packages to 0.1.0 - but the scope does not exist, so none of it has met the registry.",
+      "raisedIn": ["the plan", "ADR 0042"]
     }
   ]
 }

@@ -60,6 +60,11 @@ jobs:
       - name: Corpus provenance
         run: pnpm corpus
 
+      # The other legal gate: a published tarball has to carry the licence and
+      # the NOTICE, and neither is something a test would ever notice missing.
+      - name: Legal
+        run: pnpm legal
+
       - name: Structure
         run: pnpm structure
 

@@ -72,3 +72,4 @@ date.
 | [0039](phase-3-text/0039-upright-glyphs-in-vertical-text.md)  | Upright glyphs in vertical text, and the insets that never turned |
 | [0040](phase-3-text/0040-the-wordart-column.md)               | The WordArt column, and the lines that stacked the wrong way      |
 | [0041](phase-3-text/0041-what-the-harness-was-not-gating.md)  | What the harness was not gating, and where the difference is      |
+| [0042](phase-3-text/0042-rendering-without-a-browser.md)      | Rendering without a browser, and the first release                |

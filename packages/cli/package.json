@@ -1,7 +1,7 @@
 {
   "name": "@pptx-studio/cli",
   "version": "0.0.0",
-  "description": "Command line tools for PPTX packages: inspect a deck, validate it, prove a round trip, and bisect the change that breaks it",
+  "description": "Command line tools for PPTX packages: render slides to SVG without a browser, inspect a deck, validate it, prove a round trip, and bisect the change that breaks it",
   "license": "Apache-2.0",
   "type": "module",
   "sideEffects": false,
@@ -21,7 +21,10 @@
     "roundtrip",
     "bisect",
     "delta-debugging",
-    "powerpoint"
+    "powerpoint",
+    "render",
+    "svg",
+    "thumbnail"
   ],
   "engines": {
     "node": ">=24.11.0"
@@ -32,7 +35,9 @@
   "files": [
     "dist",
     "scripts",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "NOTICE"
   ],
   "bin": {
     "pptx-studio": "./dist/cli.js"
@@ -50,10 +55,13 @@
   },
   "dependencies": {
     "@pptx-studio/census": "workspace:^",
+    "@pptx-studio/model": "workspace:^",
     "@pptx-studio/opc": "workspace:^",
+    "@pptx-studio/render-svg": "workspace:^",
+    "@pptx-studio/text": "workspace:^",
     "@pptx-studio/validate": "workspace:^",
-    "@pptx-studio/xml": "workspace:^",
-    "@pptx-studio/writer": "workspace:^"
+    "@pptx-studio/writer": "workspace:^",
+    "@pptx-studio/xml": "workspace:^"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

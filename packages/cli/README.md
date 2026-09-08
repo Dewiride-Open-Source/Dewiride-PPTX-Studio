@@ -1,15 +1,20 @@
 # @pptx-studio/cli
 
-**Command line tools for PPTX packages.** As of sub-phase 1.5 that is four
-verbs: `inspect`, which reads a deck and tells you what is in it; `validate`,
-which checks it against the twenty-nine rules a `.pptx` must not break;
-`roundtrip`, which reads a deck, writes it back, and proves nothing moved; and
-`bisect`, which narrows a broken deck down to the change that breaks it.
+**Command line tools for PPTX packages.** As of sub-phase 3.10 that is five
+verbs: `render`, which draws slides as SVG with no browser and no LibreOffice;
+`inspect`, which reads a deck and tells you what is in it; `validate`, which
+checks it against the twenty-nine rules a `.pptx` must not break; `roundtrip`,
+which reads a deck, writes it back, and proves nothing moved; and `bisect`,
+which narrows a broken deck down to the change that breaks it.
 
 Apache-2.0 · part of
 [PPTX Studio](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio).
 
 ```bash
+npx @pptx-studio/cli render deck.pptx --out slides/
+npx @pptx-studio/cli render deck.pptx --slide 1 --width 640 --out thumb.svg
+npx @pptx-studio/cli render deck.pptx --json --font-dir ./fonts
+
 npx @pptx-studio/cli inspect deck.pptx
 npx @pptx-studio/cli inspect deck.pptx --parts --namespaces
 npx @pptx-studio/cli inspect deck.pptx --json --out census.json
@@ -203,3 +208,56 @@ brings it rather than "unknown command":
 | `fidelity` | score a render against a reference            | 3.9       |
 | `render`   | render slides to SVG or PNG without a browser | 3.10      |
 | `resolve`  | show where a resolved property came from      | 7.x       |
+
+## `render`
+
+Server-side thumbnailing with nothing installed but Node. The SVG stands alone:
+pictures are embedded as `data:` URIs, gradients and patterns are `<defs>` in
+the same document, and there is no external reference of any kind to resolve.
+
+```
+1 slide(s) at 1920x1080 -> thumb.svg
+3 typeface(s) from 412 indexed face(s), 1 substituted
+  Aptos -> Carlito
+```
+
+**Text is measured, not guessed.** The browser renderer measures with
+`OffscreenCanvas.measureText`; there is no canvas in Node, so this reads the
+face's own `cmap`, `hmtx`, `GPOS` and `OS/2` tables instead. That is a second
+measurement engine, and the risk of a second engine is that it quietly disagrees
+with the first. Experiment T13 settled the arithmetic rather than assuming it:
+seven fonts built so their tables disagree on purpose, 252 widths measured in
+Chromium, and the reader reproduces **all 252 exactly**. The rules it found are
+in [`corpus/ground-truth/font-metrics.json`](../../corpus/ground-truth/font-metrics.json)
+and the reasoning is in
+[ADR 0042](../../docs/adr/phase-3-text/0042-rendering-without-a-browser.md).
+
+Fonts are found in this platform's own directories, plus any `--font-dir` you
+name, which are searched first so you can override a face without installing
+one. `--no-system-fonts` limits it to what you named; `--no-text` draws geometry
+only and asks no font questions at all.
+
+A typeface the machine does not have is substituted through the same table
+`@pptx-studio/text` uses in the browser, so the two renderers cannot fall back
+differently, and the substitution is reported rather than hidden. A code point
+no indexed face can draw is reported too.
+
+| flag                |                                                                     |
+| ------------------- | ------------------------------------------------------------------- |
+| `--slide <n>`       | one slide, 1-based; every slide by default                          |
+| `--width <px>`      | the `width` attribute; the height follows the deck's aspect         |
+| `--out <path>`      | a directory, or a file when rendering one slide; stdout when absent |
+| `--font-dir <d>`    | look here first, repeatable                                         |
+| `--no-system-fonts` | do not look in this platform's own font directories                 |
+| `--no-text`         | geometry only                                                       |
+| `--json`            | what was drawn, and which face drew each typeface                   |
+
+### What it does not do
+
+No PNG. Rasterising would mean shipping a rasteriser, and the point of this verb
+is that it needs nothing but Node — pipe the SVG to whatever you already have.
+
+No shaping. Latin, Greek and Cyrillic measure correctly, and so does CJK, whose
+advances do not depend on context. Arabic, Devanagari and the other scripts that
+need a shaper will measure wide, because the reader sums unshaped advances. The
+browser renderer has a real shaper and does not have this limit.
