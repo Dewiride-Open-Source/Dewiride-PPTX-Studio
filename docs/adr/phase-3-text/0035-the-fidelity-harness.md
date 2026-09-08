@@ -219,15 +219,14 @@ compared to each other. The report names every substituted face for exactly this
 
 ## Open questions
 
-> Questions 3, 4 and 6 are answered in
+> Questions 1, 3, 4 and 6 are answered in
 > [0041](0041-what-the-harness-was-not-gating.md), which also records a hole in
-> the gate that none of these named. 1, 2, 5 and 7 stand.
+> the gate that none of these named. 2, 5 and 7 stand.
 
-1. **There is no `expected.linux-x64.json`, so CI cannot run the gate.** The baseline for a platform
-   has to be recorded on that platform, and this machine is Windows. Until a one-off
-   `workflow_dispatch` run records it, `pnpm fidelity` is a developer gate and not a CI one. The
-   `FID_ENV_UNKNOWN` throw is what stops a Linux run from silently recording its own baseline and
-   calling it agreement.
+1. ~~**There is no `expected.linux-x64.json`, so CI cannot run the gate.**~~ **Recorded**, by
+   exactly the one-off `workflow_dispatch` run this describes, and CI now runs the gate. The
+   `--bootstrap` lock in [0041](0041-what-the-harness-was-not-gating.md) is what lets a runner write
+   a platform its first baseline without becoming able to rewrite one.
 2. **The pinned Chromium flags are unverified where they matter.** They change nothing on win32-x64.
    Whether they are sufficient on a Linux runner is exactly what question 1 would answer.
 3. ~~**`a03-fills-02` scores 8199 bp and nothing in the plan explains it.**~~ **Answered, and

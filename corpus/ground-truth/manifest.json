@@ -1095,7 +1095,7 @@
       "description": "The digest of our own raster for every slide on linux-x64, and the font environment it was recorded in. This is the gate: a slide that rasterises differently here has changed, and no tolerance is involved in saying so.",
       "recipe": {
         "tool": "tools/fidelity/fidelity.ts",
-        "args": ["--record"]
+        "args": ["--record", "--bootstrap"]
       },
       "addedIn": "3.9"
     },

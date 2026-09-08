@@ -222,7 +222,11 @@ if (record) {
         `The digest of our own raster for every slide on ${ENV_ID}, and the font environment it ` +
         'was recorded in. This is the gate: a slide that rasterises differently here has changed, ' +
         'and no tolerance is involved in saying so.',
-      recipe: { tool: 'tools/fidelity/fidelity.ts', args: ['--record'] },
+      // The flags that decide the output, not the justification for it.
+      recipe: {
+        tool: 'tools/fidelity/fidelity.ts',
+        args: args.bootstrap ? ['--record', '--bootstrap'] : ['--record'],
+      },
     },
   ]);
 }

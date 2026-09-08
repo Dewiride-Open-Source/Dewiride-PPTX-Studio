@@ -107,8 +107,9 @@ jobs:
   #
   # `pnpm fidelity` gates the SHA-256 of our own raster against a baseline
   # recorded per platform, and a baseline has to be recorded on the platform it
-  # gates. Only `expected.win32-x64.json` exists, so this job exists to write
-  # `expected.linux-x64.json` once, by hand, on the runner CI actually uses.
+  # gates. This job is how a platform gets its first one - it wrote
+  # `expected.linux-x64.json` on the runner CI actually uses, and it is what any
+  # later platform would be bootstrapped with.
   #
   # It never runs on a push or a pull request, it uploads rather than commits,
   # and `--bootstrap` is refused the moment a baseline for the platform exists -
@@ -118,6 +119,11 @@ jobs:
   # Both files are uploaded because `--record` also claims the new fixture in
   # `corpus/ground-truth/manifest.json`, and `pnpm corpus` refuses a file under
   # `corpus/` that no entry claims.
+  #
+  # Once the baseline is committed there is nothing left to record, so the work
+  # is skipped rather than attempted: `--bootstrap` would refuse it and a red run
+  # would claim something was wrong. The check is a step and not the job's `if`,
+  # because `hashFiles` is evaluated before the checkout and would see nothing.
   record-fidelity-baseline:
     name: record the linux fidelity baseline
     if: github.event_name == 'workflow_dispatch'
@@ -128,34 +134,53 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Does this platform have a baseline already?
+        id: baseline
+        run: |
+          if [ -f corpus/ground-truth/render/fidelity/expected.linux-x64.json ]; then
+            echo 'needed=false' >> "$GITHUB_OUTPUT"
+            echo 'linux-x64 has a committed baseline; nothing to record.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'needed=true' >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        if: steps.baseline.outputs.needed == 'true'
         with:
           run_install: false
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: steps.baseline.outputs.needed == 'true'
         with:
           node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install
+        if: steps.baseline.outputs.needed == 'true'
         run: pnpm install --frozen-lockfile
 
       # The harness loads the packages as built ESM through an import map, so
       # there has to be a `dist`.
       - name: Build
+        if: steps.baseline.outputs.needed == 'true'
         run: pnpm build
 
       - name: Install Chromium
+        if: steps.baseline.outputs.needed == 'true'
         run: pnpm exec playwright install --with-deps chromium
 
-      # Refuses outright if a linux-x64 baseline is already committed.
+      # Refuses outright if a linux-x64 baseline is already committed, so the
+      # step above is a courtesy and this is the actual lock.
       - name: Record
+        if: steps.baseline.outputs.needed == 'true'
         run: pnpm fidelity --record --bootstrap
 
       - name: Report
+        if: steps.baseline.outputs.needed == 'true'
         run: cat fidelity/report.md >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: steps.baseline.outputs.needed == 'true'
         with:
           name: fidelity-baseline-linux-x64
           path: |

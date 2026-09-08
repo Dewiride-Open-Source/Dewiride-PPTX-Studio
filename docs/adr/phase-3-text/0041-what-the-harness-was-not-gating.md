@@ -2,8 +2,8 @@
 
 - **Status** accepted
 - **Sub-phase** 3.9, reopened
-- **Supersedes** open questions 3, 4 and 6 of
-  [0035](0035-the-fidelity-harness.md); leaves 1, 2, 5 and 7 open
+- **Supersedes** open questions 1, 3, 4 and 6 of
+  [0035](0035-the-fidelity-harness.md); leaves 2, 5 and 7 open
 - **Code** `tools/fidelity/blame.ts`, `tools/fidelity/record.ts`,
   `tools/fidelity/fidelity.ts`, `tools/gate2/gate2.ts`
 - **Measurement** one deck exported twice across a minute boundary, against
@@ -99,6 +99,45 @@ ones, and both refusals fire.
 claims the new fixture there and `pnpm corpus` refuses a file under `corpus/`
 that no entry claims.
 
+### What the Linux baseline turned out to say
+
+Recorded on `ubuntu-latest` by that job, 155 slides. Two things in it are worth
+keeping:
+
+- **The runner has none of the faces the corpus asks for.** It reports seven
+  families requested and six missing — Aptos, Aptos Display, Calibri, Calibri
+  Light and both `PptxStudio` faces — and every one of the seven, the "present"
+  one included, measures the same 698.046875 advance for `Hamburgefonstiv` at
+  100px. They are all resolving to one fallback. The Linux score against
+  PowerPoint is therefore much weaker evidence than the Windows one, and the
+  report's substituted-faces list is what says so.
+- **Only 2 of 155 rasters, and 2 of 155 SVG strings, match the Windows
+  baseline.** Text measurement moves the layout, not just the pixels. That is
+  the case for a per-platform baseline stated as a number rather than assumed.
+
+The browser is the _same_ build on both — `HeadlessChrome/151.0.7922.34` — because
+Playwright is pinned in the lockfile. So `FID_BROWSER_CHANGED` will fire on a
+lockfile bump, which is when it should, and not on crossing platforms.
+
+### CI had been red on every push, and it was the step order
+
+Dispatching that job ran the whole workflow, and `check` failed on Linux at
+**Lint**, on `apps/studio/src/export.ts`, with `'Report' is an 'error' type that
+acts as 'any'`. It had been failing on every push to `main` since at least
+2026-09-07 and I had not looked.
+
+`pnpm lint` and `pnpm typecheck` are type-aware, and a workspace import resolves
+through the package's `exports` to `dist/index.d.ts`. I had ordered **Build after
+both**, so on a clean checkout they resolve nothing and report every use of a
+cross-package type as `any`. It never showed up here because a `dist` from an
+earlier build is always lying around. `pnpm check` had the same order, so a fresh
+clone would have failed identically.
+
+Reproduced locally rather than guessed at: removing `packages/validate/dist`
+gives three errors in that file, and putting it back removes them. Build now runs
+before Lint in both, and the steps `pnpm check` had that CI did not — structure,
+references, fidelity, Gate 2 — are in the job.
+
 ## Where the difference is
 
 0035's open question 6: "`maxD` and `meanBp` are reported per slide, but nothing
@@ -173,6 +212,15 @@ drift is not periodic — it grows as the capture recedes — and stays recorded
 
 ## Verification
 
+- **CI runs the gate.** `pnpm fidelity` is a step of the `check` job, against
+  `expected.linux-x64.json` recorded on the same runner, alongside `pnpm
+structure`, `pnpm references` and `pnpm gate2` — four steps `pnpm check` had
+  and CI did not.
+- **`pnpm references` earned its place on its first CI run**: `tools/bench/README.md`
+  linked to `CLAUDE.md`, which is gitignored, so the link resolved here and
+  nowhere else. A check that only ever runs on the machine that wrote the file
+  cannot see that class of break at all.
+
 - `pnpm fidelity`: 155 slides scored, 0 not drawn, corpus mean **9768 bp**, gate
   PASS — and now gating all 155 rather than 152.
 - **20 of 21 mutants killed.** Paint order, the raster clip, the partial cell,
@@ -195,29 +243,34 @@ drift is not periodic — it grows as the capture recedes — and stays recorded
 
 ## Deviations
 
-| plan item                 | disposition        | why                                                                                                                                                                           |
-| ------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Turborepo inputs          | **still not done** | Unchanged from 0035, and for the same reason: it belongs with the gating CI job, which waits on a baseline. Open question 1.                                                  |
-| localise with `regionsOf` | **both**           | 0035 assumed regions were the answer. Regions need a floor and a floor is a chosen number; shape attribution needs none, so it leads and regions name their shapes beside it. |
+| plan item                 | disposition  | why                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Turborepo inputs          | **rejected** | Turbo hashes declared _files_. The environment gate keys on installed fonts and the browser, which are properties of the machine and not files, so a font change could not invalidate a cache entry and Turbo would replay a stale PASS - the exact poisoning the plan raised inputs to prevent. Not caching it prevents it absolutely. |
+| localise with `regionsOf` | **both**     | 0035 assumed regions were the answer. Regions need a floor and a floor is a chosen number; shape attribution needs none, so it leads and regions name their shapes beside it.                                                                                                                                                           |
 
 ## Open questions
 
-1. **There is still no `expected.linux-x64.json`.** The job that records one is
-   committed and its command is verified, but it has not been dispatched, so the
-   gating `fidelity` job cannot be added yet — a job that fails on every pull
-   request until a file lands is worse than the note it would remove. 0035's open
-   question 2, whether the pinned Chromium flags matter on Linux, is answered by
-   the same run, and so is how the four faces the corpus asks for and this
-   machine does not have substitute there.
-2. **`blipFill stretch fillRect` is wrong and nothing owns fixing it.** 2.12 built
+1. **Carried from 0035, still open: the pinned Chromium flags are unverified
+   where they matter.** There is now a Linux baseline, but it was recorded with
+   the flags on and nothing has recorded one with them off, so whether they
+   change anything on a runner is still unmeasured. Two dispatches of
+   `record-fidelity-baseline` either side of `PINNED_ARGS` would settle it, and
+   the answer decides whether the flags are insurance or ceremony.
+2. **A runner image bump will break the environment gate, correctly and
+   inconveniently.** The Linux baseline pins the fonts `ubuntu-latest` had on
+   the day it was recorded. When GitHub changes that image's font package the
+   gate throws `FID_FONT_COVERAGE_CHANGED` and someone has to dispatch a
+   re-record. That is the gate working; it is also a maintenance cost nobody has
+   paid yet, and no measurement here says how often it falls due.
+3. **`blipFill stretch fillRect` is wrong and nothing owns fixing it.** 2.12 built
    image fills and 2.14 fixed two of the blip effects; this is a third defect on
    the same slide, found by attribution rather than by eye, and it needs a probe
    before it needs a patch.
-3. **Attribution is by the frame, not by what the shape painted.** A `noFill`
+4. **Attribution is by the frame, not by what the shape painted.** A `noFill`
    shape sitting over another still claims its cells, and text that overflows its
    frame is charged to whatever is underneath. Both are visible in the report as a
    name that does not fit the difference, and neither is measured.
-4. **`(no shape)` conflates two very different things** — a background we drew
+5. **`(no shape)` conflates two very different things** — a background we drew
    differently, and a `p:graphicFrame` we did not draw at all. `a22-chartex-01`
    charges 99.6% of its difference to `(no shape)` for the second reason, and the
    report does not say which it is.
