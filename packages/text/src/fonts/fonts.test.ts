@@ -212,8 +212,12 @@ describe('detecting an absent family', () => {
   });
 
   it('treats a family named like a generic as a family, which is why it is quoted', () => {
-    const probe = createFontProbe();
-    expect(isFontAvailable('monospace', probe)).toBe(false);
+    // A face really named `monospace` is legal in OOXML, and quoting is what
+    // stops the stack reading it as the CSS generic. Whether a machine happens
+    // to resolve that name is the machine's business - fontconfig defines it
+    // and Windows does not - so the rule is asserted and not the environment.
+    expect(anchoredStack('monospace', 'serif')).toBe('"monospace", serif');
+    expect(anchoredStack('monospace', 'serif').startsWith('"')).toBe(true);
   });
 });
 
@@ -339,9 +343,16 @@ describe('fontReport', () => {
     const findings = fontReport(absentNames);
     expect(findings.length).toBe(20);
     expect(substitutedFonts(findings).length).toBe(20);
+    // A missing face draws as PowerPoint's last resort where this machine has
+    // it, and as nothing where it does not - a Linux runner has no Calibri, and
+    // naming a face that would not be drawn is the one thing the report must
+    // not do. Both branches, so neither can rot.
+    const drawn = isFontAvailable(POWERPOINT_LAST_RESORT, createFontProbe())
+      ? POWERPOINT_LAST_RESORT
+      : '';
     for (const finding of findings) {
       expect(finding.status).toBe('missing');
-      expect(finding.rendersAs).toBe(POWERPOINT_LAST_RESORT);
+      expect(finding.rendersAs).toBe(drawn);
     }
   });
 

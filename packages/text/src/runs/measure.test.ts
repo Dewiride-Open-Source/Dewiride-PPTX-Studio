@@ -214,18 +214,27 @@ describe('advances against PowerPoint', () => {
    *
    * By fingerprint, not by asking: the fixture records that
    * `document.fonts.check` returned true for a face that is definitively not
-   * installed, so the browser's own answer cannot be trusted. A face measuring
-   * within 5% of PowerPoint on the reference string is the same face; the
-   * recorded worst disagreement on a real face is 1.6% and the absent face was
-   * out by 21%, so 5% separates them with room to spare.
+   * installed, so the browser's own answer cannot be trusted. Within 5% is the
+   * same face - the worst disagreement on a real one is 1.6% and the absent one
+   * was out by 21%.
+   *
+   * Every string the fixture records, and not just the reference one. A
+   * substitute can land inside 5% on one string and be nowhere near on another:
+   * a fontconfig machine resolves `Impact` to something that matches on
+   * `hamburg` and is out by 18% on `kernpairs`. One string cannot separate them.
    */
   function isTheSameFace(font: string): boolean {
     const at = entries.find((e) => e.font === font && e.sz === 1800);
-    const text = STRINGS.get('hamburg');
-    if (at === undefined || text === undefined) return false;
-    const ours = measurer.measure(text, { family: font, sz: 1800 }).width;
-    const theirs = at.widthsPt.hamburg;
-    return Math.abs(ours - theirs) / theirs < 0.05;
+    if (at === undefined) return false;
+    let compared = 0;
+    for (const [key, theirs] of Object.entries(at.widthsPt)) {
+      const text = STRINGS.get(key);
+      if (text === undefined) continue;
+      const ours = measurer.measure(text, { family: font, sz: 1800 }).width;
+      if (Math.abs(ours - theirs) / theirs >= 0.05) return false;
+      compared += 1;
+    }
+    return compared > 0;
   }
 
   const present = [...new Set(entries.map((e) => e.font))].filter(
