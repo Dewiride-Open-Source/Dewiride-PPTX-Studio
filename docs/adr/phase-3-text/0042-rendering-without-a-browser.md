@@ -185,6 +185,40 @@ run is not working code, it is code that has never been run.**
   a choice — a dependency has to be resolvable. `render-dom` is the only package held back, through
   changesets' `ignore`, because nothing in this sub-phase asks anyone to depend on it.
 
+## The first publish had to use a token, and exactly once
+
+Two npm rules collide on an empty scope. A trusted publisher **cannot be attached to a package that
+does not exist** — `npm trust` says so outright and the web UI has no settings page until there is
+a package. And provenance **cannot be generated off a laptop**: npm requires a cloud-hosted runner,
+so a local `npm publish` of 0.1.0 would have carried no attestation, permanently.
+
+So the first publish was a dispatch-only job with a short-lived granular token, deleted immediately
+afterwards along with the token and the secret. It was a separate file rather than a flag on
+`release.yml`, because `release.yml` must never grow a token path: with `NODE_AUTH_TOKEN` set the
+npm CLI takes the legacy route and silently skips OIDC, and a silently unsigned release is worse
+than a failed one. Eleven packages at 0.1.0, each with a provenance attestation.
+
+The granular token needs **Packages and scopes** → read and write. Not **Organizations**, which npm
+documents as governance only: _"It does not give the token the right to publish packages managed by
+the organization."_
+
+## How a release happens
+
+Dispatched by hand from the Actions tab — type `publish`, and every package with a pending changeset
+goes out at once. The version commit and its tags land on `main` directly.
+
+Changesets' own shape is a "Version Packages" pull request opened on every push to main, which
+publishes when merged. That needs **Allow GitHub Actions to create and approve pull requests**, and
+GitHub bundles the two verbs into one toggle: enabling it so a workflow can open a PR also lets a
+workflow approve one. On a public repository that is a real concession, and what it buys a single
+maintainer is a review step performed on their own work. So the pull request is gone.
+
+Two guards replace what it used to be worth. The job refuses a commit CI has not already passed, and
+refuses to run with no changeset pending — so a release is always a green commit with something to
+say. Publishing happens **before** the push, because the failure modes are not symmetric: a failed
+publish then leaves the changesets in the tree and the next run is a clean retry, whereas pushing
+first would consume them and leave a retry with nothing to release.
+
 ## Verification
 
 - **`pnpm check` green**, all of it, including the new `pnpm legal` step.
@@ -224,5 +258,7 @@ run is not working code, it is code that has never been run.**
    number.
 4. **The advance quantisation is `trunc` or `floor`, and no probe separates them.** A font with a
    negative advance would.
-5. **`@pptx-studio` is unclaimed on npm**, so nothing here has actually been published. The
-   workflow, the changeset and the licence files are ready; the scope is not.
+5. **The trusted-publisher binding lives on npmjs.com, not in this repository.** `release.yml`
+   publishes over OIDC, and which workflow in which repository is allowed to do that is a setting on
+   each package. Nothing in the tree asserts it, so a twelfth package will fail its first release
+   until someone adds it there by hand.

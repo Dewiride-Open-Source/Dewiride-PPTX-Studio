@@ -1,9 +1,15 @@
+# Releases are dispatched by hand, never by a push. Every package with a
+# pending changeset goes out at once and the version commit lands on main
+# directly, so there is no release pull request to open or approve.
 name: Release
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "publish" to release every package with a pending changeset'
+        required: true
+        type: string
 
 concurrency:
   group: release
@@ -18,13 +24,40 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: write # changesets opens the version PR and pushes tags
-      pull-requests: write
+      contents: write # the version commit and its tags land on main directly
+      actions: read # to read whether CI passed on this commit
       id-token: write # required for npm trusted publishing (OIDC)
     steps:
+      - name: Confirm
+        if: inputs.confirm != 'publish' || github.ref_name != 'main'
+        run: |
+          echo "::error::release from main, with 'publish' typed in the confirm box"
+          exit 1
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+
+      # Publishing cannot be undone, so a red commit must not reach the registry.
+      - name: Require a green CI run for this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          runs="repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs"
+          got=$(gh api "$runs?head_sha=$GITHUB_SHA&status=completed&per_page=1" \
+            --jq '.workflow_runs[0].conclusion // "not finished"')
+          if [ "$got" != "success" ]; then
+            echo "::error::CI on $GITHUB_SHA is '$got'; wait for it, or release a green commit"
+            exit 1
+          fi
+
+      - name: Require a pending changeset
+        run: |
+          pending=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' | wc -l)
+          if [ "$pending" -eq 0 ]; then
+            echo "::error::nothing to release: no changeset in .changeset/"
+            exit 1
+          fi
 
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
@@ -39,22 +72,27 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
-      # Publishing goes through the npm CLI rather than `pnpm publish`.
-      # pnpm 11 replaced the npm publish fallback with a native implementation
-      # and OIDC trusted publishing that worked under pnpm 10 now 404s
-      # (pnpm/pnpm#11513). Revisit when that is fixed.
-      #
-      # Do NOT set NODE_AUTH_TOKEN here: with a token present the npm CLI takes
-      # the legacy token path and silently skips OIDC, which also means no
-      # provenance attestation. Trusted publishing needs npm >= 11.5.1 and
-      # `id-token: write` above, and nothing else.
-      - uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
-        with:
-          # The v2 names. changesets/action renamed all four in 2.1.0 and fails
-          # outright on the old ones, which is how this job spent six pushes red.
-          version-script: pnpm version-packages
-          publish-script: npm exec -- changeset publish
-          commit-message: 'chore: release'
-          pr-title: 'chore: release'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # The two gates that are about the tarball rather than the code.
+      - run: pnpm legal
+      - run: pnpm pkg:qa
+
+      - name: Version
+        run: pnpm version-packages
+
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'chore: release'
+
+      # npm rather than `pnpm publish` (pnpm/pnpm#11513), and NODE_AUTH_TOKEN
+      # stays unset: with a token the CLI takes the legacy path and skips both
+      # OIDC and the provenance attestation with it. ADR 0001.
+      - name: Publish
+        run: npm exec -- changeset publish
+
+      # After the registry, so a failed publish leaves the changesets in the
+      # tree and the next run is a clean retry.
+      - name: Push the version commit and its tags
+        run: git push --follow-tags origin HEAD:main
