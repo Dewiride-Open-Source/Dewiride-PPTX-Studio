@@ -22,6 +22,13 @@ import { createMeasuringContext, cssFamily, type MeasuringContext } from '../run
 export interface FaceBox {
   readonly ascent: number;
   readonly descent: number;
+  /**
+   * The ideographic baseline below the alphabetic one, as a fraction of the em.
+   *
+   * Only vertical text reads it: an upright glyph's baseline sits `1 - this`
+   * from the leading edge of its cell. ADR 0039.
+   */
+  readonly ideographic: number;
 }
 
 /**
@@ -65,6 +72,22 @@ export function baselineDrop(lineHeightPt: number, box: FaceBox): number {
  */
 export const FACE_BOX_PX = 1000;
 
+/** U+4E00, the one character every CJK face has and no Latin face does. */
+const IDEOGRAPH = '一';
+
+/**
+ * The ideographic baseline, below the alphabetic one, as a fraction of the em.
+ *
+ * Canvas reports a baseline under the alphabetic one as negative, and a face
+ * with no ideographic metric of its own answers with its descent. Zero is the
+ * reading for a face that answers with nothing usable, which puts an upright
+ * glyph's alphabetic baseline on the trailing edge of its cell.
+ */
+function ideographicOffset(ctx: MeasuringContext): number {
+  const offset = -ctx.measureText(IDEOGRAPH).ideographicBaseline / FACE_BOX_PX;
+  return Number.isFinite(offset) && offset > 0 && offset < 1 ? offset : 0;
+}
+
 /** Measures a typeface's box on the same surface the measurer uses. */
 export interface FaceBoxProbe {
   box(family: string): FaceBox;
@@ -90,6 +113,7 @@ export function createFaceBoxProbe(context?: MeasuringContext): FaceBoxProbe {
       const box: FaceBox = {
         ascent: metrics.fontBoundingBoxAscent / FACE_BOX_PX,
         descent: metrics.fontBoundingBoxDescent / FACE_BOX_PX,
+        ideographic: ideographicOffset(ctx),
       };
       baselineShare(box);
       cache.set(family, box);

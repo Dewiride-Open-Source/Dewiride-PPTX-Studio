@@ -73,6 +73,30 @@ export function contentBox(frame: { widthPt: number; heightPt: number }, insets:
   return { leftPt, topPt, widthPt, heightPt };
 }
 
+/**
+ * The insets as the frame sees them once the block has been turned.
+ *
+ * The insets do not turn with the text - `lIns` insets from the physical left
+ * edge whatever `@vert` says, 7 of 7 - so a layout done in a frame that has been
+ * turned a quarter has to be handed them the other way round. Without this a
+ * `vert` frame with the default asymmetric insets is 17pt out at 200pt, which is
+ * `vert-ins-vert` in the fixture. ADR 0039.
+ */
+export function turnedInsets(insets: Insets, quarterDeg: number): Insets {
+  if (quarterDeg === 0) return insets;
+  if (quarterDeg === 90) {
+    return { left: insets.top, top: insets.right, right: insets.bottom, bottom: insets.left };
+  }
+  if (quarterDeg === 270) {
+    return { left: insets.bottom, top: insets.left, right: insets.top, bottom: insets.right };
+  }
+  throw new TextError(
+    'TEXT_FRAME',
+    `${String(quarterDeg)} degrees is not a quarter turn a frame is laid out in`,
+    String(quarterDeg),
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /* the two axes                                                               */
 /* -------------------------------------------------------------------------- */
@@ -372,4 +396,51 @@ export function drawnLines(
     count++;
   }
   return { count, ellipsis: kind === 'ellipsis' && count < lines.length };
+}
+
+/* -------------------------------------------------------------------------- */
+/* upright glyphs                                                             */
+/* -------------------------------------------------------------------------- */
+
+/** Where an upright glyph's pen goes, in the line's own coordinates. */
+export interface UprightPen {
+  /** The glyph's alphabetic baseline, from the leading edge of its cell. */
+  readonly alongPt: number;
+  /** The glyph's own x origin, from the leading edge of the line box. */
+  readonly acrossPt: number;
+}
+
+/**
+ * The pen an upright glyph is drawn from, turned a quarter back out of the line.
+ *
+ * Across the line, the glyph's advance box is centred: 1.0997 and 1.0998 of the
+ * em measured on MS Gothic and SimSun against 1.1 predicted, Yu Gothic 1.0613.
+ * Along it, the baseline is the em box's ascent from the cell's leading edge,
+ * which is one less the ideographic baseline. ADR 0039.
+ */
+export function uprightPen(cell: {
+  readonly sizePt: number;
+  readonly advancePt: number;
+  readonly lineHeightPt: number;
+  readonly ideographic: number;
+}): UprightPen {
+  const { sizePt, advancePt, lineHeightPt, ideographic } = cell;
+  if (!Number.isFinite(sizePt) || sizePt < 0 || !Number.isFinite(advancePt) || advancePt < 0) {
+    throw new TextError(
+      'TEXT_FRAME',
+      `a cell of ${String(advancePt)}pt at ${String(sizePt)}pt is not a glyph cell`,
+      String(sizePt),
+    );
+  }
+  if (!Number.isFinite(ideographic) || ideographic < 0 || ideographic >= 1) {
+    throw new TextError(
+      'TEXT_FRAME',
+      `an ideographic baseline of ${String(ideographic)} is not a fraction of the em`,
+      String(ideographic),
+    );
+  }
+  return {
+    alongPt: (1 - ideographic) * sizePt,
+    acrossPt: (lineHeightPt + advancePt) / 2,
+  };
 }

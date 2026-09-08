@@ -26,18 +26,23 @@ import {
   drawnLines,
   frameAxes,
   lineAdvance,
+  scriptSlotOf,
+  turnedInsets,
   strikeRules,
   toCodePoints,
   underlineRules,
+  uprightPen,
   wrapText,
   type Box,
   type DrawnRule,
+  type Edge,
   type FaceBox,
   type FaceBoxProbe,
   type FaceRules,
   type Insets,
   type LineSpacing,
   type RunFont,
+  type ScriptSlot,
   type TextMeasurer,
 } from '@pptx-studio/text';
 import type { Rgba } from '@pptx-studio/paint';
@@ -65,6 +70,30 @@ export interface TextPiece {
   readonly risePt: number;
   /** The rules this piece draws, already placed. */
   readonly rules: readonly PieceRule[];
+  /**
+   * The glyphs of this piece, each placed and turned a quarter out of the line.
+   *
+   * Empty for every piece that flows, which is all of them outside an `eaVert`
+   * frame. A piece with entries draws these and not `text`.
+   */
+  readonly upright: readonly UprightGlyph[];
+}
+
+/** One glyph stood upright inside a turned line, in the line's coordinates. */
+export interface UprightGlyph {
+  readonly text: string;
+  /** The glyph's alphabetic baseline, from the line's own left edge. */
+  readonly alongPt: number;
+  /** The glyph's own x origin, from the line's own top edge. */
+  readonly acrossPt: number;
+  /**
+   * The `line-height` that lands a browser's baseline `sizePt` below the top.
+   *
+   * The SVG emitter places a baseline as a coordinate and ignores this; the HTML
+   * layer cannot, and a glyph drawn from its own pen is outside the line's own
+   * strut. `sizePt` is the anchor because a single glyph has no other.
+   */
+  readonly strutPt: number;
 }
 
 /**
@@ -160,7 +189,25 @@ const JUSTIFYING = new Set(['just', 'justLow', 'dist', 'thaiDist']);
 const JUSTIFIES_LAST = new Set(['dist']);
 
 /** The directions this package lays out and draws. */
-const DRAWN_DIRECTIONS = new Set(['horz', 'vert', 'vert270']);
+const DRAWN_DIRECTIONS = new Set(['horz', 'vert', 'vert270', 'eaVert', 'mongolianVert']);
+
+/**
+ * The quarter each direction turns the block, and the axes it is laid out on.
+ *
+ * The block is laid out horizontally in a frame with its extents swapped and
+ * then turned, so these are the axes of the **unturned** layout. A quarter turn
+ * clockwise sends its top edge to the right and its left edge to the top, which
+ * is `vert` and `eaVert`; `vert270` sends top to left and left to bottom, which
+ * is its own pair; `mongolianVert` runs downward like `vert` but stacks from the
+ * other side, so it turns with `vert` and anchors from the opposite edge.
+ */
+const TURNS: Readonly<Record<string, { quarter: number; anchorFrom: Edge }>> = {
+  horz: { quarter: 0, anchorFrom: 'top' },
+  vert: { quarter: 90, anchorFrom: 'top' },
+  eaVert: { quarter: 90, anchorFrom: 'top' },
+  vert270: { quarter: 270, anchorFrom: 'top' },
+  mongolianVert: { quarter: 90, anchorFrom: 'bottom' },
+};
 
 function turn(value: number): number {
   return ((value % 360) + 360) % 360;
@@ -294,6 +341,41 @@ function rangeMeasurer(
   };
 }
 
+/**
+ * Where one cell's share of a line splits into pieces, in code point indices.
+ *
+ * One stretch unless the frame stands its East Asian glyphs upright, which has
+ * to draw each of them from its own pen and so cannot share a piece with the
+ * Latin beside it. The split costs the kern across that boundary, which is the
+ * same trade the cell boundary already makes.
+ */
+function stretchesOf(
+  cell: Cell,
+  lo: number,
+  hi: number,
+  start: number,
+  splitScripts: boolean,
+): readonly (readonly [number, number])[] {
+  if (!splitScripts) return [[lo, hi]];
+  const out: [number, number][] = [];
+  let slot: ScriptSlot | null = null;
+  for (let at = lo; at < hi; at += 1) {
+    const point = cell.points[at - start] ?? '';
+    const here = scriptSlotOf(point.codePointAt(0) ?? 0);
+    const last = out.at(-1);
+    if (last === undefined || here !== slot) out.push([at, at + 1]);
+    else last[1] = at + 1;
+    slot = here;
+  }
+  return out;
+}
+
+/** A piece whose characters all sit in the `a:ea` slot, so all stand upright. */
+function standsUpright(text: string): boolean {
+  const first = text.codePointAt(0);
+  return first !== undefined && scriptSlotOf(first) === 'ea';
+}
+
 /** The pieces of one line, positioned from its own left edge. */
 function piecesOf(
   cells: readonly Cell[],
@@ -302,6 +384,7 @@ function piecesOf(
   measure: (from: number, to: number) => number,
   scale: number,
   rulesFor: (typeface: string) => FaceRules,
+  splitScripts: boolean,
 ): { pieces: readonly TextPiece[]; widthPt: number; sizePt: number } {
   const pieces: TextPiece[] = [];
   let leftPt = 0;
@@ -311,31 +394,34 @@ function piecesOf(
     const start = at;
     const end = at + cell.points.length;
     at = end;
-    const lo = Math.max(from, start);
-    const hi = Math.min(to, end);
-    if (hi <= lo) continue;
-    const text = cell.points.slice(lo - start, hi - start).join('');
+    const cellLo = Math.max(from, start);
+    const cellHi = Math.min(to, end);
+    if (cellHi <= cellLo) continue;
     const font = pieceFont(cell.run, cell.sizeRatio, scale);
-    const widthPt = measure(lo, hi);
     const sizeOfPiece = font.sz / 100;
     const faces = rulesFor(font.family);
     const drawn = [
       ...underlineRules(cell.run.underline, sizeOfPiece, faces),
       ...strikeRules(cell.run.strike, sizeOfPiece, faces),
     ];
-    pieces.push({
-      source: cell.source,
-      text,
-      font,
-      cssFamily: cssFamily(font.family),
-      color: cell.run.color,
-      highlight: cell.run.highlight,
-      leftPt,
-      widthPt,
-      risePt: ((cell.run.baseline / 100000) * cell.run.font.sz * scale) / 100,
-      rules: placeRules(drawn, text, cell.run.underline, lo, hi, measure),
-    });
-    leftPt += widthPt;
+    for (const [lo, hi] of stretchesOf(cell, cellLo, cellHi, start, splitScripts)) {
+      const text = cell.points.slice(lo - start, hi - start).join('');
+      const widthPt = measure(lo, hi);
+      pieces.push({
+        source: cell.source,
+        text,
+        font,
+        cssFamily: cssFamily(font.family),
+        color: cell.run.color,
+        highlight: cell.run.highlight,
+        leftPt,
+        widthPt,
+        risePt: ((cell.run.baseline / 100000) * cell.run.font.sz * scale) / 100,
+        rules: placeRules(drawn, text, cell.run.underline, lo, hi, measure),
+        upright: [],
+      });
+      leftPt += widthPt;
+    }
     // The line box follows the largest size on the line, whatever the order,
     // and a shifted or small-capped run is measured at the size it asked for.
     sizePt = Math.max(sizePt, (cell.run.font.sz * scale) / 100);
@@ -447,9 +533,9 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
   const faceBox = options.faceBox ?? createFaceBoxProbe();
   const { turnDeg, boxPt } = textTurn(frame, options);
 
-  // `vert` and `vert270` turn the block a further quarter and lay it out in the
-  // frame with its extents swapped, which is the same shape as `@upright`.
-  const quarter = frame.vertical === 'vert' ? 90 : frame.vertical === 'vert270' ? 270 : 0;
+  const axes = frameAxes(frame.vertical);
+  const uprightGlyphs = axes.verticalFace;
+  const { quarter, anchorFrom } = TURNS[frame.vertical] ?? { quarter: 0, anchorFrom: 'top' };
   const swapped = quarter !== 0;
   const laidOut: Box = swapped
     ? {
@@ -460,7 +546,7 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
       }
     : boxPt;
 
-  const insets: Insets = frame.insets;
+  const insets: Insets = turnedInsets(frame.insets, quarter);
   const content = contentBox({ widthPt: laidOut.widthPt, heightPt: laidOut.heightPt }, insets);
   const column = columnBox({
     content,
@@ -501,6 +587,7 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
         measure,
         scale,
         options.rulesFor,
+        uprightGlyphs,
       );
       const size = sizePt === 0 ? (paragraph.endRun.font.sz * scale) / 100 : sizePt;
       // `lineAdvance` takes the size in hundredths, as `a:rPr/@sz` writes it.
@@ -525,7 +612,7 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
         sizePt: size,
         strutPt: strutHeight(drop, face, size),
         wordSpacingPt: stretched ? wordSpacing(pieces, available, anchorWidth) : 0,
-        pieces,
+        pieces: uprightGlyphs ? stoodUpright(pieces, heightPt, measurer, faceBox) : pieces,
       });
       cursor += heightPt;
     });
@@ -542,10 +629,9 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
   );
   const kept = lines.slice(0, drawn.count);
 
-  const axes = frameAxes('horz');
   const origin = blockOrigin({
     content: column,
-    axes,
+    axes: { ...frameAxes('horz'), anchorFrom },
     anchor: frame.anchor,
     anchorCtr: frame.anchorCtr,
     blockAcrossPt: cursor,
@@ -566,6 +652,49 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
 
 function baselineShareOf(face: FaceBox): number {
   return face.ascent / (face.ascent + face.descent);
+}
+
+/**
+ * Every `a:ea` piece of a line given one pen per glyph, turned back upright.
+ *
+ * PowerPoint draws these from the `@`-prefixed vertical variant of the face, so
+ * one drawing call carries the whole run; a browser has no such face and has to
+ * place each glyph itself. The advance is the face's own and is not touched -
+ * the block, the wrap and the line pitch are `vert`'s to the thousandth of a
+ * point. ADR 0039.
+ */
+function stoodUpright(
+  pieces: readonly TextPiece[],
+  lineHeightPt: number,
+  measurer: TextMeasurer,
+  faceBox: FaceBoxProbe,
+): readonly TextPiece[] {
+  return pieces.map((piece) => {
+    if (!standsUpright(piece.text)) return piece;
+    if (piece.rules.length > 0) {
+      throw new RenderError(
+        'RENDER_TEXT_UNSUPPORTED',
+        'an underline or strikethrough on upright East Asian text is not measured',
+        piece.text,
+      );
+    }
+    const sizePt = piece.font.sz / 100;
+    const ideographic = faceBox.box(piece.font.family).ideographic;
+    const glyphs: UprightGlyph[] = [];
+    let alongPt = piece.leftPt;
+    for (const glyph of toCodePoints(piece.text)) {
+      const advancePt = measurer.measure(glyph, piece.font).width;
+      const pen = uprightPen({ sizePt, advancePt, lineHeightPt, ideographic });
+      glyphs.push({
+        text: glyph,
+        alongPt: alongPt + pen.alongPt,
+        acrossPt: pen.acrossPt,
+        strutPt: strutHeight(sizePt, faceBox.box(piece.font.family), sizePt),
+      });
+      alongPt += advancePt;
+    }
+    return { ...piece, upright: glyphs };
+  });
 }
 
 /**

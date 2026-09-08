@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import fixture from '../../../../corpus/ground-truth/frames.json' with { type: 'json' };
+import glyphs from '../../../../corpus/ground-truth/vertical-glyphs.json' with { type: 'json' };
 import { TextError } from '../errors.js';
 import { lastLineHeight, MEASURED_FACE_METRICS } from '../lines/autofit.js';
 import { blockHeight, lineAdvance } from '../lines/line-model.js';
@@ -16,6 +17,8 @@ import {
   frameAxes,
   MAX_COLUMNS,
   offsetAlong,
+  turnedInsets,
+  uprightPen,
   VERTICAL_AXES,
   type Anchor,
   type Insets,
@@ -571,5 +574,203 @@ describe('columns', () => {
     for (const id of ['col-0', 'col-17', 'col-negspc']) {
       expect(byId(id).repaired, id).toBe(true);
     }
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* the insets do not turn with the text                                       */
+/* -------------------------------------------------------------------------- */
+
+describe('turnedInsets', () => {
+  const INSETS: Insets = { left: 13, top: 20, right: 3, bottom: 5 };
+
+  it('leaves an unturned frame alone', () => {
+    expect(turnedInsets(INSETS, 0)).toStrictEqual(INSETS);
+  });
+
+  it('sends each edge to the one it becomes', () => {
+    // A quarter clockwise puts the laid-out top on the right, so the laid-out
+    // top has to be handed `rIns`; `vert-ins-vert` is 17pt out without it.
+    expect(turnedInsets(INSETS, 90)).toStrictEqual({ left: 20, top: 3, right: 5, bottom: 13 });
+    expect(turnedInsets(INSETS, 270)).toStrictEqual({ left: 5, top: 13, right: 20, bottom: 3 });
+  });
+
+  it('is not the same permutation both ways', () => {
+    expect(turnedInsets(INSETS, 90)).not.toStrictEqual(turnedInsets(INSETS, 270));
+  });
+
+  it('returns to itself after four quarters', () => {
+    let out = INSETS;
+    for (let i = 0; i < 4; i += 1) out = turnedInsets(out, 90);
+    expect(out).toStrictEqual(INSETS);
+  });
+
+  it('refuses a turn that is not a quarter a frame is laid out in', () => {
+    expect(() => turnedInsets(INSETS, 180)).toThrow(TextError);
+    expect(() => turnedInsets(INSETS, 45)).toThrow(TextError);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* upright glyphs                                                             */
+/* -------------------------------------------------------------------------- */
+
+describe('uprightPen', () => {
+  const CELL = { sizePt: 96, advancePt: 96, lineHeightPt: 115.2, ideographic: 0.1201 };
+
+  it('puts the baseline an em box ascent down the cell', () => {
+    expect(uprightPen(CELL).alongPt).toBeCloseTo(84.47, 2);
+  });
+
+  it('centres the advance box across the line box', () => {
+    // 1.1 of the em: 1.0997 measured on MS Gothic and 1.0998 on SimSun.
+    expect(uprightPen(CELL).acrossPt).toBeCloseTo(105.6, 6);
+  });
+
+  it('is not the horizontal baseline drop, which the rival reading uses', () => {
+    // 1.2 x the share of a face box would land at 0.918 of the em on Yu Gothic.
+    expect(uprightPen(CELL).acrossPt / 96).not.toBeCloseTo(0.9187, 3);
+  });
+
+  it('scales with the size', () => {
+    const half = uprightPen({ ...CELL, sizePt: 48, advancePt: 48, lineHeightPt: 57.6 });
+    expect(half.alongPt).toBeCloseTo(uprightPen(CELL).alongPt / 2, 10);
+    expect(half.acrossPt).toBeCloseTo(uprightPen(CELL).acrossPt / 2, 10);
+  });
+
+  it('follows the glyph, not the size, across the line', () => {
+    const half = uprightPen({ ...CELL, advancePt: 48 });
+    expect(half.acrossPt).toBeCloseTo((115.2 + 48) / 2, 10);
+    expect(half.alongPt).toBeCloseTo(uprightPen(CELL).alongPt, 10);
+  });
+
+  it('refuses a cell and a baseline that are not measurements', () => {
+    expect(() => uprightPen({ ...CELL, sizePt: -1 })).toThrow(TextError);
+    expect(() => uprightPen({ ...CELL, advancePt: Number.NaN })).toThrow(TextError);
+    expect(() => uprightPen({ ...CELL, ideographic: 1 })).toThrow(TextError);
+    expect(() => uprightPen({ ...CELL, ideographic: -0.1 })).toThrow(TextError);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* the upright cell, against experiment T10                                   */
+/* -------------------------------------------------------------------------- */
+
+interface AxisRow {
+  readonly face: string;
+  readonly readings: number;
+  readonly alongEm: number;
+  readonly cellEm: number;
+  readonly acrossEm: number;
+  readonly centredEm: number;
+  readonly acrossError: number;
+  readonly browserIdeographic: number | null;
+  readonly alongError: number | null;
+}
+
+const axisRows = glyphs.axes as readonly AxisRow[];
+
+/** A face whose em box is the cell, which is where both readings are exact. */
+const oneEm = axisRows.filter((row) => Math.abs(row.cellEm - 1) <= 0.005);
+
+/** The line box, which the fixture measured at 1.2 of the em on every face. */
+const LINE_BOX_EM = 1.2;
+
+describe('the upright cell, against experiment T10', () => {
+  it('has faces on both sides of the boundary, or it proves nothing', () => {
+    expect(oneEm.length).toBeGreaterThanOrEqual(3);
+    expect(axisRows.length - oneEm.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('measured the line pitch at 1.2 of the em on every face', () => {
+    for (const row of glyphs.linePitch.rows) {
+      expect(row.pitchEm, row.face).toBeCloseTo(LINE_BOX_EM, 2);
+    }
+  });
+
+  it('puts the baseline where PowerPoint put it, on every face whose cell is an em', () => {
+    for (const row of oneEm) {
+      const ideographic = row.browserIdeographic;
+      expect(ideographic, row.face).not.toBeNull();
+      const pen = uprightPen({
+        sizePt: 1,
+        advancePt: 1,
+        lineHeightPt: LINE_BOX_EM,
+        ideographic: ideographic ?? 0,
+      });
+      expect(Math.abs(pen.alongPt - row.alongEm), row.face).toBeLessThanOrEqual(0.002);
+    }
+  });
+
+  it('centres the advance box where PowerPoint centred it, on two of those three', () => {
+    const centred = oneEm.filter((row) => Math.abs(row.acrossError) <= 0.005);
+    expect(centred.map((row) => row.face).sort()).toStrictEqual(['MS Gothic', 'SimSun']);
+    for (const row of centred) {
+      const pen = uprightPen({
+        sizePt: 1,
+        advancePt: 1,
+        lineHeightPt: LINE_BOX_EM,
+        ideographic: row.browserIdeographic ?? 0,
+      });
+      expect(Math.abs(pen.acrossPt - row.acrossEm), row.face).toBeLessThanOrEqual(0.005);
+    }
+  });
+
+  it('is 0.039 of the em out across the line on Yu Gothic, and says so', () => {
+    // Recorded rather than fixed: nothing measured explains the difference, and
+    // a tolerance wide enough to hide it would hide the two faces below too.
+    const yu = axisRows.find((row) => row.face === 'Yu Gothic');
+    expect(yu?.acrossError ?? 0).toBeCloseTo(-0.0391, 3);
+    expect(Math.abs(yu?.alongError ?? 1)).toBeLessThanOrEqual(0.002);
+  });
+
+  it('does not fit the two faces whose cell is not an em', () => {
+    const wide = axisRows.filter((row) => Math.abs(row.cellEm - 1) > 0.005);
+    expect(wide.map((row) => row.face).sort()).toStrictEqual(['Malgun Gothic', 'Microsoft YaHei']);
+    for (const row of wide) {
+      expect(Math.abs(row.alongError ?? 0), row.face).toBeGreaterThan(0.1);
+    }
+  });
+
+  it('refutes the reading that puts the baseline at the face box share', () => {
+    // 1.2 x ascent over the font box is where a horizontal line puts it, and it
+    // is 0.11 of the em from where the upright glyph's baseline actually sits.
+    const yu = axisRows.find((row) => row.face === 'Yu Gothic');
+    const browser = (
+      glyphs.browser as readonly { face: string; ascent: number; descent: number }[]
+    ).find((row) => row.face === 'Yu Gothic');
+    const share = (browser?.ascent ?? 0) / ((browser?.ascent ?? 0) + (browser?.descent ?? 1));
+    expect(Math.abs(LINE_BOX_EM * share - (yu?.alongEm ?? 0))).toBeGreaterThan(0.03);
+  });
+
+  it('refutes the reading that centres the em box rather than the advance box', () => {
+    // Identical for a full-width glyph and different for every other one, which
+    // is what the half-width probe would separate if the two ever diverged.
+    const half = uprightPen({ sizePt: 1, advancePt: 0.5, lineHeightPt: 1.2, ideographic: 0.12 });
+    expect(half.acrossPt).toBeCloseTo(0.85, 10);
+    expect(half.acrossPt).not.toBeCloseTo(1.1, 3);
+  });
+});
+
+describe('what T10 measured about the drawn stream', () => {
+  it('chose the vertical face per script run, in all of them', () => {
+    const question = glyphs.questions.find((row) => row.key === 'face-per-stretch');
+    expect(question?.winner).toBe('per script run');
+    const perFrame = question?.candidates.find((row) => row.name.startsWith('per frame'));
+    expect(perFrame?.hits ?? question?.rows).toBeLessThan(question?.rows ?? 0);
+  });
+
+  it('stood up the East Asian slot and nothing else', () => {
+    const question = glyphs.questions.find((row) => row.key === 'glyph-orientation');
+    expect(question?.winner).toBe('an East Asian glyph in an eaVert or mongolianVert frame');
+    for (const rival of question?.candidates ?? []) {
+      if (rival.name === question?.winner) continue;
+      expect(rival.hits, rival.name).toBeLessThan(question?.rows ?? 0);
+    }
+  });
+
+  it('kept the cell pitch the face advance in every direction', () => {
+    const pitches = glyphs.cellPitch.rows.map((row) => row.pitchPt);
+    expect(Math.max(...pitches) - Math.min(...pitches)).toBeLessThanOrEqual(0.5);
   });
 });

@@ -325,3 +325,61 @@ describe('the two renderers agree on line boxes', () => {
     });
   });
 });
+
+/* -------------------------------------------------------------------------- */
+/* upright East Asian glyphs, in both renderers                               */
+/* -------------------------------------------------------------------------- */
+
+describe('an eaVert frame, in the HTML layer', () => {
+  const CJK = '日本語';
+
+  function upright(vertical: ResolvedFrame['vertical']): TextBlock {
+    return laid([paragraph([run(CJK, { font: { family: 'Yu Gothic', sz: 3200 } })])], {
+      vertical,
+      insets: { left: 0, top: 0, right: 0, bottom: 0 },
+      wrap: 'none',
+    });
+  }
+
+  it('draws one element per glyph, not one per piece', () => {
+    const block = upright('eaVert');
+    const layer = mountTextLayer(host(), [entry(block)], { widthPt: 960, heightPt: 540 });
+    const line = layer.element(7)?.children[0];
+    expect(line?.children.length).toBe([...CJK].length);
+    expect([...(line?.children ?? [])].map((el) => el.textContent)).toStrictEqual([...CJK]);
+  });
+
+  it('turns each glyph a quarter back out of the line', () => {
+    const layer = mountTextLayer(host(), [entry(upright('eaVert'))], {
+      widthPt: 960,
+      heightPt: 540,
+    });
+    const glyphs = [...(layer.element(7)?.children[0]?.children ?? [])] as HTMLElement[];
+    for (const glyph of glyphs) expect(glyph.style.transform).toBe('rotate(-90deg)');
+  });
+
+  it('puts each glyph pen where the SVG emitter puts it', () => {
+    const block = upright('eaVert');
+    const glyphs = block.lines[0]?.pieces[0]?.upright ?? [];
+    expect(glyphs.length).toBe([...CJK].length);
+    const layer = mountTextLayer(host(), [entry(block)], { widthPt: 960, heightPt: 540 });
+    const elements = [...(layer.element(7)?.children[0]?.children ?? [])] as HTMLElement[];
+    glyphs.forEach((glyph, index) => {
+      const el = elements[index];
+      const size = (block.lines[0]?.pieces[0]?.font.sz ?? 0) / 100;
+      expect(el?.style.left).toBe(`${String(Math.round(glyph.alongPt * 1000) / 1000)}px`);
+      expect(el?.style.top).toBe(`${String(Math.round((glyph.acrossPt - size) * 1000) / 1000)}px`);
+      expect(el?.style.transformOrigin).toBe(`0px ${String(size)}px`);
+    });
+  });
+
+  it('leaves a vert frame flowing, one element per piece', () => {
+    const layer = mountTextLayer(host(), [entry(upright('vert'))], {
+      widthPt: 960,
+      heightPt: 540,
+    });
+    const line = layer.element(7)?.children[0];
+    expect(line?.children.length).toBe(1);
+    expect(line?.children[0]?.textContent).toBe(CJK);
+  });
+});

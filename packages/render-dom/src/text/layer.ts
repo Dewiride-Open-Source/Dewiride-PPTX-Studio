@@ -18,7 +18,13 @@
  * exports use.
  */
 
-import type { PieceRule, TextBlock, TextLine, TextPiece } from '@pptx-studio/render-svg';
+import type {
+  PieceRule,
+  TextBlock,
+  TextLine,
+  TextPiece,
+  UprightGlyph,
+} from '@pptx-studio/render-svg';
 import { toCss, type Rgba } from '@pptx-studio/paint';
 
 import { RenderDomError } from '../errors.js';
@@ -126,6 +132,27 @@ function pieceElement(document: Document, piece: TextPiece): HTMLElement {
   return el;
 }
 
+/**
+ * One glyph stood upright inside a turned line, placed from its own pen.
+ *
+ * The span is laid out unrotated with its baseline `sizePt` below its top - what
+ * `UprightGlyph.strutPt` solves for - and then turned a quarter back about that
+ * point, so the pen lands where the SVG emitter puts the same glyph.
+ */
+function uprightElement(document: Document, piece: TextPiece, glyph: UprightGlyph): HTMLElement {
+  const el = pieceElement(document, piece);
+  const style = el.style;
+  const sizePt = piece.font.sz / 100;
+  style.position = 'absolute';
+  style.left = px(glyph.alongPt - piece.risePt);
+  style.top = px(glyph.acrossPt - sizePt);
+  style.lineHeight = px(glyph.strutPt);
+  style.transformOrigin = `0 ${px(sizePt)}`;
+  style.transform = 'rotate(-90deg)';
+  el.textContent = glyph.text;
+  return el;
+}
+
 function lineElement(document: Document, line: TextLine): HTMLElement {
   const el = document.createElement('div');
   const style = el.style;
@@ -138,7 +165,11 @@ function lineElement(document: Document, line: TextLine): HTMLElement {
   style.whiteSpace = 'pre';
   if (line.wordSpacingPt !== 0) style.wordSpacing = px(line.wordSpacingPt);
 
-  for (const piece of line.pieces) el.appendChild(pieceElement(document, piece));
+  for (const piece of line.pieces) {
+    if (piece.upright.length > 0) {
+      for (const glyph of piece.upright) el.appendChild(uprightElement(document, piece, glyph));
+    } else el.appendChild(pieceElement(document, piece));
+  }
 
   const baseline = line.baselinePt - line.topPt;
   for (const piece of line.pieces) {

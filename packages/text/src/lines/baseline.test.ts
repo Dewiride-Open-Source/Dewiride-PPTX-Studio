@@ -27,7 +27,7 @@ interface BaselineRow {
 
 const rows = fixture.powerpoint.baseline.rows as readonly BaselineRow[];
 const faces = fixture.browser.faces as Readonly<
-  Record<string, FaceBox & { baselineShare: number }>
+  Record<string, { ascent: number; descent: number; baselineShare: number }>
 >;
 
 /** One EMF logical unit is a six-hundredth of an inch, which is 0.12pt. */
@@ -36,7 +36,7 @@ const UNIT_PT = 72 / 600;
 function boxOf(face: string): FaceBox {
   const box = faces[face];
   if (box === undefined) throw new Error(`the fixture has no browser metrics for ${face}`);
-  return { ascent: box.ascent, descent: box.descent };
+  return { ascent: box.ascent, descent: box.descent, ideographic: 0 };
 }
 
 /** The score of a candidate over the fixture's rows, for a test name. */
@@ -85,22 +85,24 @@ describe('the baseline inside a line box', () => {
 
   it('agrees with the share the fixture recorded per face', () => {
     for (const [face, box] of Object.entries(faces)) {
-      expect(baselineShare(box), face).toBeCloseTo(box.baselineShare, 6);
+      expect(baselineShare(boxOf(face)), face).toBeCloseTo(box.baselineShare, 6);
     }
   });
 });
 
 describe('baselineShare', () => {
   it('refuses a box that is not one', () => {
-    expect(() => baselineShare({ ascent: 0, descent: 0 })).toThrow(TextError);
-    expect(() => baselineShare({ ascent: -1, descent: 1 })).toThrow(TextError);
-    expect(() => baselineShare({ ascent: Number.NaN, descent: 1 })).toThrow(TextError);
+    expect(() => baselineShare({ ascent: 0, descent: 0, ideographic: 0 })).toThrow(TextError);
+    expect(() => baselineShare({ ascent: -1, descent: 1, ideographic: 0 })).toThrow(TextError);
+    expect(() => baselineShare({ ascent: Number.NaN, descent: 1, ideographic: 0 })).toThrow(
+      TextError,
+    );
   });
 
   it('is between nothing and everything', () => {
-    for (const box of Object.values(faces)) {
-      expect(baselineShare(box)).toBeGreaterThan(0.7);
-      expect(baselineShare(box)).toBeLessThan(0.9);
+    for (const face of Object.keys(faces)) {
+      expect(baselineShare(boxOf(face))).toBeGreaterThan(0.7);
+      expect(baselineShare(boxOf(face))).toBeLessThan(0.9);
     }
   });
 });
@@ -130,6 +132,14 @@ describe('createFaceBoxProbe', () => {
     const box = probe.box('Arial');
     expect(box.ascent).toBeGreaterThan(0.5);
     expect(box.descent).toBeGreaterThan(0.05);
+  });
+
+  it('reads the ideographic baseline as a drop below the alphabetic one', () => {
+    // Canvas reports it as a negative offset. A probe that kept that sign would
+    // read every face as zero and stand each upright glyph a whole em out.
+    const box = createFaceBoxProbe().box('Arial');
+    expect(box.ideographic).toBeGreaterThan(0.05);
+    expect(box.ideographic).toBeLessThan(0.5);
   });
 
   it('gives the same box twice, from the cache', () => {

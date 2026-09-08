@@ -193,6 +193,8 @@ export {
   emptyParagraphHeight,
   frameAxes,
   offsetAlong,
+  turnedInsets,
+  uprightPen,
   type Anchor,
   type Box,
   type DrawnLines,
@@ -200,6 +202,7 @@ export {
   type FrameAxes,
   type Insets,
   type OverflowLine,
+  type UprightPen,
   type VertOverflow,
   type VerticalText,
 } from './frames/frame.js';

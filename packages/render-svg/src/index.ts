@@ -121,6 +121,7 @@ export {
   type TextBlock,
   type TextLine,
   type TextPiece,
+  type UprightGlyph,
 } from './text/layout.js';
 
 export {

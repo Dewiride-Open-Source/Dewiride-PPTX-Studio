@@ -58,14 +58,15 @@ date.
 
 ## Phase 3 — text
 
-| #                                                             | decision                          |
-| ------------------------------------------------------------- | --------------------------------- |
-| [0027](phase-3-text/0027-the-text-cascade.md)                 | The text cascade                  |
-| [0028](phase-3-text/0028-measurement-and-the-line-model.md)   | Measurement and the line model    |
-| [0029](phase-3-text/0029-line-breaking.md)                    | Line breaking                     |
-| [0030](phase-3-text/0030-autofit.md)                          | Autofit                           |
-| [0031](phase-3-text/0031-bullets-fields-and-script-runs.md)   | Bullets, fields and script runs   |
-| [0032](phase-3-text/0032-anchors-insets-and-vertical-text.md) | Anchors, insets and vertical text |
-| [0033](phase-3-text/0033-font-substitution-and-the-guard.md)  | Font substitution and the guard   |
-| [0034](phase-3-text/0034-text-in-both-renderers.md)           | Text in both renderers            |
-| [0035](phase-3-text/0035-the-fidelity-harness.md)             | The fidelity harness              |
+| #                                                             | decision                                                          |
+| ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [0027](phase-3-text/0027-the-text-cascade.md)                 | The text cascade                                                  |
+| [0028](phase-3-text/0028-measurement-and-the-line-model.md)   | Measurement and the line model                                    |
+| [0029](phase-3-text/0029-line-breaking.md)                    | Line breaking                                                     |
+| [0030](phase-3-text/0030-autofit.md)                          | Autofit                                                           |
+| [0031](phase-3-text/0031-bullets-fields-and-script-runs.md)   | Bullets, fields and script runs                                   |
+| [0032](phase-3-text/0032-anchors-insets-and-vertical-text.md) | Anchors, insets and vertical text                                 |
+| [0033](phase-3-text/0033-font-substitution-and-the-guard.md)  | Font substitution and the guard                                   |
+| [0034](phase-3-text/0034-text-in-both-renderers.md)           | Text in both renderers                                            |
+| [0035](phase-3-text/0035-the-fidelity-harness.md)             | The fidelity harness                                              |
+| [0039](phase-3-text/0039-upright-glyphs-in-vertical-text.md)  | Upright glyphs in vertical text, and the insets that never turned |

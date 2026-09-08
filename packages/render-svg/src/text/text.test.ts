@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseSheet, parseTheme, type Sheet } from '@pptx-studio/model';
+import { turnedInsets } from '@pptx-studio/text';
 import { parseXmlString } from '@pptx-studio/xml';
 
 import fixture from '../../../../corpus/ground-truth/text-rendering.json' with { type: 'json' };
+import frames from '../../../../corpus/ground-truth/frames.json' with { type: 'json' };
 import { layoutSheet, type Placed } from '../layout.js';
 import { RenderError } from '../errors.js';
 import { serializeSvg, type SvgElement, type SvgNode } from '../node.js';
@@ -167,9 +169,18 @@ const flatMeasurer = {
   },
 };
 
-/** A face box with a share of exactly four fifths, for arithmetic anyone can do. */
+/**
+ * A face box with a share of exactly four fifths, for arithmetic anyone can do.
+ *
+ * The eighth of an em for the ideographic baseline is likewise a round number,
+ * so an upright glyph's baseline lands at seven eighths of its cell.
+ */
 const flatFaceBox = {
-  box: (): { ascent: number; descent: number } => ({ ascent: 0.8, descent: 0.2 }),
+  box: (): { ascent: number; descent: number; ideographic: number } => ({
+    ascent: 0.8,
+    descent: 0.2,
+    ideographic: 0.125,
+  }),
 };
 
 const flatRules = {
@@ -503,7 +514,9 @@ describe('layoutText', () => {
   });
 
   it('refuses a direction it lays out but cannot draw', () => {
-    expect(() => laid(body([paragraph([run('a')])], { vertical: 'eaVert' }))).toThrow(RenderError);
+    expect(() => laid(body([paragraph([run('a')])], { vertical: 'wordArtVert' }))).toThrow(
+      RenderError,
+    );
   });
 
   it('gives a vertical frame the swapped extents and a quarter turn', () => {
@@ -528,7 +541,7 @@ describe('layoutText', () => {
 
 describe('strutHeight', () => {
   it("lands a browser's baseline where the layout put it", () => {
-    const face = { ascent: 0.9, descent: 0.25 };
+    const face = { ascent: 0.9, descent: 0.25, ideographic: 0.12 };
     const size = 40;
     const drop = 1.2 * size * (face.ascent / (face.ascent + face.descent));
     const strut = strutHeight(drop, face, size);
@@ -537,7 +550,7 @@ describe('strutHeight', () => {
   });
 
   it('never asks for a negative height', () => {
-    expect(strutHeight(0, { ascent: 0.9, descent: 0.2 }, 40)).toBe(0);
+    expect(strutHeight(0, { ascent: 0.9, descent: 0.2, ideographic: 0.12 }, 40)).toBe(0);
   });
 
   it('solves every baseline the fixture recorded', () => {
@@ -545,7 +558,7 @@ describe('strutHeight', () => {
     for (const row of baselineRows) {
       const box = boxes[row.face];
       if (box === undefined) continue;
-      const strut = strutHeight(row.drop, box, row.size);
+      const strut = strutHeight(row.drop, { ...box, ideographic: 0 }, row.size);
       const browser = (strut - (box.ascent + box.descent) * row.size) / 2 + box.ascent * row.size;
       expect(browser, row.probe).toBeCloseTo(row.drop, 6);
     }
@@ -863,5 +876,282 @@ describe('text outside the basic multilingual plane', () => {
     const block = laid(body([paragraph([run(source)])]), { widthPt: 4000 });
     expect(block.lines.length).toBe(1);
     expect(block.lines[0]?.pieces.map((piece) => piece.text).join('')).toBe(source);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* the turned frame, against T6's own readings                                */
+/* -------------------------------------------------------------------------- */
+
+interface FrameProbe {
+  readonly id: string;
+  readonly family: string;
+  readonly vars: Readonly<Record<string, unknown>>;
+  readonly frame: Readonly<Record<string, unknown>>;
+  readonly box: readonly number[];
+  readonly measured: {
+    readonly dLeft: number | null;
+    readonly dTop: number | null;
+    readonly frame?: unknown;
+  };
+  readonly drew?: readonly string[] | undefined;
+}
+
+/** A probe field that is a string, or the default when the probe omits it. */
+function word(row: Readonly<Record<string, unknown>>, key: string, fallback: string): string {
+  const value = row[key];
+  return typeof value === 'string' ? value : fallback;
+}
+
+/** A probe field that is a length in points, or zero when the probe omits it. */
+function length(row: Readonly<Record<string, unknown>>, key: string): number {
+  const value = row[key];
+  return typeof value === 'number' ? value : 0;
+}
+
+const frameProbes = (frames.probes as readonly unknown[] as readonly FrameProbe[]).filter(
+  (probe) => probe.family === 'vert' && !probe.id.startsWith('vert-wrap-'),
+);
+
+/** The along-axis advance of each script's probe string, from its `horz` row. */
+const PROBE_ADVANCE: Readonly<Record<string, number>> = { latin: 49, cjk: 99 };
+
+/** The probe font: 18pt, so its line box is 21.6. */
+const PROBE_SIZE = 1800;
+
+/** The insets of the `vert-ins-*` probes, asymmetric on both axes. */
+const PROBE_INSETS = { left: 13, top: 20, right: 3, bottom: 5 };
+
+/** The directions this package draws, which is what the probes are filtered to. */
+const DRAWN = ['horz', 'vert', 'vert270', 'eaVert', 'mongolianVert'];
+
+/** A measurer answering with the advance PowerPoint measured for the probe. */
+function probeMeasurer(
+  advancePt: number,
+  text: string,
+): { measure: (part: string) => { width: number } } {
+  const glyphs = Math.max(1, [...text].length);
+  // The probe strings are one script and one size each, so an even share of the
+  // measured advance is the same measurement whether asked whole or per glyph.
+  return {
+    measure: (part: string): { width: number } => ({
+      width: (advancePt * [...part].length) / glyphs,
+    }),
+  };
+}
+
+/** The block's near corner on the slide, once the turn has been applied. */
+function screenCorner(
+  block: TextBlock,
+  widthPt: number,
+  heightPt: number,
+): { leftPt: number; topPt: number } {
+  const radians = (block.turnDeg * Math.PI) / 180;
+  const cos = Math.round(Math.cos(radians));
+  const sin = Math.round(Math.sin(radians));
+  const halfX = widthPt / 2;
+  const halfY = heightPt / 2;
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const line of block.lines) {
+    const corners = [
+      [line.leftPt, line.topPt],
+      [line.leftPt + line.widthPt, line.topPt + line.heightPt],
+    ] as const;
+    for (const [x, y] of corners) {
+      xs.push(halfX + (x - halfX) * cos - (y - halfY) * sin);
+      ys.push(halfY + (x - halfX) * sin + (y - halfY) * cos);
+    }
+  }
+  return { leftPt: Math.min(...xs), topPt: Math.min(...ys) };
+}
+
+function vertical(text: string, frame: Partial<ResolvedFrame>, advancePt: number): TextBlock {
+  return layoutText(
+    body([paragraph([run(text, { font: { family: 'Yu Gothic', sz: PROBE_SIZE } })])], {
+      insets: { left: 0, top: 0, right: 0, bottom: 0 },
+      wrap: 'none',
+      ...frame,
+    }),
+    {
+      widthPt: 200,
+      heightPt: 200,
+      rot: 0,
+      flipH: false,
+      flipV: false,
+      measurer: probeMeasurer(advancePt, text),
+      faceBox: flatFaceBox,
+      rulesFor: () => flatRules,
+    },
+  );
+}
+
+function laidProbe(probe: FrameProbe): TextBlock {
+  const text = (probe.drew ?? []).join('');
+  return layoutText(
+    body([paragraph([run(text, { font: { family: 'Yu Gothic', sz: PROBE_SIZE } })])], {
+      vertical: word(probe.frame, 'vert', 'horz') as ResolvedFrame['vertical'],
+      anchor: word(probe.frame, 'anchor', 't') as ResolvedFrame['anchor'],
+      insets: {
+        left: length(probe.frame, 'lIns'),
+        top: length(probe.frame, 'tIns'),
+        right: length(probe.frame, 'rIns'),
+        bottom: length(probe.frame, 'bIns'),
+      },
+      wrap: 'none',
+    }),
+    {
+      widthPt: probe.box[0] ?? 0,
+      heightPt: probe.box[1] ?? 0,
+      rot: 0,
+      flipH: false,
+      flipV: false,
+      measurer: probeMeasurer(PROBE_ADVANCE[word(probe.vars, 'script', 'latin')] ?? 49, text),
+      faceBox: flatFaceBox,
+      rulesFor: () => flatRules,
+    },
+  );
+}
+
+describe('a turned frame, against experiment T6', () => {
+  const drawable = frameProbes.filter((probe) => DRAWN.includes(word(probe.frame, 'vert', 'horz')));
+
+  it('has probes for every direction this package draws', () => {
+    expect(new Set(drawable.map((probe) => word(probe.frame, 'vert', 'horz'))).size).toBe(
+      DRAWN.length,
+    );
+    expect(drawable.length).toBeGreaterThanOrEqual(15);
+  });
+
+  it('puts the block where PowerPoint put it, in all of them', () => {
+    const misses: string[] = [];
+    for (const probe of drawable) {
+      const corner = screenCorner(laidProbe(probe), probe.box[0] ?? 0, probe.box[1] ?? 0);
+      const wantLeft = (probe.measured.dLeft ?? 0) / 1000;
+      const wantTop = (probe.measured.dTop ?? 0) / 1000;
+      if (Math.abs(corner.leftPt - wantLeft) > 0.05 || Math.abs(corner.topPt - wantTop) > 0.05) {
+        misses.push(`${probe.id}: ${corner.leftPt.toFixed(2)},${corner.topPt.toFixed(2)}`);
+      }
+    }
+    expect(misses).toStrictEqual([]);
+  });
+
+  it('is 17pt out on `vert-ins-vert` if the insets do not turn with the frame', () => {
+    // Turning them back the other way first cancels the turn the layout does,
+    // which is exactly the rival reading: `lIns` on the laid-out left edge.
+    const naive = screenCorner(
+      vertical(
+        'Wxyz',
+        { vertical: 'vert', insets: turnedInsets(PROBE_INSETS, 270) },
+        PROBE_ADVANCE['latin'] ?? 49,
+      ),
+      200,
+      200,
+    );
+    const turned = screenCorner(
+      vertical('Wxyz', { vertical: 'vert', insets: PROBE_INSETS }, PROBE_ADVANCE['latin'] ?? 49),
+      200,
+      200,
+    );
+    expect(naive.leftPt).toBeCloseTo(158.4, 6);
+    expect(turned.leftPt).toBeCloseTo(175.4, 6);
+  });
+
+  it('places eaVert exactly where PowerPoint places vert, in every pair', () => {
+    // Everything but `frame`, which is the object model's own orientation
+    // number and is the one thing the two are meant to differ in.
+    const placement = (row: FrameProbe): string => JSON.stringify({ ...row.measured, frame: null });
+    const pairs = frameProbes.filter((probe) => word(probe.frame, 'vert', '') === 'eaVert');
+    expect(pairs.length).toBeGreaterThanOrEqual(3);
+    for (const probe of pairs) {
+      const twin = frameProbes.find((row) => row.id === probe.id.replace('eaVert', 'vert'));
+      expect(twin, probe.id).toBeDefined();
+      expect(placement(probe), probe.id).toBe(placement(twin as FrameProbe));
+    }
+  });
+
+  it('refuses the directions whose glyph cell nobody measured', () => {
+    for (const vert of ['wordArtVert', 'wordArtVertRtl']) {
+      expect(() => vertical('Wxyz', { vertical: vert as ResolvedFrame['vertical'] }, 49)).toThrow(
+        RenderError,
+      );
+    }
+  });
+});
+
+describe('upright East Asian glyphs', () => {
+  const CJK = '日本語';
+
+  it('stands every East Asian glyph up in an eaVert frame', () => {
+    const line = vertical(CJK, { vertical: 'eaVert' }, 54).lines[0];
+    expect(line?.pieces).toHaveLength(1);
+    expect(line?.pieces[0]?.upright.map((glyph) => glyph.text)).toStrictEqual([...CJK]);
+  });
+
+  it('leaves them flowing in a vert frame, which turns the glyphs too', () => {
+    expect(vertical(CJK, { vertical: 'vert' }, 54).lines[0]?.pieces[0]?.upright).toStrictEqual([]);
+  });
+
+  it('stands them up in a mongolianVert frame as well', () => {
+    const line = vertical(CJK, { vertical: 'mongolianVert' }, 54).lines[0];
+    expect(line?.pieces[0]?.upright).toHaveLength(3);
+  });
+
+  it('advances one glyph cell at a time, and centres each across the line', () => {
+    const line = vertical(CJK, { vertical: 'eaVert' }, 54).lines[0];
+    const glyphs = line?.pieces[0]?.upright ?? [];
+    // A 54pt advance over three glyphs is an 18pt cell, which is the size; the
+    // flat face box puts the ideographic baseline an eighth of the em up.
+    expect(glyphs.map((glyph) => glyph.alongPt - (line?.leftPt ?? 0))).toStrictEqual([
+      15.75, 33.75, 51.75,
+    ]);
+    for (const glyph of glyphs) expect(glyph.acrossPt).toBeCloseTo((21.6 + 18) / 2, 10);
+  });
+
+  it('splits a run at the script boundary and stands up only its own half', () => {
+    const line = vertical('日本Ab', { vertical: 'eaVert' }, 72).lines[0];
+    expect(line?.pieces.map((piece) => piece.text)).toStrictEqual(['日本', 'Ab']);
+    expect(line?.pieces[0]?.upright).toHaveLength(2);
+    expect(line?.pieces[1]?.upright).toStrictEqual([]);
+  });
+
+  it('never splits a run in a frame that draws no upright glyph', () => {
+    const line = vertical('日本Ab', { vertical: 'vert' }, 72).lines[0];
+    expect(line?.pieces.map((piece) => piece.text)).toStrictEqual(['日本Ab']);
+  });
+
+  it('draws each upright glyph as its own turned <text>', () => {
+    const block = vertical(CJK, { vertical: 'eaVert' }, 54);
+    const markup = serializeSvg(
+      textNodes(block, { x: 0, y: 0, cx: 2540000, cy: 2540000 })[0] as SvgElement,
+    );
+    expect([...markup.matchAll(/rotate\(-90 /g)]).toHaveLength(3);
+    for (const glyph of [...CJK]) expect(markup).toContain(`>${glyph}</text>`);
+  });
+
+  it('refuses an underline nobody measured under upright text', () => {
+    expect(() => vertical(CJK, { vertical: 'eaVert' }, 54)).not.toThrow();
+    expect(() =>
+      layoutText(
+        body(
+          [
+            paragraph([
+              run(CJK, { font: { family: 'Yu Gothic', sz: PROBE_SIZE }, underline: 'sng' }),
+            ]),
+          ],
+          { vertical: 'eaVert', insets: { left: 0, top: 0, right: 0, bottom: 0 }, wrap: 'none' },
+        ),
+        {
+          widthPt: 200,
+          heightPt: 200,
+          rot: 0,
+          flipH: false,
+          flipV: false,
+          measurer: probeMeasurer(54, CJK),
+          faceBox: flatFaceBox,
+          rulesFor: () => flatRules,
+        },
+      ),
+    ).toThrow(RenderError);
   });
 });

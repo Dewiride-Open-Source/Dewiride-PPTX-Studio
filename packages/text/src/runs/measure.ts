@@ -187,6 +187,8 @@ export interface MeasuringContext {
     readonly width: number;
     readonly fontBoundingBoxAscent: number;
     readonly fontBoundingBoxDescent: number;
+    /** Negative where the ideographic baseline is below the alphabetic one. */
+    readonly ideographicBaseline: number;
   };
 }
 interface MeasuringCanvas {

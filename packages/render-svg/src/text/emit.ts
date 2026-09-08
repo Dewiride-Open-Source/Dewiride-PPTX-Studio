@@ -19,7 +19,7 @@ import { toHexColor, type Rgba } from '@pptx-studio/paint';
 import { element, text as textNode, type SvgElement, type SvgNode } from '../node.js';
 import { EMU_PER_POINT } from '../transform.js';
 
-import type { PieceRule, TextBlock, TextLine, TextPiece } from './layout.js';
+import type { PieceRule, TextBlock, TextLine, TextPiece, UprightGlyph } from './layout.js';
 
 /**
  * `#rrggbb`, with alpha handed over separately as SVG wants it.
@@ -109,6 +109,31 @@ function pieceAttrs(piece: TextPiece): Record<string, string | number | null> {
  * A shifted piece carries a `dy` and the piece after it carries the opposite
  * one, so a superscript moves itself and nothing that follows.
  */
+/**
+ * One glyph stood upright inside a turned line.
+ *
+ * The line's own turn is undone about the glyph's pen, which is why this is a
+ * `<text>` of its own rather than a `<tspan>`: a rotation is per element.
+ */
+function uprightNode(line: TextLine, piece: TextPiece, glyph: UprightGlyph): SvgElement {
+  // A rise lifts the glyph along its own up, which the quarter turn maps to the
+  // line's own left, so it moves the pen rather than becoming a `dy`.
+  const x = line.leftPt + glyph.alongPt - piece.risePt;
+  const y = line.topPt + glyph.acrossPt;
+  return element(
+    'text',
+    {
+      ...pieceAttrs(piece),
+      x,
+      y,
+      dy: null,
+      transform: `rotate(-90 ${String(x)} ${String(y)})`,
+      'xml:space': 'preserve',
+    },
+    [textNode(glyph.text)],
+  );
+}
+
 function lineNodes(line: TextLine): readonly SvgNode[] {
   const out: SvgNode[] = [];
 
@@ -130,6 +155,10 @@ function lineNodes(line: TextLine): readonly SvgNode[] {
   const spans: SvgNode[] = [];
   let carried = 0;
   line.pieces.forEach((piece, index) => {
+    if (piece.upright.length > 0) {
+      for (const glyph of piece.upright) out.push(uprightNode(line, piece, glyph));
+      return;
+    }
     const attrs = pieceAttrs(piece);
     const dy = -piece.risePt + carried;
     carried = piece.risePt;
