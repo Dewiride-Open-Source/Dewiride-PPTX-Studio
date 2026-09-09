@@ -5,7 +5,7 @@ import { isValidateError } from '@pptx-studio/validate';
 import { BISECT_DEFAULTS, runBisect, type BisectOptions } from './bisect.js';
 import { INSPECT_DEFAULTS, runInspect, type InspectOptions } from './inspect.js';
 import { isRenderError } from './render/errors.js';
-import { RENDER_DEFAULTS, runRender, type RenderOptions } from './render/render.js';
+import { DEFAULT_WIDTH, runRender, type RenderOptions } from './render/render.js';
 import { runRoundTrip, type RoundTripOptions } from './roundtrip.js';
 import { runValidate, type ValidateOptions } from './validate.js';
 
@@ -63,7 +63,10 @@ function usage(): string {
     '',
     'render options:',
     '  --slide <n>      one slide, 1-based; every slide by default',
-    '  --width <px>     the SVG width attribute; the height follows the aspect',
+    '  --width <px>     the SVG width attribute; the height follows the aspect ' +
+      '(default ' +
+      String(DEFAULT_WIDTH) +
+      ')',
     '  --out <path>     a directory, or a file when rendering one slide',
     '  --font-dir <d>   look for fonts here first; repeatable',
     '  --no-system-fonts   do not look in this platform own font directories',
@@ -72,6 +75,9 @@ function usage(): string {
     '  --quiet          no summary after writing',
     '',
     '  With no --out the markup goes to stdout, which is one slide worth doing.',
+    '  In Node, `import { renderDeck } from "@pptx-studio/cli"` takes the five',
+    '  drawing options above and defaults every one; --out, --json and --quiet are',
+    "  this command's own.",
     '',
     'inspect options:',
     '  --json           the census as JSON, for a script or for committing as a fixture',
@@ -266,7 +272,7 @@ export function main(argv: readonly string[], streams: Streams = CONSOLE_STREAMS
       streams.err('--slide wants a positive integer, got ' + String(values.slide) + '\n');
       return 2;
     }
-    const width = positiveInteger(values.width, RENDER_DEFAULTS.width);
+    const width = positiveInteger(values.width, DEFAULT_WIDTH);
     if (width === null) {
       streams.err('--width wants a positive integer, got ' + String(values.width) + '\n');
       return 2;

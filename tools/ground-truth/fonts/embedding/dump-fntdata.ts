@@ -346,7 +346,7 @@ if (jsonOut !== undefined) {
         fsType: f.eot.fsType,
         panose: f.eot.panose,
         // Kept exactly as read, NUL terminators included: that a family name
-        // arrives as "Cambria " is the finding, not a defect to tidy.
+        // arrives as "Cambria\0" is the finding, not a defect to tidy.
         familyName: f.eot.familyName,
         styleName: f.eot.styleName,
         versionName: f.eot.versionName,

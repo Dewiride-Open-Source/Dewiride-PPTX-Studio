@@ -27,6 +27,8 @@ export interface FaceMetrics {
   readonly descent: number;
   /** Which table `ascent` and `descent` came out of, for the diagnostics. */
   readonly source: 'usWin' | 'sTypo';
+  /** The `BASE` `ideo` coordinate under `DFLT`, in font units below the baseline. */
+  readonly ideographic: number | undefined;
 }
 
 export interface Face {
@@ -67,6 +69,10 @@ function u32(r: Reader, at: number): number {
   return r.view.getUint32(at);
 }
 
+function tagAt(r: Reader, at: number): string {
+  return String.fromCharCode(u8(r, at), u8(r, at + 1), u8(r, at + 2), u8(r, at + 3));
+}
+
 function unreadable(what: string, subject: string): never {
   throw new RenderError('CLI_FONT_UNREADABLE', what, subject);
 }
@@ -85,7 +91,7 @@ function directoryAt(bytes: Uint8Array, start: number, subject: string): Tables 
   for (let i = 0; i < count; i++) {
     const at = start + 12 + i * 16;
     if (at + 16 > bytes.length) unreadable('table directory runs past the file', subject);
-    const tag = String.fromCharCode(u8(r, at), u8(r, at + 1), u8(r, at + 2), u8(r, at + 3));
+    const tag = tagAt(r, at);
     const offset = u32(r, at + 8);
     const length = u32(r, at + 12);
     // A length that runs past the end is a truncated file, not a fatal one:
@@ -363,13 +369,7 @@ function gposKerning(tables: Tables): Kerning | undefined {
   const featureCount = u16(r, featureList);
   for (let i = 0; i < featureCount; i++) {
     const record = featureList + 2 + i * 6;
-    const tag = String.fromCharCode(
-      u8(r, record),
-      u8(r, record + 1),
-      u8(r, record + 2),
-      u8(r, record + 3),
-    );
-    if (tag !== 'kern') continue;
+    if (tagAt(r, record) !== 'kern') continue;
     const feature = featureList + u16(r, record + 4);
     const lookups = u16(r, feature + 2);
     for (let j = 0; j < lookups; j++) wanted.add(u16(r, feature + 4 + j * 2));
@@ -426,6 +426,61 @@ function legacyKerning(tables: Tables): Kerning | undefined {
 }
 
 /* -------------------------------------------------------------------------- */
+/* BASE                                                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The `BASE` horizontal axis' `ideo` coordinate under `DFLT`, in font units.
+ *
+ * One script and one tag: T13 built a font whose `DFLT`, `latn` and `hani`
+ * coordinates all differ and Chromium took `DFLT`, and a second whose `BASE`
+ * names every script but `DFLT` and Chromium read none of them. A table this
+ * cannot follow is answered with `undefined`, which is what HarfBuzz's
+ * sanitiser leaves the browser holding as well.
+ */
+function ideographicOf(tables: Tables): number | undefined {
+  const table = tables.get('BASE');
+  if (table === undefined || table.length < 8) return undefined;
+  const r = readerOf(table);
+  /** An offset that is neither NULL nor short of the bytes it points at. */
+  const within = (offset: number, need: number): number | undefined =>
+    offset > 0 && offset + need <= table.length ? offset : undefined;
+
+  const axis = within(u16(r, 4), 4);
+  if (axis === undefined) return undefined;
+  const tagList = within(axis + u16(r, axis), 2);
+  const scriptList = within(axis + u16(r, axis + 2), 2);
+  if (tagList === undefined || scriptList === undefined) return undefined;
+
+  const tagCount = u16(r, tagList);
+  if (tagList + 2 + tagCount * 4 > table.length) return undefined;
+  let tag = -1;
+  for (let i = 0; i < tagCount && tag < 0; i++) {
+    if (tagAt(r, tagList + 2 + i * 4) === 'ideo') tag = i;
+  }
+  if (tag < 0) return undefined;
+
+  const scriptCount = u16(r, scriptList);
+  if (scriptList + 2 + scriptCount * 6 > table.length) return undefined;
+  let script: number | undefined;
+  for (let i = 0; i < scriptCount && script === undefined; i++) {
+    const record = scriptList + 2 + i * 6;
+    if (tagAt(r, record) === 'DFLT') script = within(scriptList + u16(r, record + 4), 6);
+  }
+  if (script === undefined) return undefined;
+
+  const values = within(script + u16(r, script), 4);
+  if (values === undefined) return undefined;
+  if (tag >= u16(r, values + 2) || values + 4 + tag * 2 + 2 > table.length) return undefined;
+  const coord = within(values + u16(r, values + 4 + tag * 2), 4);
+  if (coord === undefined) return undefined;
+  // Formats 2 and 3 put the coordinate in the same field as format 1 and add a
+  // device or glyph hint after it, so one read serves all three.
+  const format = u16(r, coord);
+  return format >= 1 && format <= 3 ? -i16(r, coord + 2) : undefined;
+}
+
+/* -------------------------------------------------------------------------- */
 /* the face                                                                   */
 /* -------------------------------------------------------------------------- */
 
@@ -443,19 +498,27 @@ function metricsOf(tables: Tables, subject: string): FaceMetrics {
   const unitsPerEm = u16(head, 18);
   if (unitsPerEm <= 0) unreadable('head.unitsPerEm is zero', subject);
 
+  const ideographic = ideographicOf(tables);
+
   const os2 = tables.get('OS/2');
   if (os2 === undefined || os2.length < 78) {
     // No OS/2 at all is a bare CJK or bitmap face; hhea is then the only source
     // there is, and the browser has nothing else to read either.
     const hhea = readerOf(required(tables, 'hhea', subject));
-    return { unitsPerEm, ascent: i16(hhea, 4), descent: -i16(hhea, 6), source: 'usWin' };
+    return {
+      unitsPerEm,
+      ascent: i16(hhea, 4),
+      descent: -i16(hhea, 6),
+      source: 'usWin',
+      ideographic,
+    };
   }
   const r = readerOf(os2);
   const useTypo = (u16(r, 62) & USE_TYPO_METRICS) !== 0;
   if (useTypo) {
-    return { unitsPerEm, ascent: i16(r, 68), descent: -i16(r, 70), source: 'sTypo' };
+    return { unitsPerEm, ascent: i16(r, 68), descent: -i16(r, 70), source: 'sTypo', ideographic };
   }
-  return { unitsPerEm, ascent: u16(r, 74), descent: u16(r, 76), source: 'usWin' };
+  return { unitsPerEm, ascent: u16(r, 74), descent: u16(r, 76), source: 'usWin', ideographic };
 }
 
 function advancesOf(tables: Tables, subject: string): (glyph: number) => number {

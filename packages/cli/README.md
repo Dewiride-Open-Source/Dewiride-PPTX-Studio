@@ -200,14 +200,12 @@ cannot drift apart.
 
 ## Not built yet
 
-The plan gives this package three more verbs. Asking for one says which sub-phase
-brings it rather than "unknown command":
+The plan gives this package one more verb. Asking for it says which sub-phase brings
+it rather than "unknown command":
 
-| verb       | what it will do                               | sub-phase |
-| ---------- | --------------------------------------------- | --------- |
-| `fidelity` | score a render against a reference            | 3.9       |
-| `render`   | render slides to SVG or PNG without a browser | 3.10      |
-| `resolve`  | show where a resolved property came from      | 7.x       |
+| verb      | what it will do                          | sub-phase |
+| --------- | ---------------------------------------- | --------- |
+| `resolve` | show where a resolved property came from | 7.x       |
 
 ## `render`
 
@@ -226,8 +224,11 @@ the same document, and there is no external reference of any kind to resolve.
 face's own `cmap`, `hmtx`, `GPOS` and `OS/2` tables instead. That is a second
 measurement engine, and the risk of a second engine is that it quietly disagrees
 with the first. Experiment T13 settled the arithmetic rather than assuming it:
-seven fonts built so their tables disagree on purpose, 252 widths measured in
-Chromium, and the reader reproduces **all 252 exactly**. The rules it found are
+eleven fonts built so their tables disagree on purpose, 396 widths measured in
+Chromium, and the reader reproduces **all 396 exactly**. It also settled where
+an upright East Asian glyph sits: on the `BASE` table's `ideo` coordinate for
+the `DFLT` script, and on the face box descent only where there is none. The
+rules it found are
 in [`corpus/ground-truth/font-metrics.json`](../../corpus/ground-truth/font-metrics.json)
 and the reasoning is in
 [ADR 0042](../../docs/adr/phase-3-text/0042-rendering-without-a-browser.md).
@@ -251,6 +252,37 @@ no indexed face can draw is reported too.
 | `--no-system-fonts` | do not look in this platform's own font directories                 |
 | `--no-text`         | geometry only                                                       |
 | `--json`            | what was drawn, and which face drew each typeface                   |
+| `--quiet`           | no summary after writing                                            |
+
+### From a program
+
+`renderDeck` is what the verb runs, without the file handling: it takes bytes and
+returns the markup. Every option has a default, so the smallest call is the deck and
+nothing else.
+
+```ts
+import { renderDeck } from '@pptx-studio/cli';
+
+const deck = renderDeck(bytes); // every slide, 1920 wide
+const thumb = renderDeck(bytes, { slide: 1, width: 640 }).slides[0]?.svg;
+const shape = renderDeck(bytes, { text: false }); // geometry only, no fonts read
+```
+
+| option        | default     |                                                             |
+| ------------- | ----------- | ----------------------------------------------------------- |
+| `slide`       | every slide | 1-based; `null` and omitted both mean every slide           |
+| `width`       | `1920`      | the `width` attribute; the height follows the deck's aspect |
+| `fontDirs`    | none        | searched before the platform's own                          |
+| `systemFonts` | `true`      | also look in this platform's font directories               |
+| `text`        | `true`      | `false` draws geometry only and asks no font questions      |
+
+`--out`, `--json` and `--quiet` are the command's, not the library's: they say where
+the markup goes and what is printed about it. `runRender` takes those, reads the deck
+off the disk and writes the files. `renderDeck` does neither, and a width that is not
+a positive whole number throws `CLI_WIDTH` rather than drawing an empty picture.
+
+Fonts are indexed per call, so a server rendering many decks pays for the scan every
+time.
 
 ### What it does not do
 

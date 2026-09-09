@@ -16,18 +16,27 @@ import { join, resolve } from 'node:path';
 // The built package, not its source: `tools/` is run by Node directly and the
 // sources carry `.js` specifiers. Run `pnpm build` first.
 import { facesIn } from '../../../../packages/cli/dist/index.js';
-import { buildFont } from '../../lib/truetype.ts';
-import { PROBES, STRINGS, SIZES, BOX_PX, probeFonts } from './probes.ts';
+import { buildFont, type Baselines, type FontSpec } from '../../lib/truetype.ts';
+import { PROBES, STRINGS, SIZES, BOX_PX, BASELINE_SIZES, probeFonts } from './probes.ts';
+
+interface BrowserBaselines {
+  readonly alphabetic: number;
+  readonly hanging: number;
+  readonly ideographic: number;
+}
 
 interface Measured {
   readonly chromium: string;
   readonly boxPx: number;
   readonly sizes: readonly number[];
+  readonly baselineSizes: readonly number[];
   readonly strings: readonly string[];
   readonly measured: readonly {
     readonly id: string;
     readonly widths: Record<string, Record<string, number>>;
     readonly box: { readonly ascent: number; readonly descent: number };
+    readonly baselines: Record<string, BrowserBaselines>;
+    readonly hanBaselines: Record<string, BrowserBaselines & { width: number }> | null;
   }[];
 }
 
@@ -233,6 +242,171 @@ const widthScores: Scored[] = Object.entries(QUANTISERS).map(([model, q]) => {
 const widthAnswer = decide('the width arithmetic', widthScores);
 
 /* -------------------------------------------------------------------------- */
+/* question 4 - where the ideographic baseline comes from                      */
+/* -------------------------------------------------------------------------- */
+
+/** The script a run is in, which a reading may or may not turn out to consult. */
+type Script = 'latn' | 'hani';
+
+const specOf = (id: string): FontSpec =>
+  buildFont(PROBES.find((p) => p.id === id)?.spec ?? {}).spec;
+
+/** The face box descent, which is what `measure.ts` reads today. */
+const boxDescent = (s: FontSpec): number =>
+  s.useTypoMetrics === true ? -s.typoDescender : s.winDescent;
+
+const FALLBACKS: Record<string, (s: FontSpec) => number> = {
+  'the face box descent': boxDescent,
+  'OS/2.usWinDescent': (s) => s.winDescent,
+  'OS/2.sTypoDescender': (s) => -s.typoDescender,
+  'hhea.descender': (s) => -s.hheaDescender,
+  'sTypoDescender where fsSelection bit 7 is set and hhea.descender otherwise': (s) =>
+    s.useTypoMetrics === true ? -s.typoDescender : -s.hheaDescender,
+};
+
+/** Which `BaseScript` a reading looks the coordinate up in. */
+const LOOKUPS: Record<string, (s: FontSpec, script: Script) => Baselines | undefined> = {
+  'the run script': (s, script) => s.base?.[script],
+  'the DFLT script': (s) => s.base?.DFLT,
+  'the latn script': (s) => s.base?.latn,
+  'the hani script': (s) => s.base?.hani,
+  'the DFLT script or the latn script': (s) => s.base?.DFLT ?? s.base?.latn,
+  'the DFLT script or the first script named': (s) =>
+    s.base?.DFLT ?? s.base?.hani ?? s.base?.kana ?? s.base?.latn,
+};
+
+/** Font units below the alphabetic baseline, positive downwards. */
+type Reading = (s: FontSpec, script: Script) => number;
+
+const IDEOGRAPHIC_READINGS: Record<string, Reading> = {
+  'the face box descent': boxDescent,
+  'OS/2.usWinDescent': (s) => s.winDescent,
+  'OS/2.sTypoDescender': (s) => -s.typoDescender,
+  'hhea.descender': (s) => -s.hheaDescender,
+  'zero, the alphabetic baseline': () => 0,
+};
+
+for (const [where, lookup] of Object.entries(LOOKUPS)) {
+  for (const [tag, fallbacks] of [
+    ['ideo', where === 'the run script' || where === 'the DFLT script' ? FALLBACKS : {}],
+    ['icfb', {}],
+  ] as const) {
+    const only = { 'the face box descent': boxDescent };
+    for (const [otherwise, fallback] of Object.entries({ ...only, ...fallbacks })) {
+      IDEOGRAPHIC_READINGS[`the BASE ${tag} coordinate of ${where}, else ${otherwise}`] = (
+        s,
+        script,
+      ) => {
+        const coordinate = lookup(s, script)?.[tag];
+        return coordinate === undefined ? fallback(s) : -coordinate;
+      };
+    }
+  }
+}
+
+// A coordinate outside the em is where `packages/text`'s own probe gives up and
+// answers zero, so whether the browser hands it over intact decides whether the
+// two engines can agree on such a face at all.
+IDEOGRAPHIC_READINGS[
+  'the BASE ideo coordinate of the DFLT script where it falls inside the em, else the face box descent'
+] = (s) => {
+  const coordinate = s.base?.DFLT?.ideo;
+  const units = coordinate === undefined ? undefined : -coordinate;
+  return units === undefined || units <= 0 || units >= s.unitsPerEm ? boxDescent(s) : units;
+};
+
+interface Observation {
+  readonly id: string;
+  readonly px: number;
+  readonly script: Script;
+  readonly measured: number;
+}
+
+const observations: Observation[] = [];
+for (const row of browser.measured) {
+  for (const px of BASELINE_SIZES) {
+    const latin = row.baselines[String(px)];
+    if (latin === undefined) throw new Error(`${row.id}: no baselines at ${String(px)}px`);
+    observations.push({ id: row.id, px, script: 'latn', measured: -latin.ideographic });
+    const han = row.hanBaselines?.[String(px)];
+    if (han !== undefined) {
+      observations.push({ id: row.id, px, script: 'hani', measured: -han.ideographic });
+    }
+  }
+}
+
+/* Guard 1: a non-zero alphabetic baseline means the browser answered about some
+   other face, or about a convention we have misread, and nothing here is
+   evidence. */
+for (const row of browser.measured) {
+  for (const [px, read] of [
+    ...Object.entries(row.baselines),
+    ...Object.entries(row.hanBaselines ?? {}),
+  ]) {
+    if (Math.abs(read.alphabetic) > 1e-9) {
+      throw new Error(
+        `${row.id} at ${px}px reported an alphabetic baseline of ${String(read.alphabetic)}, ` +
+          'which is not the origin every other baseline here is measured from',
+      );
+    }
+  }
+}
+
+/* Guard 2: the ideograph must have been drawn in the probe, not in a face off
+   this machine, and its own advance is what says so. */
+for (const row of browser.measured) {
+  if (row.hanBaselines === null) continue;
+  const spec = specOf(row.id);
+  for (const [px, read] of Object.entries(row.hanBaselines)) {
+    const want = (spec.advance * Number(px)) / spec.unitsPerEm;
+    if (Math.abs(read.width - want) > 1e-9) {
+      throw new Error(
+        `${row.id} drew U+${(spec.ideograph ?? 0).toString(16)} ${String(read.width)}px wide at ` +
+          `${px}px where its own advance is ${String(want)}px, so some other face answered`,
+      );
+    }
+  }
+}
+
+const ideographicScores: Scored[] = Object.entries(IDEOGRAPHIC_READINGS).map(([model, read]) => {
+  let fits = 0;
+  let worst = 0;
+  for (const at of observations) {
+    const spec = specOf(at.id);
+    const predicted = (read(spec, at.script) * at.px) / spec.unitsPerEm;
+    const off = Math.abs(predicted - at.measured);
+    if (off < 1e-9) fits += 1;
+    else worst = Math.max(worst, off);
+  }
+  return { model, fits, of: observations.length, worst };
+});
+const ideographicAnswer = decide('the ideographic baseline', ideographicScores);
+
+/* Guard 3: a null result and a malformed BASE table look identical, because
+   HarfBuzz sanitises a bad one and reads it as absent. The `hang` coordinate of
+   the same table is what tells them apart. */
+const hangingHonoured = browser.measured
+  .filter((row) => specOf(row.id).base !== undefined)
+  .map((row) => {
+    const spec = specOf(row.id);
+    const hang = spec.base?.DFLT?.hang;
+    const read = row.baselines[String(BOX_PX)];
+    const want = ((hang ?? 0) * BOX_PX) / spec.unitsPerEm;
+    return {
+      id: row.id,
+      honoured: hang !== undefined && Math.abs((read?.hanging ?? 0) - want) < 1e-9,
+    };
+  });
+if (!ideographicAnswer.model.includes('BASE') && !hangingHonoured.some((row) => row.honoured)) {
+  throw new Error(
+    `the ideographic baseline scored as "${ideographicAnswer.model}", but no BASE font's hang ` +
+      'coordinate came back through hangingBaseline either, so "the browser ignores BASE" and ' +
+      '"the probe emitted a BASE table HarfBuzz sanitised away" are indistinguishable; the ' +
+      'experiment is inconclusive and must not be committed',
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* the fixture                                                                */
 /* -------------------------------------------------------------------------- */
 
@@ -262,11 +436,19 @@ const answers = {
     sizes: SIZES,
     strings: STRINGS,
     boxPx: BOX_PX,
-    rows: browser.measured.map((row) => ({ id: row.id, box: row.box, widths: row.widths })),
+    baselineSizes: BASELINE_SIZES,
+    rows: browser.measured.map((row) => ({
+      id: row.id,
+      box: row.box,
+      widths: row.widths,
+      baselines: row.baselines,
+      hanBaselines: row.hanBaselines,
+    })),
   },
   measurements: {
     widths: PROBES.length * SIZES.length * STRINGS.length,
     boxes: PROBES.length * 2,
+    baselines: observations.length,
   },
   faceBox: {
     $comment:
@@ -291,6 +473,15 @@ const answers = {
     linearWithinPx: linear?.worst ?? null,
     scores: widthScores,
   },
+  ideographic: {
+    $comment:
+      'Where an upright East Asian glyph puts its baseline. A BASE table names a coordinate per ' +
+      'script per baseline tag, so the reading has to say which tag, which script, and what a ' +
+      'font without one falls back to; three fonts disagree with themselves on all three.',
+    answer: ideographicAnswer.model,
+    hangingHonoured,
+    scores: ideographicScores,
+  },
 } as const;
 
 const text = `${JSON.stringify(answers, null, 2)}\n`;
@@ -306,10 +497,18 @@ console.log(
   `width      ${widthAnswer.model}  (${String(widthAnswer.fits)}/${String(widthAnswer.of)})`,
 );
 console.log(`  linear reading is within ${String(linear?.worst ?? 0)} px`);
+console.log(
+  `ideographic ${ideographicAnswer.model}  ` +
+    `(${String(ideographicAnswer.fits)}/${String(ideographicAnswer.of)})`,
+);
+for (const row of hangingHonoured) {
+  console.log(`  ${row.id} hang coordinate honoured: ${String(row.honoured)}`);
+}
 for (const [name, scores] of [
   ['face box', boxScores],
   ['kerning', kernScores],
   ['width', widthScores],
+  ['ideographic', ideographicScores],
 ] as const) {
   console.log(`\n${name}`);
   for (const s of [...scores].sort((a, b) => b.fits - a.fits)) {

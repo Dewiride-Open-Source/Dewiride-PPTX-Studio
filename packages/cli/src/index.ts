@@ -25,8 +25,8 @@ export {
 export {
   renderDeck,
   runRender,
-  RENDER_DEFAULTS,
   DEFAULT_WIDTH,
+  type RenderDeckOptions,
   type RenderOptions,
   type RenderResult,
   type RenderedSlide,

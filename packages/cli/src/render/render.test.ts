@@ -6,7 +6,14 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { repoPath } from '../../../../tools/repo/root.ts';
 import { buildFont } from '../../../../tools/ground-truth/lib/truetype.ts';
 import { main, type Streams } from '../main.js';
-import { renderDeck, RENDER_DEFAULTS, type RenderOptions } from './render.js';
+import { isRenderError } from './errors.js';
+import {
+  DEFAULT_WIDTH,
+  renderDeck,
+  runRender,
+  type RenderDeckOptions,
+  type RenderOptions,
+} from './render.js';
 
 /**
  * `pptx-studio render`, over the corpus.
@@ -29,10 +36,11 @@ beforeAll(() => {
   }
 });
 
+/** The verb's shape: what `main` builds and `runRender` takes. */
 function options(over: Partial<RenderOptions> = {}): RenderOptions {
   return {
     slide: null,
-    width: RENDER_DEFAULTS.width,
+    width: DEFAULT_WIDTH,
     out: null,
     fontDirs: [fontDir],
     systemFonts: false,
@@ -41,6 +49,21 @@ function options(over: Partial<RenderOptions> = {}): RenderOptions {
     quiet: false,
     ...over,
   };
+}
+
+/** The library's shape: only what a drawing has an opinion about. */
+function drawing(over: RenderDeckOptions = {}): RenderDeckOptions {
+  return { fontDirs: [fontDir], systemFonts: false, ...over };
+}
+
+/** The code of the `RenderError` a call throws, as a string to assert on. */
+function codeOf(run: () => unknown): string {
+  try {
+    run();
+  } catch (error) {
+    return isRenderError(error) ? error.code : `not a RenderError: ${String(error)}`;
+  }
+  return 'nothing was thrown';
 }
 
 function deck(name: string): Uint8Array {
@@ -69,6 +92,38 @@ describe('drawing a deck', () => {
     }
   });
 
+  it('defaults to every slide, 1920 wide, with text drawn', () => {
+    // One call pins three defaults, and the font directory is the temporary one
+    // rather than this machine's.
+    const result = renderDeck(deck('a07-text-cascade.pptx'), drawing());
+    expect(result.slides.length).toBe(3);
+    expect([result.width, result.height]).toEqual([DEFAULT_WIDTH, 1080]);
+    expect(result.facesIndexed).toBe(FAMILIES.length);
+    expect(result.slides[0]?.svg).toContain('<text');
+  });
+
+  it('takes the shape a web route hands it: a width, and nothing about files', () => {
+    const result = renderDeck(deck('a01-minimal.pptx'), { width: 640, text: false });
+    expect([result.width, result.height]).toEqual([640, 360]);
+    expect(result.slides.length).toBe(1);
+  });
+
+  it("takes none of the command's own fields", () => {
+    // An accepted `out` would be a field the function ignores, so the unused
+    // directive is what fails if the two shapes merge again.
+    // @ts-expect-error `out` is the command's, not the library's
+    renderDeck(deck('a01-minimal.pptx'), { text: false, out: null });
+  });
+
+  it('refuses a width that is not a positive whole number of pixels', () => {
+    const bad = [0, -1, 1.5, Number.NaN];
+    for (const width of bad) {
+      expect(codeOf(() => renderDeck(deck('a01-minimal.pptx'), drawing({ width })))).toBe(
+        'CLI_WIDTH',
+      );
+    }
+  });
+
   it('takes its height from the deck aspect, not from the width it was asked for', () => {
     // a01 is 16:9, so the numbers are known rather than merely self-consistent -
     // comparing two renders to each other passes for `height = width` too.
@@ -87,15 +142,14 @@ describe('drawing a deck', () => {
     expect(withText.slides[0]!.svg.length).toBeGreaterThan(without.slides[0]!.svg.length * 4);
   });
 
-  it('asks no font questions at all with --no-text', () => {
-    // The proof is that it renders with no font directory and no system fonts,
-    // which would otherwise be a `CLI_NO_FACE` on the first run of text.
-    const result = renderDeck(
-      deck('a07-text-cascade.pptx'),
-      options({ text: false, fontDirs: [] }),
-    );
+  it('asks no font questions at all with text off', () => {
+    // No font option of any kind: `indexFonts` is not reached, so the default
+    // `systemFonts` never gets to scan anything.
+    const result = renderDeck(deck('a07-text-cascade.pptx'), { text: false });
     expect(result.fonts).toEqual([]);
     expect(result.facesIndexed).toBe(0);
+    expect(result.fontDirectories).toEqual([]);
+    expect(result.slides[0]?.svg).not.toContain('<text');
   });
 
   it('says which face drew each typeface the deck named', () => {
@@ -274,6 +328,27 @@ describe('the command line', () => {
       main(['render', repoPath('corpus/decks/a01-minimal.pptx'), '--slide', '0'], s.streams),
     ).toBe(2);
     expect(s.err()).toContain('--slide');
+  });
+
+  it('names the typefaces in its summary when the caller left text alone', () => {
+    // `main` always spells `text` out, so only a caller that omits it can catch
+    // a summary that reads the field instead of its default.
+    const out = mkdtempSync(join(tmpdir(), 'pptx-studio-out-'));
+    const lines: string[] = [];
+    const code = runRender(
+      repoPath('corpus/decks/a07-text-cascade.pptx'),
+      { out, json: false, quiet: false, fontDirs: [fontDir], systemFonts: false },
+      (text) => lines.push(text),
+    );
+    expect(code).toBe(0);
+    expect(lines.join('')).toContain('typeface(s) from');
+  });
+
+  it('says what the default width is, and which options the library shares', () => {
+    const s = streams();
+    main(['--help'], s.streams);
+    expect(s.out()).toContain(`(default ${String(DEFAULT_WIDTH)})`);
+    expect(s.out()).toContain('import { renderDeck } from "@pptx-studio/cli"');
   });
 
   it('no longer says render is unbuilt', () => {

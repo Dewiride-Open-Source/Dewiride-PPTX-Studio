@@ -23,6 +23,12 @@ export interface KernPair {
   readonly adjust: number;
 }
 
+/** `BASE` baseline coordinates for one script, in font units. */
+export type Baselines = Partial<Record<'hang' | 'icfb' | 'ideo' | 'romn', number>>;
+
+/** The `BASE` script tags a probe may carry, in the order the table sorts them. */
+export type BaseScriptTag = 'DFLT' | 'hani' | 'kana' | 'latn';
+
 export interface FontSpec {
   readonly familyName: string;
   readonly unitsPerEm: number;
@@ -53,6 +59,10 @@ export interface FontSpec {
    * best subtable from one that takes the first it recognises.
    */
   readonly astral?: number;
+  /** A horizontal `BASE` axis, one coordinate set per script it names. */
+  readonly base?: Readonly<Partial<Record<BaseScriptTag, Baselines>>>;
+  /** A BMP ideograph mapped to the letter glyph, so a run in this font is Han. */
+  readonly ideograph?: number;
 }
 
 export const BASE_SPEC: FontSpec = {
@@ -187,12 +197,21 @@ function glyfAndLoca(list: readonly Glyph[]): { glyf: Uint8Array; loca: Uint8Arr
   return { glyf, loca: loca.done() };
 }
 
-/** A format 4 subtable over space and `A`..`H`, which is two contiguous ranges. */
-function cmapFormat4(): Uint8Array {
-  const starts = [0x20, 0x41, 0xffff];
-  const ends = [0x20, 0x40 + LETTERS.length, 0xffff];
+/** The highest code point a font maps in the BMP, which `OS/2` also declares. */
+function lastCharOf(spec: FontSpec): number {
+  return spec.ideograph ?? 0x40 + LETTERS.length;
+}
+
+/** A format 4 subtable over space, `A`..`H` and the ideograph if there is one. */
+function cmapFormat4(ideograph: number | undefined): Uint8Array {
+  if (ideograph !== undefined && (ideograph <= 0x40 + LETTERS.length || ideograph >= 0xffff)) {
+    throw new Error(`an ideograph at ${String(ideograph)} would not sort into the cmap`);
+  }
+  const ideo = ideograph === undefined ? [] : [ideograph];
+  const starts = [0x20, 0x41, ...ideo, 0xffff];
+  const ends = [0x20, 0x40 + LETTERS.length, ...ideo, 0xffff];
   // idDelta maps a code point to its glyph id: 0x20 -> 1, 0x41 -> 2.
-  const deltas = [1 - 0x20, 2 - 0x41, 1];
+  const deltas = [1 - 0x20, 2 - 0x41, ...ideo.map((c) => 2 - c), 1];
   const segments = starts.length;
 
   const sub = new Writer();
@@ -219,10 +238,13 @@ function cmapFormat4(): Uint8Array {
  * reader that prefers the BMP subtable answers "no glyph" and one that prefers
  * this answers with a width.
  */
-function cmapFormat12(astral: number): Uint8Array {
+function cmapFormat12(astral: number, ideograph: number | undefined): Uint8Array {
+  const ideo: [number, number, number][] =
+    ideograph === undefined ? [] : [[ideograph, ideograph, 2]];
   const groups: readonly [number, number, number][] = [
     [0x20, 0x20, 1],
     [0x41, 0x40 + LETTERS.length, 2],
+    ...ideo,
     [astral, astral, 2],
   ];
   const sub = new Writer();
@@ -235,10 +257,13 @@ function cmapFormat12(astral: number): Uint8Array {
 }
 
 /** The cmap, with the format 4 subtable first so a reader must choose on merit. */
-function cmapTable(astral: number | undefined): Uint8Array {
+function cmapTable(spec: FontSpec): Uint8Array {
+  const { astral, ideograph } = spec;
   const subtables = [
-    { platform: 3, encoding: 1, bytes: cmapFormat4() },
-    ...(astral === undefined ? [] : [{ platform: 3, encoding: 10, bytes: cmapFormat12(astral) }]),
+    { platform: 3, encoding: 1, bytes: cmapFormat4(ideograph) },
+    ...(astral === undefined
+      ? []
+      : [{ platform: 3, encoding: 10, bytes: cmapFormat12(astral, ideograph) }]),
   ];
   const headerLength = 4 + subtables.length * 8;
   const out = new Writer();
@@ -382,6 +407,87 @@ function gposTable(pairs: readonly KernPair[]): Uint8Array {
   return out.done();
 }
 
+/** The baseline tags a `BASE` axis may carry, in the alphabetical order it requires. */
+const BASE_TAGS = ['hang', 'icfb', 'ideo', 'romn'] as const;
+
+/** The script tags a `BASE` axis may name, in the order the table sorts them. */
+const BASE_SCRIPT_TAGS: readonly BaseScriptTag[] = ['DFLT', 'hani', 'kana', 'latn'];
+
+/**
+ * A horizontal `BASE` axis, one `BaseValues` per distinct coordinate set.
+ *
+ * The default baseline is `ideo` under an East Asian script and `romn`
+ * elsewhere, and two scripts whose coordinates are equal share one `BaseScript`.
+ */
+function baseTable(base: Readonly<Partial<Record<BaseScriptTag, Baselines>>>): Uint8Array {
+  const named = BASE_SCRIPT_TAGS.filter((tag) => base[tag] !== undefined);
+  const first = base[named[0] ?? 'DFLT'];
+  if (first === undefined) throw new Error('a BASE axis must name at least one script');
+  const tags = BASE_TAGS.filter((tag) => first[tag] !== undefined);
+  for (const script of named) {
+    const own = BASE_TAGS.filter((tag) => base[script]?.[tag] !== undefined);
+    if (own.join() !== tags.join()) {
+      throw new Error('a BASE axis must give every script the same baseline tags');
+    }
+  }
+  const romn = Math.max(tags.indexOf('romn'), 0);
+
+  const sets = new Map<string, { defaultIndex: number; coords: readonly number[] }>();
+  const scripts = named.map((tag) => {
+    const set = base[tag] ?? {};
+    const coords = tags.map((baseline) => set[baseline] ?? 0);
+    const ideo = tags.indexOf('ideo');
+    const eastAsian = tag === 'hani' || tag === 'kana';
+    const defaultIndex = eastAsian && ideo >= 0 ? ideo : romn;
+    const key = `${String(defaultIndex)}:${coords.join(',')}`;
+    if (!sets.has(key)) sets.set(key, { defaultIndex, coords });
+    return { tag, key };
+  });
+  const keys = [...sets.keys()];
+
+  const axisAt = 8;
+  const tagListAt = axisAt + 4;
+  const scriptListAt = tagListAt + 2 + tags.length * 4;
+  const scriptAt = scriptListAt + 2 + scripts.length * 6;
+  const valuesAt = scriptAt + keys.length * 6;
+  const valuesLength = 4 + tags.length * 2;
+  const coordsAt = valuesAt + keys.length * valuesLength;
+
+  const out = new Writer();
+  out.u16(1).u16(0).u16(axisAt).u16(0);
+  out.u16(tagListAt - axisAt).u16(scriptListAt - axisAt);
+  out.u16(tags.length);
+  for (const tag of tags) out.tag(tag);
+  out.u16(scripts.length);
+  for (const script of scripts) {
+    out.tag(script.tag).u16(scriptAt + keys.indexOf(script.key) * 6 - scriptListAt);
+  }
+  for (let i = 0; i < keys.length; i++) {
+    const own = scriptAt + i * 6;
+    out
+      .u16(valuesAt + i * valuesLength - own)
+      .u16(0)
+      .u16(0);
+  }
+  for (let i = 0; i < keys.length; i++) {
+    const own = valuesAt + i * valuesLength;
+    const set = sets.get(keys[i] ?? '');
+    if (set === undefined) throw new Error('a BASE coordinate set went missing');
+    out.u16(set.defaultIndex).u16(tags.length);
+    for (let j = 0; j < tags.length; j++) {
+      out.u16(coordsAt + (i * tags.length + j) * 4 - own);
+    }
+  }
+  for (const key of keys) {
+    for (const coordinate of sets.get(key)?.coords ?? []) out.u16(1).i16(coordinate);
+  }
+  const bytes = out.done();
+  if (bytes.length !== coordsAt + keys.length * tags.length * 4) {
+    throw new Error(`the BASE table came out ${String(bytes.length)} bytes long`);
+  }
+  return bytes;
+}
+
 export interface BuiltFont {
   readonly bytes: Uint8Array;
   readonly spec: FontSpec;
@@ -431,7 +537,7 @@ export function buildFont(overrides: Partial<FontSpec> = {}): BuiltFont {
   os2.u32(1).u32(0).u32(0).u32(0); // ulUnicodeRange: Basic Latin
   os2.tag('PXST');
   os2.u16(spec.useTypoMetrics === true ? 0x00c0 : 0x0040); // fsSelection: REGULAR (+ USE_TYPO)
-  os2.u16(0x20).u16(0x40 + LETTERS.length);
+  os2.u16(0x20).u16(lastCharOf(spec));
   os2
     .i16(spec.typoAscender)
     .i16(spec.typoDescender)
@@ -445,7 +551,7 @@ export function buildFont(overrides: Partial<FontSpec> = {}): BuiltFont {
 
   const tables: { tag: string; bytes: Uint8Array }[] = [
     { tag: 'OS/2', bytes: os2.done() },
-    { tag: 'cmap', bytes: cmapTable(spec.astral) },
+    { tag: 'cmap', bytes: cmapTable(spec) },
     { tag: 'glyf', bytes: glyf },
     { tag: 'head', bytes: head.done() },
     { tag: 'hhea', bytes: hhea.done() },
@@ -455,6 +561,7 @@ export function buildFont(overrides: Partial<FontSpec> = {}): BuiltFont {
     { tag: 'name', bytes: nameTable(spec.familyName) },
     { tag: 'post', bytes: post.done() },
   ];
+  if (spec.base !== undefined) tables.push({ tag: 'BASE', bytes: baseTable(spec.base) });
   if (spec.gpos !== undefined) tables.push({ tag: 'GPOS', bytes: gposTable(spec.gpos) });
   if (spec.kern !== undefined) tables.push({ tag: 'kern', bytes: kernTable(spec.kern) });
   tables.sort((a, b) => (a.tag < b.tag ? -1 : 1));

@@ -13,10 +13,17 @@ import { facesIn, fontsIn, faceOf } from './sfnt.js';
  * reported. A test that re-derived the rule from `sfnt.ts` would pass whatever
  * `sfnt.ts` said. T13, ADR 0042.
  */
+interface Baselines {
+  readonly alphabetic: number;
+  readonly hanging: number;
+  readonly ideographic: number;
+}
+
 interface Fixture {
   readonly chromium: string;
   readonly faceBox: { readonly answer: string };
   readonly kerning: { readonly answer: string };
+  readonly ideographic: { readonly answer: string };
   readonly fonts: readonly {
     readonly id: string;
     readonly family: string;
@@ -32,16 +39,21 @@ interface Fixture {
       readonly useTypoMetrics?: boolean;
       readonly advance: number;
       readonly spaceAdvance: number;
+      readonly ideograph?: number;
+      readonly base?: Record<string, Record<string, number>>;
     };
   }[];
   readonly browser: {
     readonly boxPx: number;
     readonly sizes: readonly number[];
+    readonly baselineSizes: readonly number[];
     readonly strings: readonly string[];
     readonly rows: readonly {
       readonly id: string;
       readonly box: { readonly ascent: number; readonly descent: number };
       readonly widths: Record<string, Record<string, number>>;
+      readonly baselines: Record<string, Baselines>;
+      readonly hanBaselines: Record<string, Baselines & { width: number }> | null;
     }[];
   };
 }
@@ -111,6 +123,26 @@ describe('cmap and hmtx', () => {
     expect(face.advanceOf(0x20000)).toBeTypeOf('number');
     expect(face.advanceOf(A)).toBeTypeOf('number');
     expect(facesIn(bytesOf('plain'), 'plain')[0]!.advanceOf(0x20000)).toBeUndefined();
+  });
+
+  it('maps the ideograph in the fonts that declare one, and no others', () => {
+    for (const font of FIXTURE.fonts) {
+      const face = facesIn(bytesOf(font.id), font.id)[0]!;
+      const drawn = face.advanceOf(font.spec.ideograph ?? 0x4e00);
+      expect(drawn, font.id).toBe(
+        font.spec.ideograph === undefined ? undefined : font.spec.advance,
+      );
+    }
+  });
+
+  it('reads a maximal advance as unsigned, which is why flooring cannot differ', () => {
+    // `hmtx.advanceWidth` is a UFWORD, so 0xFFFF is 65535 and never -1. No
+    // probe font has an advance over 32767, so nothing else here can say so.
+    const bytes = bytesOf('plain');
+    const hmtx = fontsIn(bytes, 'plain')[0]!.get('hmtx')!;
+    hmtx[8] = 0xff;
+    hmtx[9] = 0xff;
+    expect(faceOf(fontsIn(bytes, 'plain')[0]!, 'plain').advanceOf(A)).toBe(65535);
   });
 
   it('reports unitsPerEm from head', () => {
@@ -187,5 +219,58 @@ describe('kerning', () => {
   it('is zero for a pair the font has no glyph for', () => {
     const face = facesIn(bytesOf('gpos-only'), 'gpos-only')[0]!;
     expect(face.kernBetween(A, 'Z'.codePointAt(0)!)).toBe(0);
+  });
+});
+
+describe('the ideographic baseline', () => {
+  const ideoOf = (id: string): number | undefined =>
+    FIXTURE.fonts.find((f) => f.id === id)?.spec.base?.['DFLT']?.['ideo'];
+
+  it('is the BASE ideo coordinate of the DFLT script for every probe that has one', () => {
+    expect(FIXTURE.ideographic.answer).toBe(
+      'the BASE ideo coordinate of the DFLT script, else the face box descent',
+    );
+    for (const font of FIXTURE.fonts) {
+      const face = facesIn(bytesOf(font.id), font.id)[0]!;
+      const coordinate = ideoOf(font.id);
+      expect(face.metrics.ideographic, font.id).toBe(
+        coordinate === undefined ? undefined : -coordinate,
+      );
+    }
+  });
+
+  it('is not the run script, the icfb tag, or anything a metric could supply', () => {
+    const spec = FIXTURE.fonts.find((f) => f.id === 'base-table')!.spec;
+    const face = facesIn(bytesOf('base-table'), 'base-table')[0]!;
+    // The font says -450 under DFLT, -410 under latn and -380 under hani; only
+    // one of the three is what Chromium read.
+    expect(face.metrics.ideographic).toBe(-(spec.base?.['DFLT']?.['ideo'] ?? 0));
+    expect(face.metrics.ideographic).not.toBe(-(spec.base?.['latn']?.['ideo'] ?? 0));
+    expect(face.metrics.ideographic).not.toBe(-(spec.base?.['hani']?.['ideo'] ?? 0));
+    expect(face.metrics.ideographic).not.toBe(-(spec.base?.['DFLT']?.['icfb'] ?? 0));
+    expect(face.metrics.ideographic).not.toBe(face.metrics.descent);
+  });
+
+  it('is nothing at all for a BASE table that names every script but DFLT', () => {
+    // latn, hani and kana each carry a coordinate and Chromium reads none of them.
+    expect(
+      facesIn(bytesOf('base-no-dflt'), 'base-no-dflt')[0]!.metrics.ideographic,
+    ).toBeUndefined();
+    expect(ideoOf('base-no-dflt')).toBeUndefined();
+  });
+
+  it('is nothing at all for a BASE table carrying no ideo tag', () => {
+    expect(
+      facesIn(bytesOf('base-no-ideo'), 'base-no-ideo')[0]!.metrics.ideographic,
+    ).toBeUndefined();
+    expect(FIXTURE.fonts.find((f) => f.id === 'base-no-ideo')?.spec.base?.['DFLT']?.['hang']).toBe(
+      610,
+    );
+  });
+
+  it('is nothing at all for a font with no BASE table', () => {
+    for (const id of ['plain', 'split', 'split-usetypo', 'astral']) {
+      expect(facesIn(bytesOf(id), id)[0]!.metrics.ideographic, id).toBeUndefined();
+    }
   });
 });

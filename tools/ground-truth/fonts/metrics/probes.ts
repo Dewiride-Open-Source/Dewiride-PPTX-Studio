@@ -7,7 +7,7 @@
  * with each other. These probes disagree on purpose. ADR 0042.
  */
 
-import { buildFont, type FontSpec } from '../../lib/truetype.ts';
+import { buildFont, type Baselines, type FontSpec } from '../../lib/truetype.ts';
 
 export interface Probe {
   readonly id: string;
@@ -42,6 +42,29 @@ const PAIR = [{ left: 'A', right: 'B', adjust: -200 }] as const;
  * reader that takes the first subtable it understands cannot find it.
  */
 export const ASTRAL = 0x20000;
+
+/**
+ * U+4E00, the one character `packages/text`'s own baseline probe measures.
+ *
+ * The two engines have to be asked the same question in the same script, so a
+ * font that answers about the ideographic baseline must map it. ADR 0039.
+ */
+export const IDEOGRAPH = 0x4e00;
+
+/**
+ * `BASE` coordinates distinct from every vertical metric and from each other.
+ *
+ * 450, 410 and 380 match no ascent (900, 800, 700), no descent (300, 200, 100),
+ * no `icfb` or `hang` coordinate, four fifths of no ascent, and not zero. Three
+ * scripts rather than two because the answer names which one was looked up.
+ */
+const DEFAULT_BASELINES: Baselines = { hang: 620, icfb: -530, ideo: -450, romn: 0 };
+const LATIN_BASELINES: Baselines = { hang: 630, icfb: -535, ideo: -410, romn: 0 };
+const HAN_BASELINES: Baselines = { hang: 660, icfb: -560, ideo: -380, romn: 0 };
+const NO_IDEO_BASELINES: Baselines = { hang: 610, icfb: -520, romn: 0 };
+
+/** A coordinate a fifth of an em below the em, which no cell could hold. */
+const OUTSIZE_BASELINES: Baselines = { hang: 640, icfb: -570, ideo: -1200, romn: 0 };
 
 export const PROBES: readonly Probe[] = [
   {
@@ -83,6 +106,56 @@ export const PROBES: readonly Probe[] = [
       gpos: [{ left: 'A', right: 'B', adjust: -100 }],
     },
   },
+  {
+    id: 'base-table',
+    asks: 'whether the ideographic baseline is a BASE coordinate, and of which script',
+    spec: {
+      ...METRIC_SPLIT,
+      familyName: 'PptxStudio Base',
+      base: {
+        DFLT: DEFAULT_BASELINES,
+        latn: LATIN_BASELINES,
+        hani: HAN_BASELINES,
+        kana: HAN_BASELINES,
+      },
+      ideograph: IDEOGRAPH,
+    },
+  },
+  {
+    id: 'base-no-dflt',
+    asks: 'whether the lookup falls through to another script when DFLT is absent',
+    spec: {
+      ...METRIC_SPLIT,
+      familyName: 'PptxStudio Base NoDflt',
+      base: { latn: LATIN_BASELINES, hani: HAN_BASELINES, kana: HAN_BASELINES },
+      ideograph: IDEOGRAPH,
+    },
+  },
+  {
+    id: 'base-outsize',
+    asks: 'whether a coordinate outside the em is reported as written or clamped',
+    spec: {
+      ...METRIC_SPLIT,
+      familyName: 'PptxStudio Base Outsize',
+      base: { DFLT: OUTSIZE_BASELINES, latn: OUTSIZE_BASELINES },
+      ideograph: IDEOGRAPH,
+    },
+  },
+  {
+    id: 'base-no-ideo',
+    asks: 'what a BASE table carrying no ideo coordinate falls back to',
+    spec: {
+      ...METRIC_SPLIT,
+      familyName: 'PptxStudio Base NoIdeo',
+      base: {
+        DFLT: NO_IDEO_BASELINES,
+        latn: NO_IDEO_BASELINES,
+        hani: NO_IDEO_BASELINES,
+        kana: NO_IDEO_BASELINES,
+      },
+      ideograph: IDEOGRAPH,
+    },
+  },
 ];
 
 /** The strings measured in every probe font. */
@@ -98,6 +171,14 @@ export const SIZES: readonly number[] = [8, 12, 16, 32, 100, 1000];
 
 /** The size the face box is read at, matching `FACE_BOX_PX` in the product. */
 export const BOX_PX = 1000;
+
+/**
+ * The sizes a baseline is scored at.
+ *
+ * Every candidate coordinate is a whole number of pixels at both, so a browser
+ * that rounds a baseline to the pixel grid cannot make a reading fit or miss.
+ */
+export const BASELINE_SIZES: readonly number[] = [100, 1000];
 
 export interface ProbeFont {
   readonly id: string;

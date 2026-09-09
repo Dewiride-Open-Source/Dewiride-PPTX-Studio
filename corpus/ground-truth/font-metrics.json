@@ -32,6 +32,22 @@
     {
       "id": "kern-and-gpos",
       "asks": "which one wins when both are present and they disagree"
+    },
+    {
+      "id": "base-table",
+      "asks": "whether the ideographic baseline is a BASE coordinate, and of which script"
+    },
+    {
+      "id": "base-no-dflt",
+      "asks": "whether the lookup falls through to another script when DFLT is absent"
+    },
+    {
+      "id": "base-outsize",
+      "asks": "whether a coordinate outside the em is reported as written or clamped"
+    },
+    {
+      "id": "base-no-ideo",
+      "asks": "what a BASE table carrying no ideo coordinate falls back to"
     }
   ],
   "fonts": [
@@ -183,12 +199,167 @@
         ]
       },
       "base64": "AAEAAAAMAIAAAwBAR1BPU6+avxcAAADMAAAAUE9TLzJhWl0BAAABHAAAAGBjbWFwAHsAPAAAAXwAAAA0Z2x5ZhoaMgAAAAGwAAABRGhlYWRhbEM+AAAC9AAAADZoaGVhBXoBmwAAAywAAAAkaG10eBaoArwAAANQAAAAKGtlcm4ACv9QAAADeAAAABhsb2NhAAAGeAAAA5AAAAAsbWF4cAAMAAYAAAO8AAAAIm5hbWUO3iI4AAAD4AAAANBwb3N0/58AMgAABLAAAAAgAAEAAAAKAB4ALAABREZMVAAIAAQAAAAA//8AAQAAAAFrZXJuAAgAAAABAAAAAQAEAAIAAAABAAgAAQASAAQAAAABAAwAAQAD/5wAAQABAAIABAJYAZAABQAAAooCvP9qAMgBkAEsAGT/zgGQASwAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAUFhTVABAACAASAMg/zgAAAMgAMgAAAABAAAAAAH0ArwAAAAAAAAAAAABAAMAAQAAAAwABAAoAAAABgAEAAEAAgAgAEj//wAAACAAQf///+H/wQABAAAAAAAAAAEAPAAAAhwC+AADAAABAQEBADwB4AAA/iAAAAAAAvgAAAAAAAEAUAAAAggAZAADAAABAQEBAFABuAAA/kgAAAAAAGQAAAAAAAEAUAAAAggAyAADAAABAQEBAFABuAAA/kgAAAAAAMgAAAAAAAEAUAAAAggBLAADAAABAQEBAFABuAAA/kgAAAAAASwAAAAAAAEAUAAAAggBkAADAAABAQEBAFABuAAA/kgAAAAAAZAAAAAAAAEAUAAAAggB9AADAAABAQEBAFABuAAA/kgAAAAAAfQAAAAAAAEAUAAAAggCWAADAAABAQEBAFABuAAA/kgAAAAAAlgAAAAAAAEAUAAAAggCvAADAAABAQEBAFABuAAA/kgAAAAAArwAAAAAAAEAUAAAAggDIAADAAABAQEBAFABuAAA/kgAAAAAAyAAAAAAAAEAAAABAACDh0kwXw889QAAA+gAAAAAAAAAAAAAAAAAAAAAAAD/OAJYAyAAAAAIAAIAAQAAAAAAAQAAAyD/OAAAAlgAAAAAAlgAAQAAAAAAAAAAAAAAAAAAAAoCWAA8AZAAAAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFACWABQAAAAAQAAABQAAQABAAYAAAAAAAIAA/84AAAAAAAAACQAAAAkAAAASAAAAGwAAACQAAAAtAAAANgAAAD8AAABIAAAAUQAAQAAAAoABAABAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAEIAAwABBAkAAQAeAAAAAwABBAkAAgAOAB4AAwABBAkAAwAoACwAAwABBAkABAAeAFQAAwABBAkABgAcAHIAUABwAHQAeABTAHQAdQBkAGkAbwAgAEIAbwB0AGgAUgBlAGcAdQBsAGEAcgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAQgBvAHQAaAAgADIAMAAyADYAUABwAHQAeABTAHQAdQBkAGkAbwAgAEIAbwB0AGgAUABwAHQAeABTAHQAdQBkAGkAbwBCAG8AdABoAAMAAAAAAAD/nAAyAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "id": "base-table",
+      "family": "PptxStudio Base",
+      "spec": {
+        "familyName": "PptxStudio Base",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 900,
+        "winDescent": 300,
+        "typoAscender": 700,
+        "typoDescender": -100,
+        "advance": 600,
+        "spaceAdvance": 400,
+        "base": {
+          "DFLT": {
+            "hang": 620,
+            "icfb": -530,
+            "ideo": -450,
+            "romn": 0
+          },
+          "latn": {
+            "hang": 630,
+            "icfb": -535,
+            "ideo": -410,
+            "romn": 0
+          },
+          "hani": {
+            "hang": 660,
+            "icfb": -560,
+            "ideo": -380,
+            "romn": 0
+          },
+          "kana": {
+            "hang": 660,
+            "icfb": -560,
+            "ideo": -380,
+            "romn": 0
+          }
+        },
+        "ideograph": 19968
+      },
+      "base64": "AAEAAAALAIAAAwAwQkFTRTgTPqIAAAC8AAAAnk9TLzJhWquBAAABXAAAAGBjbWFwAFtOagAAAbwAAAA8Z2x5ZhoaMgAAAAH4AAABRGhlYWRhbEM+AAADPAAAADZoaGVhBXoBmwAAA3QAAAAkaG10eBaoArwAAAOYAAAAKGxvY2EAAAZ4AAADwAAAACxtYXhwAAwABgAAA+wAAAAibmFtZQ7aIfQAAAQQAAAA0HBvc3T/nwAyAAAE4AAAACAAAQAAAAgAAAAEABYABGhhbmdpY2ZiaWRlb3JvbW4ABERGTFQAGmhhbmkAIGthbmEAIGxhdG4AJgASAAAAAAAYAAAAAAAeAAAAAAADAAQAJAAoACwAMAACAAQAKAAsADAANAADAAQALAAwADQAOAABAmwAAf3uAAH+PgABAAAAAQKUAAH90AAB/oQAAQAAAAECdgAB/ekAAf5mAAEAAAAAAAQCWAGQAAUAAAKKArz/agDIAZABLABk/84BkAEsAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAFBYU1QAQAAgTgACvP+cAAADhAEsAAAAAQAAAAAB9AK8AAAAAAAAAAAAAQADAAEAAAAMAAQAMAAAAAgACAACAAAAIABITgD//wAAACAAQU4A////4f/BsgIAAQAAAAAAAAAAAAEAPAAAAhwC+AADAAABAQEBADwB4AAA/iAAAAAAAvgAAAAAAAEAUAAAAggAZAADAAABAQEBAFABuAAA/kgAAAAAAGQAAAAAAAEAUAAAAggAyAADAAABAQEBAFABuAAA/kgAAAAAAMgAAAAAAAEAUAAAAggBLAADAAABAQEBAFABuAAA/kgAAAAAASwAAAAAAAEAUAAAAggBkAADAAABAQEBAFABuAAA/kgAAAAAAZAAAAAAAAEAUAAAAggB9AADAAABAQEBAFABuAAA/kgAAAAAAfQAAAAAAAEAUAAAAggCWAADAAABAQEBAFABuAAA/kgAAAAAAlgAAAAAAAEAUAAAAggCvAADAAABAQEBAFABuAAA/kgAAAAAArwAAAAAAAEAUAAAAggDIAADAAABAQEBAFABuAAA/kgAAAAAAyAAAAAAAAEAAAABAADjaH9cXw889QAAA+gAAAAAAAAAAAAAAAAAAAAAAAD/OAJYAyAAAAAIAAIAAQAAAAAAAQAAAyD/OAAAAlgAAAAAAlgAAQAAAAAAAAAAAAAAAAAAAAoCWAA8AZAAAAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFACWABQAAAAAAAAACQAAAAkAAAASAAAAGwAAACQAAAAtAAAANgAAAD8AAABIAAAAUQAAQAAAAoABAABAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAEIAAwABBAkAAQAeAAAAAwABBAkAAgAOAB4AAwABBAkAAwAoACwAAwABBAkABAAeAFQAAwABBAkABgAcAHIAUABwAHQAeABTAHQAdQBkAGkAbwAgAEIAYQBzAGUAUgBlAGcAdQBsAGEAcgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAQgBhAHMAZQAgADIAMAAyADYAUABwAHQAeABTAHQAdQBkAGkAbwAgAEIAYQBzAGUAUABwAHQAeABTAHQAdQBkAGkAbwBCAGEAcwBlAAMAAAAAAAD/nAAyAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "id": "base-no-dflt",
+      "family": "PptxStudio Base NoDflt",
+      "spec": {
+        "familyName": "PptxStudio Base NoDflt",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 900,
+        "winDescent": 300,
+        "typoAscender": 700,
+        "typoDescender": -100,
+        "advance": 600,
+        "spaceAdvance": 400,
+        "base": {
+          "latn": {
+            "hang": 630,
+            "icfb": -535,
+            "ideo": -410,
+            "romn": 0
+          },
+          "hani": {
+            "hang": 660,
+            "icfb": -560,
+            "ideo": -380,
+            "romn": 0
+          },
+          "kana": {
+            "hang": 660,
+            "icfb": -560,
+            "ideo": -380,
+            "romn": 0
+          }
+        },
+        "ideograph": 19968
+      },
+      "base64": "AAEAAAALAIAAAwAwQkFTRelZ/I0AAAC8AAAAdk9TLzJhWquBAAABNAAAAGBjbWFwAFtOagAAAZQAAAA8Z2x5ZhoaMgAAAAHQAAABRGhlYWRhbEM+AAADFAAAADZoaGVhBXoBmwAAA0wAAAAkaG10eBaoArwAAANwAAAAKGxvY2EAAAZ4AAADmAAAACxtYXhwAAwABgAAA8QAAAAibmFtZRQ7JqcAAAPoAAABBnBvc3T/nwAyAAAE8AAAACAAAQAAAAgAAAAEABYABGhhbmdpY2ZiaWRlb3JvbW4AA2hhbmkAFGthbmEAFGxhdG4AGgAMAAAAAAASAAAAAAACAAQAGAAcACAAJAADAAQAHAAgACQAKAABApQAAf3QAAH+hAABAAAAAQJ2AAH96QAB/mYAAQAAAAAABAJYAZAABQAAAooCvP9qAMgBkAEsAGT/zgGQASwAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAUFhTVABAACBOAAK8/5wAAAOEASwAAAABAAAAAAH0ArwAAAAAAAAAAAABAAMAAQAAAAwABAAwAAAACAAIAAIAAAAgAEhOAP//AAAAIABBTgD////h/8GyAgABAAAAAAAAAAAAAQA8AAACHAL4AAMAAAEBAQEAPAHgAAD+IAAAAAAC+AAAAAAAAQBQAAACCABkAAMAAAEBAQEAUAG4AAD+SAAAAAAAZAAAAAAAAQBQAAACCADIAAMAAAEBAQEAUAG4AAD+SAAAAAAAyAAAAAAAAQBQAAACCAEsAAMAAAEBAQEAUAG4AAD+SAAAAAABLAAAAAAAAQBQAAACCAGQAAMAAAEBAQEAUAG4AAD+SAAAAAABkAAAAAAAAQBQAAACCAH0AAMAAAEBAQEAUAG4AAD+SAAAAAAB9AAAAAAAAQBQAAACCAJYAAMAAAEBAQEAUAG4AAD+SAAAAAACWAAAAAAAAQBQAAACCAK8AAMAAAEBAQEAUAG4AAD+SAAAAAACvAAAAAAAAQBQAAACCAMgAAMAAAEBAQEAUAG4AAD+SAAAAAADIAAAAAAAAQAAAAEAAHYY+2pfDzz1AAAD6AAAAAAAAAAAAAAAAAAAAAAAAP84AlgDIAAAAAgAAgABAAAAAAABAAADIP84AAACWAAAAAACWAABAAAAAAAAAAAAAAAAAAAACgJYADwBkAAAAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFAAAAAAAAAAJAAAACQAAABIAAAAbAAAAJAAAAC0AAAA2AAAAPwAAAEgAAABRAABAAAACgAEAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAQgADAAEECQABACwAAAADAAEECQACAA4ALAADAAEECQADADYAOgADAAEECQAEACwAcAADAAEECQAGACgAnABQAHAAdAB4AFMAdAB1AGQAaQBvACAAQgBhAHMAZQAgAE4AbwBEAGYAbAB0AFIAZQBnAHUAbABhAHIAUABwAHQAeABTAHQAdQBkAGkAbwAgAEIAYQBzAGUAIABOAG8ARABmAGwAdAAgADIAMAAyADYAUABwAHQAeABTAHQAdQBkAGkAbwAgAEIAYQBzAGUAIABOAG8ARABmAGwAdABQAHAAdAB4AFMAdAB1AGQAaQBvAEIAYQBzAGUATgBvAEQAZgBsAHQAAAADAAAAAAAA/5wAMgAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "id": "base-outsize",
+      "family": "PptxStudio Base Outsize",
+      "spec": {
+        "familyName": "PptxStudio Base Outsize",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 900,
+        "winDescent": 300,
+        "typoAscender": 700,
+        "typoDescender": -100,
+        "advance": 600,
+        "spaceAdvance": 400,
+        "base": {
+          "DFLT": {
+            "hang": 640,
+            "icfb": -570,
+            "ideo": -1200,
+            "romn": 0
+          },
+          "latn": {
+            "hang": 640,
+            "icfb": -570,
+            "ideo": -1200,
+            "romn": 0
+          }
+        },
+        "ideograph": 19968
+      },
+      "base64": "AAEAAAALAIAAAwAwQkFTRVxDZpkAAAC8AAAATk9TLzJhWquBAAABDAAAAGBjbWFwAFtOagAAAWwAAAA8Z2x5ZhoaMgAAAAGoAAABRGhlYWRhbEM+AAAC7AAAADZoaGVhBXoBmwAAAyQAAAAkaG10eBaoArwAAANIAAAAKGxvY2EAAAZ4AAADcAAAACxtYXhwAAwABgAAA5wAAAAibmFtZRVhKEcAAAPAAAABDnBvc3T/nwAyAAAE0AAAACAAAQAAAAgAAAAEABYABGhhbmdpY2ZiaWRlb3JvbW4AAkRGTFQADmxhdG4ADgAGAAAAAAADAAQADAAQABQAGAABAoAAAf3GAAH7UAABAAAAAAAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAEAAIE4AArz/nAAAA4QBLAAAAAEAAAAAAfQCvAAAAAAAAAAAAAEAAwABAAAADAAEADAAAAAIAAgAAgAAACAASE4A//8AAAAgAEFOAP///+H/wbICAAEAAAAAAAAAAAABADwAAAIcAvgAAwAAAQEBAQA8AeAAAP4gAAAAAAL4AAAAAAABAFAAAAIIAGQAAwAAAQEBAQBQAbgAAP5IAAAAAABkAAAAAAABAFAAAAIIAMgAAwAAAQEBAQBQAbgAAP5IAAAAAADIAAAAAAABAFAAAAIIASwAAwAAAQEBAQBQAbgAAP5IAAAAAAEsAAAAAAABAFAAAAIIAZAAAwAAAQEBAQBQAbgAAP5IAAAAAAGQAAAAAAABAFAAAAIIAfQAAwAAAQEBAQBQAbgAAP5IAAAAAAH0AAAAAAABAFAAAAIIAlgAAwAAAQEBAQBQAbgAAP5IAAAAAAJYAAAAAAABAFAAAAIIArwAAwAAAQEBAQBQAbgAAP5IAAAAAAK8AAAAAAABAFAAAAIIAyAAAwAAAQEBAQBQAbgAAP5IAAAAAAMgAAAAAAABAAAAAQAAjfolul8PPPUAAAPoAAAAAAAAAAAAAAAAAAAAAAAA/zgCWAMgAAAACAACAAEAAAAAAAEAAAMg/zgAAAJYAAAAAAJYAAEAAAAAAAAAAAAAAAAAAAAKAlgAPAGQAAACWABQAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAAAAAAAAAAkAAAAJAAAAEgAAABsAAAAkAAAALQAAADYAAAA/AAAASAAAAFEAAEAAAAKAAQAAQAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQBCAAMAAQQJAAEALgAAAAMAAQQJAAIADgAuAAMAAQQJAAMAOAA8AAMAAQQJAAQALgB0AAMAAQQJAAYAKgCiAFAAcAB0AHgAUwB0AHUAZABpAG8AIABCAGEAcwBlACAATwB1AHQAcwBpAHoAZQBSAGUAZwB1AGwAYQByAFAAcAB0AHgAUwB0AHUAZABpAG8AIABCAGEAcwBlACAATwB1AHQAcwBpAHoAZQAgADIAMAAyADYAUABwAHQAeABTAHQAdQBkAGkAbwAgAEIAYQBzAGUAIABPAHUAdABzAGkAegBlAFAAcAB0AHgAUwB0AHUAZABpAG8AQgBhAHMAZQBPAHUAdABzAGkAegBlAAAAAwAAAAAAAP+cADIAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "id": "base-no-ideo",
+      "family": "PptxStudio Base NoIdeo",
+      "spec": {
+        "familyName": "PptxStudio Base NoIdeo",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 900,
+        "winDescent": 300,
+        "typoAscender": 700,
+        "typoDescender": -100,
+        "advance": 600,
+        "spaceAdvance": 400,
+        "base": {
+          "DFLT": {
+            "hang": 610,
+            "icfb": -520,
+            "romn": 0
+          },
+          "latn": {
+            "hang": 610,
+            "icfb": -520,
+            "romn": 0
+          },
+          "hani": {
+            "hang": 610,
+            "icfb": -520,
+            "romn": 0
+          },
+          "kana": {
+            "hang": 610,
+            "icfb": -520,
+            "romn": 0
+          }
+        },
+        "ideograph": 19968
+      },
+      "base64": "AAEAAAALAIAAAwAwQkFTRdUW1GwAAAC8AAAAUE9TLzJhWquBAAABDAAAAGBjbWFwAFtOagAAAWwAAAA8Z2x5ZhoaMgAAAAGoAAABRGhlYWRhbEM+AAAC7AAAADZoaGVhBXoBmwAAAyQAAAAkaG10eBaoArwAAANIAAAAKGxvY2EAAAZ4AAADcAAAACxtYXhwAAwABgAAA5wAAAAibmFtZRQkJpoAAAPAAAABBnBvc3T/nwAyAAAEyAAAACAAAQAAAAgAAAAEABIAA2hhbmdpY2Zicm9tbgAEREZMVAAaaGFuaQAaa2FuYQAabGF0bgAaAAYAAAAAAAIAAwAKAA4AEgABAmIAAf34AAEAAAAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAEAAIE4AArz/nAAAA4QBLAAAAAEAAAAAAfQCvAAAAAAAAAAAAAEAAwABAAAADAAEADAAAAAIAAgAAgAAACAASE4A//8AAAAgAEFOAP///+H/wbICAAEAAAAAAAAAAAABADwAAAIcAvgAAwAAAQEBAQA8AeAAAP4gAAAAAAL4AAAAAAABAFAAAAIIAGQAAwAAAQEBAQBQAbgAAP5IAAAAAABkAAAAAAABAFAAAAIIAMgAAwAAAQEBAQBQAbgAAP5IAAAAAADIAAAAAAABAFAAAAIIASwAAwAAAQEBAQBQAbgAAP5IAAAAAAEsAAAAAAABAFAAAAIIAZAAAwAAAQEBAQBQAbgAAP5IAAAAAAGQAAAAAAABAFAAAAIIAfQAAwAAAQEBAQBQAbgAAP5IAAAAAAH0AAAAAAABAFAAAAIIAlgAAwAAAQEBAQBQAbgAAP5IAAAAAAJYAAAAAAABAFAAAAIIArwAAwAAAQEBAQBQAbgAAP5IAAAAAAK8AAAAAAABAFAAAAIIAyAAAwAAAQEBAQBQAbgAAP5IAAAAAAMgAAAAAAABAAAAAQAAns1NfF8PPPUAAAPoAAAAAAAAAAAAAAAAAAAAAAAA/zgCWAMgAAAACAACAAEAAAAAAAEAAAMg/zgAAAJYAAAAAAJYAAEAAAAAAAAAAAAAAAAAAAAKAlgAPAGQAAACWABQAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAAAAAAAAAAkAAAAJAAAAEgAAABsAAAAkAAAALQAAADYAAAA/AAAASAAAAFEAAEAAAAKAAQAAQAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQBCAAMAAQQJAAEALAAAAAMAAQQJAAIADgAsAAMAAQQJAAMANgA6AAMAAQQJAAQALABwAAMAAQQJAAYAKACcAFAAcAB0AHgAUwB0AHUAZABpAG8AIABCAGEAcwBlACAATgBvAEkAZABlAG8AUgBlAGcAdQBsAGEAcgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAQgBhAHMAZQAgAE4AbwBJAGQAZQBvACAAMgAwADIANgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAQgBhAHMAZQAgAE4AbwBJAGQAZQBvAFAAcAB0AHgAUwB0AHUAZABpAG8AQgBhAHMAZQBOAG8ASQBkAGUAbwAAAAMAAAAAAAD/nAAyAAAAAAAAAAAAAAAAAAAAAAAAAAA="
     }
   ],
   "browser": {
     "sizes": [8, 12, 16, 32, 100, 1000],
     "strings": ["A", "B", "AB", "AC", "ABCDEFGH", "A B"],
     "boxPx": 1000,
+    "baselineSizes": [100, 1000],
     "rows": [
       {
         "id": "plain",
@@ -245,7 +416,20 @@
             "ABCDEFGH": 4800,
             "A B": 1600
           }
-        }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 64,
+            "ideographic": -20
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 640,
+            "ideographic": -200
+          }
+        },
+        "hanBaselines": null
       },
       {
         "id": "split",
@@ -302,7 +486,20 @@
             "ABCDEFGH": 4800,
             "A B": 1600
           }
-        }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 72,
+            "ideographic": -30
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 720,
+            "ideographic": -300
+          }
+        },
+        "hanBaselines": null
       },
       {
         "id": "split-usetypo",
@@ -359,7 +556,20 @@
             "ABCDEFGH": 4800,
             "A B": 1600
           }
-        }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 56,
+            "ideographic": -10
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 560,
+            "ideographic": -100
+          }
+        },
+        "hanBaselines": null
       },
       {
         "id": "kern-only",
@@ -416,7 +626,20 @@
             "ABCDEFGH": 4600,
             "A B": 1600
           }
-        }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 64,
+            "ideographic": -20
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 640,
+            "ideographic": -200
+          }
+        },
+        "hanBaselines": null
       },
       {
         "id": "gpos-only",
@@ -473,7 +696,20 @@
             "ABCDEFGH": 4600,
             "A B": 1600
           }
-        }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 64,
+            "ideographic": -20
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 640,
+            "ideographic": -200
+          }
+        },
+        "hanBaselines": null
       },
       {
         "id": "astral",
@@ -530,7 +766,20 @@
             "ABCDEFGH": 4800,
             "A B": 1600
           }
-        }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 64,
+            "ideographic": -20
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 640,
+            "ideographic": -200
+          }
+        },
+        "hanBaselines": null
       },
       {
         "id": "kern-and-gpos",
@@ -587,13 +836,359 @@
             "ABCDEFGH": 4700,
             "A B": 1600
           }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 64,
+            "ideographic": -20
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 640,
+            "ideographic": -200
+          }
+        },
+        "hanBaselines": null
+      },
+      {
+        "id": "base-table",
+        "box": {
+          "ascent": 900,
+          "descent": 300
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 9.5999755859375,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 38.39990234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 14.399993896484375,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 57.5999755859375,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 19.199981689453125,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 76.7999267578125,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 38.399993896484375,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 153.5999755859375,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 120,
+            "AC": 120,
+            "ABCDEFGH": 480,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1200,
+            "AC": 1200,
+            "ABCDEFGH": 4800,
+            "A B": 1600
+          }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 62,
+            "ideographic": -45
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 620,
+            "ideographic": -450
+          }
+        },
+        "hanBaselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 62,
+            "ideographic": -45,
+            "width": 60
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 620,
+            "ideographic": -450,
+            "width": 600
+          }
+        }
+      },
+      {
+        "id": "base-no-dflt",
+        "box": {
+          "ascent": 900,
+          "descent": 300
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 9.5999755859375,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 38.39990234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 14.399993896484375,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 57.5999755859375,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 19.199981689453125,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 76.7999267578125,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 38.399993896484375,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 153.5999755859375,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 120,
+            "AC": 120,
+            "ABCDEFGH": 480,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1200,
+            "AC": 1200,
+            "ABCDEFGH": 4800,
+            "A B": 1600
+          }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 72,
+            "ideographic": -30
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 720,
+            "ideographic": -300
+          }
+        },
+        "hanBaselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 72,
+            "ideographic": -30,
+            "width": 60
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 720,
+            "ideographic": -300,
+            "width": 600
+          }
+        }
+      },
+      {
+        "id": "base-outsize",
+        "box": {
+          "ascent": 900,
+          "descent": 300
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 9.5999755859375,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 38.39990234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 14.399993896484375,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 57.5999755859375,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 19.199981689453125,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 76.7999267578125,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 38.399993896484375,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 153.5999755859375,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 120,
+            "AC": 120,
+            "ABCDEFGH": 480,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1200,
+            "AC": 1200,
+            "ABCDEFGH": 4800,
+            "A B": 1600
+          }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 64,
+            "ideographic": -120
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 640,
+            "ideographic": -1200
+          }
+        },
+        "hanBaselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 64,
+            "ideographic": -120,
+            "width": 60
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 640,
+            "ideographic": -1200,
+            "width": 600
+          }
+        }
+      },
+      {
+        "id": "base-no-ideo",
+        "box": {
+          "ascent": 900,
+          "descent": 300
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 9.5999755859375,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 38.39990234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 14.399993896484375,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 57.5999755859375,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 19.199981689453125,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 76.7999267578125,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 38.399993896484375,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 153.5999755859375,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 120,
+            "AC": 120,
+            "ABCDEFGH": 480,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1200,
+            "AC": 1200,
+            "ABCDEFGH": 4800,
+            "A B": 1600
+          }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 61,
+            "ideographic": -30
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 610,
+            "ideographic": -300
+          }
+        },
+        "hanBaselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 61,
+            "ideographic": -30,
+            "width": 60
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 610,
+            "ideographic": -300,
+            "width": 600
+          }
         }
       }
     ]
   },
   "measurements": {
-    "widths": 252,
-    "boxes": 14
+    "widths": 396,
+    "boxes": 22,
+    "baselines": 30
   },
   "faceBox": {
     "$comment": "The ascent and descent a browser reports for a face. Every real font sets hhea and usWin to the same numbers, so only a font built to disagree can say which was read.",
@@ -602,25 +1197,25 @@
       {
         "model": "hhea.ascender/descender",
         "fits": 10,
-        "of": 14,
+        "of": 22,
         "worst": 100
       },
       {
         "model": "OS/2.usWinAscent/usWinDescent",
-        "fits": 12,
-        "of": 14,
+        "fits": 20,
+        "of": 22,
         "worst": 200
       },
       {
         "model": "OS/2.sTypoAscender/sTypoDescender",
         "fits": 12,
-        "of": 14,
+        "of": 22,
         "worst": 200
       },
       {
         "model": "usWin, or sTypo when fsSelection bit 7 is set",
-        "fits": 14,
-        "of": 14,
+        "fits": 22,
+        "of": 22,
         "worst": 0
       }
     ]
@@ -631,32 +1226,32 @@
     "scores": [
       {
         "model": "the legacy kern table only",
-        "fits": 30,
-        "of": 42,
+        "fits": 54,
+        "of": 66,
         "worst": 200
       },
       {
         "model": "GPOS PairPos only",
-        "fits": 36,
-        "of": 42,
+        "fits": 60,
+        "of": 66,
         "worst": 200
       },
       {
         "model": "GPOS when present, else the kern table",
-        "fits": 42,
-        "of": 42,
+        "fits": 66,
+        "of": 66,
         "worst": 0
       },
       {
         "model": "the kern table when present, else GPOS",
-        "fits": 36,
-        "of": 42,
+        "fits": 60,
+        "of": 66,
         "worst": 100
       },
       {
         "model": "neither",
-        "fits": 24,
-        "of": 42,
+        "fits": 48,
+        "of": 66,
         "worst": 200
       }
     ]
@@ -668,33 +1263,213 @@
     "scores": [
       {
         "model": "exact float, no quantisation",
-        "fits": 88,
-        "of": 252,
+        "fits": 136,
+        "of": 396,
         "worst": 0.00010375976562215783
       },
       {
         "model": "advance and kern truncated at 1/65536 px",
-        "fits": 244,
-        "of": 252,
+        "fits": 388,
+        "of": 396,
         "worst": 0.0000152587890625
       },
       {
         "model": "advance and kern rounded at 1/65536 px",
-        "fits": 154,
-        "of": 252,
+        "fits": 242,
+        "of": 396,
         "worst": 0.0001220703125
       },
       {
         "model": "advance truncated, kern rounded, both at 1/65536 px",
-        "fits": 252,
-        "of": 252,
+        "fits": 396,
+        "of": 396,
         "worst": 0
       },
       {
         "model": "the whole string quantised once at 1/65536 px",
-        "fits": 168,
-        "of": 252,
+        "fits": 264,
+        "of": 396,
         "worst": 0.000091552734375
+      }
+    ]
+  },
+  "ideographic": {
+    "$comment": "Where an upright East Asian glyph puts its baseline. A BASE table names a coordinate per script per baseline tag, so the reading has to say which tag, which script, and what a font without one falls back to; three fonts disagree with themselves on all three.",
+    "answer": "the BASE ideo coordinate of the DFLT script, else the face box descent",
+    "hangingHonoured": [
+      {
+        "id": "base-table",
+        "honoured": true
+      },
+      {
+        "id": "base-no-dflt",
+        "honoured": false
+      },
+      {
+        "id": "base-outsize",
+        "honoured": true
+      },
+      {
+        "id": "base-no-ideo",
+        "honoured": true
+      }
+    ],
+    "scores": [
+      {
+        "model": "the face box descent",
+        "fits": 22,
+        "of": 30,
+        "worst": 900
+      },
+      {
+        "model": "OS/2.usWinDescent",
+        "fits": 20,
+        "of": 30,
+        "worst": 900
+      },
+      {
+        "model": "OS/2.sTypoDescender",
+        "fits": 12,
+        "of": 30,
+        "worst": 1100
+      },
+      {
+        "model": "hhea.descender",
+        "fits": 10,
+        "of": 30,
+        "worst": 1000
+      },
+      {
+        "model": "zero, the alphabetic baseline",
+        "fits": 0,
+        "of": 30,
+        "worst": 1200
+      },
+      {
+        "model": "the BASE ideo coordinate of the run script, else the face box descent",
+        "fits": 20,
+        "of": 30,
+        "worst": 900
+      },
+      {
+        "model": "the BASE ideo coordinate of the run script, else OS/2.usWinDescent",
+        "fits": 18,
+        "of": 30,
+        "worst": 900
+      },
+      {
+        "model": "the BASE ideo coordinate of the run script, else OS/2.sTypoDescender",
+        "fits": 14,
+        "of": 30,
+        "worst": 1100
+      },
+      {
+        "model": "the BASE ideo coordinate of the run script, else hhea.descender",
+        "fits": 12,
+        "of": 30,
+        "worst": 1000
+      },
+      {
+        "model": "the BASE ideo coordinate of the run script, else sTypoDescender where fsSelection bit 7 is set and hhea.descender otherwise",
+        "fits": 14,
+        "of": 30,
+        "worst": 1000
+      },
+      {
+        "model": "the BASE icfb coordinate of the run script, else the face box descent",
+        "fits": 14,
+        "of": 30,
+        "worst": 900
+      },
+      {
+        "model": "the BASE ideo coordinate of the DFLT script, else the face box descent",
+        "fits": 30,
+        "of": 30,
+        "worst": 0
+      },
+      {
+        "model": "the BASE ideo coordinate of the DFLT script, else OS/2.usWinDescent",
+        "fits": 28,
+        "of": 30,
+        "worst": 200
+      },
+      {
+        "model": "the BASE ideo coordinate of the DFLT script, else OS/2.sTypoDescender",
+        "fits": 20,
+        "of": 30,
+        "worst": 200
+      },
+      {
+        "model": "the BASE ideo coordinate of the DFLT script, else hhea.descender",
+        "fits": 18,
+        "of": 30,
+        "worst": 100
+      },
+      {
+        "model": "the BASE ideo coordinate of the DFLT script, else sTypoDescender where fsSelection bit 7 is set and hhea.descender otherwise",
+        "fits": 20,
+        "of": 30,
+        "worst": 100
+      },
+      {
+        "model": "the BASE icfb coordinate of the DFLT script, else the face box descent",
+        "fits": 18,
+        "of": 30,
+        "worst": 630
+      },
+      {
+        "model": "the BASE ideo coordinate of the latn script, else the face box descent",
+        "fits": 22,
+        "of": 30,
+        "worst": 110
+      },
+      {
+        "model": "the BASE icfb coordinate of the latn script, else the face box descent",
+        "fits": 14,
+        "of": 30,
+        "worst": 630
+      },
+      {
+        "model": "the BASE ideo coordinate of the hani script, else the face box descent",
+        "fits": 18,
+        "of": 30,
+        "worst": 900
+      },
+      {
+        "model": "the BASE icfb coordinate of the hani script, else the face box descent",
+        "fits": 14,
+        "of": 30,
+        "worst": 900
+      },
+      {
+        "model": "the BASE ideo coordinate of the DFLT script or the latn script, else the face box descent",
+        "fits": 26,
+        "of": 30,
+        "worst": 110
+      },
+      {
+        "model": "the BASE icfb coordinate of the DFLT script or the latn script, else the face box descent",
+        "fits": 14,
+        "of": 30,
+        "worst": 630
+      },
+      {
+        "model": "the BASE ideo coordinate of the DFLT script or the first script named, else the face box descent",
+        "fits": 26,
+        "of": 30,
+        "worst": 80
+      },
+      {
+        "model": "the BASE icfb coordinate of the DFLT script or the first script named, else the face box descent",
+        "fits": 14,
+        "of": 30,
+        "worst": 630
+      },
+      {
+        "model": "the BASE ideo coordinate of the DFLT script where it falls inside the em, else the face box descent",
+        "fits": 26,
+        "of": 30,
+        "worst": 900
       }
     ]
   }

@@ -73,3 +73,4 @@ date.
 | [0040](phase-3-text/0040-the-wordart-column.md)               | The WordArt column, and the lines that stacked the wrong way      |
 | [0041](phase-3-text/0041-what-the-harness-was-not-gating.md)  | What the harness was not gating, and where the difference is      |
 | [0042](phase-3-text/0042-rendering-without-a-browser.md)      | Rendering without a browser, and the first release                |
+| [0043](phase-3-text/0043-what-3-10-left-open.md)              | What 3.10 left open, and what installing it found                 |

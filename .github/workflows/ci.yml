@@ -293,3 +293,70 @@ jobs:
       # committed badge does not say what this run just measured.
       - name: Round trip the corpus
         run: pnpm roundtrip
+
+  # ADR 0042 open questions 2 and 3, folded into one measurement.
+  #
+  # T13 has the font-table reader exact on seven fonts built to disagree with
+  # themselves, which says nothing about a face nobody built: real faces bring
+  # class-based GPOS kerning, GSUB ligatures and hmtx tables with thousands of
+  # entries. This scores the shipped reader against `measureText` on the faces
+  # this image carries, and prices the missing shaper on the same faces.
+  #
+  # Its own job rather than a step in `check`, for the reason `example` is its
+  # own job: the font directories are a property of this image and are named on
+  # the command line, so `pnpm check` on a laptop cannot run it - there the
+  # system font directory is not ours to index. It reaches no registry.
+  #
+  # No font package is installed. What is measured has to be what the image
+  # carries, or the number is a property of an apt line rather than of the
+  # runner; a script no face on the image covers is recorded, and passes.
+  real-faces:
+    name: the font reader against Chromium, on real faces
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # The measurement scores the built reader, which is what an `npm install`
+      # gets, so there has to be a `dist`.
+      - name: Build the CLI
+        run: pnpm turbo run build --filter=@pptx-studio/cli...
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # `--font-dir` is required and there is no system fallback, so a directory
+      # that moves fails here rather than quietly measuring nothing.
+      - name: Measure
+        run: >
+          node tools/ground-truth/fonts/real-faces/measure-in-browser.ts
+          "$RUNNER_TEMP/real-faces" --font-dir /usr/share/fonts
+
+      - name: Score
+        run: >
+          node tools/ground-truth/fonts/real-faces/analyse.ts
+          "$RUNNER_TEMP/real-faces" --summary "$GITHUB_STEP_SUMMARY"
+
+      # The numbers, whether or not the gate held: a red run is the one whose
+      # measurement is worth reading. `warn` rather than `error`, because a
+      # measure step that died before writing must not add a second failure.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: font-agreement
+          path: ${{ runner.temp }}/real-faces
+          if-no-files-found: warn

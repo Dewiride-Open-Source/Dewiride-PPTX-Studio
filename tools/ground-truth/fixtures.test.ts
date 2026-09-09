@@ -311,10 +311,10 @@ describe('experiment A - what PowerPoint writes into .fntdata', () => {
   // in an editor and does not survive the first person who tidies this file.
   it('NUL-terminates FamilyName and StyleName but not VersionName or FullName', () => {
     for (const font of fonts) {
-      expect(font.familyName.endsWith(' '), `${font.part} family`).toBe(true);
-      expect(font.styleName.endsWith(' '), `${font.part} style`).toBe(true);
-      expect(font.versionName.endsWith(' '), `${font.part} version`).toBe(false);
-      expect(font.fullName.endsWith(' '), `${font.part} full`).toBe(false);
+      expect(font.familyName.endsWith('\u0000'), `${font.part} family`).toBe(true);
+      expect(font.styleName.endsWith('\u0000'), `${font.part} style`).toBe(true);
+      expect(font.versionName.endsWith('\u0000'), `${font.part} version`).toBe(false);
+      expect(font.fullName.endsWith('\u0000'), `${font.part} full`).toBe(false);
     }
   });
 
@@ -421,7 +421,7 @@ describe('experiment B - the probe font and the EOT writer', () => {
     const v22 = readEot(read('fonts', 'probe-v2_2.eot'));
     expect(v22.version).toBe(EOT_VERSION_2_2);
     expect(v22.flags).toBe(0);
-    expect(v22.familyName).toBe('ProbeCharlie ');
+    expect(v22.familyName).toBe('ProbeCharlie\u0000');
     expect(v22.charset).toBe(0);
   });
 });

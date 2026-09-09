@@ -273,7 +273,7 @@ export function checkCorpus(input: CheckInput): Violation[] {
     // --- C017: sorted -------------------------------------------------------
     const ids = entries.map((entry) => String((entry as CorpusEntry).id ?? ''));
     const sorted = [...ids].sort();
-    if (ids.join(' ') !== sorted.join(' ')) {
+    if (ids.join('\u0000') !== sorted.join('\u0000')) {
       add(
         'C017-sorted',
         manifest.path + '#/entries',

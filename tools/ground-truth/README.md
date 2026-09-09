@@ -381,24 +381,27 @@ text/                    -> packages/text
   bullets/               T5  - 6849 probes: 41 schemes, PUA bullets, fields, script runs
   frames/                T6  - anchors, insets, vertical text, a:br, endParaRPr
 
-fonts/                   -> packages/text/src/fonts, packages/fonts
+fonts/                   -> packages/text/src/fonts, packages/fonts, packages/cli
   format/                A   - what PowerPoint writes into ppt/fonts/*.fntdata
   embedding/             B   - whether PowerPoint renders an EOT we built
   substitution/          T7  - 159 probes: which face a run is actually drawn in
+  metrics/               T13 - 514 probes: the box, kerning, widths, the baseline
+  real-faces/            T14 - the same reader, on faces nobody built for it
 
 fixtures.test.ts         the committed answers, as assertions CI can run
 ```
 
-Every experiment has the same six files, and only the ones it needs:
+Every experiment has the same file names for the same roles, and only the ones it needs:
 
-| file              | what it is                                                         |
-| ----------------- | ------------------------------------------------------------------ |
-| `probes.ts`       | the probe table: what is asked, and why each probe is there        |
-| `build-deck.ts`   | writes the probe packages and the `*-inputs.json` describing them  |
-| `author.ps1`      | makes PowerPoint author the same thing, so it names its own values |
-| `read.ps1`        | reads the decks back over COM, and exports what is needed          |
-| `analyse.ts`      | scores the candidate models and emits the fixture                  |
-| `write-tables.ts` | turns the fixture into a table a package ships                     |
+| file              | what it is                                                          |
+| ----------------- | ------------------------------------------------------------------- |
+| `probes.ts`       | the probe table: what is asked, and why each probe is there         |
+| `build-deck.ts`   | writes the probe packages and the `*-inputs.json` describing them   |
+| `author.ps1`      | makes PowerPoint author the same thing, so it names its own values  |
+| `read.ps1`        | reads the decks back over COM, and exports what is needed           |
+| `analyse.ts`      | scores the candidate models and emits the fixture                   |
+| `write-tables.ts` | turns the fixture into a table a package ships                      |
+| `score.ts`        | the verdict as a pure function, where the experiment is also a gate |
 
 `analyse.ts` throws rather than emitting a fixture it cannot fit perfectly. That is the point of
 the whole directory: a model that scores 46 of 46 is a finding, and one that scores 45 is a
@@ -447,7 +450,7 @@ browser disagreement whole.
 The only experiment here that never opens PowerPoint. `pptx-studio render` measures text in Node,
 where there is no canvas, so it reads the face's own tables instead — and every one of those reads
 has more than one plausible source. **No real font can say which is right**, because a real font's
-`hhea`, `usWin` and `sTypo` metrics are the same numbers. So the probes are seven fonts built to
+`hhea`, `usWin` and `sTypo` metrics are the same numbers. So the probes are eleven fonts built to
 disagree with themselves on purpose, loaded into Chromium as data URIs under family names that exist
 nowhere.
 
@@ -457,21 +460,50 @@ pnpm build   # analyse scores the built reader, which is what an npm install get
 node tools/ground-truth/fonts/metrics/analyse.ts <dir> --fixture corpus/ground-truth/font-metrics.json
 ```
 
-Three answers, each with every rival scored:
+Four answers, each with every rival scored:
 
 - The font bounding box is **`OS/2.usWinAscent`/`usWinDescent`**, and **`sTypoAscender`/`sTypoDescender`
-  when `fsSelection` bit 7 is set** — 14/14, where reading either pair alone scores 12 and `hhea`,
-  which is the first thing anyone reaches for, scores 10.
+  when `fsSelection` bit 7 is set** — 22/22, where reading `usWin` alone scores 20, `sTypo` alone 12,
+  and `hhea`, which is the first thing anyone reaches for, scores 10.
 - Pair kerning comes from **GPOS when the font has a `kern` feature, and the legacy `kern` table
-  otherwise** — 42/42. The font that carries both, saying −200 in one and −100 in the other, is the
-  only probe that can separate them: preferring the legacy table scores 36.
+  otherwise** — 66/66. The font that carries both, saying −200 in one and −100 in the other, is the
+  only probe that can separate them: preferring the legacy table scores 60.
 - A width is **each glyph advance truncated to 1/65536 px, plus each kern adjustment rounded to the
-  same step** — 252/252, against 88 for exact float arithmetic. The advance is linear in size to
-  within 1.04e-4 px, which is what makes a table reader viable at all: the browser does not hint it.
+  same step** — 396/396, against 136 for exact float arithmetic and 388 for truncating both. The
+  advance is linear in size to within 1.04e-4 px, which is what makes a table reader viable at all:
+  the browser does not hint it.
+- The ideographic baseline is **the `BASE` table's `ideo` coordinate for the `DFLT` script, and the
+  face box descent where the font names none** — 30/30, against 22 for the descent alone. Chromium
+  reads `DFLT` and no other script, does not fall through to one when `DFLT` is absent, and hands
+  back a coordinate outside the em unchanged.
 
 `analyse.ts` throws rather than emit a fixture where two readings tie, and it scores the reader in
 `packages/cli/dist` rather than a copy of its logic, so the fixture is a statement about the shipped
 code.
+
+### T14 — the same reader, on faces nobody built for it _(added in 3.10)_
+
+`metrics/` asks with fonts built to disagree with themselves; `real-faces/` asks with the faces a
+machine has. That is the half T13 cannot reach: class-based GPOS kerning, GSUB ligatures, `hmtx`
+tables with thousands of entries, and a `unitsPerEm` that is not a round 1000. Eleven samples across
+seven scripts at six sizes, against every face in the directories named on the command line.
+
+```bash
+node tools/ground-truth/fonts/real-faces/measure-in-browser.ts <dir> --font-dir <fonts>
+node tools/ground-truth/fonts/real-faces/analyse.ts <dir> --summary <dir>/summary.md
+```
+
+Nothing here is committed as a fixture. A digest over whatever fonts a runner happens to carry would
+be red the week the image changes its font package, so the answer is a job artifact and the number
+is dated in the ADR instead. `--font-dir` is required and there is no system fallback: the job says
+which faces it read.
+
+Latin, Cyrillic, Greek, Hebrew and CJK are gated at 1e-4 relative — a fifteenth of the 0.149% by
+which the same browser disagrees with PowerPoint in T2. Arabic, Devanagari and the `liga`
+substitutions are **recorded rather than gated**, because the reader sums unshaped advances and a
+shaper does not; that ratio is what turns "no shaping" from a caveat into a number. No gated sample
+contains an `f`, since `liga` is on by default in `measureText` and would otherwise score the reader
+against a shaper it never claimed to be.
 
 ## Where an experiment reads the browser too
 

@@ -15,7 +15,7 @@ import { join, resolve } from 'node:path';
 
 import { chromium } from 'playwright';
 
-import { BOX_PX, SIZES, STRINGS, probeFonts } from './probes.ts';
+import { BASELINE_SIZES, BOX_PX, SIZES, STRINGS, probeFonts } from './probes.ts';
 
 /*
  * `page.evaluate` runs in Chromium; `tools/` is compiled with `types: ["node"]`
@@ -29,6 +29,9 @@ interface Ctx2D {
     readonly width: number;
     readonly fontBoundingBoxAscent: number;
     readonly fontBoundingBoxDescent: number;
+    readonly alphabeticBaseline: number;
+    readonly hangingBaseline: number;
+    readonly ideographicBaseline: number;
   };
 }
 interface CanvasLike {
@@ -42,10 +45,23 @@ declare const FontFace: new (family: string, source: string) => FontFaceLike;
 declare const document: { fonts: { add(face: FontFaceLike): void } };
 
 interface Job {
-  readonly fonts: readonly { id: string; family: string; base64: string }[];
+  readonly fonts: readonly {
+    id: string;
+    family: string;
+    base64: string;
+    ideograph: number | undefined;
+  }[];
   readonly strings: readonly string[];
   readonly sizes: readonly number[];
   readonly boxPx: number;
+  readonly baselineSizes: readonly number[];
+}
+
+/** What one `measureText` says about where the baselines sit. */
+interface Baselines {
+  alphabetic: number;
+  hanging: number;
+  ideographic: number;
 }
 
 const dir = process.argv[2];
@@ -54,10 +70,16 @@ const work = resolve(dir);
 
 const fonts = probeFonts();
 const job: Job = {
-  fonts: fonts.map((f) => ({ id: f.id, family: f.family, base64: f.base64 })),
+  fonts: fonts.map((f) => ({
+    id: f.id,
+    family: f.family,
+    base64: f.base64,
+    ideograph: f.spec.ideograph,
+  })),
   strings: STRINGS,
   sizes: SIZES,
   boxPx: BOX_PX,
+  baselineSizes: BASELINE_SIZES,
 };
 
 // No PINNED_ARGS here: `--disable-remote-fonts` would refuse every probe.
@@ -73,6 +95,8 @@ try {
       loaded: boolean;
       widths: Record<string, Record<string, number>>;
       box: { ascent: number; descent: number };
+      baselines: Record<string, Baselines>;
+      hanBaselines: Record<string, Baselines & { width: number }> | null;
     }[] = [];
 
     for (const font of j.fonts) {
@@ -96,6 +120,29 @@ try {
 
       ctx.font = `${String(j.boxPx)}px "${font.family}"`;
       const metrics = ctx.measureText('AH');
+
+      const read = (m: ReturnType<Ctx2D['measureText']>): Baselines => ({
+        alphabetic: m.alphabeticBaseline,
+        hanging: m.hangingBaseline,
+        ideographic: m.ideographicBaseline,
+      });
+      const baselines: Record<string, Baselines> = {};
+      // Only a font that maps U+4E00 is asked about it: a font that does not
+      // would be answered by whatever face the machine has, which is the one
+      // thing this suite refuses.
+      const hanBaselines: Record<string, Baselines & { width: number }> | null =
+        font.ideograph === undefined ? null : {};
+      for (const px of j.baselineSizes) {
+        ctx.font = `${String(px)}px "${font.family}"`;
+        ctx.letterSpacing = '0px';
+        ctx.fontKerning = 'normal';
+        baselines[String(px)] = read(ctx.measureText('A'));
+        if (hanBaselines !== null && font.ideograph !== undefined) {
+          const han = ctx.measureText(String.fromCodePoint(font.ideograph));
+          hanBaselines[String(px)] = { ...read(han), width: han.width };
+        }
+      }
+
       out.push({
         id: font.id,
         loaded,
@@ -104,6 +151,8 @@ try {
           ascent: metrics.fontBoundingBoxAscent,
           descent: metrics.fontBoundingBoxDescent,
         },
+        baselines,
+        hanBaselines,
       });
     }
     return out;
@@ -121,6 +170,7 @@ try {
         chromium: browser.version(),
         boxPx: BOX_PX,
         sizes: SIZES,
+        baselineSizes: BASELINE_SIZES,
         strings: STRINGS,
         fonts: fonts.map((f) => ({ id: f.id, asks: f.asks, family: f.family, spec: f.spec })),
         measured,
@@ -133,9 +183,13 @@ try {
   console.log(`chromium ${browser.version()}`);
   for (const row of measured) {
     const at100 = row.widths['100'] ?? {};
+    const base = row.baselines['1000'];
+    const han = row.hanBaselines?.['1000'];
     console.log(
       `${row.id.padEnd(16)} box ${String(row.box.ascent)}/${String(row.box.descent)}` +
-        `  A=${String(at100['A'])} V=${String(at100['V'])} AV=${String(at100['AV'])}`,
+        `  A=${String(at100['A'])} AB=${String(at100['AB'])}` +
+        `  ideo=${String(base?.ideographic)} hang=${String(base?.hanging)}` +
+        `  han ideo=${String(han?.ideographic)} width=${String(han?.width)}`,
     );
   }
   console.log(`\nwrote ${join(work, 'browser-metrics.json')}`);

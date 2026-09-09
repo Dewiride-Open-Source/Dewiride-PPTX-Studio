@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import { indexFonts, systemFontDirectories, type FontLibrary } from './faces.js';
 import { createFontMeasurer } from './measure.js';
+import { facesIn } from './sfnt.js';
 import { FIXTURE, bytesOf } from './sfnt.test.js';
 
 /**
@@ -78,10 +79,10 @@ describe('the font library', () => {
 
 describe('measuring against what Chromium reported', () => {
   /**
-   * The whole point of the experiment: 252 widths, and the measurer has to
+   * The whole point of the experiment: 396 widths, and the measurer has to
    * reproduce every one of them from the font tables alone.
    */
-  it('reproduces all 252 widths exactly', () => {
+  it('reproduces all 396 widths exactly', () => {
     const measurer = createFontMeasurer(library).measurer;
     let compared = 0;
     for (const row of FIXTURE.browser.rows) {
@@ -96,12 +97,32 @@ describe('measuring against what Chromium reported', () => {
         }
       }
     }
-    expect(compared).toBe(252);
+    expect(compared).toBe(396);
+  });
+
+  it('quantises only non-negative advances, so trunc and floor are one rule', () => {
+    let checked = 0;
+    for (const font of FIXTURE.fonts) {
+      const face = facesIn(bytesOf(font.id), font.id)[0]!;
+      for (const px of FIXTURE.browser.sizes) {
+        for (const text of FIXTURE.browser.strings) {
+          for (const ch of [...text]) {
+            const units = face.advanceOf(ch.codePointAt(0)!) ?? 0;
+            expect(units, `${font.id} ${ch}`).toBeGreaterThanOrEqual(0);
+            const x = (units * px) / face.metrics.unitsPerEm;
+            expect(Math.floor(x), `${font.id} ${ch} ${String(px)}px`).toBe(Math.trunc(x));
+            checked += 1;
+          }
+        }
+      }
+    }
+    const perFont = FIXTURE.browser.strings.reduce((n, s) => n + [...s].length, 0);
+    expect(checked).toBe(FIXTURE.fonts.length * FIXTURE.browser.sizes.length * perFont);
   });
 
   it('would not reproduce them with exact float arithmetic', () => {
     // The plausible implementation - sum advance x size / upem in doubles - and
-    // the fixture says it fits 88 of 252. If this ever stops disagreeing, the
+    // the fixture says it fits 124 of 396. If this ever stops disagreeing, the
     // test above has stopped being evidence of anything.
     const font = FIXTURE.fonts.find((f) => f.id === 'plain')!;
     const naive = (text: string, px: number): number =>
@@ -155,13 +176,71 @@ describe('the face box probe', () => {
     }
   });
 
-  it('puts the ideographic baseline on the descent, as Chromium does with no BASE table', () => {
+  /** What `packages/text/src/lines/baseline.ts` makes of one browser reading. */
+  const offsetOf = (ideographicBaseline: number, px: number): number => {
+    const offset = -ideographicBaseline / px;
+    return offset > 0 && offset < 1 ? offset : 0;
+  };
+
+  it('reproduces the ideographic baseline Chromium reported for every probe', () => {
     const { faceBox } = createFontMeasurer(library);
-    // `split` has an ascent of 0.9 against a descent of 0.3, so the two cannot
-    // be mistaken for one another the way they can in a face where they are close.
-    const box = faceBox.box(FIXTURE.fonts.find((f) => f.id === 'split')!.family);
-    expect(box.ideographic).toBe(box.descent);
-    expect(box.ideographic).not.toBe(box.ascent);
+    let compared = 0;
+    for (const row of FIXTURE.browser.rows) {
+      const family = FIXTURE.fonts.find((f) => f.id === row.id)!.family;
+      for (const px of FIXTURE.browser.baselineSizes) {
+        const want = offsetOf(row.baselines[String(px)]!.ideographic, px);
+        const got = faceBox.box(family).ideographic;
+        expect(got, `${row.id} ideographic at ${String(px)}px`).toBeCloseTo(want, 9);
+        compared += 1;
+      }
+    }
+    expect(compared).toBe(FIXTURE.browser.rows.length * FIXTURE.browser.baselineSizes.length);
+  });
+
+  it('answers a Han run exactly as it answers a Latin one, so caching by family is sound', () => {
+    const { faceBox } = createFontMeasurer(library);
+    let compared = 0;
+    for (const row of FIXTURE.browser.rows) {
+      if (row.hanBaselines === null) continue;
+      const family = FIXTURE.fonts.find((f) => f.id === row.id)!.family;
+      for (const px of FIXTURE.browser.baselineSizes) {
+        const han = row.hanBaselines[String(px)]!.ideographic;
+        expect(han, `${row.id} at ${String(px)}px`).toBe(row.baselines[String(px)]!.ideographic);
+        expect(faceBox.box(family).ideographic, row.id).toBeCloseTo(offsetOf(han, px), 9);
+        compared += 1;
+      }
+    }
+    expect(compared).toBe(8);
+  });
+
+  it('is not the descent, which is what a BASE table moves it off', () => {
+    const font = FIXTURE.fonts.find((f) => f.id === 'base-table')!;
+    const box = createFontMeasurer(library).faceBox.box(font.family);
+    expect(box.ideographic).not.toBe(box.descent);
+    expect(box.ideographic * FIXTURE.browser.boxPx).toBeCloseTo(
+      -(font.spec.base?.['DFLT']?.['ideo'] ?? 0),
+      9,
+    );
+  });
+
+  it('falls back to the descent for a face whose BASE says nothing about ideo', () => {
+    const { faceBox } = createFontMeasurer(library);
+    for (const id of ['split', 'base-no-dflt', 'base-no-ideo']) {
+      const box = faceBox.box(FIXTURE.fonts.find((f) => f.id === id)!.family);
+      expect(box.ideographic, id).toBe(box.descent);
+    }
+  });
+
+  it('answers zero for a coordinate outside the em, where uprightPen would throw', () => {
+    const font = FIXTURE.fonts.find((f) => f.id === 'base-outsize')!;
+    const row = FIXTURE.browser.rows.find((r) => r.id === 'base-outsize')!;
+    // Chromium hands a 1.2 em coordinate over as written rather than clamping
+    // it, so both engines see the same unusable number and both answer zero.
+    expect(-row.baselines[String(FIXTURE.browser.boxPx)]!.ideographic).toBe(1200);
+    expect(1200 / font.spec.unitsPerEm).toBeGreaterThan(1);
+    const box = createFontMeasurer(library).faceBox.box(font.family);
+    expect(box.ideographic).toBe(0);
+    expect(box.ideographic).not.toBe(box.descent);
   });
 });
 

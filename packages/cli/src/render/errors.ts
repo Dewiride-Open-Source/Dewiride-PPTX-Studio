@@ -16,6 +16,8 @@ export type RenderErrorCode =
   | 'CLI_FONT_SIZE'
   /** A slide index outside the deck. */
   | 'CLI_NO_SLIDE'
+  /** A width that is not a positive whole number of pixels. */
+  | 'CLI_WIDTH'
   /** An output path that names no directory, or a directory that is a file. */
   | 'CLI_OUTPUT_PATH';
 
@@ -25,6 +27,7 @@ export const RENDER_ERROR_CODES: readonly RenderErrorCode[] = [
   'CLI_NO_FACE',
   'CLI_FONT_SIZE',
   'CLI_NO_SLIDE',
+  'CLI_WIDTH',
   'CLI_OUTPUT_PATH',
 ];
 
