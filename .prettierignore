@@ -5,3 +5,5 @@ coverage
 pnpm-lock.yaml
 corpus/**/*.pptx
 *.gen.ts
+examples/*/.next
+examples/*/next-env.d.ts

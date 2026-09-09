@@ -1,0 +1,39 @@
+{
+  "name": "nextjs-studio-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A Next.js app built on the published @pptx-studio packages, one tool per package.",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "smoke": "node smoke.mjs"
+  },
+  "dependencies": {
+    "@pptx-studio/census": "^0.1.0",
+    "@pptx-studio/cli": "^0.1.0",
+    "@pptx-studio/geometry": "^0.1.0",
+    "@pptx-studio/model": "^0.1.0",
+    "@pptx-studio/opc": "^0.1.0",
+    "@pptx-studio/paint": "^0.1.0",
+    "@pptx-studio/render-svg": "^0.1.0",
+    "@pptx-studio/text": "^0.1.0",
+    "@pptx-studio/validate": "^0.1.0",
+    "@pptx-studio/writer": "^0.1.0",
+    "@pptx-studio/xml": "^0.1.0",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "26.5.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3"
+  }
+}

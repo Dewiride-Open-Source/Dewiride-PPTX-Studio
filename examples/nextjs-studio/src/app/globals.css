@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+
+/*
+ * The palette is the renderer's own debug-overlay palette, from
+ * `render-svg/src/overlay.ts` - chrome blue, the text-rectangle purple, the
+ * connection-site teal, the handle red. A tool that draws OOXML should not
+ * invent a second set of colours for talking about it.
+ */
+@theme {
+  --color-ink-900: #08090b;
+  --color-ink-850: #0d0f13;
+  --color-ink-800: #12151a;
+  --color-ink-700: #1a1f26;
+  --color-ink-600: #262d37;
+  --color-ink-500: #3a4350;
+  --color-ink-400: #5c6675;
+  --color-ink-300: #8b95a3;
+  --color-ink-200: #b9c1cc;
+  --color-ink-100: #e4e8ee;
+
+  --color-chrome: #3b8fd4;
+  --color-chrome-dim: #0b62b0;
+  --color-textrect: #a855c9;
+  --color-site: #00a5b5;
+  --color-handle: #e8453c;
+  --color-widened: #d98a2b;
+  --color-good: #2fa869;
+
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-ink-900);
+  color: var(--color-ink-100);
+}
+
+/* The slide stage is a lit surface inside dark chrome, the way every deck tool does it. */
+.stage-surface {
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px var(--color-ink-600),
+    0 18px 50px -12px rgb(0 0 0 / 0.7);
+}
+
+/*
+ * A placeholder PowerPoint wrote paints nothing - `fill="none" stroke="none"` -
+ * and SVG's default `visiblePainted` gives an unpainted path no pointer events,
+ * so an empty title would be unselectable. An editor has to be able to click it.
+ */
+.stage-surface [data-shape] path {
+  pointer-events: all;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--color-chrome-dim);
+  color: #fff;
+}

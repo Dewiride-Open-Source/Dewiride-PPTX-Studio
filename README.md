@@ -117,6 +117,8 @@ packages/
   cli/     the Node entry point — `pptx-studio inspect` and `validate`
 apps/
   studio/  drop a .pptx on a page; the parse Worker boundary lives here
+examples/
+  nextjs-studio/ a Next.js app on the published packages, one tool per package
 tools/
   layering/      the dependency-direction guard (see below)
   eslint-rules/  local ESLint rules with no upstream equivalent
@@ -249,6 +251,26 @@ recipe, deterministically. See [`tools/bench/README.md`](./tools/bench/README.md
 
 `pnpm test` and `pnpm typecheck` read package **source**, not `dist`, so neither needs a build
 first. Publishing reads `dist`.
+
+## The example
+
+[`examples/nextjs-studio`](./examples/nextjs-studio) is a Next.js app with one tool per published
+package: the deck drawn and editable, the inheritance chain with its provenance, the package and
+its relationship graph, byte-identical re-emission shown live, the census in a Web Worker, the 29
+validator rules, a round trip you can download and open in PowerPoint, the 187 presets with
+draggable handles, the colour transforms, the text engine, and server-side thumbnails with no
+LibreOffice.
+
+It sits **outside** `pnpm-workspace.yaml` on purpose and installs `@pptx-studio/*` from the public
+registry with npm. Nothing else in this repository does: everything here resolves through the pnpm
+link farm, so nothing else can tell whether a published tarball actually works. CI installs it
+without a lockfile on every run, so `^0.1.0` is re-resolved against the registry each time.
+
+```sh
+cd examples/nextjs-studio
+npm install
+npm run dev
+```
 
 ## Contributing
 

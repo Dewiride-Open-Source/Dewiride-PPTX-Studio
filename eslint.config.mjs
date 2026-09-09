@@ -68,6 +68,9 @@ export default tseslint.config(
       '**/coverage/**',
       '**/*.gen.ts',
       'corpus/**',
+      // Installed from the registry rather than linked, so this config's
+      // type-aware rules cannot resolve its imports. It lints itself.
+      'examples/**',
     ],
   },
 
