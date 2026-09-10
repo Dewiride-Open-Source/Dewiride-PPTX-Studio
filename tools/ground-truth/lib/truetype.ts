@@ -52,6 +52,8 @@ export interface FontSpec {
   readonly kern?: readonly KernPair[];
   /** Pairs written into a `GPOS` PairPos, format 1. */
   readonly gpos?: readonly KernPair[];
+  /** Reach the PairPos through a type 9 Extension lookup, as compilers emit. */
+  readonly gposExtension?: boolean;
   /**
    * A code point above the BMP, added in a second cmap subtable of format 12.
    *
@@ -348,9 +350,10 @@ function kernTable(pairs: readonly KernPair[]): Uint8Array {
  * A `GPOS` with one PairPos format 1 subtable under `kern`, latn/DFLT.
  *
  * Format 1 rather than 2 because it lists pairs literally, so what the fixture
- * says the font contains is what the bytes contain.
+ * says the font contains is what the bytes contain. Under `extension` the same
+ * subtable is reached through an `ExtensionPosFormat1` of type 9.
  */
-function gposTable(pairs: readonly KernPair[]): Uint8Array {
+function gposTable(pairs: readonly KernPair[], extension: boolean): Uint8Array {
   const byLeft = new Map<number, KernPair[]>();
   for (const pair of pairs) {
     const left = glyphIdOf(pair.left);
@@ -400,9 +403,15 @@ function gposTable(pairs: readonly KernPair[]): Uint8Array {
   out.u16(1).tag('kern').u16(8);
   out.u16(0).u16(1).u16(0);
 
-  // LookupList: one lookup, type 2 (pair adjustment).
+  // LookupList: one lookup, over one subtable eight bytes past its own start.
   out.u16(1).u16(4);
-  out.u16(2).u16(0).u16(1).u16(8);
+  out
+    .u16(extension ? 9 : 2)
+    .u16(0)
+    .u16(1)
+    .u16(8);
+  // ExtensionPosFormat1: the real type, and a 32-bit offset from here.
+  if (extension) out.u16(1).u16(2).u32(8);
   for (const byte of lookupSubtable) out.u8(byte);
   return out.done();
 }
@@ -562,7 +571,9 @@ export function buildFont(overrides: Partial<FontSpec> = {}): BuiltFont {
     { tag: 'post', bytes: post.done() },
   ];
   if (spec.base !== undefined) tables.push({ tag: 'BASE', bytes: baseTable(spec.base) });
-  if (spec.gpos !== undefined) tables.push({ tag: 'GPOS', bytes: gposTable(spec.gpos) });
+  if (spec.gpos !== undefined) {
+    tables.push({ tag: 'GPOS', bytes: gposTable(spec.gpos, spec.gposExtension === true) });
+  }
   if (spec.kern !== undefined) tables.push({ tag: 'kern', bytes: kernTable(spec.kern) });
   tables.sort((a, b) => (a.tag < b.tag ? -1 : 1));
 

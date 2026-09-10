@@ -10,10 +10,14 @@
 export interface Sample {
   readonly id: string;
   readonly script: string;
-  /** Whether a disagreement on this sample fails the job. */
+  /**
+   * Whether a disagreement on this sample fails the job.
+   *
+   * A sample that is not gated is recorded instead, and has to measure outside
+   * `widthTolerance` on some face: what it prices is a feature of the browser
+   * the reader does not implement.
+   */
   readonly gated: boolean;
-  /** Whether the browser runs a shaper here that the reader has no answer for. */
-  readonly shaped: boolean;
   /** The one question this sample exists to answer. */
   readonly asks: string;
   readonly text: string;
@@ -37,7 +41,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'latin-short',
     script: 'latin',
     gated: true,
-    shaped: false,
     asks: 'the per-glyph error, with nothing accumulated',
     text: 'HEAD BADGE',
   },
@@ -45,7 +48,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'latin-kern-pairs',
     script: 'latin',
     gated: true,
-    shaped: false,
     asks: 'class-based GPOS kerning, which no built font could exercise',
     text: KERN_PAIRS,
   },
@@ -53,7 +55,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'latin-long',
     script: 'latin',
     gated: true,
-    shaped: false,
     asks: 'whether truncating each advance drifts over hundreds of glyphs',
     text: LONG,
   },
@@ -61,7 +62,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'latin-spread',
     script: 'latin',
     gated: true,
-    shaped: false,
     asks: 'a cmap addressed across its range, not in one segment',
     text: 'AB Æ × ÷ ¿ ¡ « » – — ‘ ’ “ ” • … € ™ ° ±',
   },
@@ -69,7 +69,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'cyrillic',
     script: 'cyrillic',
     gated: true,
-    shaped: false,
     asks: 'a second alphabet, and a second cmap segment block',
     text: 'Съешь же ещё этих мягких французских булок да выпей чаю',
   },
@@ -77,7 +76,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'greek',
     script: 'greek',
     gated: true,
-    shaped: false,
     asks: 'a third alphabet',
     text: 'Ξεσκεπάζω την ψυχοφθόρα βδελυγμία',
   },
@@ -85,7 +83,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'hebrew',
     script: 'hebrew',
     gated: true,
-    shaped: false,
     asks: 'the control: right-to-left without joining, which separates direction from shaping',
     text: 'דג סקרן שט בים מאוכזב ולפתע מצא חברה',
   },
@@ -93,7 +90,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'cjk',
     script: 'cjk',
     gated: true,
-    shaped: false,
     asks: 'advances that do not depend on context, and a format 12 cmap',
     text: '永東京都漢字測試日本語中文',
   },
@@ -101,7 +97,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'latin-ligatures',
     script: 'latin',
     gated: false,
-    shaped: false,
     asks: 'what GSUB liga costs a reader that does not read GSUB',
     text: 'office difficult waffle fluffy',
   },
@@ -109,7 +104,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'arabic',
     script: 'arabic',
     gated: false,
-    shaped: true,
     asks: 'how wide an unshaped sum measures where a shaper would join',
     text: 'العربية لغة جميلة وواسعة',
   },
@@ -117,7 +111,6 @@ export const SAMPLES: readonly Sample[] = [
     id: 'devanagari',
     script: 'devanagari',
     gated: false,
-    shaped: true,
     asks: 'a second shaped script, so the answer is not one script per anecdote',
     text: 'हिन्दी एक सुंदर भाषा है',
   },
@@ -130,17 +123,43 @@ export const SIZES: readonly number[] = [8, 12, 16, 32, 100, 1000];
 export const BOX_PX = 1000;
 
 /**
- * The relative disagreement a gated comparison may carry.
+ * The pixel Chromium quantises each glyph advance to on a Linux runner.
  *
- * T13 has the reader reproducing Chromium exactly, so a residual on a real face
- * is a feature the reader misses rather than noise; this is a fifteenth of the
- * 0.149% median by which that browser disagrees with PowerPoint (T2), and
- * 0.004 px on a ten-glyph string at 8 px - far under the half pixel that moves
- * a line break.
+ * FreeMono - one advance for every glyph - is out by exactly `glyphs` times
+ * `round(0.6px) - 0.6px` at every size, which is per-glyph rounding rather than
+ * one rounding of a total. `advanceQuantum` refuses a run that says otherwise.
  */
-export const AGREEMENT = 1e-4;
+export const ADVANCE_QUANTUM = 1;
 
-/** Equality, for the rival scoreboard: T13 scored its readings at 1e-12 px. */
+/** The reader's own step: T13's per-glyph advance truncation and kern rounding. */
+export const READER_STEP = 1 / 65536 + 1 / 131072;
+
+/**
+ * How far a whole-pixel browser and the reader may sit apart over `glyphs`.
+ *
+ * Each glyph carries at most half a quantum of the browser's rounding and one
+ * `READER_STEP` of the reader's. Inclusive at the half quantum, which one Lato
+ * face reaches exactly: 40 glyphs, every advance a half pixel, all rounded down.
+ */
+export function widthTolerance(glyphs: number): number {
+  return glyphs * (ADVANCE_QUANTUM / 2 + READER_STEP);
+}
+
+/** The face box is one measurement, so it carries one glyph's quantisation. */
+export const BOX_TOLERANCE = ADVANCE_QUANTUM / 2;
+
+/**
+ * The glyphs a sample is drawn with, which is its code points.
+ *
+ * True of every gated sample by construction, since none carries an `f` or a
+ * joining script; a recorded sample is drawn with fewer, which makes its
+ * tolerance generous and is why a recorded sample is never gated.
+ */
+export function glyphsOf(text: string): number {
+  return [...text].length;
+}
+
+/** Equality, for the column that shows what the quantisation hides: T13 scored at 1e-12 px. */
 export const EXACT_PX = 1e-9;
 
 /**
@@ -162,12 +181,54 @@ export type Reading = (typeof READINGS)[number];
 /** The reading the product implements, and the one that has to win. */
 export const SHIPPED: Reading = 'shipped';
 
+/** The one rival a whole-pixel browser can still separate: it is not a rounding. */
+export const UNKERNED: Reading = 'unkerned';
+
+/** One ascent and descent in font units, the descent positive below the baseline. */
+export interface BoxPair {
+  readonly ascent: number;
+  readonly descent: number;
+}
+
+/** `FaceMetrics.candidates`, as the artifact writes it: an absent table is null. */
+export interface BoxCandidates {
+  readonly hhea: BoxPair;
+  readonly usWin: BoxPair | null;
+  readonly sTypo: BoxPair | null;
+  readonly useTypoMetrics: boolean;
+}
+
 /**
- * The four readings of the face box.
+ * Which table the browser read the face box out of, as rival readings.
  *
- * T13's built fonts all have `unitsPerEm` 1000 and integer metrics, so the four
- * tie there; a real face with `unitsPerEm` 2048 puts the box at 928.22265625
- * and separates them.
+ * A reading that needs a table this face has no bytes for answers `undefined`
+ * and is scored over the faces that carry it. T13 settled this at 24/24 on
+ * Windows; ADR 0044 has three faces on Linux that no reading here has fitted.
+ */
+export const BOX_READINGS: Readonly<
+  Record<string, (candidates: BoxCandidates) => BoxPair | undefined>
+> = {
+  'hhea.ascender/descender': (c) => c.hhea,
+  'OS/2.usWinAscent/usWinDescent': (c) => c.usWin ?? undefined,
+  'OS/2.sTypoAscender/sTypoDescender': (c) => c.sTypo ?? undefined,
+  'usWin, or sTypo when fsSelection bit 7 is set': (c) => {
+    // What `metricsOf` answers, including its fall back to hhea with no OS/2.
+    if (c.usWin === null || c.sTypo === null) return c.hhea;
+    return c.useTypoMetrics ? c.sTypo : c.usWin;
+  },
+  'hhea, or sTypo when fsSelection bit 7 is set': (c) =>
+    c.useTypoMetrics && c.sTypo !== null ? c.sTypo : c.hhea,
+};
+
+/** The reading `metricsOf` implements, which no rival may fit more faces than. */
+export const SHIPPED_BOX = 'usWin, or sTypo when fsSelection bit 7 is set';
+
+/**
+ * The four readings of the face box, recorded rather than gated.
+ *
+ * A browser reporting the box as a whole pixel can be reproduced by `round`
+ * whatever the reader answers, so the table scores that rounding and ADR 0043
+ * open question 2 stays open.
  */
 export const BOX_VARIANTS = ['exact', 'round', 'floor', 'ceil'] as const;
 

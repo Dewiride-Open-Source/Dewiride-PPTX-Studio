@@ -27,6 +27,12 @@ function key(family: string): string {
   return family.trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
+/** Code unit order, which is the same on every machine and in every locale. */
+function compare(a: string, b: string): number {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
+
 /** Where fonts live on this platform, whether or not the directories exist. */
 export function systemFontDirectories(platform: string = process.platform): readonly string[] {
   const home = homedir();
@@ -60,7 +66,9 @@ function filesUnder(directory: string, depth: number, out: string[]): void {
     // checks those before it gets here.
     return;
   }
-  for (const entry of entries) {
+  // By name, because `readdir` order is the filesystem's own and two machines
+  // holding the same files return it differently.
+  for (const entry of [...entries].sort((a, b) => compare(a.name, b.name))) {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) filesUnder(path, depth + 1, out);
     else if (FONT_FILE.test(entry.name)) out.push(path);
@@ -109,6 +117,41 @@ function slot(bold: boolean, italic: boolean): number {
   return (bold ? 1 : 0) | (italic ? 2 : 0);
 }
 
+/** One family and the four style slots it fills. */
+interface Family {
+  /** The spelling to report, as the first face claiming it spells the name. */
+  readonly name: string;
+  readonly slots: (IndexedFace | undefined)[];
+}
+
+/**
+ * The names a typeface is a variation of, longest first.
+ *
+ * DrawingML has no weight axis, so `Calibri Light` is a typeface name rather
+ * than Calibri at a weight, and Calibri is the nearer face to draw it in.
+ */
+function shorterNames(family: string): readonly string[] {
+  const words = family.trim().split(/\s+/);
+  const names: string[] = [];
+  for (let at = words.length - 1; at > 0; at--) names.push(words.slice(0, at).join(' '));
+  return names;
+}
+
+/**
+ * The families to try for one this machine lacks, in order.
+ *
+ * The measured chain first - `@pptx-studio/text`'s table and then what
+ * PowerPoint itself falls back to, ADR 0033 - and the shorter forms of the
+ * asked-for name only after it, where no measurement reaches.
+ */
+function standInsFor(family: string): readonly string[] {
+  return [
+    substituteFor(family)?.use,
+    ...LAST_RESORT_FAMILIES,
+    ...shorterNames(family).flatMap((name) => [name, substituteFor(name)?.use]),
+  ].filter((name): name is string => name !== undefined);
+}
+
 /**
  * Read every font file under the given directories, once.
  *
@@ -137,14 +180,19 @@ export function indexFonts(options: IndexOptions = {}): FontLibrary {
   for (const directory of directories) filesUnder(directory, 0, files);
 
   const indexed: IndexedFace[] = [];
-  const byFamily = new Map<string, (IndexedFace | undefined)[]>();
+  const byFamily = new Map<string, Family>();
   const claim = (family: string, entry: IndexedFace): void => {
-    const slots = byFamily.get(key(family)) ?? [undefined, undefined, undefined, undefined];
-    const at = slot(entry.face.bold, entry.face.italic);
+    const at = key(family);
+    // `name` ID 16 can be present and blank, and a blank name identifies nothing.
+    if (at === '') return;
+    const found = byFamily.get(at) ?? {
+      name: family,
+      slots: [undefined, undefined, undefined, undefined],
+    };
     // First file wins, so an earlier `--font-dir` beats a system face of the
     // same name and the caller can override without uninstalling anything.
-    slots[at] ??= entry;
-    byFamily.set(key(family), slots);
+    found.slots[slot(entry.face.bold, entry.face.italic)] ??= entry;
+    byFamily.set(at, found);
   };
 
   for (const file of files) {
@@ -166,9 +214,7 @@ export function indexFonts(options: IndexOptions = {}): FontLibrary {
   }
 
   /** The nearest slot to the one asked for: exact, then drop italic, then bold. */
-  const pick = (family: string, bold: boolean, italic: boolean): IndexedFace | undefined => {
-    const slots = byFamily.get(key(family));
-    if (slots === undefined) return undefined;
+  const pickIn = (found: Family, bold: boolean, italic: boolean): IndexedFace | undefined => {
     const wanted = [
       slot(bold, italic),
       slot(bold, false),
@@ -180,36 +226,49 @@ export function indexFonts(options: IndexOptions = {}): FontLibrary {
       3,
     ];
     for (const at of wanted) {
-      const found = slots[at];
-      if (found !== undefined) return found;
+      const entry = found.slots[at];
+      if (entry !== undefined) return entry;
     }
     return undefined;
+  };
+
+  const drawnIn = (
+    name: string,
+    bold: boolean,
+    italic: boolean,
+    asked: string,
+  ): Resolved | undefined => {
+    const family = byFamily.get(key(name));
+    if (family === undefined) return undefined;
+    const found = pickIn(family, bold, italic);
+    if (found === undefined) return undefined;
+    return {
+      face: found.face,
+      asked,
+      drawn: name,
+      file: found.file,
+      substituted: key(name) !== key(asked),
+    };
   };
 
   return {
     indexed,
     directories,
     resolve(family: string, bold: boolean, italic: boolean): Resolved | undefined {
-      const direct = pick(family, bold, italic);
-      if (direct !== undefined) {
-        return {
-          face: direct.face,
-          asked: family,
-          drawn: family,
-          file: direct.file,
-          substituted: false,
-        };
+      for (const name of [family, ...standInsFor(family)]) {
+        const found = drawnIn(name, bold, italic, family);
+        if (found !== undefined) return found;
       }
-      const chain = [substituteFor(family)?.use, ...LAST_RESORT_FAMILIES].filter(
-        (name): name is string => name !== undefined,
-      );
-      for (const name of chain) {
-        const found = pick(name, bold, italic);
+      // Every named stand-in is absent too. The browser's stack ends in a
+      // generic and this cannot, so the first family by name draws it: the
+      // choice two machines holding the same faces both make.
+      for (const [, entry] of [...byFamily].sort((a, b) => compare(a[0], b[0]))) {
+        const found = pickIn(entry, bold, italic);
         if (found !== undefined) {
           return {
             face: found.face,
             asked: family,
-            drawn: name,
+            drawn: entry.name,
             file: found.file,
             substituted: true,
           };

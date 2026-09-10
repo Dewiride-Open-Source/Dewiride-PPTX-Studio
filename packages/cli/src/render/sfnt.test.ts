@@ -22,7 +22,14 @@ interface Baselines {
 interface Fixture {
   readonly chromium: string;
   readonly faceBox: { readonly answer: string };
-  readonly kerning: { readonly answer: string };
+  readonly kerning: {
+    readonly answer: string;
+    readonly scores: readonly {
+      readonly model: string;
+      readonly fits: number;
+      readonly of: number;
+    }[];
+  };
   readonly ideographic: { readonly answer: string };
   readonly fonts: readonly {
     readonly id: string;
@@ -176,6 +183,19 @@ describe('the face box', () => {
     expect(face.metrics.ascent).toBe(split.spec.winAscent);
   });
 
+  it('carries the shape the IPA Gothic faces have, so nothing new has to be built', () => {
+    // Three distinct descents, and a usWin box taller than the em: 900 + 300 on
+    // a 1000 em, where ipag.ttf is 1802 + 401 on a 2048 one. ADR 0044.
+    const spec = FIXTURE.fonts.find((f) => f.id === 'split')!.spec;
+    const descents = [-spec.hheaDescender, spec.winDescent, -spec.typoDescender];
+    expect(new Set(descents).size).toBe(3);
+    expect(spec.winAscent + spec.winDescent).toBeGreaterThan(spec.unitsPerEm);
+    expect(FIXTURE.browser.rows.find((row) => row.id === 'split')?.box).toEqual({
+      ascent: spec.winAscent,
+      descent: spec.winDescent,
+    });
+  });
+
   it('follows fsSelection bit 7 onto the typographic metrics', () => {
     const font = FIXTURE.fonts.find((f) => f.id === 'split-usetypo')!;
     const face = facesIn(bytesOf('split-usetypo'), 'split-usetypo')[0]!;
@@ -186,6 +206,66 @@ describe('the face box', () => {
     // moved the answer rather than the two fonts differing some other way.
     const clear = facesIn(bytesOf('split'), 'split')[0]!;
     expect(clear.metrics.ascent).toBe(font.spec.winAscent);
+  });
+});
+
+describe('the candidate pairs', () => {
+  it('hands back what each of the three tables said, chosen or not', () => {
+    for (const font of FIXTURE.fonts) {
+      const { spec } = font;
+      const { candidates } = facesIn(bytesOf(font.id), font.id)[0]!.metrics;
+      expect(candidates.hhea, font.id).toEqual({
+        ascent: spec.hheaAscender,
+        descent: -spec.hheaDescender,
+      });
+      expect(candidates.usWin, font.id).toEqual({
+        ascent: spec.winAscent,
+        descent: spec.winDescent,
+      });
+      expect(candidates.sTypo, font.id).toEqual({
+        ascent: spec.typoAscender,
+        descent: -spec.typoDescender,
+      });
+      expect(candidates.useTypoMetrics, font.id).toBe(spec.useTypoMetrics === true);
+    }
+  });
+
+  it('keeps the three apart on the probe built to disagree with itself', () => {
+    const { candidates } = facesIn(bytesOf('split'), 'split')[0]!.metrics;
+    const descents = [candidates.hhea, candidates.usWin, candidates.sTypo].map(
+      (pair) => pair?.descent,
+    );
+    expect(descents).toEqual([200, 300, 100]);
+  });
+
+  it('is where the chosen box came from, on every probe', () => {
+    for (const font of FIXTURE.fonts) {
+      const { metrics } = facesIn(bytesOf(font.id), font.id)[0]!;
+      const chosen =
+        metrics.source === 'sTypo' ? metrics.candidates.sTypo : metrics.candidates.usWin;
+      expect(chosen, font.id).toEqual({ ascent: metrics.ascent, descent: metrics.descent });
+    }
+  });
+
+  it('names hhea alone for a face carrying no OS/2 table', () => {
+    const tables = fontsIn(bytesOf('split'), 'split')[0]!;
+    const bare = new Map([...tables].filter(([tag]) => tag !== 'OS/2'));
+    const { metrics } = faceOf(bare, 'split');
+    expect(metrics.candidates.usWin).toBeUndefined();
+    expect(metrics.candidates.sTypo).toBeUndefined();
+    expect(metrics.candidates.useTypoMetrics).toBe(false);
+    expect(metrics.ascent).toBe(metrics.candidates.hhea.ascent);
+    expect(metrics.descent).toBe(metrics.candidates.hhea.descent);
+  });
+
+  it('reads no OS/2 shorter than the 78 bytes of version 0', () => {
+    const tables = fontsIn(bytesOf('split'), 'split')[0]!;
+    const short = new Map(tables).set('OS/2', tables.get('OS/2')!.subarray(0, 77));
+    expect(faceOf(short, 'split').metrics.candidates.usWin).toBeUndefined();
+    expect(faceOf(new Map(tables), 'split').metrics.candidates.usWin).toEqual({
+      ascent: 900,
+      descent: 300,
+    });
   });
 });
 
@@ -204,11 +284,62 @@ describe('kerning', () => {
 
   it('takes GPOS over the legacy table when they disagree, as Chromium does', () => {
     const face = facesIn(bytesOf('kern-and-gpos'), 'kern-and-gpos')[0]!;
-    expect(FIXTURE.kerning.answer).toBe('GPOS when present, else the kern table');
+    expect(FIXTURE.kerning.answer).toBe(
+      'GPOS when it yields a pair, else the kern table, following one type 9 Extension lookup',
+    );
     // The font says -200 in `kern` and -100 in GPOS. Reading the legacy table
     // first is the cheaper implementation and the wrong one.
     expect(face.kernBetween(A, B)).toBe(-100);
     expect(face.kernBetween(A, B)).not.toBe(-200);
+  });
+
+  it('follows a type 9 Extension lookup to the PairPos behind it', () => {
+    const face = facesIn(bytesOf('gpos-extension'), 'gpos-extension')[0]!;
+    expect(face.kernBetween(A, B)).toBe(-200);
+    expect(face.kernBetween(A, C)).toBe(0);
+  });
+
+  it('reads the Extension probe exactly as Chromium measured the plain one', () => {
+    // Two fonts alike but for the wrapper, and Chromium drew them the same
+    // width at every size, so the pair behind the extension is honoured.
+    const wrapped = FIXTURE.browser.rows.find((r) => r.id === 'gpos-extension')!;
+    const plain = FIXTURE.browser.rows.find((r) => r.id === 'gpos-only')!;
+    for (const px of FIXTURE.browser.sizes) {
+      for (const text of FIXTURE.browser.strings) {
+        expect(wrapped.widths[String(px)]?.[text], `${text} at ${String(px)}px`).toBe(
+          plain.widths[String(px)]?.[text],
+        );
+      }
+    }
+    expect(facesIn(bytesOf('gpos-extension'), 'gpos-extension')[0]!.kernBetween(A, B)).toBe(
+      facesIn(bytesOf('gpos-only'), 'gpos-only')[0]!.kernBetween(A, B),
+    );
+  });
+
+  it('scores the reading that skips type 9 below the one that follows it', () => {
+    const fitsOf = (model: string): number =>
+      FIXTURE.kerning.scores.find((s) => s.model === model)?.fits ?? -1;
+    const answer = FIXTURE.kerning.scores.find((s) => s.model === FIXTURE.kerning.answer)!;
+    expect(answer.fits).toBe(answer.of);
+    expect(
+      fitsOf('GPOS when it yields a pair, else the kern table, type 2 lookups only'),
+    ).toBeLessThan(answer.of);
+  });
+
+  it('does not follow an Extension that names another Extension', () => {
+    // ExtensionPosFormat1.extensionLookupType, 2 patched to 9. The specification
+    // forbids that nesting, so the pair is unreadable rather than a level down.
+    const bytes = bytesOf('gpos-extension');
+    const gpos = fontsIn(bytes, 'gpos-extension')[0]!.get('GPOS')!;
+    const view = new DataView(gpos.buffer, gpos.byteOffset, gpos.byteLength);
+    const lookupList = view.getUint16(8);
+    const lookup = lookupList + view.getUint16(lookupList + 2);
+    const subtable = lookup + view.getUint16(lookup + 6);
+    expect(view.getUint16(lookup)).toBe(9);
+    expect(view.getUint16(subtable + 2)).toBe(2);
+    view.setUint16(subtable + 2, 9);
+    const face = faceOf(fontsIn(bytes, 'gpos-extension')[0]!, 'gpos-extension');
+    expect(face.kernBetween(A, B)).toBe(0);
   });
 
   it('is zero for a font that declares none', () => {

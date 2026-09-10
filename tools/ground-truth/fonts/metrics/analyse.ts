@@ -16,7 +16,7 @@ import { join, resolve } from 'node:path';
 // The built package, not its source: `tools/` is run by Node directly and the
 // sources carry `.js` specifiers. Run `pnpm build` first.
 import { facesIn } from '../../../../packages/cli/dist/index.js';
-import { buildFont, type Baselines, type FontSpec } from '../../lib/truetype.ts';
+import { buildFont, type Baselines, type FontSpec, type KernPair } from '../../lib/truetype.ts';
 import { PROBES, STRINGS, SIZES, BOX_PX, BASELINE_SIZES, probeFonts } from './probes.ts';
 
 interface BrowserBaselines {
@@ -131,16 +131,28 @@ const boxAnswer = decide('the font bounding box', boxScores);
 /* question 2 - which kerning table the browser honours                        */
 /* -------------------------------------------------------------------------- */
 
+const specOf = (id: string): FontSpec =>
+  buildFont(PROBES.find((p) => p.id === id)?.spec ?? {}).spec;
+
+/** The `A`/`B` adjustment a table declares, in font units. */
+const declared = (pairs: readonly KernPair[] | undefined): number =>
+  pairs?.find((p) => p.left === 'A' && p.right === 'B')?.adjust ?? 0;
+
+/** What GPOS yields a reader that does or does not follow a type 9 Extension. */
+const fromGpos = (s: FontSpec, extensions: boolean): number | undefined =>
+  s.gpos === undefined || (s.gposExtension === true && !extensions) ? undefined : declared(s.gpos);
+
 /** What each probe's tables say, so a reading can be scored without the reader. */
-const KERN_READINGS = {
-  'the legacy kern table only': (id: string) =>
-    id === 'kern-only' || id === 'kern-and-gpos' ? -200 : id === 'gpos-only' ? 0 : 0,
-  'GPOS PairPos only': (id: string) =>
-    id === 'gpos-only' ? -200 : id === 'kern-and-gpos' ? -100 : 0,
-  'GPOS when present, else the kern table': (id: string) =>
-    id === 'kern-only' ? -200 : id === 'gpos-only' ? -200 : id === 'kern-and-gpos' ? -100 : 0,
-  'the kern table when present, else GPOS': (id: string) =>
-    id === 'kern-only' ? -200 : id === 'gpos-only' ? -200 : id === 'kern-and-gpos' ? -200 : 0,
+const KERN_READINGS: Record<string, (s: FontSpec) => number> = {
+  'the legacy kern table only': (s) => declared(s.kern),
+  'GPOS PairPos only, type 2 lookups only': (s) => fromGpos(s, false) ?? 0,
+  'GPOS PairPos only, following one type 9 Extension lookup': (s) => fromGpos(s, true) ?? 0,
+  'GPOS when it yields a pair, else the kern table, type 2 lookups only': (s) =>
+    fromGpos(s, false) ?? declared(s.kern),
+  'GPOS when it yields a pair, else the kern table, following one type 9 Extension lookup': (s) =>
+    fromGpos(s, true) ?? declared(s.kern),
+  'the kern table when present, else GPOS': (s) =>
+    s.kern === undefined ? (fromGpos(s, true) ?? 0) : declared(s.kern),
   neither: () => 0,
 };
 
@@ -150,11 +162,13 @@ const kernScores: Scored[] = Object.entries(KERN_READINGS).map(([model, adjustOf
   let worst = 0;
   for (const probe of PROBES) {
     const row = rowOf(probe.id);
+    const spec = specOf(probe.id);
+    const adjust = adjustOf(spec);
     for (const px of SIZES) {
       // `AB` is the kerned pair; `AC` is the control that never moves.
       const kerned = row.widths[String(px)]?.['AB'] ?? 0;
       const control = row.widths[String(px)]?.['AC'] ?? 0;
-      const predicted = control + (adjustOf(probe.id) * px) / 1000;
+      const predicted = control + (adjust * px) / spec.unitsPerEm;
       of += 1;
       // The rival readings are 100 font units apart, which is 0.8px at the
       // smallest size probed; the browser quantisation this tolerance absorbs is
@@ -247,9 +261,6 @@ const widthAnswer = decide('the width arithmetic', widthScores);
 
 /** The script a run is in, which a reading may or may not turn out to consult. */
 type Script = 'latn' | 'hani';
-
-const specOf = (id: string): FontSpec =>
-  buildFont(PROBES.find((p) => p.id === id)?.spec ?? {}).spec;
 
 /** The face box descent, which is what `measure.ts` reads today. */
 const boxDescent = (s: FontSpec): number =>
@@ -460,7 +471,9 @@ const answers = {
   kerning: {
     $comment:
       'A font may carry pair adjustments in a legacy kern table, in GPOS, or in both. The third ' +
-      'probe sets them to different values, which is the only way to find out which one loses.',
+      'probe sets them to different values, which is the only way to find out which one loses, ' +
+      'and the fourth reaches its PairPos through a type 9 Extension lookup, which is how a font ' +
+      'compiler emits one and where a reader that skips the type silently loses all kerning.',
     answer: kernAnswer.model,
     scores: kernScores,
   },

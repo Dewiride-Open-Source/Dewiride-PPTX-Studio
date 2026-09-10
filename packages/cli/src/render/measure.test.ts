@@ -17,6 +17,11 @@ import { FIXTURE, bytesOf } from './sfnt.test.js';
  */
 let library: FontLibrary;
 
+/** What draws a typeface no probe font is named after, and nothing stands in for. */
+const LAST_RESORT = FIXTURE.fonts
+  .map((font) => font.family)
+  .sort((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1))[0]!;
+
 beforeAll(() => {
   const dir = mkdtempSync(join(tmpdir(), 'pptx-studio-t13-'));
   for (const font of FIXTURE.fonts) writeFileSync(join(dir, `${font.id}.ttf`), bytesOf(font.id));
@@ -36,8 +41,11 @@ describe('the font library', () => {
     }
   });
 
-  it('reports nothing for a family no directory holds and nothing stands in for', () => {
-    expect(library.resolve('Zzz Probe Face That Is Not Installed', false, false)).toBeUndefined();
+  it('stands in for a family no directory holds, and says which face it used', () => {
+    const found = library.resolve('Zzz Probe Face That Is Not Installed', false, false);
+    expect(found?.asked).toBe('Zzz Probe Face That Is Not Installed');
+    expect(found?.substituted).toBe(true);
+    expect(found?.drawn).toBe(LAST_RESORT);
   });
 
   it('names this platform font directories without reading them', () => {
@@ -79,10 +87,10 @@ describe('the font library', () => {
 
 describe('measuring against what Chromium reported', () => {
   /**
-   * The whole point of the experiment: 396 widths, and the measurer has to
+   * The whole point of the experiment: 432 widths, and the measurer has to
    * reproduce every one of them from the font tables alone.
    */
-  it('reproduces all 396 widths exactly', () => {
+  it('reproduces all 432 widths exactly', () => {
     const measurer = createFontMeasurer(library).measurer;
     let compared = 0;
     for (const row of FIXTURE.browser.rows) {
@@ -97,7 +105,7 @@ describe('measuring against what Chromium reported', () => {
         }
       }
     }
-    expect(compared).toBe(396);
+    expect(compared).toBe(432);
   });
 
   it('quantises only non-negative advances, so trunc and floor are one rule', () => {
@@ -122,7 +130,7 @@ describe('measuring against what Chromium reported', () => {
 
   it('would not reproduce them with exact float arithmetic', () => {
     // The plausible implementation - sum advance x size / upem in doubles - and
-    // the fixture says it fits 124 of 396. If this ever stops disagreeing, the
+    // the fixture says it fits 150 of 432. If this ever stops disagreeing, the
     // test above has stopped being evidence of anything.
     const font = FIXTURE.fonts.find((f) => f.id === 'plain')!;
     const naive = (text: string, px: number): number =>
@@ -272,10 +280,35 @@ describe('what it says it did', () => {
     expect(fonts.missing()).toEqual([]);
   });
 
-  it('refuses a typeface nothing in the library can stand in for', () => {
+  it('draws a typeface nothing stands in for, and reports the substitution', () => {
     const fonts = createFontMeasurer(library);
+    const width = fonts.measurer.measure('A', { family: 'Nothing At All', sz: 1800 }).width;
+    expect(width).toBeGreaterThan(0);
+    const used = fonts.used();
+    expect(used).toHaveLength(1);
+    expect(used[0]?.asked).toBe('Nothing At All');
+    expect(used[0]?.substituted).toBe(true);
+    expect(used[0]?.drawn).toBe(LAST_RESORT);
+  });
+
+  it('measures and boxes a substituted typeface with the one face it chose', () => {
+    // The measurer and the box probe are asked separately and only the family
+    // name reaches both, so a choice that depended on the text would split them.
+    const fonts = createFontMeasurer(library);
+    expect(fonts.measurer.measure('ABC', { family: 'Nothing At All', sz: 1800 }).width).toBe(
+      fonts.measurer.measure('ABC', { family: LAST_RESORT, sz: 1800 }).width,
+    );
+    expect(fonts.faceBox.box('Nothing At All')).toEqual(fonts.faceBox.box(LAST_RESORT));
+  });
+
+  it('refuses only when the library is empty, which is nothing to draw with', () => {
+    const empty = indexFonts({
+      extra: [mkdtempSync(join(tmpdir(), 'pptx-studio-empty-'))],
+      system: false,
+    });
+    const fonts = createFontMeasurer(empty);
     expect(() => fonts.measurer.measure('A', { family: 'Nothing At All', sz: 1800 })).toThrowError(
-      /no face on this machine/,
+      /no face on this machine .* the font library is empty/s,
     );
   });
 

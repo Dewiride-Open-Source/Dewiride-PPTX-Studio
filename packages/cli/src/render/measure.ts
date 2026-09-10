@@ -24,7 +24,7 @@ import { RenderError } from './errors.js';
  * The fixed-point step Chromium reports an advance in.
  *
  * Quantising each glyph advance toward zero and each kern adjustment to nearest
- * fits all 396 of T13's widths, where summing exact floats fits 124 and is out
+ * fits all 432 of T13's widths, where summing exact floats fits 150 and is out
  * by up to 1.04e-4 px. ADR 0042.
  */
 const FIXED = 65536;
@@ -75,11 +75,16 @@ export function createFontMeasurer(library: FontLibrary): FontMeasurer {
     if (cached !== undefined) return cached;
     const found = library.resolve(family, bold, italic);
     if (found === undefined) {
+      // The library resolves any family it holds a face for, so this is the
+      // empty library: there is nothing at all to draw with.
+      const where =
+        library.directories.length === 0
+          ? 'no directory was searched'
+          : `nothing was found in ${library.directories.join(', ')}`;
       throw new RenderError(
         'CLI_NO_FACE',
-        `no face on this machine can stand in for ${JSON.stringify(family)}; ` +
-          `${String(library.indexed.length)} face(s) were indexed from ` +
-          `${library.directories.join(', ')}`,
+        `no face on this machine can stand in for ${JSON.stringify(family)}: ` +
+          `the font library is empty, ${where}`,
         family,
       );
     }

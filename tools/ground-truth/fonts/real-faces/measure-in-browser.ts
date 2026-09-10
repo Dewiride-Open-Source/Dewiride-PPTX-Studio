@@ -26,7 +26,14 @@ import {
   type Face,
   type FontLibrary,
 } from '../../../../packages/cli/dist/index.js';
-import { AGREEMENT, BOX_PX, SAMPLES, SIZES, sampleCharacters, type Reading } from './probes.ts';
+import {
+  BOX_PX,
+  SAMPLES,
+  SIZES,
+  sampleCharacters,
+  type BoxCandidates,
+  type Reading,
+} from './probes.ts';
 import type { Row, Run, RunFace } from './score.ts';
 
 /*
@@ -131,6 +138,12 @@ function rivals(face: Face, text: string, px: number): Rivals {
     advanceRounded += roundAt(kern);
   }
   return { exact, advanceRounded, unkerned, wholeStringTruncated: truncateAt(exact) };
+}
+
+/** The pairs the reader chose the box from, with an absent table written as null. */
+function candidatesOf(face: Face): BoxCandidates {
+  const { hhea, usWin, sTypo, useTypoMetrics } = face.metrics.candidates;
+  return { hhea, usWin: usWin ?? null, sTypo: sTypo ?? null, useTypoMetrics };
 }
 
 /** One face, presented as a whole library, so no cross-face fallback can fire. */
@@ -349,6 +362,7 @@ try {
       box: {
         browser: measured.box,
         reader: { ascent: entry.face.metrics.ascent, descent: entry.face.metrics.descent },
+        candidates: candidatesOf(entry.face),
       },
       uncovered: SAMPLES.filter((sample) => !entry.samples.includes(sample)).map(
         (sample) => sample.id,
@@ -371,12 +385,10 @@ try {
     directories: library.directories,
     sizes: SIZES,
     boxPx: BOX_PX,
-    agreement: AGREEMENT,
     samples: SAMPLES.map((sample) => ({
       id: sample.id,
       script: sample.script,
       gated: sample.gated,
-      shaped: sample.shaped,
       asks: sample.asks,
       text: sample.text,
     })),

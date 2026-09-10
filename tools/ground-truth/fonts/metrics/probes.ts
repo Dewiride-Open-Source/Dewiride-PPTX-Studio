@@ -93,6 +93,11 @@ export const PROBES: readonly Probe[] = [
     spec: { familyName: 'PptxStudio Gpos', gpos: PAIR },
   },
   {
+    id: 'gpos-extension',
+    asks: 'whether a PairPos behind a type 9 Extension lookup still kerns',
+    spec: { familyName: 'PptxStudio Gpos Extension', gpos: PAIR, gposExtension: true },
+  },
+  {
     id: 'astral',
     asks: 'which cmap subtable a reader must prefer when a font has two',
     spec: { familyName: 'PptxStudio Astral', astral: ASTRAL },

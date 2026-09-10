@@ -18,6 +18,22 @@ const TTCF = 0x74746366;
 /** `OS/2.fsSelection` bit 7: the typographic metrics are the ones to use. */
 const USE_TYPO_METRICS = 0x0080;
 
+/** One ascent and descent in font units, the descent positive below the baseline. */
+export interface MetricPair {
+  readonly ascent: number;
+  readonly descent: number;
+}
+
+/** Every pair a browser could report a face box from, each as its table wrote it. */
+export interface MetricCandidates {
+  readonly hhea: MetricPair;
+  /** `undefined` on a face with no `OS/2` table long enough to hold version 0. */
+  readonly usWin: MetricPair | undefined;
+  readonly sTypo: MetricPair | undefined;
+  /** `OS/2.fsSelection` bit 7, USE_TYPO_METRICS. */
+  readonly useTypoMetrics: boolean;
+}
+
 export interface FaceMetrics {
   /** `head.unitsPerEm`, the denominator of every number here. */
   readonly unitsPerEm: number;
@@ -29,6 +45,8 @@ export interface FaceMetrics {
   readonly source: 'usWin' | 'sTypo';
   /** The `BASE` `ideo` coordinate under `DFLT`, in font units below the baseline. */
   readonly ideographic: number | undefined;
+  /** The pairs `ascent` and `descent` were chosen from, so a rival reading is scorable. */
+  readonly candidates: MetricCandidates;
 }
 
 export interface Face {
@@ -312,6 +330,12 @@ function valueSize(format: number): number {
 /** `XAdvance` is bit 2, and it is the only field a horizontal advance reads. */
 const X_ADVANCE = 0x0004;
 
+/** `LookupType` 2, pair adjustment: the only positioning that moves an advance. */
+const PAIR_POS = 2;
+
+/** `LookupType` 9, Extension Positioning, whose subtable names the real type. */
+const EXTENSION_POS = 9;
+
 function pairPosLookup(r: Reader, at: number): Kerning | undefined {
   const format = u16(r, at);
   const valueFormat1 = u16(r, at + 4);
@@ -352,10 +376,26 @@ function pairPosLookup(r: Reader, at: number): Kerning | undefined {
 }
 
 /**
+ * The pair adjustments behind an `ExtensionPosFormat1` subtable.
+ *
+ * The extension names the real lookup type and a 32-bit offset from its own
+ * start, and may not itself target another, so exactly one level is followed.
+ */
+function extensionPairPos(r: Reader, at: number): Kerning | undefined {
+  const end = r.bytes.length;
+  if (at + 8 > end || u16(r, at) !== 1 || u16(r, at + 2) !== PAIR_POS) return undefined;
+  const target = at + u32(r, at + 4);
+  // A PairPos header is sixteen bytes at its widest and a 32-bit offset can
+  // name anything, so one that runs past the table is read as no kerning.
+  return target + 16 > end ? undefined : pairPosLookup(r, target);
+}
+
+/**
  * The `kern` feature's pair adjustments, if the font has GPOS.
  *
  * Only the `kern` feature: a font's GPOS also carries mark attachment and
- * cursive positioning, and neither changes an advance.
+ * cursive positioning, and neither changes an advance. Its lookups are type 2,
+ * or the type 9 Extension a font compiler wraps them in.
  */
 function gposKerning(tables: Tables): Kerning | undefined {
   const table = tables.get('GPOS');
@@ -381,10 +421,12 @@ function gposKerning(tables: Tables): Kerning | undefined {
   for (const index of wanted) {
     if (index >= lookupCount) continue;
     const lookup = lookupList + u16(r, lookupList + 2 + index * 2);
-    if (u16(r, lookup) !== 2) continue; // type 2, pair adjustment
+    const type = u16(r, lookup);
+    if (type !== PAIR_POS && type !== EXTENSION_POS) continue;
     const subtables = u16(r, lookup + 4);
     for (let i = 0; i < subtables; i++) {
-      const pairs = pairPosLookup(r, lookup + u16(r, lookup + 6 + i * 2));
+      const at = lookup + u16(r, lookup + 6 + i * 2);
+      const pairs = type === PAIR_POS ? pairPosLookup(r, at) : extensionPairPos(r, at);
       if (pairs !== undefined) found.push(pairs);
     }
   }
@@ -488,10 +530,9 @@ function ideographicOf(tables: Tables): number | undefined {
  * The vertical metrics a browser reports for the face.
  *
  * T13 built one font whose `hhea`, `usWin` and `sTypo` pairs are all different
- * and asked Chromium for `fontBoundingBoxAscent`: it answered `usWin`, and
- * answered `sTypo` from the same font with `fsSelection` bit 7 set. So `hhea`
- * is never the answer, and a reader that ignores bit 7 is wrong on every font
- * that sets it, which is most of the ones shipped since 2015.
+ * and Chromium answered `usWin`, and `sTypo` from the same bytes with
+ * `fsSelection` bit 7 set: 24/24 on Windows. ADR 0044 has that open on Linux,
+ * which is what `candidates` hands back unread.
  */
 function metricsOf(tables: Tables, subject: string): FaceMetrics {
   const head = readerOf(required(tables, 'head', subject));
@@ -499,26 +540,33 @@ function metricsOf(tables: Tables, subject: string): FaceMetrics {
   if (unitsPerEm <= 0) unreadable('head.unitsPerEm is zero', subject);
 
   const ideographic = ideographicOf(tables);
+  const hhea = readerOf(required(tables, 'hhea', subject));
+  const hheaPair: MetricPair = { ascent: i16(hhea, 4), descent: -i16(hhea, 6) };
 
+  // 78 bytes is `OS/2` version 0, which is every field read below.
   const os2 = tables.get('OS/2');
   if (os2 === undefined || os2.length < 78) {
     // No OS/2 at all is a bare CJK or bitmap face; hhea is then the only source
     // there is, and the browser has nothing else to read either.
-    const hhea = readerOf(required(tables, 'hhea', subject));
     return {
       unitsPerEm,
-      ascent: i16(hhea, 4),
-      descent: -i16(hhea, 6),
+      ...hheaPair,
       source: 'usWin',
       ideographic,
+      candidates: { hhea: hheaPair, usWin: undefined, sTypo: undefined, useTypoMetrics: false },
     };
   }
   const r = readerOf(os2);
-  const useTypo = (u16(r, 62) & USE_TYPO_METRICS) !== 0;
-  if (useTypo) {
-    return { unitsPerEm, ascent: i16(r, 68), descent: -i16(r, 70), source: 'sTypo', ideographic };
-  }
-  return { unitsPerEm, ascent: u16(r, 74), descent: u16(r, 76), source: 'usWin', ideographic };
+  const usWin: MetricPair = { ascent: u16(r, 74), descent: u16(r, 76) };
+  const sTypo: MetricPair = { ascent: i16(r, 68), descent: -i16(r, 70) };
+  const useTypoMetrics = (u16(r, 62) & USE_TYPO_METRICS) !== 0;
+  return {
+    unitsPerEm,
+    ...(useTypoMetrics ? sTypo : usWin),
+    source: useTypoMetrics ? 'sTypo' : 'usWin',
+    ideographic,
+    candidates: { hhea: hheaPair, usWin, sTypo, useTypoMetrics },
+  };
 }
 
 function advancesOf(tables: Tables, subject: string): (glyph: number) => number {

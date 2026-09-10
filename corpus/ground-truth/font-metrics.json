@@ -26,6 +26,10 @@
       "asks": "whether GPOS PairPos is honoured at all"
     },
     {
+      "id": "gpos-extension",
+      "asks": "whether a PairPos behind a type 9 Extension lookup still kerns"
+    },
+    {
       "id": "astral",
       "asks": "which cmap subtable a reader must prefer when a font has two"
     },
@@ -150,6 +154,31 @@
         ]
       },
       "base64": "AAEAAAALAIAAAwAwR1BPU682vxcAAAC8AAAAUE9TLzJhWl0BAAABDAAAAGBjbWFwAHsAPAAAAWwAAAA0Z2x5ZhoaMgAAAAGgAAABRGhlYWRhbEM+AAAC5AAAADZoaGVhBXoBmwAAAxwAAAAkaG10eBaoArwAAANAAAAAKGxvY2EAAAZ4AAADaAAAACxtYXhwAAwABgAAA5QAAAAibmFtZQ7eImgAAAO4AAAA0HBvc3T/nwAyAAAEiAAAACAAAQAAAAoAHgAsAAFERkxUAAgABAAAAAD//wABAAAAAWtlcm4ACAAAAAEAAAABAAQAAgAAAAEACAABABIABAAAAAEADAABAAP/OAABAAEAAgAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAEAAIABIAyD/OAAAAyAAyAAAAAEAAAAAAfQCvAAAAAAAAAAAAAEAAwABAAAADAAEACgAAAAGAAQAAQACACAASP//AAAAIABB////4f/BAAEAAAAAAAAAAQA8AAACHAL4AAMAAAEBAQEAPAHgAAD+IAAAAAAC+AAAAAAAAQBQAAACCABkAAMAAAEBAQEAUAG4AAD+SAAAAAAAZAAAAAAAAQBQAAACCADIAAMAAAEBAQEAUAG4AAD+SAAAAAAAyAAAAAAAAQBQAAACCAEsAAMAAAEBAQEAUAG4AAD+SAAAAAABLAAAAAAAAQBQAAACCAGQAAMAAAEBAQEAUAG4AAD+SAAAAAABkAAAAAAAAQBQAAACCAH0AAMAAAEBAQEAUAG4AAD+SAAAAAAB9AAAAAAAAQBQAAACCAJYAAMAAAEBAQEAUAG4AAD+SAAAAAACWAAAAAAAAQBQAAACCAK8AAMAAAEBAQEAUAG4AAD+SAAAAAACvAAAAAAAAQBQAAACCAMgAAMAAAEBAQEAUAG4AAD+SAAAAAADIAAAAAAAAQAAAAEAAO/Lvo5fDzz1AAAD6AAAAAAAAAAAAAAAAAAAAAAAAP84AlgDIAAAAAgAAgABAAAAAAABAAADIP84AAACWAAAAAACWAABAAAAAAAAAAAAAAAAAAAACgJYADwBkAAAAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFAAAAAAAAAAJAAAACQAAABIAAAAbAAAAJAAAAC0AAAA2AAAAPwAAAEgAAABRAABAAAACgAEAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAQgADAAEECQABAB4AAAADAAEECQACAA4AHgADAAEECQADACgALAADAAEECQAEAB4AVAADAAEECQAGABwAcgBQAHAAdAB4AFMAdAB1AGQAaQBvACAARwBwAG8AcwBSAGUAZwB1AGwAYQByAFAAcAB0AHgAUwB0AHUAZABpAG8AIABHAHAAbwBzACAAMgAwADIANgBQAHAAdAB4AFMAdAB1AGQAaQBvACAARwBwAG8AcwBQAHAAdAB4AFMAdAB1AGQAaQBvAEcAcABvAHMAAwAAAAAAAP+cADIAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "id": "gpos-extension",
+      "family": "PptxStudio Gpos Extension",
+      "spec": {
+        "familyName": "PptxStudio Gpos Extension",
+        "unitsPerEm": 1000,
+        "hheaAscender": 800,
+        "hheaDescender": -200,
+        "winAscent": 800,
+        "winDescent": 200,
+        "typoAscender": 800,
+        "typoDescender": -200,
+        "advance": 600,
+        "spaceAdvance": 400,
+        "gpos": [
+          {
+            "left": "A",
+            "right": "B",
+            "adjust": -200
+          }
+        ],
+        "gposExtension": true
+      },
+      "base64": "AAEAAAALAIAAAwAwR1BPU68+vyEAAAC8AAAAWE9TLzJhWl0BAAABFAAAAGBjbWFwAHsAPAAAAXQAAAA0Z2x5ZhoaMgAAAAGoAAABRGhlYWRhbEM+AAAC7AAAADZoaGVhBXoBmwAAAyQAAAAkaG10eBaoArwAAANIAAAAKGxvY2EAAAZ4AAADcAAAACxtYXhwAAwABgAAA5wAAAAibmFtZRcFKm8AAAPAAAABHnBvc3T/nwAyAAAE4AAAACAAAQAAAAoAHgAsAAFERkxUAAgABAAAAAD//wABAAAAAWtlcm4ACAAAAAEAAAABAAQACQAAAAEACAABAAIAAAAIAAEAEgAEAAAAAQAMAAEAA/84AAEAAQACAAQCWAGQAAUAAAKKArz/agDIAZABLABk/84BkAEsAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAFBYU1QAQAAgAEgDIP84AAADIADIAAAAAQAAAAAB9AK8AAAAAAAAAAAAAQADAAEAAAAMAAQAKAAAAAYABAABAAIAIABI//8AAAAgAEH////h/8EAAQAAAAAAAAABADwAAAIcAvgAAwAAAQEBAQA8AeAAAP4gAAAAAAL4AAAAAAABAFAAAAIIAGQAAwAAAQEBAQBQAbgAAP5IAAAAAABkAAAAAAABAFAAAAIIAMgAAwAAAQEBAQBQAbgAAP5IAAAAAADIAAAAAAABAFAAAAIIASwAAwAAAQEBAQBQAbgAAP5IAAAAAAEsAAAAAAABAFAAAAIIAZAAAwAAAQEBAQBQAbgAAP5IAAAAAAGQAAAAAAABAFAAAAIIAfQAAwAAAQEBAQBQAbgAAP5IAAAAAAH0AAAAAAABAFAAAAIIAlgAAwAAAQEBAQBQAbgAAP5IAAAAAAJYAAAAAAABAFAAAAIIArwAAwAAAQEBAQBQAbgAAP5IAAAAAAK8AAAAAAABAFAAAAIIAyAAAwAAAQEBAQBQAbgAAP5IAAAAAAMgAAAAAAABAAAAAQAA322tdl8PPPUAAAPoAAAAAAAAAAAAAAAAAAAAAAAA/zgCWAMgAAAACAACAAEAAAAAAAEAAAMg/zgAAAJYAAAAAAJYAAEAAAAAAAAAAAAAAAAAAAAKAlgAPAGQAAACWABQAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAAAAAAAAAAkAAAAJAAAAEgAAABsAAAAkAAAALQAAADYAAAA/AAAASAAAAFEAAEAAAAKAAQAAQAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQBCAAMAAQQJAAEAMgAAAAMAAQQJAAIADgAyAAMAAQQJAAMAPABAAAMAAQQJAAQAMgB8AAMAAQQJAAYALgCuAFAAcAB0AHgAUwB0AHUAZABpAG8AIABHAHAAbwBzACAARQB4AHQAZQBuAHMAaQBvAG4AUgBlAGcAdQBsAGEAcgBQAHAAdAB4AFMAdAB1AGQAaQBvACAARwBwAG8AcwAgAEUAeAB0AGUAbgBzAGkAbwBuACAAMgAwADIANgBQAHAAdAB4AFMAdAB1AGQAaQBvACAARwBwAG8AcwAgAEUAeAB0AGUAbgBzAGkAbwBuAFAAcAB0AHgAUwB0AHUAZABpAG8ARwBwAG8AcwBFAHgAdABlAG4AcwBpAG8AbgAAAAMAAAAAAAD/nAAyAAAAAAAAAAAAAAAAAAAAAAAAAAA="
     },
     {
       "id": "astral",
@@ -712,6 +741,76 @@
         "hanBaselines": null
       },
       {
+        "id": "gpos-extension",
+        "box": {
+          "ascent": 800,
+          "descent": 200
+        },
+        "widths": {
+          "8": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 7.999969482421875,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 36.799896240234375,
+            "A B": 12.799972534179688
+          },
+          "12": {
+            "A": 7.1999969482421875,
+            "B": 7.1999969482421875,
+            "AB": 12,
+            "AC": 14.399993896484375,
+            "ABCDEFGH": 55.199981689453125,
+            "A B": 19.199981689453125
+          },
+          "16": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 15.999984741210938,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 73.59992980957031,
+            "A B": 25.5999755859375
+          },
+          "32": {
+            "A": 19.199996948242188,
+            "B": 19.199996948242188,
+            "AB": 32,
+            "AC": 38.399993896484375,
+            "ABCDEFGH": 147.19998168945312,
+            "A B": 51.199981689453125
+          },
+          "100": {
+            "A": 60,
+            "B": 60,
+            "AB": 100,
+            "AC": 120,
+            "ABCDEFGH": 460,
+            "A B": 160
+          },
+          "1000": {
+            "A": 600,
+            "B": 600,
+            "AB": 1000,
+            "AC": 1200,
+            "ABCDEFGH": 4600,
+            "A B": 1600
+          }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 64,
+            "ideographic": -20
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 640,
+            "ideographic": -200
+          }
+        },
+        "hanBaselines": null
+      },
+      {
         "id": "astral",
         "box": {
           "ascent": 800,
@@ -1186,9 +1285,9 @@
     ]
   },
   "measurements": {
-    "widths": 396,
-    "boxes": 22,
-    "baselines": 30
+    "widths": 432,
+    "boxes": 24,
+    "baselines": 32
   },
   "faceBox": {
     "$comment": "The ascent and descent a browser reports for a face. Every real font sets hhea and usWin to the same numbers, so only a font built to disagree can say which was read.",
@@ -1196,62 +1295,74 @@
     "scores": [
       {
         "model": "hhea.ascender/descender",
-        "fits": 10,
-        "of": 22,
+        "fits": 12,
+        "of": 24,
         "worst": 100
       },
       {
         "model": "OS/2.usWinAscent/usWinDescent",
-        "fits": 20,
-        "of": 22,
+        "fits": 22,
+        "of": 24,
         "worst": 200
       },
       {
         "model": "OS/2.sTypoAscender/sTypoDescender",
-        "fits": 12,
-        "of": 22,
+        "fits": 14,
+        "of": 24,
         "worst": 200
       },
       {
         "model": "usWin, or sTypo when fsSelection bit 7 is set",
-        "fits": 22,
-        "of": 22,
+        "fits": 24,
+        "of": 24,
         "worst": 0
       }
     ]
   },
   "kerning": {
-    "$comment": "A font may carry pair adjustments in a legacy kern table, in GPOS, or in both. The third probe sets them to different values, which is the only way to find out which one loses.",
-    "answer": "GPOS when present, else the kern table",
+    "$comment": "A font may carry pair adjustments in a legacy kern table, in GPOS, or in both. The third probe sets them to different values, which is the only way to find out which one loses, and the fourth reaches its PairPos through a type 9 Extension lookup, which is how a font compiler emits one and where a reader that skips the type silently loses all kerning.",
+    "answer": "GPOS when it yields a pair, else the kern table, following one type 9 Extension lookup",
     "scores": [
       {
         "model": "the legacy kern table only",
         "fits": 54,
-        "of": 66,
+        "of": 72,
         "worst": 200
       },
       {
-        "model": "GPOS PairPos only",
+        "model": "GPOS PairPos only, type 2 lookups only",
         "fits": 60,
-        "of": 66,
+        "of": 72,
         "worst": 200
       },
       {
-        "model": "GPOS when present, else the kern table",
+        "model": "GPOS PairPos only, following one type 9 Extension lookup",
         "fits": 66,
-        "of": 66,
+        "of": 72,
+        "worst": 200
+      },
+      {
+        "model": "GPOS when it yields a pair, else the kern table, type 2 lookups only",
+        "fits": 66,
+        "of": 72,
+        "worst": 200
+      },
+      {
+        "model": "GPOS when it yields a pair, else the kern table, following one type 9 Extension lookup",
+        "fits": 72,
+        "of": 72,
         "worst": 0
       },
       {
         "model": "the kern table when present, else GPOS",
-        "fits": 60,
-        "of": 66,
+        "fits": 66,
+        "of": 72,
         "worst": 100
       },
       {
         "model": "neither",
         "fits": 48,
-        "of": 66,
+        "of": 72,
         "worst": 200
       }
     ]
@@ -1263,32 +1374,32 @@
     "scores": [
       {
         "model": "exact float, no quantisation",
-        "fits": 136,
-        "of": 396,
+        "fits": 150,
+        "of": 432,
         "worst": 0.00010375976562215783
       },
       {
         "model": "advance and kern truncated at 1/65536 px",
-        "fits": 388,
-        "of": 396,
+        "fits": 422,
+        "of": 432,
         "worst": 0.0000152587890625
       },
       {
         "model": "advance and kern rounded at 1/65536 px",
-        "fits": 242,
-        "of": 396,
+        "fits": 264,
+        "of": 432,
         "worst": 0.0001220703125
       },
       {
         "model": "advance truncated, kern rounded, both at 1/65536 px",
-        "fits": 396,
-        "of": 396,
+        "fits": 432,
+        "of": 432,
         "worst": 0
       },
       {
         "model": "the whole string quantised once at 1/65536 px",
-        "fits": 264,
-        "of": 396,
+        "fits": 288,
+        "of": 432,
         "worst": 0.000091552734375
       }
     ]
@@ -1317,158 +1428,158 @@
     "scores": [
       {
         "model": "the face box descent",
-        "fits": 22,
-        "of": 30,
+        "fits": 24,
+        "of": 32,
         "worst": 900
       },
       {
         "model": "OS/2.usWinDescent",
-        "fits": 20,
-        "of": 30,
+        "fits": 22,
+        "of": 32,
         "worst": 900
       },
       {
         "model": "OS/2.sTypoDescender",
-        "fits": 12,
-        "of": 30,
+        "fits": 14,
+        "of": 32,
         "worst": 1100
       },
       {
         "model": "hhea.descender",
-        "fits": 10,
-        "of": 30,
+        "fits": 12,
+        "of": 32,
         "worst": 1000
       },
       {
         "model": "zero, the alphabetic baseline",
         "fits": 0,
-        "of": 30,
+        "of": 32,
         "worst": 1200
       },
       {
         "model": "the BASE ideo coordinate of the run script, else the face box descent",
-        "fits": 20,
-        "of": 30,
+        "fits": 22,
+        "of": 32,
         "worst": 900
       },
       {
         "model": "the BASE ideo coordinate of the run script, else OS/2.usWinDescent",
-        "fits": 18,
-        "of": 30,
+        "fits": 20,
+        "of": 32,
         "worst": 900
       },
       {
         "model": "the BASE ideo coordinate of the run script, else OS/2.sTypoDescender",
-        "fits": 14,
-        "of": 30,
+        "fits": 16,
+        "of": 32,
         "worst": 1100
       },
       {
         "model": "the BASE ideo coordinate of the run script, else hhea.descender",
-        "fits": 12,
-        "of": 30,
+        "fits": 14,
+        "of": 32,
         "worst": 1000
       },
       {
         "model": "the BASE ideo coordinate of the run script, else sTypoDescender where fsSelection bit 7 is set and hhea.descender otherwise",
-        "fits": 14,
-        "of": 30,
+        "fits": 16,
+        "of": 32,
         "worst": 1000
       },
       {
         "model": "the BASE icfb coordinate of the run script, else the face box descent",
-        "fits": 14,
-        "of": 30,
+        "fits": 16,
+        "of": 32,
         "worst": 900
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script, else the face box descent",
-        "fits": 30,
-        "of": 30,
+        "fits": 32,
+        "of": 32,
         "worst": 0
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script, else OS/2.usWinDescent",
-        "fits": 28,
-        "of": 30,
+        "fits": 30,
+        "of": 32,
         "worst": 200
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script, else OS/2.sTypoDescender",
-        "fits": 20,
-        "of": 30,
+        "fits": 22,
+        "of": 32,
         "worst": 200
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script, else hhea.descender",
-        "fits": 18,
-        "of": 30,
+        "fits": 20,
+        "of": 32,
         "worst": 100
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script, else sTypoDescender where fsSelection bit 7 is set and hhea.descender otherwise",
-        "fits": 20,
-        "of": 30,
+        "fits": 22,
+        "of": 32,
         "worst": 100
       },
       {
         "model": "the BASE icfb coordinate of the DFLT script, else the face box descent",
-        "fits": 18,
-        "of": 30,
+        "fits": 20,
+        "of": 32,
         "worst": 630
       },
       {
         "model": "the BASE ideo coordinate of the latn script, else the face box descent",
-        "fits": 22,
-        "of": 30,
+        "fits": 24,
+        "of": 32,
         "worst": 110
       },
       {
         "model": "the BASE icfb coordinate of the latn script, else the face box descent",
-        "fits": 14,
-        "of": 30,
+        "fits": 16,
+        "of": 32,
         "worst": 630
       },
       {
         "model": "the BASE ideo coordinate of the hani script, else the face box descent",
-        "fits": 18,
-        "of": 30,
+        "fits": 20,
+        "of": 32,
         "worst": 900
       },
       {
         "model": "the BASE icfb coordinate of the hani script, else the face box descent",
-        "fits": 14,
-        "of": 30,
+        "fits": 16,
+        "of": 32,
         "worst": 900
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script or the latn script, else the face box descent",
-        "fits": 26,
-        "of": 30,
+        "fits": 28,
+        "of": 32,
         "worst": 110
       },
       {
         "model": "the BASE icfb coordinate of the DFLT script or the latn script, else the face box descent",
-        "fits": 14,
-        "of": 30,
+        "fits": 16,
+        "of": 32,
         "worst": 630
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script or the first script named, else the face box descent",
-        "fits": 26,
-        "of": 30,
+        "fits": 28,
+        "of": 32,
         "worst": 80
       },
       {
         "model": "the BASE icfb coordinate of the DFLT script or the first script named, else the face box descent",
-        "fits": 14,
-        "of": 30,
+        "fits": 16,
+        "of": 32,
         "worst": 630
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script where it falls inside the em, else the face box descent",
-        "fits": 26,
-        "of": 30,
+        "fits": 28,
+        "of": 32,
         "worst": 900
       }
     ]

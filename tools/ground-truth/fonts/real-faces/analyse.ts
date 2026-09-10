@@ -13,7 +13,6 @@
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { AGREEMENT } from './probes.ts';
 import { reportMarkdown, score, type Run } from './score.ts';
 
 const USAGE = 'usage: analyse.ts <work-dir> [--summary <path>]';
@@ -28,15 +27,6 @@ if (summaryAt >= 0 && summary === undefined) throw new Error(`${USAGE}\n--summar
 
 const workDir = resolve(work);
 const run = JSON.parse(readFileSync(join(workDir, 'real-faces.json'), 'utf8')) as Run;
-
-// The threshold is committed, not carried: an artifact that names a different
-// one is scoring against a gate nobody reviewed.
-if (run.agreement !== AGREEMENT) {
-  throw new Error(
-    `the measurement records a gate of ${String(run.agreement)}, but probes.ts commits ` +
-      `${String(AGREEMENT)}`,
-  );
-}
 
 const verdict = score(run);
 const report = reportMarkdown(run, verdict);

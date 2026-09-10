@@ -240,8 +240,21 @@ only and asks no font questions at all.
 
 A typeface the machine does not have is substituted through the same table
 `@pptx-studio/text` uses in the browser, so the two renderers cannot fall back
-differently, and the substitution is reported rather than hidden. A code point
-no indexed face can draw is reported too.
+differently, and the substitution is reported rather than hidden. The chain is
+that table's entry for the name, then Calibri and Carlito — what PowerPoint
+itself falls back to, measured 22 of 22 in
+[ADR 0033](../../docs/adr/phase-3-text/0033-font-substitution-and-the-guard.md) —
+then the family the asked-for name is a variation of, so `Calibri Light` draws
+in Calibri where the machine has it.
+
+Past all of those the first family by name draws the run. The browser's stack
+ends in a generic and this has none, so something has to be chosen, and it is
+chosen by name rather than by the order the files were read in: two machines
+holding the same faces answer identically. It is still reported as a
+substitution, under the name the deck asked for. **`CLI_NO_FACE` is thrown only
+when no font was found at all** — an empty library is nothing to draw with,
+which is a different thing from an unusual typeface. A code point no indexed
+face can draw is reported too.
 
 | flag                |                                                                     |
 | ------------------- | ------------------------------------------------------------------- |
