@@ -15,10 +15,10 @@ import {
   EXACT_PX,
   READINGS,
   SHIPPED,
-  SHIPPED_BOX,
   UNKERNED,
   applyBoxVariant,
   glyphsOf,
+  shippedBoxFor,
   widthTolerance,
   type BoxCandidates,
   type BoxPair,
@@ -43,6 +43,8 @@ export interface Row {
   readonly px: number;
   /** `measureText(...).width`, in CSS pixels. */
   readonly browser: number;
+  /** Adjacent pairs the reader kerned, each carrying its own browser rounding. */
+  readonly kerns?: number;
   readonly readings: Readonly<Partial<Record<Reading, number>>>;
 }
 
@@ -247,7 +249,22 @@ function gatedComparisons(run: Run, failures: Failure[]): Comparison[] {
         });
         continue;
       }
-      out.push({ face, row, shipped, tolerance: widthTolerance(glyphsOf(sample.text)) });
+      if (row.kerns === undefined) {
+        failures.push({
+          kind: 'unmeasured',
+          subject: face.file,
+          detail:
+            `${row.sample} at ${String(row.px)}px carries no kern count, and the tolerance ` +
+            'is one browser rounding per glyph and one per applied kern',
+        });
+        continue;
+      }
+      out.push({
+        face,
+        row,
+        shipped,
+        tolerance: widthTolerance(glyphsOf(sample.text), row.kerns),
+      });
     }
   }
   return out;
@@ -312,11 +329,11 @@ interface ScriptBucket {
 function scoreScripts(run: Run): ScriptScore[] {
   const buckets = new Map<string, ScriptBucket>();
   for (const sample of run.samples) {
-    const tolerance = widthTolerance(glyphsOf(sample.text));
     for (const face of run.faces) {
       for (const row of face.rows) {
         const shipped = row.readings[SHIPPED];
         if (row.sample !== sample.id || shipped === undefined || !usable(row)) continue;
+        const tolerance = widthTolerance(glyphsOf(sample.text), row.kerns ?? 0);
         const key = `${sample.script}/${String(sample.gated)}`;
         let bucket = buckets.get(key);
         if (bucket === undefined) {
@@ -384,7 +401,11 @@ function samePair(a: BoxPair, b: BoxPair): boolean {
 }
 
 /** Every reading of the face box, over the faces whose candidates were recorded. */
-function scoreBoxReadings(scorable: readonly RunFace[], boxPx: number): BoxReadingScore[] {
+function scoreBoxReadings(
+  scorable: readonly RunFace[],
+  boxPx: number,
+  shippedBox: string,
+): BoxReadingScore[] {
   return Object.entries(BOX_READINGS).map(([reading, read]) => {
     let of = 0;
     let fits = 0;
@@ -399,7 +420,7 @@ function scoreBoxReadings(scorable: readonly RunFace[], boxPx: number): BoxReadi
       const miss = boxMiss(pair, face, boxPx);
       if (miss <= BOX_TOLERANCE) fits += 1;
       worstPx = Math.max(worstPx, miss);
-      const shipped = BOX_READINGS[SHIPPED_BOX]?.(candidates);
+      const shipped = BOX_READINGS[shippedBox]?.(candidates);
       if (shipped !== undefined && !samePair(pair, shipped)) separates += 1;
     }
     return { reading, of, fits, separates, worstPx };
@@ -410,7 +431,6 @@ function scoreShaping(run: Run): ShapingScore[] {
   const out: ShapingScore[] = [];
   for (const sample of run.samples) {
     if (sample.gated) continue;
-    const tolerance = widthTolerance(glyphsOf(sample.text));
     const faces = new Set<string>();
     const ratios: number[] = [];
     let outsideTolerance = 0;
@@ -418,6 +438,7 @@ function scoreShaping(run: Run): ShapingScore[] {
       for (const row of face.rows) {
         const shipped = row.readings[SHIPPED];
         if (row.sample !== sample.id || shipped === undefined || !usable(row)) continue;
+        const tolerance = widthTolerance(glyphsOf(sample.text), row.kerns ?? 0);
         faces.add(face.sha256);
         ratios.push(shipped / row.browser);
         if (Math.abs(shipped - row.browser) > tolerance) outsideTolerance += 1;
@@ -541,7 +562,8 @@ export function score(run: Run): Verdict {
     );
   }
 
-  const readings = scoreBoxReadings(run.faces, run.boxPx);
+  const shippedBoxName = shippedBoxFor(run.image.platform);
+  const readings = scoreBoxReadings(run.faces, run.boxPx, shippedBoxName);
   const scorable = run.faces.filter((face) => face.box.candidates !== undefined);
   const unscorable = run.faces.filter((face) => face.box.candidates === undefined);
   if (unscorable.length > 0) {
@@ -554,7 +576,7 @@ export function score(run: Run): Verdict {
         'read the box out of cannot be scored on a run that did not record them',
     });
   }
-  const shippedBox = readings.find((entry) => entry.reading === SHIPPED_BOX);
+  const shippedBox = readings.find((entry) => entry.reading === shippedBoxName);
   if (shippedBox !== undefined && run.faces.length > 0) {
     if (agreed < run.faces.length && !readings.some((e) => e.fits === run.faces.length)) {
       failures.push({
@@ -568,13 +590,13 @@ export function score(run: Run): Verdict {
       });
     }
     for (const rival of readings) {
-      if (rival.reading === SHIPPED_BOX || rival.fits <= shippedBox.fits) continue;
+      if (rival.reading === shippedBoxName || rival.fits <= shippedBox.fits) continue;
       failures.push({
         kind: 'face-box-rival',
         subject: rival.reading,
         detail:
           `fits ${String(rival.fits)}/${String(rival.of)} face box(es) against ` +
-          `${SHIPPED_BOX} at ${String(shippedBox.fits)}/${String(shippedBox.of)}, and ` +
+          `${shippedBoxName} at ${String(shippedBox.fits)}/${String(shippedBox.of)}, and ` +
           `predicts a different box on ${String(rival.separates)} of them`,
       });
     }
@@ -637,9 +659,12 @@ export function reportMarkdown(run: Run, verdict: Verdict): string {
   parts.push(
     `**The gate.** This browser quantises every glyph advance to ${String(ADVANCE_QUANTUM)} px, ` +
       'so a reader that sums fractional advances can never reproduce it and is not asked to. ' +
-      `A width may sit ${String(ADVANCE_QUANTUM / 2)} px per glyph away from the browser's, ` +
-      `plus the reader's own ${READER_STEP_TEXT} px per glyph, and the face box one rounding. ` +
-      'Nothing here is a tolerance chosen to pass.',
+      `A width may sit ${String(ADVANCE_QUANTUM / 2)} px away from the browser's per glyph ` +
+      'and once more per kern the reader applied, because the browser rounds the advance and ' +
+      `the adjustment separately, plus the reader's own ${READER_STEP_TEXT} px per glyph, and ` +
+      'the face box one rounding. A single joint rounding is refuted rather than assumed: it ' +
+      'could not cost the 0.648 px a glyph T14 measured on Lato Thin, where a kern-free sample ' +
+      'on the same faces never passes 0.45. Nothing here is a tolerance chosen to pass. ADR 0045.',
   );
 
   parts.push('### Every reading, scored against the tolerance and at equality');
@@ -690,13 +715,20 @@ export function reportMarkdown(run: Run, verdict: Verdict): string {
     table(
       ['reading', 'fits', 'of', 'differs from shipped', 'worst px'],
       verdict.faceBox.readings.map((entry) => [
-        entry.reading === SHIPPED_BOX ? `**${entry.reading}**` : entry.reading,
+        entry.reading === shippedBoxFor(run.image.platform)
+          ? `**${entry.reading}**`
+          : entry.reading,
         String(entry.fits),
         String(entry.of),
         String(entry.separates),
         entry.worstPx.toExponential(3),
       ]),
     ),
+  );
+  parts.push(
+    `This runner reads the box through ${run.image.platform === 'linux' ? 'FreeType' : 'DirectWrite'}, ` +
+      `so **${shippedBoxFor(run.image.platform)}** is the shipped reading here; the other ` +
+      'rasteriser reads a different table and is scored by T13. ADR 0045.',
   );
   parts.push(
     'A reading is scored over the faces whose tables carry the pair it names, and fits a face ' +

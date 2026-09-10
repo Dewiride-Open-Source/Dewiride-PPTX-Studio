@@ -5,8 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import { indexFonts, systemFontDirectories, type FontLibrary } from './faces.js';
 import { createFontMeasurer } from './measure.js';
-import { facesIn } from './sfnt.js';
-import { FIXTURE, bytesOf } from './sfnt.test.js';
+import { FIXTURE, bytesOf, readFaces } from './sfnt.test.js';
 
 /**
  * A directory of the exact fonts Chromium was measured on.
@@ -25,7 +24,9 @@ const LAST_RESORT = FIXTURE.fonts
 beforeAll(() => {
   const dir = mkdtempSync(join(tmpdir(), 'pptx-studio-t13-'));
   for (const font of FIXTURE.fonts) writeFileSync(join(dir, `${font.id}.ttf`), bytesOf(font.id));
-  library = indexFonts({ extra: [dir], system: false });
+  // Pinned to the platform T13 measured on, so the face box rows below assert
+  // one rasteriser rather than whichever this suite runs on. ADR 0045.
+  library = indexFonts({ extra: [dir], system: false, platform: 'win32' });
 });
 
 describe('the font library', () => {
@@ -111,7 +112,7 @@ describe('measuring against what Chromium reported', () => {
   it('quantises only non-negative advances, so trunc and floor are one rule', () => {
     let checked = 0;
     for (const font of FIXTURE.fonts) {
-      const face = facesIn(bytesOf(font.id), font.id)[0]!;
+      const face = readFaces(bytesOf(font.id), font.id)[0]!;
       for (const px of FIXTURE.browser.sizes) {
         for (const text of FIXTURE.browser.strings) {
           for (const ch of [...text]) {

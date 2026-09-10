@@ -36,7 +36,7 @@ export { indexFonts, systemFontDirectories, type FontLibrary } from './render/fa
 
 export { createFontMeasurer, type FaceUse, type FontMeasurer } from './render/measure.js';
 
-export { facesIn, type Face } from './render/sfnt.js';
+export { backendFor, facesIn, type Face, type FontBackend } from './render/sfnt.js';
 
 export {
   RenderError,

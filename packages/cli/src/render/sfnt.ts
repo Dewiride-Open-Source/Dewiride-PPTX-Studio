@@ -18,6 +18,20 @@ const TTCF = 0x74746366;
 /** `OS/2.fsSelection` bit 7: the typographic metrics are the ones to use. */
 const USE_TYPO_METRICS = 0x0080;
 
+/**
+ * The rasteriser a Chromium reads a face's vertical metrics through.
+ *
+ * T13 scored `usWin` 24/24 against DirectWrite on fonts built to disagree, and
+ * T14 scored `hhea` 79/79 against FreeType on real faces where `usWin` reaches
+ * 76/79. One reader cannot answer both. ADR 0045.
+ */
+export type FontBackend = 'directwrite' | 'freetype';
+
+/** FreeType on Linux, DirectWrite elsewhere. macOS is unmeasured. ADR 0045. */
+export function backendFor(platform: string): FontBackend {
+  return platform === 'linux' ? 'freetype' : 'directwrite';
+}
+
 /** One ascent and descent in font units, the descent positive below the baseline. */
 export interface MetricPair {
   readonly ascent: number;
@@ -42,7 +56,7 @@ export interface FaceMetrics {
   /** Below the baseline, in font units, positive. */
   readonly descent: number;
   /** Which table `ascent` and `descent` came out of, for the diagnostics. */
-  readonly source: 'usWin' | 'sTypo';
+  readonly source: 'hhea' | 'usWin' | 'sTypo';
   /** The `BASE` `ideo` coordinate under `DFLT`, in font units below the baseline. */
   readonly ideographic: number | undefined;
   /** The pairs `ascent` and `descent` were chosen from, so a rival reading is scorable. */
@@ -529,12 +543,10 @@ function ideographicOf(tables: Tables): number | undefined {
 /**
  * The vertical metrics a browser reports for the face.
  *
- * T13 built one font whose `hhea`, `usWin` and `sTypo` pairs are all different
- * and Chromium answered `usWin`, and `sTypo` from the same bytes with
- * `fsSelection` bit 7 set: 24/24 on Windows. ADR 0044 has that open on Linux,
- * which is what `candidates` hands back unread.
+ * Bit 7 wins on both backends; without it DirectWrite answers `usWin` and
+ * FreeType `hhea`, measured 24/24 and 79/79. ADR 0045.
  */
-function metricsOf(tables: Tables, subject: string): FaceMetrics {
+function metricsOf(tables: Tables, subject: string, backend: FontBackend): FaceMetrics {
   const head = readerOf(required(tables, 'head', subject));
   const unitsPerEm = u16(head, 18);
   if (unitsPerEm <= 0) unreadable('head.unitsPerEm is zero', subject);
@@ -551,7 +563,7 @@ function metricsOf(tables: Tables, subject: string): FaceMetrics {
     return {
       unitsPerEm,
       ...hheaPair,
-      source: 'usWin',
+      source: 'hhea',
       ideographic,
       candidates: { hhea: hheaPair, usWin: undefined, sTypo: undefined, useTypoMetrics: false },
     };
@@ -560,10 +572,12 @@ function metricsOf(tables: Tables, subject: string): FaceMetrics {
   const usWin: MetricPair = { ascent: u16(r, 74), descent: u16(r, 76) };
   const sTypo: MetricPair = { ascent: i16(r, 68), descent: -i16(r, 70) };
   const useTypoMetrics = (u16(r, 62) & USE_TYPO_METRICS) !== 0;
+  const source = useTypoMetrics ? 'sTypo' : backend === 'freetype' ? 'hhea' : 'usWin';
+  const chosen = source === 'sTypo' ? sTypo : source === 'hhea' ? hheaPair : usWin;
   return {
     unitsPerEm,
-    ...(useTypoMetrics ? sTypo : usWin),
-    source: useTypoMetrics ? 'sTypo' : 'usWin',
+    ...chosen,
+    source,
     ideographic,
     candidates: { hhea: hheaPair, usWin, sTypo, useTypoMetrics },
   };
@@ -585,7 +599,7 @@ const BOLD_STYLE = /bold|black|heavy|semibold|extrabold|demibold/i;
 const ITALIC_STYLE = /italic|oblique/i;
 
 /** Read one font out of an already-located table directory. */
-export function faceOf(tables: Tables, subject: string): Face {
+export function faceOf(tables: Tables, subject: string, backend: FontBackend): Face {
   const names = namesOf(tables, subject);
   const family = names.get(1);
   if (family === undefined || family === '') unreadable('no family name', subject);
@@ -606,7 +620,7 @@ export function faceOf(tables: Tables, subject: string): Face {
     family,
     subfamily,
     typographicFamily: names.get(16),
-    metrics: metricsOf(tables, subject),
+    metrics: metricsOf(tables, subject, backend),
     bold: BOLD_STYLE.test(subfamily) || (macStyle & 0x01) !== 0,
     italic: ITALIC_STYLE.test(subfamily) || (macStyle & 0x02) !== 0,
     advanceOf(codePoint: number): number | undefined {
@@ -622,6 +636,6 @@ export function faceOf(tables: Tables, subject: string): Face {
 }
 
 /** Every face in a file, which is one unless the file is a collection. */
-export function facesIn(bytes: Uint8Array, subject: string): readonly Face[] {
-  return fontsIn(bytes, subject).map((tables) => faceOf(tables, subject));
+export function facesIn(bytes: Uint8Array, subject: string, backend: FontBackend): readonly Face[] {
+  return fontsIn(bytes, subject).map((tables) => faceOf(tables, subject, backend));
 }

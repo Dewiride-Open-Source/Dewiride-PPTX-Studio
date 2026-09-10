@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 
 import { repoPath } from '../../../../tools/repo/root.ts';
 import { RenderError, isRenderError } from './errors.js';
-import { facesIn, fontsIn, faceOf } from './sfnt.js';
+import { backendFor, facesIn, fontsIn, faceOf } from './sfnt.js';
+
+/** T13 was measured on Windows, so every fixture row below is the DirectWrite reading. */
+export const readFaces = (bytes: Uint8Array, subject: string) =>
+  facesIn(bytes, subject, 'directwrite');
 
 /**
  * The measurement, not a copy of it.
@@ -82,7 +86,7 @@ const C = 'C'.codePointAt(0)!;
 describe('the font directory', () => {
   it('reads every probe font the fixture recorded', () => {
     for (const font of FIXTURE.fonts) {
-      const faces = facesIn(bytesOf(font.id), font.id);
+      const faces = readFaces(bytesOf(font.id), font.id);
       expect(faces, font.id).toHaveLength(1);
       expect(faces[0]?.family, font.id).toBe(font.family);
     }
@@ -90,9 +94,9 @@ describe('the font directory', () => {
 
   it('refuses bytes that carry no SFNT signature', () => {
     const notAFont = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0, 0, 0, 0, 0]);
-    expect(() => facesIn(notAFont, 'a.zip')).toThrowError(RenderError);
+    expect(() => readFaces(notAFont, 'a.zip')).toThrowError(RenderError);
     try {
-      facesIn(notAFont, 'a.zip');
+      readFaces(notAFont, 'a.zip');
     } catch (error) {
       expect(isRenderError(error) && error.code).toBe('CLI_FONT_UNREADABLE');
       expect(isRenderError(error) && error.subject).toBe('a.zip');
@@ -100,19 +104,19 @@ describe('the font directory', () => {
   });
 
   it('refuses a file too short to hold a directory', () => {
-    expect(() => facesIn(new Uint8Array(4), 'stub.ttf')).toThrowError(/too short/);
+    expect(() => readFaces(new Uint8Array(4), 'stub.ttf')).toThrowError(/too short/);
   });
 
   it('exposes the same face through fontsIn and faceOf', () => {
     const tables = fontsIn(bytesOf('plain'), 'plain');
     expect(tables).toHaveLength(1);
-    expect(faceOf(tables[0]!, 'plain').family).toBe('PptxStudio Plain');
+    expect(faceOf(tables[0]!, 'plain', 'directwrite').family).toBe('PptxStudio Plain');
   });
 });
 
 describe('cmap and hmtx', () => {
   it('maps the characters the font declares and no others', () => {
-    const face = facesIn(bytesOf('plain'), 'plain')[0]!;
+    const face = readFaces(bytesOf('plain'), 'plain')[0]!;
     const spec = FIXTURE.fonts.find((f) => f.id === 'plain')!.spec;
     expect(face.advanceOf(A)).toBe(spec.advance);
     expect(face.advanceOf(' '.codePointAt(0)!)).toBe(spec.spaceAdvance);
@@ -126,15 +130,15 @@ describe('cmap and hmtx', () => {
     // U+20000 is in the font's format 12 subtable and cannot be in its format 4
     // one, so a reader that takes the first subtable it recognises answers "no
     // glyph" here. The format 4 table is written first on purpose.
-    const face = facesIn(bytesOf('astral'), 'astral')[0]!;
+    const face = readFaces(bytesOf('astral'), 'astral')[0]!;
     expect(face.advanceOf(0x20000)).toBeTypeOf('number');
     expect(face.advanceOf(A)).toBeTypeOf('number');
-    expect(facesIn(bytesOf('plain'), 'plain')[0]!.advanceOf(0x20000)).toBeUndefined();
+    expect(readFaces(bytesOf('plain'), 'plain')[0]!.advanceOf(0x20000)).toBeUndefined();
   });
 
   it('maps the ideograph in the fonts that declare one, and no others', () => {
     for (const font of FIXTURE.fonts) {
-      const face = facesIn(bytesOf(font.id), font.id)[0]!;
+      const face = readFaces(bytesOf(font.id), font.id)[0]!;
       const drawn = face.advanceOf(font.spec.ideograph ?? 0x4e00);
       expect(drawn, font.id).toBe(
         font.spec.ideograph === undefined ? undefined : font.spec.advance,
@@ -149,12 +153,12 @@ describe('cmap and hmtx', () => {
     const hmtx = fontsIn(bytes, 'plain')[0]!.get('hmtx')!;
     hmtx[8] = 0xff;
     hmtx[9] = 0xff;
-    expect(faceOf(fontsIn(bytes, 'plain')[0]!, 'plain').advanceOf(A)).toBe(65535);
+    expect(faceOf(fontsIn(bytes, 'plain')[0]!, 'plain', 'directwrite').advanceOf(A)).toBe(65535);
   });
 
   it('reports unitsPerEm from head', () => {
     for (const font of FIXTURE.fonts) {
-      const face = facesIn(bytesOf(font.id), font.id)[0]!;
+      const face = readFaces(bytesOf(font.id), font.id)[0]!;
       expect(face.metrics.unitsPerEm, font.id).toBe(font.spec.unitsPerEm);
     }
   });
@@ -166,7 +170,7 @@ describe('the face box', () => {
     const { boxPx } = FIXTURE.browser;
     for (const row of FIXTURE.browser.rows) {
       const font = FIXTURE.fonts.find((f) => f.id === row.id)!;
-      const face = facesIn(bytesOf(row.id), row.id)[0]!;
+      const face = readFaces(bytesOf(row.id), row.id)[0]!;
       const scale = boxPx / face.metrics.unitsPerEm;
       expect(face.metrics.ascent * scale, `${row.id} ascent`).toBeCloseTo(row.box.ascent, 9);
       expect(face.metrics.descent * scale, `${row.id} descent`).toBeCloseTo(row.box.descent, 9);
@@ -176,13 +180,38 @@ describe('the face box', () => {
     }
   });
 
-  it('is not hhea, which is the reading everybody writes first', () => {
+  it('is not hhea through DirectWrite, which is the reading everybody writes first', () => {
     const split = FIXTURE.fonts.find((f) => f.id === 'split')!;
-    const face = facesIn(bytesOf('split'), 'split')[0]!;
+    const face = readFaces(bytesOf('split'), 'split')[0]!;
     expect(face.metrics.ascent).not.toBe(split.spec.hheaAscender);
     expect(face.metrics.ascent).toBe(split.spec.winAscent);
   });
 
+  it('reads hhea through FreeType and usWin through DirectWrite, from one file', () => {
+    const { spec } = FIXTURE.fonts.find((f) => f.id === 'split')!;
+    const freetype = facesIn(bytesOf('split'), 'split', 'freetype')[0]!;
+    const directwrite = facesIn(bytesOf('split'), 'split', 'directwrite')[0]!;
+    expect(spec.hheaAscender).not.toBe(spec.winAscent);
+    expect(freetype.metrics.source).toBe('hhea');
+    expect(freetype.metrics.ascent).toBe(spec.hheaAscender);
+    expect(directwrite.metrics.source).toBe('usWin');
+    expect(directwrite.metrics.ascent).toBe(spec.winAscent);
+  });
+
+  it('follows fsSelection bit 7 onto sTypo through either rasteriser', () => {
+    const { spec } = FIXTURE.fonts.find((f) => f.id === 'split-usetypo')!;
+    for (const backend of ['freetype', 'directwrite'] as const) {
+      const face = facesIn(bytesOf('split-usetypo'), 'split-usetypo', backend)[0]!;
+      expect(face.metrics.source, backend).toBe('sTypo');
+      expect(face.metrics.ascent, backend).toBe(spec.typoAscender);
+    }
+  });
+
+  it('names FreeType on Linux and DirectWrite everywhere else', () => {
+    expect(backendFor('linux')).toBe('freetype');
+    expect(backendFor('win32')).toBe('directwrite');
+    expect(backendFor('darwin')).toBe('directwrite');
+  });
   it('carries the shape the IPA Gothic faces have, so nothing new has to be built', () => {
     // Three distinct descents, and a usWin box taller than the em: 900 + 300 on
     // a 1000 em, where ipag.ttf is 1802 + 401 on a 2048 one. ADR 0044.
@@ -198,13 +227,13 @@ describe('the face box', () => {
 
   it('follows fsSelection bit 7 onto the typographic metrics', () => {
     const font = FIXTURE.fonts.find((f) => f.id === 'split-usetypo')!;
-    const face = facesIn(bytesOf('split-usetypo'), 'split-usetypo')[0]!;
+    const face = readFaces(bytesOf('split-usetypo'), 'split-usetypo')[0]!;
     expect(font.spec.useTypoMetrics).toBe(true);
     expect(face.metrics.ascent).toBe(font.spec.typoAscender);
     expect(face.metrics.descent).toBe(-font.spec.typoDescender);
     // The same bytes with the bit clear read the other pair, so the bit is what
     // moved the answer rather than the two fonts differing some other way.
-    const clear = facesIn(bytesOf('split'), 'split')[0]!;
+    const clear = readFaces(bytesOf('split'), 'split')[0]!;
     expect(clear.metrics.ascent).toBe(font.spec.winAscent);
   });
 });
@@ -213,7 +242,7 @@ describe('the candidate pairs', () => {
   it('hands back what each of the three tables said, chosen or not', () => {
     for (const font of FIXTURE.fonts) {
       const { spec } = font;
-      const { candidates } = facesIn(bytesOf(font.id), font.id)[0]!.metrics;
+      const { candidates } = readFaces(bytesOf(font.id), font.id)[0]!.metrics;
       expect(candidates.hhea, font.id).toEqual({
         ascent: spec.hheaAscender,
         descent: -spec.hheaDescender,
@@ -231,7 +260,7 @@ describe('the candidate pairs', () => {
   });
 
   it('keeps the three apart on the probe built to disagree with itself', () => {
-    const { candidates } = facesIn(bytesOf('split'), 'split')[0]!.metrics;
+    const { candidates } = readFaces(bytesOf('split'), 'split')[0]!.metrics;
     const descents = [candidates.hhea, candidates.usWin, candidates.sTypo].map(
       (pair) => pair?.descent,
     );
@@ -240,9 +269,13 @@ describe('the candidate pairs', () => {
 
   it('is where the chosen box came from, on every probe', () => {
     for (const font of FIXTURE.fonts) {
-      const { metrics } = facesIn(bytesOf(font.id), font.id)[0]!;
+      const { metrics } = readFaces(bytesOf(font.id), font.id)[0]!;
       const chosen =
-        metrics.source === 'sTypo' ? metrics.candidates.sTypo : metrics.candidates.usWin;
+        metrics.source === 'sTypo'
+          ? metrics.candidates.sTypo
+          : metrics.source === 'hhea'
+            ? metrics.candidates.hhea
+            : metrics.candidates.usWin;
       expect(chosen, font.id).toEqual({ ascent: metrics.ascent, descent: metrics.descent });
     }
   });
@@ -250,19 +283,23 @@ describe('the candidate pairs', () => {
   it('names hhea alone for a face carrying no OS/2 table', () => {
     const tables = fontsIn(bytesOf('split'), 'split')[0]!;
     const bare = new Map([...tables].filter(([tag]) => tag !== 'OS/2'));
-    const { metrics } = faceOf(bare, 'split');
+    const { metrics } = faceOf(bare, 'split', 'directwrite');
     expect(metrics.candidates.usWin).toBeUndefined();
     expect(metrics.candidates.sTypo).toBeUndefined();
     expect(metrics.candidates.useTypoMetrics).toBe(false);
     expect(metrics.ascent).toBe(metrics.candidates.hhea.ascent);
     expect(metrics.descent).toBe(metrics.candidates.hhea.descent);
+    // The diagnostics name the table the numbers came out of, and hhea is the
+    // only one this face has, through either rasteriser.
+    expect(metrics.source).toBe('hhea');
+    expect(faceOf(bare, 'split', 'freetype').metrics.source).toBe('hhea');
   });
 
   it('reads no OS/2 shorter than the 78 bytes of version 0', () => {
     const tables = fontsIn(bytesOf('split'), 'split')[0]!;
     const short = new Map(tables).set('OS/2', tables.get('OS/2')!.subarray(0, 77));
-    expect(faceOf(short, 'split').metrics.candidates.usWin).toBeUndefined();
-    expect(faceOf(new Map(tables), 'split').metrics.candidates.usWin).toEqual({
+    expect(faceOf(short, 'split', 'directwrite').metrics.candidates.usWin).toBeUndefined();
+    expect(faceOf(new Map(tables), 'split', 'directwrite').metrics.candidates.usWin).toEqual({
       ascent: 900,
       descent: 300,
     });
@@ -271,19 +308,19 @@ describe('the candidate pairs', () => {
 
 describe('kerning', () => {
   it('reads a legacy kern table', () => {
-    const face = facesIn(bytesOf('kern-only'), 'kern-only')[0]!;
+    const face = readFaces(bytesOf('kern-only'), 'kern-only')[0]!;
     expect(face.kernBetween(A, B)).toBe(-200);
     expect(face.kernBetween(A, C)).toBe(0);
   });
 
   it('reads a GPOS PairPos', () => {
-    const face = facesIn(bytesOf('gpos-only'), 'gpos-only')[0]!;
+    const face = readFaces(bytesOf('gpos-only'), 'gpos-only')[0]!;
     expect(face.kernBetween(A, B)).toBe(-200);
     expect(face.kernBetween(A, C)).toBe(0);
   });
 
   it('takes GPOS over the legacy table when they disagree, as Chromium does', () => {
-    const face = facesIn(bytesOf('kern-and-gpos'), 'kern-and-gpos')[0]!;
+    const face = readFaces(bytesOf('kern-and-gpos'), 'kern-and-gpos')[0]!;
     expect(FIXTURE.kerning.answer).toBe(
       'GPOS when it yields a pair, else the kern table, following one type 9 Extension lookup',
     );
@@ -294,7 +331,7 @@ describe('kerning', () => {
   });
 
   it('follows a type 9 Extension lookup to the PairPos behind it', () => {
-    const face = facesIn(bytesOf('gpos-extension'), 'gpos-extension')[0]!;
+    const face = readFaces(bytesOf('gpos-extension'), 'gpos-extension')[0]!;
     expect(face.kernBetween(A, B)).toBe(-200);
     expect(face.kernBetween(A, C)).toBe(0);
   });
@@ -311,8 +348,8 @@ describe('kerning', () => {
         );
       }
     }
-    expect(facesIn(bytesOf('gpos-extension'), 'gpos-extension')[0]!.kernBetween(A, B)).toBe(
-      facesIn(bytesOf('gpos-only'), 'gpos-only')[0]!.kernBetween(A, B),
+    expect(readFaces(bytesOf('gpos-extension'), 'gpos-extension')[0]!.kernBetween(A, B)).toBe(
+      readFaces(bytesOf('gpos-only'), 'gpos-only')[0]!.kernBetween(A, B),
     );
   });
 
@@ -338,17 +375,17 @@ describe('kerning', () => {
     expect(view.getUint16(lookup)).toBe(9);
     expect(view.getUint16(subtable + 2)).toBe(2);
     view.setUint16(subtable + 2, 9);
-    const face = faceOf(fontsIn(bytes, 'gpos-extension')[0]!, 'gpos-extension');
+    const face = faceOf(fontsIn(bytes, 'gpos-extension')[0]!, 'gpos-extension', 'directwrite');
     expect(face.kernBetween(A, B)).toBe(0);
   });
 
   it('is zero for a font that declares none', () => {
-    const face = facesIn(bytesOf('plain'), 'plain')[0]!;
+    const face = readFaces(bytesOf('plain'), 'plain')[0]!;
     expect(face.kernBetween(A, B)).toBe(0);
   });
 
   it('is zero for a pair the font has no glyph for', () => {
-    const face = facesIn(bytesOf('gpos-only'), 'gpos-only')[0]!;
+    const face = readFaces(bytesOf('gpos-only'), 'gpos-only')[0]!;
     expect(face.kernBetween(A, 'Z'.codePointAt(0)!)).toBe(0);
   });
 });
@@ -362,7 +399,7 @@ describe('the ideographic baseline', () => {
       'the BASE ideo coordinate of the DFLT script, else the face box descent',
     );
     for (const font of FIXTURE.fonts) {
-      const face = facesIn(bytesOf(font.id), font.id)[0]!;
+      const face = readFaces(bytesOf(font.id), font.id)[0]!;
       const coordinate = ideoOf(font.id);
       expect(face.metrics.ideographic, font.id).toBe(
         coordinate === undefined ? undefined : -coordinate,
@@ -372,7 +409,7 @@ describe('the ideographic baseline', () => {
 
   it('is not the run script, the icfb tag, or anything a metric could supply', () => {
     const spec = FIXTURE.fonts.find((f) => f.id === 'base-table')!.spec;
-    const face = facesIn(bytesOf('base-table'), 'base-table')[0]!;
+    const face = readFaces(bytesOf('base-table'), 'base-table')[0]!;
     // The font says -450 under DFLT, -410 under latn and -380 under hani; only
     // one of the three is what Chromium read.
     expect(face.metrics.ideographic).toBe(-(spec.base?.['DFLT']?.['ideo'] ?? 0));
@@ -385,14 +422,14 @@ describe('the ideographic baseline', () => {
   it('is nothing at all for a BASE table that names every script but DFLT', () => {
     // latn, hani and kana each carry a coordinate and Chromium reads none of them.
     expect(
-      facesIn(bytesOf('base-no-dflt'), 'base-no-dflt')[0]!.metrics.ideographic,
+      readFaces(bytesOf('base-no-dflt'), 'base-no-dflt')[0]!.metrics.ideographic,
     ).toBeUndefined();
     expect(ideoOf('base-no-dflt')).toBeUndefined();
   });
 
   it('is nothing at all for a BASE table carrying no ideo tag', () => {
     expect(
-      facesIn(bytesOf('base-no-ideo'), 'base-no-ideo')[0]!.metrics.ideographic,
+      readFaces(bytesOf('base-no-ideo'), 'base-no-ideo')[0]!.metrics.ideographic,
     ).toBeUndefined();
     expect(FIXTURE.fonts.find((f) => f.id === 'base-no-ideo')?.spec.base?.['DFLT']?.['hang']).toBe(
       610,
@@ -401,7 +438,7 @@ describe('the ideographic baseline', () => {
 
   it('is nothing at all for a font with no BASE table', () => {
     for (const id of ['plain', 'split', 'split-usetypo', 'astral']) {
-      expect(facesIn(bytesOf(id), id)[0]!.metrics.ideographic, id).toBeUndefined();
+      expect(readFaces(bytesOf(id), id)[0]!.metrics.ideographic, id).toBeUndefined();
     }
   });
 });
