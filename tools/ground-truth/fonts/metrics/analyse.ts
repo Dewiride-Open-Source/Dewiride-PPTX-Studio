@@ -215,7 +215,8 @@ function widthUnder(
   q: { advance: (x: number) => number; kern: (x: number) => number },
 ): number {
   const built = buildFont(PROBES.find((p) => p.id === faceFor)?.spec ?? {});
-  const face = facesIn(built.bytes, faceFor)[0]!;
+  // T13 was measured in a Chromium reading these tables through DirectWrite.
+  const face = facesIn(built.bytes, faceFor, 'directwrite')[0]!;
   const em = face.metrics.unitsPerEm;
   const points = [...text];
   let width = 0;

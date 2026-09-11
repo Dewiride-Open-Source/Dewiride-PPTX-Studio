@@ -114,6 +114,8 @@ interface Rivals {
   readonly advanceRounded: number;
   readonly unkerned: number;
   readonly wholeStringTruncated: number;
+  /** Adjacent pairs the reader adjusted, which is what the tolerance prices. */
+  readonly kerns: number;
 }
 
 /** The four candidate readings, from the same `Face` the product would use. */
@@ -123,6 +125,7 @@ function rivals(face: Face, text: string, px: number): Rivals {
   let exact = 0;
   let advanceRounded = 0;
   let unkerned = 0;
+  let kerns = 0;
   for (let i = 0; i < points.length; i += 1) {
     const code = points[i]?.codePointAt(0) ?? 0;
     const advance = ((face.advanceOf(code) ?? 0) * px) / em;
@@ -133,11 +136,12 @@ function rivals(face: Face, text: string, px: number): Rivals {
     if (following === undefined) continue;
     const adjust = face.kernBetween(code, following.codePointAt(0) ?? 0);
     if (adjust === 0) continue;
+    kerns += 1;
     const kern = (adjust * px) / em;
     exact += kern;
     advanceRounded += roundAt(kern);
   }
-  return { exact, advanceRounded, unkerned, wholeStringTruncated: truncateAt(exact) };
+  return { exact, advanceRounded, unkerned, wholeStringTruncated: truncateAt(exact), kerns };
 }
 
 /** The pairs the reader chose the box from, with an absent table written as null. */
@@ -332,12 +336,13 @@ try {
           family: entry.family,
           sz: px * 100,
         });
-        const rest = rivals(entry.face, sample.text, px);
+        const { kerns, ...rest } = rivals(entry.face, sample.text, px);
         const readings: Record<Reading, number> = { shipped: shipped.width, ...rest };
         rows.push({
           sample: sample.id,
           px,
           browser: measured.widths[String(px)]?.[sample.id] ?? Number.NaN,
+          kerns,
           readings,
         });
       }

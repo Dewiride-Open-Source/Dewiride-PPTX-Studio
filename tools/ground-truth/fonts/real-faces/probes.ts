@@ -135,14 +135,15 @@ export const ADVANCE_QUANTUM = 1;
 export const READER_STEP = 1 / 65536 + 1 / 131072;
 
 /**
- * How far a whole-pixel browser and the reader may sit apart over `glyphs`.
+ * How far a whole-pixel browser and the reader may sit apart.
  *
- * Each glyph carries at most half a quantum of the browser's rounding and one
- * `READER_STEP` of the reader's. Inclusive at the half quantum, which one Lato
- * face reaches exactly: 40 glyphs, every advance a half pixel, all rounded down.
+ * The browser quantises the advance and the kern adjustment separately, so a
+ * run carries one rounding per glyph and one more per applied kern; a single
+ * joint rounding is refuted, because it could not cost the 0.648 px a glyph
+ * T14 measured on Lato Thin. Inclusive at the half quantum. ADR 0045.
  */
-export function widthTolerance(glyphs: number): number {
-  return glyphs * (ADVANCE_QUANTUM / 2 + READER_STEP);
+export function widthTolerance(glyphs: number, kerns = 0): number {
+  return (glyphs + kerns) * (ADVANCE_QUANTUM / 2) + glyphs * READER_STEP;
 }
 
 /** The face box is one measurement, so it carries one glyph's quantisation. */
@@ -198,12 +199,15 @@ export interface BoxCandidates {
   readonly useTypoMetrics: boolean;
 }
 
+const DIRECTWRITE_BOX = 'usWin, or sTypo when fsSelection bit 7 is set';
+const FREETYPE_BOX = 'hhea, or sTypo when fsSelection bit 7 is set';
+
 /**
  * Which table the browser read the face box out of, as rival readings.
  *
  * A reading that needs a table this face has no bytes for answers `undefined`
- * and is scored over the faces that carry it. T13 settled this at 24/24 on
- * Windows; ADR 0044 has three faces on Linux that no reading here has fitted.
+ * and is scored over the faces that carry it. T13 settled DirectWrite at 24/24
+ * and T14 settled FreeType at 79/79, on different tables. ADR 0045.
  */
 export const BOX_READINGS: Readonly<
   Record<string, (candidates: BoxCandidates) => BoxPair | undefined>
@@ -211,17 +215,23 @@ export const BOX_READINGS: Readonly<
   'hhea.ascender/descender': (c) => c.hhea,
   'OS/2.usWinAscent/usWinDescent': (c) => c.usWin ?? undefined,
   'OS/2.sTypoAscender/sTypoDescender': (c) => c.sTypo ?? undefined,
-  'usWin, or sTypo when fsSelection bit 7 is set': (c) => {
+  [DIRECTWRITE_BOX]: (c) => {
     // What `metricsOf` answers, including its fall back to hhea with no OS/2.
     if (c.usWin === null || c.sTypo === null) return c.hhea;
     return c.useTypoMetrics ? c.sTypo : c.usWin;
   },
-  'hhea, or sTypo when fsSelection bit 7 is set': (c) =>
-    c.useTypoMetrics && c.sTypo !== null ? c.sTypo : c.hhea,
+  [FREETYPE_BOX]: (c) => (c.useTypoMetrics && c.sTypo !== null ? c.sTypo : c.hhea),
 };
 
-/** The reading `metricsOf` implements, which no rival may fit more faces than. */
-export const SHIPPED_BOX = 'usWin, or sTypo when fsSelection bit 7 is set';
+/**
+ * The reading `metricsOf` implements here, which no rival may fit more faces than.
+ *
+ * DirectWrite and FreeType read the box out of different tables, so which
+ * reading is the shipped one is a property of the runner. ADR 0045.
+ */
+export function shippedBoxFor(platform: string): string {
+  return platform === 'linux' ? FREETYPE_BOX : DIRECTWRITE_BOX;
+}
 
 /**
  * The four readings of the face box, recorded rather than gated.

@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { LAST_RESORT_FAMILIES, substituteFor } from '@pptx-studio/text';
 
 import { RenderError } from './errors.js';
-import { facesIn, type Face } from './sfnt.js';
+import { backendFor, facesIn, type Face } from './sfnt.js';
 
 const FONT_FILE = /\.(ttf|ttc|otf|otc)$/i;
 
@@ -179,6 +179,10 @@ export function indexFonts(options: IndexOptions = {}): FontLibrary {
   const files: string[] = [];
   for (const directory of directories) filesUnder(directory, 0, files);
 
+  // The face box comes out of a different table per rasteriser, so the reader
+  // answers for the machine whose fonts these are. ADR 0045.
+  const backend = backendFor(options.platform ?? process.platform);
+
   const indexed: IndexedFace[] = [];
   const byFamily = new Map<string, Family>();
   const claim = (family: string, entry: IndexedFace): void => {
@@ -198,7 +202,7 @@ export function indexFonts(options: IndexOptions = {}): FontLibrary {
   for (const file of files) {
     let faces: readonly Face[];
     try {
-      faces = facesIn(new Uint8Array(readFileSync(file)), file);
+      faces = facesIn(new Uint8Array(readFileSync(file)), file, backend);
     } catch {
       continue;
     }

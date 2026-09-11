@@ -224,14 +224,23 @@ the same document, and there is no external reference of any kind to resolve.
 face's own `cmap`, `hmtx`, `GPOS` and `OS/2` tables instead. That is a second
 measurement engine, and the risk of a second engine is that it quietly disagrees
 with the first. Experiment T13 settled the arithmetic rather than assuming it:
-eleven fonts built so their tables disagree on purpose, 396 widths measured in
-Chromium, and the reader reproduces **all 396 exactly**. It also settled where
+twelve fonts built so their tables disagree on purpose, 432 widths measured in
+Chromium, and the reader reproduces **all 432 exactly**. It also settled where
 an upright East Asian glyph sits: on the `BASE` table's `ideo` coordinate for
 the `DFLT` script, and on the face box descent only where there is none. The
 rules it found are
 in [`corpus/ground-truth/font-metrics.json`](../../corpus/ground-truth/font-metrics.json)
 and the reasoning is in
 [ADR 0042](../../docs/adr/phase-3-text/0042-rendering-without-a-browser.md).
+
+**The face box depends on the rasteriser**, so the reader takes the answer
+belonging to the platform it runs on. Chromium reports a face's ascent and
+descent from `OS/2.usWinAscent`/`usWinDescent` through DirectWrite and from
+`hhea.ascender`/`descender` through FreeType, with `fsSelection` bit 7 moving
+both onto `sTypo`. Neither reading fits both: T13's probes score 12/12 and 7/12
+on Windows where 79 real faces score 76/79 and 79/79 on Linux, missing by up to
+100 px on a 1000 px em. See
+[ADR 0045](../../docs/adr/phase-3-text/0045-the-face-box-belongs-to-the-rasteriser.md).
 
 Fonts are found in this platform's own directories, plus any `--font-dir` you
 name, which are searched first so you can override a face without installing

@@ -12,13 +12,16 @@ import {
   ADVANCE_QUANTUM,
   BOX_PX,
   BOX_TOLERANCE,
-  SHIPPED_BOX,
   glyphsOf,
+  shippedBoxFor,
   widthTolerance,
   type BoxCandidates,
   type BoxPair,
 } from './probes.ts';
 import { score, type Row, type Run, type RunFace, type Verdict } from './score.ts';
+
+/** Every run below declares a Linux runner, which reads the box through FreeType. */
+const SHIPPED_BOX = shippedBoxFor('linux');
 
 /** 1705/2048 and 615/2048 of a 1000px em, and the whole pixels Chromium reports. */
 const EM = 2048;
@@ -43,11 +46,12 @@ const SAMPLES: Run['samples'] = [
 ];
 
 /** A gated row, with the four rivals a whole-pixel browser cannot separate. */
-function gatedRow(sample: string, px: number, browser: number, shipped: number): Row {
+function gatedRow(sample: string, px: number, browser: number, shipped: number, kerns = 0): Row {
   return {
     sample,
     px,
     browser,
+    kerns,
     readings: {
       shipped,
       exact: shipped + 1e-7,
@@ -59,7 +63,7 @@ function gatedRow(sample: string, px: number, browser: number, shipped: number):
 }
 
 function arabicRow(px: number, browser: number, ratio: number): Row {
-  return { sample: 'arabic', px, browser, readings: { shipped: browser * ratio } };
+  return { sample: 'arabic', px, browser, kerns: 0, readings: { shipped: browser * ratio } };
 }
 
 /** A face whose three tables agree with themselves, which nearly every real one is. */
@@ -137,6 +141,15 @@ describe('the tolerance', () => {
     expect(widthTolerance(10)).toBeCloseTo(5.000228882, 9);
   });
 
+  it('adds one browser rounding per kern the reader applied, and none otherwise', () => {
+    expect(widthTolerance(44, 15)).toBe(59 * (ADVANCE_QUANTUM / 2) + 44 * (1 / 65536 + 1 / 131072));
+    expect(widthTolerance(44, 0)).toBe(widthTolerance(44));
+    // 0.648 px a glyph is what T14 measured on Lato Thin, which no single
+    // rounding of the two could reach and this bound has to allow. ADR 0045.
+    expect(widthTolerance(44, 15) / 44).toBeGreaterThan(0.648);
+    expect(widthTolerance(44, 0) / 44).toBeLessThan(ADVANCE_QUANTUM / 2 + 1e-4);
+  });
+
   it('counts a glyph per code point, not per UTF-16 unit', () => {
     expect(glyphsOf('AV To')).toBe(5);
     expect(glyphsOf('\u{20000}')).toBe(1);
@@ -165,6 +178,7 @@ describe('the T14 gate, green', () => {
       sample: 'latin-short',
       px: 16,
       browser: 100,
+      kerns: 0,
       readings: {
         shipped: 100,
         exact: 100,
@@ -340,6 +354,26 @@ describe('the T14 gate, red', () => {
     expect(kinds(score(loose))).toEqual(['width']);
   });
 
+  it('A2 fails a gated row that never counted its kerns', () => {
+    const uncounted: Row = {
+      sample: 'latin-spread',
+      px: 1000,
+      browser: 15291,
+      readings: { shipped: 15291, unkerned: 15297 },
+    };
+    const verdict = score(withGated(uncounted));
+    expect(kinds(verdict)).toContain('unmeasured');
+    expect(verdict.failures.find((f) => f.kind === 'unmeasured')?.detail).toContain('kern count');
+  });
+
+  it('A4 counts the kerns, so one delta passes with them and fails without', () => {
+    const delta = widthTolerance(40, 20) * 0.99;
+    const kerned = gatedRow('latin-spread', 1000, 15291, 15291 + delta, 20);
+    expect(kinds(score(withGated(kerned)))).not.toContain('width');
+    const unkerned = gatedRow('latin-spread', 1000, 15291, 15291 + delta, 0);
+    expect(kinds(score(withGated(unkerned)))).toContain('width');
+  });
+
   it('A4 scales with the glyphs, so the same delta passes long and fails short', () => {
     expect(kinds(score(withGated(gatedRow('latin-long', 1000, 500000, 500600))))).toEqual([]);
     expect(kinds(score(withGated(gatedRow('latin-short', 1000, 500000, 500600))))).toEqual([
@@ -354,6 +388,7 @@ describe('the T14 gate, red', () => {
           sample: 'latin-spread',
           px: 1000,
           browser: 15291,
+          kerns: 0,
           readings: { shipped: 15291 + 30, exact: 15291, unkerned: 15291 + 100 },
         },
         gatedRow('latin-short', 16, 100, 100),
@@ -372,6 +407,7 @@ describe('the T14 gate, red', () => {
           sample: 'latin-short',
           px: 16,
           browser: 100,
+          kerns: 0,
           readings: { shipped: 100, exact: 100, unkerned: 100 },
         },
         arabicRow(16, 100, 1.35),
@@ -401,16 +437,17 @@ describe('the T14 gate, red', () => {
   });
 
   it('A6 fails to a rival, not to the face, when one reading fits and the shipped one does not', () => {
-    // The reading ADR 0044 leaves open: 1802/246 is one rounding from 880/120,
-    // and 1802/401 - what usWin says and the reader takes - is 75.8 px away.
+    // Authored, not measured: this run declares Linux, so hhea is the shipped
+    // reading, and the face is built for usWin to be the one that fits. The
+    // gate has to go red whichever table the runner's rasteriser reads.
     const split = runWith([
       faceWith(
         [gatedRow('latin-short', 16, 100, 100), arabicRow(16, 100, 1.35)],
         { ascent: 1802, descent: 401 },
         { ascent: 880, descent: 120 },
         {
-          hhea: { ascent: 1802, descent: 246 },
-          usWin: { ascent: 1802, descent: 401 },
+          hhea: { ascent: 1802, descent: 401 },
+          usWin: { ascent: 1802, descent: 246 },
           sTypo: { ascent: 1500, descent: 300 },
           useTypoMetrics: false,
         },
@@ -419,25 +456,24 @@ describe('the T14 gate, red', () => {
     const verdict = score(split);
     expect(kinds(verdict)).toEqual(['face-box-rival', 'face-box-rival']);
     expect(verdict.failures.map((failure) => failure.subject)).toEqual([
-      'hhea.ascender/descender',
-      'hhea, or sTypo when fsSelection bit 7 is set',
+      'OS/2.usWinAscent/usWinDescent',
+      'usWin, or sTypo when fsSelection bit 7 is set',
     ]);
     expect(verdict.failures[0]?.detail).toContain('fits 1/1 face box(es)');
     const byName = new Map(verdict.faceBox.readings.map((entry) => [entry.reading, entry]));
     expect(byName.get(SHIPPED_BOX)).toMatchObject({ fits: 0, of: 1, separates: 0 });
-    expect(byName.get('hhea.ascender/descender')).toMatchObject({ fits: 1, of: 1, separates: 1 });
+    expect(byName.get('OS/2.usWinAscent/usWinDescent')).toMatchObject({
+      fits: 1,
+      of: 1,
+      separates: 1,
+    });
   });
 
   it('A6 counts a reading that fits every face carrying its table as not fitting the run', () => {
     // One face has no OS/2, so usWin is scored over the other alone and lands
     // 1/1 - which is not the same claim as fitting the run.
     const rows = [gatedRow('latin-short', 16, 100, 100), arabicRow(16, 100, 1.35)];
-    const right = faceWith(rows, READER_BOX, BROWSER_BOX, {
-      hhea: { ascent: 1500, descent: 500 },
-      usWin: READER_BOX,
-      sTypo: READER_BOX,
-      useTypoMetrics: false,
-    });
+    const right = faceWith(rows, READER_BOX, BROWSER_BOX, agreeing(READER_BOX));
     const bare = {
       ...faceWith(
         rows,
