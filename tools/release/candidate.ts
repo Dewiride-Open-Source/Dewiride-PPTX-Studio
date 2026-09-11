@@ -76,12 +76,20 @@ cpSync(repoPath('examples/nextjs-studio'), consumer, {
 
 const example = JSON.parse(
   readFileSync(repoPath('examples/nextjs-studio/package.json'), 'utf8'),
-) as { dependencies: Record<string, string>; devDependencies: Record<string, string> };
+) as {
+  scripts: Record<string, string>;
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
+};
 const offScope = Object.fromEntries(
   Object.entries(example.dependencies).filter(([name]) => !name.startsWith(SCOPE)),
 );
 
-const manifest = scratchManifest(packed, { ...offScope, ...example.devDependencies });
+const manifest = scratchManifest(
+  packed,
+  { ...offScope, ...example.devDependencies },
+  example.scripts,
+);
 writeFileSync(join(consumer, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
 // A lookup for our own scope now has nowhere to go, so a fallback to the

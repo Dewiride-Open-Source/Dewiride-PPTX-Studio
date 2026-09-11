@@ -67,6 +67,8 @@ export interface ScratchManifest {
   readonly version: string;
   readonly private: true;
   readonly type: 'module';
+  /** The consumer's own, so the gate runs the commands the example declares. */
+  readonly scripts: Readonly<Record<string, string>>;
   readonly dependencies: Readonly<Record<string, string>>;
   readonly overrides: Readonly<Record<string, string>>;
 }
@@ -93,6 +95,7 @@ export function fileSpec(filename: string): string {
 export function scratchManifest(
   packed: readonly Packed[],
   extra: Readonly<Record<string, string>>,
+  scripts: Readonly<Record<string, string>> = {},
 ): ScratchManifest {
   const pinned: Record<string, string> = {};
   for (const entry of [...packed].sort((a, b) => (a.name < b.name ? -1 : 1))) {
@@ -103,6 +106,7 @@ export function scratchManifest(
     version: '0.0.0',
     private: true,
     type: 'module',
+    scripts,
     dependencies: { ...pinned, ...extra },
     overrides: pinned,
   };

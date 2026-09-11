@@ -108,6 +108,14 @@ describe('the scratch manifest', () => {
     expect(manifest.overrides).toEqual(manifest.dependencies);
   });
 
+  it('carries the consumer own scripts, so the gate can run them', () => {
+    // The gate runs `npm run smoke`, which only exists if the scripts survive
+    // replacing the example's manifest.
+    expect(scratchManifest(PACKED, {}, { smoke: 'node smoke.mjs' }).scripts).toEqual({
+      smoke: 'node smoke.mjs',
+    });
+  });
+
   it('carries the consumer own dependencies through without pinning them', () => {
     const manifest = scratchManifest(PACKED, { next: '16.3.4' });
     expect(manifest.dependencies['next']).toBe('16.3.4');
