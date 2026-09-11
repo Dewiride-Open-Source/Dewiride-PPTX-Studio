@@ -14,10 +14,7 @@ import { renderDeck } from '@pptx-studio/cli';
 export const runtime = 'nodejs';   // it reads font files off the disk
 
 export async function POST(request: Request) {
-  const result = renderDeck(new Uint8Array(await request.arrayBuffer()), {
-    slide: null, width: 640, fontDirs: [], systemFonts: true, text: true,
-    out: null, json: false, quiet: true,   // CLI-shaped, meaningless here
-  });
+  const result = renderDeck(new Uint8Array(await request.arrayBuffer()), { width: 640 });
   return Response.json({ slides: result.slides, fonts: result.fonts });
 }`;
 

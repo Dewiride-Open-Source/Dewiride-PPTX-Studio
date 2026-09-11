@@ -26,18 +26,10 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const startedAt = performance.now();
+    // Every field is optional, and the three the CLI verb needs for itself -
+    // `out`, `json`, `quiet` - are not part of this shape at all.
     const result = renderDeck(new Uint8Array(body), {
-      slide: null,
       width: Number.isFinite(width) ? Math.min(Math.max(width, 160), 3840) : 640,
-      // The four below are the CLI's own shape rather than this caller's. All
-      // eight fields are required at 0.1.0, so a web server passes three that
-      // mean nothing to it. Worth fixing in the package, not worth faking here.
-      out: null,
-      fontDirs: [],
-      systemFonts: true,
-      text: true,
-      json: false,
-      quiet: true,
     });
 
     return Response.json({

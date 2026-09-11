@@ -193,63 +193,43 @@ jobs:
             corpus/ground-truth/manifest.json
           if-no-files-found: error
 
-  # The one job that installs from the registry rather than from the workspace.
+  # The one job that resolves `@pptx-studio/*` through package boundaries.
   #
-  # Everything else here resolves `@pptx-studio/*` through the pnpm link farm,
-  # so nothing else can tell whether a published tarball is usable. This can:
-  # `examples/nextjs-studio` is outside `pnpm-workspace.yaml` and installs the
-  # real thing with npm, no lockfile, resolving `^0.1.0` fresh every run.
+  # Everything else here reads the working tree: `check` resolves through the
+  # pnpm link farm, and `pkg:qa` reads a tarball's manifest without installing
+  # or executing it. So nothing else can tell whether what would be published is
+  # usable, and 0.1.0 reached npm having never been installed anywhere.
   #
-  # Deliberately not part of `check`. It reaches the public registry, so it can
-  # go red for reasons that have nothing to do with the commit, and a gate that
-  # does that stops being read. It is still the only thing that would notice a
-  # broken exports map or an unresolvable dependency range in a release.
-  #
-  # `--no-package-lock` is the point rather than a shortcut: a committed lockfile
-  # would pin this to the day it was written and it would never be a canary again.
-  example:
-    name: the example, installed from npm
+  # This packs the candidates, installs them into a scratch consumer with the
+  # scope pointed at a dead registry, refuses any resolution that did not come
+  # from one of this run's tarballs, and then runs the example against them.
+  # Hermetic: it depends on the commit and never on what is already published,
+  # which is what lets the release gate require it. ADR 0046.
+  candidate:
+    name: the packages this commit would publish
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          run_install: false
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
+          cache: pnpm
 
-      - name: Install from the registry
-        working-directory: examples/nextjs-studio
-        run: npm install --no-package-lock --no-fund --no-audit
+      - run: pnpm install --frozen-lockfile
 
-      # Real directories, not symlinks. If pnpm had linked these the whole job
-      # would pass while proving nothing.
-      - name: Assert nothing is linked
-        working-directory: examples/nextjs-studio
-        run: |
-          for dir in node_modules/@pptx-studio/*; do
-            if [ -L "$dir" ]; then
-              echo "::error::$dir is a symlink; this must install real tarballs"
-              exit 1
-            fi
-          done
-          node -e "console.log(require('@pptx-studio/render-svg/package.json').version)"
+      # `pnpm pack` ships whatever `dist` holds, so the build has to precede it.
+      - run: pnpm build
 
-      - name: Typecheck
-        working-directory: examples/nextjs-studio
-        run: npx tsc --noEmit
-
-      # Renders every shipped deck through the published packages and asserts
-      # the slide count, the SVG shape and a clean round trip.
-      - name: Smoke
-        working-directory: examples/nextjs-studio
-        run: npm run smoke
-
-      - name: Build
-        working-directory: examples/nextjs-studio
-        run: npm run build
+      - name: Pack the candidates, install them, and consume them
+        run: node tools/release/candidate.ts "$RUNNER_TEMP/candidate"
 
   # Phase 1's whole claim, on its own, in about a minute.
   #

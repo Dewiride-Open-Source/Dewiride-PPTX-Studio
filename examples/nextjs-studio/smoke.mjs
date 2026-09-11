@@ -40,16 +40,7 @@ for (const file of readdirSync(DECKS)
   const fatal = report.findings.filter((f) => f.severity === 'fatal');
   check(`${file}: validates`, fatal.length === 0, `${report.findings.length} finding(s)`);
 
-  const rendered = renderDeck(bytes, {
-    slide: null,
-    width: 1280,
-    out: null,
-    fontDirs: [],
-    systemFonts: true,
-    text: true,
-    json: false,
-    quiet: true,
-  });
+  const rendered = renderDeck(bytes, { width: 1280 });
   // Every slide is well formed, and the deck as a whole draws something. Not a
   // size floor per slide: a deck of the eleven built-in layouts contains the
   // Blank one, and an empty `<svg>` is the right answer for it.
