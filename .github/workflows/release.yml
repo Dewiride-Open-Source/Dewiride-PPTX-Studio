@@ -39,17 +39,44 @@ jobs:
           fetch-depth: 0
 
       # Publishing cannot be undone, so a red commit must not reach the registry.
-      - name: Require a green CI run for this commit
+      #
+      # Named jobs rather than the run's conclusion. A conclusion folds in every
+      # job in the file, so one non-gating job can refuse every release - which
+      # is what the registry canary did before it moved to canary.yml. A job
+      # absent from this list cannot block a publish, and a job named here that
+      # did not run is a failure rather than a pass. ADR 0046.
+      - name: Require the gating jobs of CI to be green on this commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REQUIRED: |
+            check
+            the packages this commit would publish
+            round trip
+            the font reader against Chromium, on real faces
         run: |
           runs="repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs"
-          got=$(gh api "$runs?head_sha=$GITHUB_SHA&status=completed&per_page=1" \
-            --jq '.workflow_runs[0].conclusion // "not finished"')
-          if [ "$got" != "success" ]; then
-            echo "::error::CI on $GITHUB_SHA is '$got'; wait for it, or release a green commit"
+          id=$(gh api "$runs?head_sha=$GITHUB_SHA&status=completed&per_page=1" \
+            --jq '.workflow_runs[0].id // empty')
+          if [ -z "$id" ]; then
+            echo "::error::no completed CI run for $GITHUB_SHA; wait for one"
             exit 1
           fi
+          got=$(gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$id/jobs?filter=latest" \
+            --jq '.jobs[] | [.name, .conclusion] | @tsv')
+          bad=0
+          while IFS= read -r name; do
+            [ -z "$name" ] && continue
+            was=$(printf '%s\n' "$got" | awk -F'\t' -v n="$name" '$1 == n { print $2 }')
+            if [ -z "$was" ]; then
+              echo "::error::CI run $id has no job named '$name'; this gate would pass vacuously"
+              bad=1
+            elif [ "$was" != "success" ]; then
+              echo "::error::'$name' concluded '$was' on $GITHUB_SHA"
+              bad=1
+            fi
+          done <<< "$REQUIRED"
+          [ "$bad" -eq 0 ] || exit 1
 
       - name: Require a pending changeset
         run: |
@@ -78,6 +105,14 @@ jobs:
 
       - name: Version
         run: pnpm version-packages
+
+      # Only now are the versions the ones that will be published, and only now
+      # does `workspace:^` pack as the range a consumer will actually resolve.
+      # The last thing between the code and a registry that cannot be undone.
+      - name: Consume the exact tarballs that are about to be published
+        run: |
+          pnpm build
+          node tools/release/candidate.ts "$RUNNER_TEMP/candidate"
 
       - name: Commit
         run: |

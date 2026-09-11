@@ -1,0 +1,103 @@
+# What npm is actually serving, checked against the example that consumes it.
+#
+# This is a monitor, not a gate, and the distinction is the whole reason it is
+# its own workflow. It installs `@pptx-studio/*` from the public registry, so
+# its answer is a property of the world rather than of any commit: the same
+# commit can be green today and red tomorrow with nobody touching it.
+#
+# It used to be a job inside `ci.yml`, where the release gate reads the run's
+# conclusion. That deadlocked - the published packages were broken, so CI was
+# red, so the release that would fix them was refused. A monitor wired into a
+# gate socket can block the only thing that could ever repair it. ADR 0046.
+#
+# What the release gate requires instead is `candidate`, which proves the
+# tarballs this commit would publish, and depends on nothing already published.
+name: canary
+
+on:
+  schedule:
+    # Daily. The published packages only change when a release runs, so this is
+    # about the registry and the ecosystem around it, not about our cadence.
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: canary
+  cancel-in-progress: false
+
+jobs:
+  published:
+    name: the example, installed from npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      # `latest` rather than the example's own ranges. A `^0.1.0` cannot resolve
+      # to 0.2.0 - a caret below 1.0 is bounded by the minor - so a monitor that
+      # honoured the manifest would keep reporting on the version the next
+      # release replaces, and would need a hand-edit after every one.
+      - name: Point every @pptx-studio dependency at what npm is serving
+        working-directory: examples/nextjs-studio
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            for (const name of Object.keys(p.dependencies)) {
+              if (name.startsWith("@pptx-studio/")) p.dependencies[name] = "latest";
+            }
+            fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
+          '
+
+      # `--no-package-lock` is the point rather than a shortcut: a committed
+      # lockfile would pin this to the day it was written and it would never be
+      # a canary again.
+      - name: Install from the registry
+        working-directory: examples/nextjs-studio
+        run: npm install --no-package-lock --no-fund --no-audit
+
+      # Real directories, not symlinks. If pnpm had linked these the whole job
+      # would pass while proving nothing.
+      - name: Assert nothing is linked
+        working-directory: examples/nextjs-studio
+        run: |
+          for dir in node_modules/@pptx-studio/*; do
+            if [ -L "$dir" ]; then
+              echo "::error::$dir is a symlink; this must install real tarballs"
+              exit 1
+            fi
+          done
+          node -e "console.log(require('@pptx-studio/render-svg/package.json').version)"
+
+      - name: Typecheck
+        working-directory: examples/nextjs-studio
+        run: npx tsc --noEmit
+
+      # Renders every shipped deck through the published packages and asserts
+      # the slide count, the SVG shape and a clean round trip.
+      - name: Smoke
+        working-directory: examples/nextjs-studio
+        run: npm run smoke
+
+      - name: Build
+        working-directory: examples/nextjs-studio
+        run: npm run build
+
+      # A monitor nobody reads is worse than no monitor, and a red square on a
+      # page is not read. A failure becomes an issue somebody owns.
+      - name: Say so, where it will be seen
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "::error::the published packages do not work for a consumer; \
+          this does not block a release, and a release is how it gets fixed"
