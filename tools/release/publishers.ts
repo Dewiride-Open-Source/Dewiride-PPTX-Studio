@@ -2,12 +2,12 @@
  * Ask npm whether this workflow may publish each package, before it publishes any.
  *
  * ```
- * node tools/release/publishers.ts [--require-pending|--require-all]
+ * node tools/release/publishers.ts
  * ```
  *
  * Runs in the release before `changeset publish`, which goes one package at a
- * time and cannot be rolled back, and in the canary, because a trusted
- * publisher can be revoked without anything here changing. ADR 0048.
+ * time and cannot be rolled back. Only the workflow a publisher names can ask
+ * this, so nothing else can ask it on that workflow's behalf. ADR 0049.
  */
 
 import { readFileSync, readdirSync } from 'node:fs';
@@ -97,13 +97,7 @@ console.log(
     `${String(willPublish.size)} pending in this release`,
 );
 
-const required = process.argv.includes('--require-all')
-  ? new Set(packages.map((entry) => entry.name))
-  : process.argv.includes('--require-pending')
-    ? willPublish
-    : new Set<string>();
-
-const blocked = refusals(attempts, required);
+const blocked = refusals(attempts, willPublish);
 if (blocked.length > 0) {
   console.error(`\n${missingPublisherInstructions(blocked)}`);
   process.exitCode = 1;

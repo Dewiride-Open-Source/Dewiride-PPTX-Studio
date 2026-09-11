@@ -122,29 +122,3 @@ jobs:
         run: |
           echo "::error::the published packages do not work for a consumer; \
           this does not block a release, and a release is how it gets fixed"
-
-  # A trusted publisher can be revoked, or migrated, with nothing in this
-  # repository changing - and without one a package cannot be released at all.
-  # The release asks this of the packages it is about to publish; the canary
-  # asks it of every package, so the answer is known before a release needs it
-  # rather than discovered halfway through one. ADR 0048.
-  publishers:
-    name: every package can still be published over OIDC
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      id-token: write # to mint the ID token npm trades for a publish token
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: .nvmrc
-
-      # Nothing is installed into this job. A job that can mint npm publish
-      # tokens must not also run third-party code.
-      - name: Ask npm, one package at a time
-        run: node tools/release/publishers.ts --require-all
