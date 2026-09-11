@@ -1,5 +1,14 @@
 # @pptx-studio/validate
 
+## 0.1.1
+
+### Patch Changes
+
+- 76b505c: Published with a provenance attestation. The first release went out over a token rather than OIDC, and npm attests automatically only on the OIDC path, so the registry recorded no attestation and `npm audit signatures` could not verify these packages. Nothing else about them has changed.
+- Updated dependencies [76b505c]
+  - @pptx-studio/opc@0.1.1
+  - @pptx-studio/xml@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
