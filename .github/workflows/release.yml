@@ -128,6 +128,12 @@ jobs:
           git add -A
           git commit -m 'chore: release'
 
+      # npm trades an ID token for a publish token one package at a time, so a
+      # package whose trusted publisher is missing fails partway through and
+      # leaves the release half shipped. Ask for all of them first. ADR 0048.
+      - name: Prove every package this release publishes can publish over OIDC
+        run: node tools/release/publishers.ts --require-pending
+
       # npm rather than `pnpm publish` (pnpm/pnpm#11513), and NODE_AUTH_TOKEN
       # stays unset: with a token the CLI takes the legacy path and skips both
       # OIDC and the provenance attestation with it. ADR 0001.

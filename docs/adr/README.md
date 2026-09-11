@@ -78,3 +78,4 @@ date.
 | [0045](phase-3-text/0045-the-face-box-belongs-to-the-rasteriser.md)  | The face box belongs to the rasteriser                            |
 | [0046](phase-3-text/0046-nothing-gated-the-thing-being-published.md) | Nothing gated the thing being published                           |
 | [0047](phase-3-text/0047-ten-packages-were-never-attested.md)        | Ten packages were never attested                                  |
+| [0048](phase-3-text/0048-every-package-proves-it-can-publish.md)     | Every package proves it can publish, before any of them do        |

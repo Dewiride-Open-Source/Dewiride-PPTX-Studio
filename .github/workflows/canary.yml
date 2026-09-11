@@ -100,6 +100,19 @@ jobs:
         if: always()
         run: node tools/release/attestations.ts --require-all
 
+      # Counting `dist.attestations` is not verifying it. This is the check a
+      # consumer would run, in a project of its own because it audits a whole
+      # tree and a third-party gap is not ours to answer for. ADR 0048.
+      - name: A consumer can verify every signature and attestation
+        if: always()
+        env:
+          PACKAGES: ${{ github.workspace }}/packages
+        run: |
+          mkdir -p "$RUNNER_TEMP/signatures"
+          cd "$RUNNER_TEMP/signatures"
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund $(node -p "const d = process.env.PACKAGES; require('fs').readdirSync(d).map((n) => require(d + '/' + n + '/package.json')).filter((p) => !p.private).map((p) => p.name + '@latest').join(' ')")
+          npm audit signatures
       # A monitor nobody reads is worse than no monitor, and a red square on a
       # page is not read. A failure becomes an issue somebody owns.
       - name: Say so, where it will be seen
@@ -109,3 +122,29 @@ jobs:
         run: |
           echo "::error::the published packages do not work for a consumer; \
           this does not block a release, and a release is how it gets fixed"
+
+  # A trusted publisher can be revoked, or migrated, with nothing in this
+  # repository changing - and without one a package cannot be released at all.
+  # The release asks this of the packages it is about to publish; the canary
+  # asks it of every package, so the answer is known before a release needs it
+  # rather than discovered halfway through one. ADR 0048.
+  publishers:
+    name: every package can still be published over OIDC
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write # to mint the ID token npm trades for a publish token
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      # Nothing is installed into this job. A job that can mint npm publish
+      # tokens must not also run third-party code.
+      - name: Ask npm, one package at a time
+        run: node tools/release/publishers.ts --require-all
