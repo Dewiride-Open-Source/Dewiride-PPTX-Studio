@@ -15,7 +15,7 @@ export function audienceFor(registry: string): string {
 
 /** A scoped name as npm escapes it inside a registry path. */
 export function escapedName(name: string): string {
-  return name.replace('/', '%2f');
+  return name.replaceAll('/', '%2f');
 }
 
 /** Where an ID token is traded for a token that may publish this one package. */

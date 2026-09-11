@@ -14,6 +14,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 
 import { repoPath } from '../repo/root.ts';
+import { escapedName } from './oidc.ts';
 
 const REGISTRY = 'https://registry.npmjs.org';
 
@@ -40,7 +41,7 @@ const bare: string[] = [];
 const absent: string[] = [];
 
 for (const name of names) {
-  const encoded = name.replace('/', '%2f');
+  const encoded = escapedName(name);
   const tags = await fetch(`${REGISTRY}/-/package/${encoded}/dist-tags`, { cache: 'no-store' });
   if (tags.status === 404) {
     absent.push(name);

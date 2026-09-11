@@ -13,6 +13,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 
 import { repoPath } from '../repo/root.ts';
 import { bootstrapInstructions, newcomers, publishableIn } from './bootstrap.ts';
+import { escapedName } from './oidc.ts';
 
 const REGISTRY = 'https://registry.npmjs.org';
 
@@ -41,7 +42,7 @@ const packages = publishableIn(manifests, ignore ?? []);
  * `@pptx-studio/render-dom`: packument 404 and dist-tags 200, at the same second.
  */
 async function exists(name: string): Promise<boolean> {
-  const at = `${REGISTRY}/-/package/${name.replace('/', '%2f')}/dist-tags`;
+  const at = `${REGISTRY}/-/package/${escapedName(name)}/dist-tags`;
   const response = await fetch(at, { cache: 'no-store' });
   if (response.status === 404) return false;
   if (response.ok) return true;

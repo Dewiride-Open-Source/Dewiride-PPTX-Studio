@@ -32,6 +32,8 @@ describe('addressing the exchange', () => {
   it('escapes the scope separator, which a path segment cannot hold', () => {
     expect(escapedName('@pptx-studio/xml')).toBe('@pptx-studio%2fxml');
     expect(escapedName('fflate')).toBe('fflate');
+    // A name npm would reject is still not a path with segments in it.
+    expect(escapedName('@a/b/c')).toBe('@a%2fb%2fc');
   });
 
   it('addresses one package, because publish rights are per package', () => {
