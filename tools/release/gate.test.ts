@@ -86,7 +86,7 @@ const ranBy = (steps: readonly Step[], pattern: RegExp): number =>
 
 describe('publishing over OIDC', () => {
   it('is proved for this release before anything is published', () => {
-    const asked = ranBy(releaseSteps, /publishers[.]ts --require-pending/);
+    const asked = ranBy(releaseSteps, /publishers[.]ts/);
     const published = ranBy(releaseSteps, /changeset publish/);
     expect(asked, 'the release never asks npm whether it may publish').toBeGreaterThan(-1);
     expect(published).toBeGreaterThan(asked);
@@ -98,24 +98,13 @@ describe('publishing over OIDC', () => {
     expect(JSON.stringify(release)).not.toContain('NODE_AUTH_TOKEN');
   });
 
-  it('is asked of every package by the canary, not just the ones releasing', () => {
-    const steps = canary.jobs['publishers']?.steps ?? [];
-    expect(ranBy(steps, /publishers[.]ts --require-all/)).toBeGreaterThan(-1);
-    expect(canary.jobs['publishers']?.permissions?.['id-token']).toBe('write');
-  });
-
-  it('mints those tokens in a job that installs nothing', () => {
-    const job = canary.jobs['publishers'];
-    for (const step of job?.steps ?? []) {
-      expect(step.run ?? '', step.name).not.toMatch(/(npm|pnpm|npx) (install|add|ci)/);
+  it('is never asked by a workflow no publisher names', () => {
+    // npm answers 404 to any workflow it cannot match to a publisher on the
+    // package, so a monitor could only ask by holding publish rights of its
+    // own - which is a worse thing to have than the answer is worth. ADR 0049.
+    expect(JSON.stringify(canary)).not.toContain('publishers.ts');
+    for (const [id, job] of Object.entries(canary.jobs)) {
+      expect(job.permissions?.['id-token'], id).toBeUndefined();
     }
-    const uses = (job?.steps ?? []).map((step) => step.uses).filter((u) => u !== undefined);
-    const pinned = (u: string): boolean => /@[0-9a-f]{40}$/.test(u);
-    const allowed = ['actions/checkout@', 'actions/setup-node@'];
-    expect(uses.every((u) => allowed.some((a) => u.startsWith(a)) && pinned(u))).toBe(true);
-  });
-
-  it('gives the job that installs from the registry no way to mint them', () => {
-    expect(canary.jobs['published']?.permissions?.['id-token']).toBeUndefined();
   });
 });
