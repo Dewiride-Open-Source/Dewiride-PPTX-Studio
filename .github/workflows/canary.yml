@@ -92,6 +92,14 @@ jobs:
         working-directory: examples/nextjs-studio
         run: npm run build
 
+      # Provenance is a claim about the published artifact, so only the registry
+      # can answer it, and a release over OIDC attests automatically - anything
+      # without one was published some other way. Ten packages were described as
+      # attested for a month without being, because nothing asked. ADR 0047.
+      - name: Every published package carries a provenance attestation
+        if: always()
+        run: node tools/release/attestations.ts --require-all
+
       # A monitor nobody reads is worse than no monitor, and a red square on a
       # page is not read. A failure becomes an issue somebody owns.
       - name: Say so, where it will be seen
