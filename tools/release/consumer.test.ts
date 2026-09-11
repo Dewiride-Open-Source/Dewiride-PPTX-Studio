@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   fileSpec,
+  packedFrom,
   provenanceFailures,
   scratchManifest,
   type Lockfile,
@@ -45,6 +46,55 @@ const GREEN = lockOf({
     resolved: 'file:/tmp/tgz/pptx-studio-cli-0.2.0.tgz',
     integrity: 'sha512-CLI',
   },
+});
+
+describe('reading what pnpm packed', () => {
+  /** The real shape: an array, and every entry carries a nested `files` list. */
+  const REPORT = JSON.stringify(
+    [
+      {
+        name: '@pptx-studio/opc',
+        version: '0.1.0',
+        filename: '/tmp/tgz/pptx-studio-opc-0.1.0.tgz',
+        files: [{ path: 'dist/index.js' }, { path: 'package.json' }],
+      },
+      {
+        name: '@pptx-studio/xml',
+        version: '0.1.0',
+        filename: '/tmp/tgz/pptx-studio-xml-0.1.0.tgz',
+        files: [{ path: 'README.md' }],
+      },
+    ],
+    null,
+    2,
+  );
+
+  it('reads every tarball out of a nested report', () => {
+    expect(packedFrom(REPORT).map((entry) => entry.name)).toEqual([
+      '@pptx-studio/opc',
+      '@pptx-studio/xml',
+    ]);
+  });
+
+  it('takes the filename from the report rather than rebuilding it', () => {
+    // The default flattens the scope, so `@pptx-studio/opc` is not a path.
+    expect(packedFrom(REPORT)[0]?.filename).toBe('/tmp/tgz/pptx-studio-opc-0.1.0.tgz');
+  });
+
+  it('reads several documents when the report is not one array', () => {
+    const concatenated = `{"name":"a","version":"1.0.0","filename":"/tmp/a.tgz","files":[{"path":"x"}]}
+{"name":"b","version":"1.0.0","filename":"/tmp/b.tgz","files":[]}`;
+    expect(packedFrom(concatenated).map((entry) => entry.name)).toEqual(['a', 'b']);
+  });
+
+  it('is not confused by a brace inside a string', () => {
+    const tricky = '[{"name":"a","version":"1.0.0","filename":"/tmp/a}b\\".tgz","files":[]}]';
+    expect(packedFrom(tricky)[0]?.filename).toBe('/tmp/a}b".tgz');
+  });
+
+  it('ignores anything that is not a packed tarball', () => {
+    expect(packedFrom('{"lifecycle":"prepack"} not json at all [1,2,3]')).toEqual([]);
+  });
 });
 
 describe('the scratch manifest', () => {

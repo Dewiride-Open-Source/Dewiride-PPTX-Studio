@@ -16,6 +16,52 @@ export interface Packed {
   readonly filename: string;
 }
 
+/**
+ * The tarballs out of `pnpm -r pack --json`.
+ *
+ * Each entry carries a nested `files` array, so this reads brace depth rather
+ * than matching a flat object, and takes the filename from the report instead
+ * of rebuilding it - the default name flattens the scope.
+ */
+function jsonValues(raw: string): unknown[] {
+  const values: unknown[] = [];
+  let depth = 0;
+  let start = -1;
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (c === '\\') escaped = true;
+      else if (c === '"') inString = false;
+    } else if (c === '"') {
+      inString = true;
+    } else if (c === '{' || c === '[') {
+      if (depth === 0) start = i;
+      depth += 1;
+    } else if ((c === '}' || c === ']') && --depth === 0 && start >= 0) {
+      values.push(JSON.parse(raw.slice(start, i + 1)));
+      start = -1;
+    }
+  }
+  return values;
+}
+
+export function packedFrom(raw: string): readonly Packed[] {
+  const values = jsonValues(raw);
+  const out: Packed[] = [];
+  for (const value of values.flatMap((v) => (Array.isArray(v) ? (v as unknown[]) : [v]))) {
+    if (typeof value !== 'object' || value === null) continue;
+    const { name, version, filename } = value as Record<string, unknown>;
+    if (typeof name !== 'string' || typeof version !== 'string' || typeof filename !== 'string') {
+      continue;
+    }
+    out.push({ name, version, filename });
+  }
+  return out;
+}
+
 export interface ScratchManifest {
   readonly name: string;
   readonly version: string;

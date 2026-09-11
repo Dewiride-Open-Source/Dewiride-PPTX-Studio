@@ -16,7 +16,13 @@ import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path';
 
 import { repoPath } from '../repo/root.ts';
-import { provenanceFailures, scratchManifest, type Lockfile, type Packed } from './consumer.ts';
+import {
+  packedFrom,
+  provenanceFailures,
+  scratchManifest,
+  type Lockfile,
+  type Packed,
+} from './consumer.ts';
 
 const SCOPE = '@pptx-studio/';
 
@@ -42,15 +48,9 @@ function pack(into: string): readonly Packed[] {
     ['-r', '--filter', './packages/*', 'pack', '--pack-destination', into, '--json'],
     repoPath('.'),
   );
-  // One JSON document per package, concatenated; the filename is read from it
-  // rather than rebuilt, because the default flattens the scope.
-  const packed: Packed[] = [];
-  for (const match of raw.matchAll(/\{[^{}]*"filename"[^{}]*\}/g)) {
-    const entry = JSON.parse(match[0]) as { name: string; version: string; filename: string };
-    packed.push({ name: entry.name, version: entry.version, filename: resolve(entry.filename) });
-  }
+  const packed = packedFrom(raw);
   if (packed.length === 0) throw new Error(`pnpm pack reported no tarballs:\n${raw}`);
-  return packed;
+  return packed.map((entry) => ({ ...entry, filename: resolve(entry.filename) }));
 }
 
 function integrityOf(filename: string): string {
