@@ -74,11 +74,12 @@ describe('the message', () => {
 });
 
 describe('the repository as it stands', () => {
-  it('holds render-dom back, so no release can try to create it', () => {
+  it('holds nothing back, now that every public package exists on npm', () => {
     const config = JSON.parse(readFileSync(repoPath('.changeset/config.json'), 'utf8')) as {
       ignore: string[];
     };
-    // The guard above is the safety net; this is the thing it is a net for.
-    expect(config.ignore).toContain('@pptx-studio/render-dom');
+    // The guard above is the net. Nothing is on the ledge any more, and a name
+    // going back into this list is what would put something there again.
+    expect(config.ignore).toEqual([]);
   });
 });
