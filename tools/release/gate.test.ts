@@ -15,13 +15,22 @@ import { repoPath } from '../repo/root.ts';
 
 interface Step {
   readonly name?: string;
+  readonly run?: string;
+  readonly uses?: string;
   readonly env?: Readonly<Record<string, string>>;
 }
 
 interface Workflow {
   readonly on?: Readonly<Record<string, unknown>>;
   readonly jobs: Readonly<
-    Record<string, { readonly name?: string; readonly steps?: readonly Step[] }>
+    Record<
+      string,
+      {
+        readonly name?: string;
+        readonly permissions?: Readonly<Record<string, string>>;
+        readonly steps?: readonly Step[];
+      }
+    >
   >;
 }
 
@@ -68,5 +77,45 @@ describe('the canary', () => {
 
   it('is not a job in CI, where the release gate would read it', () => {
     expect(jobNames(ci)).not.toContain('the example, installed from npm');
+  });
+});
+
+const releaseSteps = release.jobs['release']?.steps ?? [];
+const ranBy = (steps: readonly Step[], pattern: RegExp): number =>
+  steps.findIndex((step) => pattern.test(step.run ?? ''));
+
+describe('publishing over OIDC', () => {
+  it('is proved for this release before anything is published', () => {
+    const asked = ranBy(releaseSteps, /publishers[.]ts --require-pending/);
+    const published = ranBy(releaseSteps, /changeset publish/);
+    expect(asked, 'the release never asks npm whether it may publish').toBeGreaterThan(-1);
+    expect(published).toBeGreaterThan(asked);
+  });
+
+  it('never lets a token onto the publish path, which would skip provenance', () => {
+    // With NODE_AUTH_TOKEN set the CLI takes the legacy route and attests
+    // nothing. Ten packages shipped unverifiable that way. ADR 0047.
+    expect(JSON.stringify(release)).not.toContain('NODE_AUTH_TOKEN');
+  });
+
+  it('is asked of every package by the canary, not just the ones releasing', () => {
+    const steps = canary.jobs['publishers']?.steps ?? [];
+    expect(ranBy(steps, /publishers[.]ts --require-all/)).toBeGreaterThan(-1);
+    expect(canary.jobs['publishers']?.permissions?.['id-token']).toBe('write');
+  });
+
+  it('mints those tokens in a job that installs nothing', () => {
+    const job = canary.jobs['publishers'];
+    for (const step of job?.steps ?? []) {
+      expect(step.run ?? '', step.name).not.toMatch(/(npm|pnpm|npx) (install|add|ci)/);
+    }
+    const uses = (job?.steps ?? []).map((step) => step.uses).filter((u) => u !== undefined);
+    const pinned = (u: string): boolean => /@[0-9a-f]{40}$/.test(u);
+    const allowed = ['actions/checkout@', 'actions/setup-node@'];
+    expect(uses.every((u) => allowed.some((a) => u.startsWith(a)) && pinned(u))).toBe(true);
+  });
+
+  it('gives the job that installs from the registry no way to mint them', () => {
+    expect(canary.jobs['published']?.permissions?.['id-token']).toBeUndefined();
   });
 });
