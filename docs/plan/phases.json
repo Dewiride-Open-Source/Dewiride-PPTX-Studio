@@ -619,8 +619,8 @@
     },
     {
       "title": "The twelfth package has no trusted publisher",
-      "detail": "render-dom sits at 0.0.0 in changesets ignore, so mountSlide and mountOverlay cannot be installed. Which workflow may publish over OIDC is a setting on each npm package and nothing in this tree asserts it, so its first release fails until someone adds it on npmjs.com by hand.",
-      "raisedIn": ["ADR 0042", "ADR 0043"]
+      "detail": "render-dom sits at 0.0.0 in changesets ignore, so mountSlide and mountOverlay cannot be installed. Which workflow may publish over OIDC is a setting on each npm package, and npm has no way to attach one to a name it does not have yet - npm/cli#8544 is open - so the first publish of a new name cannot go out over OIDC at all. It needs a one-time granular token scoped to @pptx-studio, then the trusted publisher, then the token revoked. What the tree now asserts is the hazard rather than the setting: tools/release/newcomers.ts asks the registry which packages a release would be creating rather than updating, and refuses before changeset publish - which goes one package at a time - can half-publish a release.",
+      "raisedIn": ["ADR 0042", "ADR 0043", "ADR 0046"]
     },
     {
       "title": "A whole-pixel browser cannot separate the sub-pixel readings",

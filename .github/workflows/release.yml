@@ -103,6 +103,13 @@ jobs:
       - run: pnpm legal
       - run: pnpm pkg:qa
 
+      # A trusted publisher is a setting on an npm package and cannot be
+      # attached to a name npm does not have yet, so a package's first publish
+      # cannot go out over OIDC. `changeset publish` goes one at a time, so
+      # finding that out halfway leaves a half-published release. Ask first.
+      - name: Refuse to create a package npm does not have yet
+        run: node tools/release/newcomers.ts
+
       - name: Version
         run: pnpm version-packages
 

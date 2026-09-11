@@ -102,6 +102,29 @@ the deadlock it replaced.
 ranges are the old ones; only afterwards do the tarballs carry the versions a consumer will really
 resolve. It is the last thing between the code and a registry that cannot be undone.
 
+## A release cannot create a package npm does not have yet
+
+A trusted publisher is a setting on an npm package, and [npm/cli#8544] is open, so there is no way
+to attach one to a name the registry does not hold. `npm trust` says the same in as many words: the
+package must already exist. So the first publish of a new name cannot go out over OIDC at all.
+
+`@pptx-studio/render-dom` is that package — `0.0.0`, in changesets' `ignore`, E404 on the registry.
+While it is ignored nothing tries to publish it. The hazard is the moment somebody lifts the ignore:
+`changeset publish` publishes one package at a time, so the release would ship some packages, reach
+the new name, fail to authenticate, and stop — leaving a half-published release that cannot be
+rolled back.
+
+`tools/release/newcomers.ts` runs before `changeset publish` and asks the registry which of the
+packages this release would publish are new. If any are, it refuses and prints the bootstrap: a
+one-time granular token scoped to `@pptx-studio`, `npm publish --provenance --access public`, attach
+the trusted publisher, revoke the token, then lift the ignore. Those steps are printed in full
+rather than linked, because whoever reads them is mid-release and they are not guessable.
+
+Verified against the live registry both ways: with `render-dom` ignored it reports 11 packages and 0
+new; with the ignore lifted it reports 12 and 1, names `@pptx-studio/render-dom`, and exits 1.
+
+[npm/cli#8544]: https://github.com/npm/cli/issues/8544
+
 ## Verification
 
 `pnpm check` green. 7 mutants tried, 7 killed.
@@ -131,12 +154,9 @@ present. If the peer-dependency surface ever grows, revisit it.
 1. **One package manager, one Node version.** The scratch install is npm on the repo's pinned Node.
    pnpm's isolated layout is what catches an undeclared dependency that npm's hoisting hides, and
    the two disagree about `exports` resolution often enough to be worth a matrix. Not done here.
-2. **`@pptx-studio/render-dom` still cannot be published by this pipeline.** npm has no way to
-   pre-register a trusted publisher for a name that does not exist — [npm/cli#8544] is open, and
-   `npm trust` requires that "the package you're configuring must already exist". The first publish
-   of a new name needs a one-time granular token scoped to `@pptx-studio`, after which the trusted
-   publisher can be attached and the token revoked. That is a human step and it is in the release
-   runbook, not in this gate.
+2. **`@pptx-studio/render-dom` is still unpublished.** The guard above refuses to half-publish it,
+   which is not the same as shipping it: the bootstrap needs a credential this repository does not
+   hold, so it stays a human step.
 3. **The canary has no owner.** A monitor nobody reads is worse than no monitor. It annotates the run
    on failure; it does not yet open an issue or notify anyone.
 
