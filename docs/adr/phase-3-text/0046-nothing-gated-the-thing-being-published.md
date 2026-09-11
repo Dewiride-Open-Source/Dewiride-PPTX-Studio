@@ -120,8 +120,21 @@ one-time granular token scoped to `@pptx-studio`, `npm publish --provenance --ac
 the trusted publisher, revoke the token, then lift the ignore. Those steps are printed in full
 rather than linked, because whoever reads them is mid-release and they are not guessable.
 
-Verified against the live registry both ways: with `render-dom` ignored it reports 11 packages and 0
-new; with the ignore lifted it reports 12 and 1, names `@pptx-studio/render-dom`, and exits 1.
+Verified against the live registry in all three states: with `render-dom` ignored, 11 packages and 0
+new; with the ignore lifted and the name absent, 12 and 1, naming it, exit 1; and after the
+bootstrap, 12 and 0.
+
+**Ask the dist-tags endpoint, not the packument.** Running this for real found that
+`registry.npmjs.org/@scope%2fname` answers 404 for a while after the publish that created the
+package — 404 on the packument and 200 on both `/0.0.0` and `/-/package/@scope%2fname/dist-tags`, at
+the same second. npm builds the aggregated document asynchronously, and the minutes after a first
+publish are the one moment this check is asked about, so the endpoint that lags is the wrong one to
+ask. It would have refused a release for a package that already existed.
+
+`@pptx-studio/render-dom` has been through it: published once by hand at `0.0.0` to create the name,
+trusted publisher `2dc44547-f099-464d-bce9-b94d2ca1b44b` attached to this repository's `release.yml`,
+and the name lifted out of `ignore`. Its first OIDC release carries provenance; the `0.0.0` that
+created it does not, which is the cost of npm having no way to pre-register.
 
 [npm/cli#8544]: https://github.com/npm/cli/issues/8544
 

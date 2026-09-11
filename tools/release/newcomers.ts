@@ -32,9 +32,17 @@ const { ignore } = JSON.parse(readFileSync(repoPath('.changeset/config.json'), '
 
 const packages = publishableIn(manifests, ignore ?? []);
 
-/** A 404 is the answer this asks for; anything else is not an answer at all. */
+/**
+ * Whether npm holds the name, asked of its dist-tags rather than its packument.
+ *
+ * The packument of a freshly created package 404s for a while after the publish
+ * that created it, which is the one moment this check is asked about; the
+ * dist-tags endpoint answers as soon as a version exists. Measured on
+ * `@pptx-studio/render-dom`: packument 404 and dist-tags 200, at the same second.
+ */
 async function exists(name: string): Promise<boolean> {
-  const response = await fetch(`${REGISTRY}/${name.replace('/', '%2f')}`, { method: 'HEAD' });
+  const at = `${REGISTRY}/-/package/${name.replace('/', '%2f')}/dist-tags`;
+  const response = await fetch(at, { cache: 'no-store' });
   if (response.status === 404) return false;
   if (response.ok) return true;
   throw new Error(`${name}: the registry answered ${String(response.status)}, so this is unknown`);
