@@ -80,3 +80,4 @@ date.
 | [0047](phase-3-text/0047-ten-packages-were-never-attested.md)         | Ten packages were never attested                                     |
 | [0048](phase-3-text/0048-every-package-proves-it-can-publish.md)      | Every package proves it can publish, before any of them do           |
 | [0049](phase-3-text/0049-the-right-to-publish-cannot-be-monitored.md) | The right to publish can only be asked by the workflow that holds it |
+| [0050](phase-3-text/0050-what-the-release-actually-published.md)      | What the release actually published                                  |
