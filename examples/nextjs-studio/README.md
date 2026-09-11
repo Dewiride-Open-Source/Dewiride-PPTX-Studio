@@ -59,10 +59,12 @@ resize solver and no multi-select. Two refusals are deliberate and worth reading
 
 ## Two things this sample exposes
 
-**The `renderDeck` options object is CLI-shaped.** All eight fields are required at 0.1.0, three of
-which (`out`, `json`, `quiet`) mean nothing to a web server, and
-[`src/app/api/thumbnails/route.ts`](./src/app/api/thumbnails/route.ts) passes them anyway. It is
-written against the API as published rather than around it, because that is what makes it evidence.
+**The `renderDeck` options object was CLI-shaped, and this sample is why it is not.** At 0.1.0 all
+eight fields were required, three of which — `out`, `json`, `quiet` — mean nothing to a web server,
+and [`src/app/api/thumbnails/route.ts`](./src/app/api/thumbnails/route.ts) passed them anyway,
+written against the API as published rather than around it. That awkward call site was the evidence
+for the fix: `RenderDeckOptions` is every field optional and the three verb-only ones gone, so the
+same route is now one line. Consuming a package from outside is the only thing that shows you this.
 
 **A server with no fonts substitutes everything.** The route runs with `systemFonts: true`, so
 locally it finds the real ones; a container that ships none will draw every typeface in a fallback.
