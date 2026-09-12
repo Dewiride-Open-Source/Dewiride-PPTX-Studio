@@ -1,5 +1,14 @@
 # @pptx-studio/render-dom
 
+## 0.1.1
+
+### Patch Changes
+
+- 55f3073: The help text spells `this platform's own font directories` with its apostrophe, and the
+  `render-dom` tarball carries `CHANGELOG.md` like the other eleven.
+- Updated dependencies [55f3073]
+  - @pptx-studio/render-svg@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

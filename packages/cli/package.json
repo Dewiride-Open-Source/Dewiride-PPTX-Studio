@@ -1,6 +1,6 @@
 {
   "name": "@pptx-studio/cli",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Command line tools for PPTX packages: render slides to SVG without a browser, inspect a deck, validate it, prove a round trip, and bisect the change that breaks it",
   "license": "Apache-2.0",
   "type": "module",
