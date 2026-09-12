@@ -242,6 +242,17 @@ this repository to go through the page end to end, and it needed nothing fixed.
 - `pnpm check` green: structure, layering, legal, references, corpus, format, build, lint,
   typecheck, round trip 55/55, fidelity, Gate 2, Gate 3, package QA, tests.
 
+## What the release said
+
+Pull request #28 merged on CI run 34717677018; release run 34717979793 published
+`@pptx-studio/paint` 0.2.0, `@pptx-studio/render-svg` 0.3.0, `@pptx-studio/render-dom` 0.2.0 and
+`@pptx-studio/cli` 0.3.1 over OIDC, with `model` bumped for the dependency, and pushed the version
+commit to `main`. The canary was green before the release (run 34717716541) and red 38 seconds
+after it — `npm install` asked for `@pptx-studio/cli@0.3.1` at 20:48:08 and the registry had
+published it at 20:47:30 and was not yet serving it — so it opened issue #29 as ADR 0053 designed,
+and the next run (34718207672) was green and closed it. Replication lag, not the release; a canary
+dispatched straight after a publish should expect one red run.
+
 ## Deviations from the plan
 
 - **Zoom is a mount, not `resize()`.** The plan named `MountedSlide.resize()` and said a
