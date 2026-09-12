@@ -1004,8 +1004,11 @@ describe('strokes at a named width, re-derived from F2', () => {
       `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${ln('3175')}</p:spPr></p:pic>`;
     const { slide } = buildChain({ shapes: [pic] });
     const markup = renderSlide(slide, SIZE, { idPrefix: 'p', width: 960 });
-    // A quarter point is one pixel at 960, doubled for the one-sided band.
+    // A quarter point is one pixel at 960, doubled for the one-sided band, and the clip that
+    // keeps the outer half reaches two drawn widths out, not two nominal ones.
     expect(markup).toContain('stroke-width="25400"');
+    expect(markup).toContain('M-25400 -25400H3835400V1295400H-25400Z');
+    expect(markup).not.toContain('M-6350 -6350');
     expect(zoom.findings.border).toBe('T4');
   });
 
