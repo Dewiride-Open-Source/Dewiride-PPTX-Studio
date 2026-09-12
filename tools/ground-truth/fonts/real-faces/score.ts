@@ -744,7 +744,8 @@ export function reportMarkdown(run: Run, verdict: Verdict): string {
     'That table scores the browser, not the reader: a box that lands on a whole pixel is ' +
       'reproduced by every rounding, so only the faces whose tables put it off one - a 2000 em ' +
       'on the half, a 2048 em elsewhere - separate the rows. T13 settled round half up on ' +
-      'DirectWrite, 30 of 30; CoreText holds the em ratio in single precision first, 247 of 247. ' +
+      'DirectWrite, 30 of 30, and FreeType, 94 of 94; CoreText holds the em ratio as 16.16 fixed ' +
+      'point first, 248 of 248. ' +
       'ADR 0052, ADR 0053.',
   );
 

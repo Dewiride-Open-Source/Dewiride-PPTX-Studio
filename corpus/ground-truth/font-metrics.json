@@ -63,7 +63,7 @@
     },
     {
       "id": "split-2560",
-      "asks": "whether the em ratio is held in single precision before the half rounds"
+      "asks": "whether the em ratio is held in fixed or single precision before the half rounds"
     }
   ],
   "fonts": [
@@ -1652,6 +1652,34 @@
         ]
       },
       {
+        "model": "hhea.ascender/descender; round half up, the em ratio in 16.16 fixed point",
+        "table": "hhea.ascender/descender",
+        "rounding": "round half up, the em ratio in 16.16 fixed point",
+        "fits": 12,
+        "of": 30,
+        "worst": 129,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent",
+          "split-2560:ascent",
+          "split-2560:descent"
+        ]
+      },
+      {
         "model": "hhea.ascender/descender; round half to even",
         "table": "hhea.ascender/descender",
         "rounding": "round half to even",
@@ -1804,6 +1832,20 @@
         ]
       },
       {
+        "model": "OS/2.usWinAscent/usWinDescent; round half up, the em ratio in 16.16 fixed point",
+        "table": "OS/2.usWinAscent/usWinDescent",
+        "rounding": "round half up, the em ratio in 16.16 fixed point",
+        "fits": 26,
+        "of": 30,
+        "worst": 200,
+        "missed": [
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "split-2000:ascent",
+          "split-2560:descent"
+        ]
+      },
+      {
         "model": "OS/2.usWinAscent/usWinDescent; round half to even",
         "table": "OS/2.usWinAscent/usWinDescent",
         "rounding": "round half to even",
@@ -1913,6 +1955,32 @@
         "model": "OS/2.sTypoAscender/sTypoDescender; round half up, the em ratio in single precision",
         "table": "OS/2.sTypoAscender/sTypoDescender",
         "rounding": "round half up, the em ratio in single precision",
+        "fits": 14,
+        "of": 30,
+        "worst": 229,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent",
+          "split-2560:ascent",
+          "split-2560:descent"
+        ]
+      },
+      {
+        "model": "OS/2.sTypoAscender/sTypoDescender; round half up, the em ratio in 16.16 fixed point",
+        "table": "OS/2.sTypoAscender/sTypoDescender",
+        "rounding": "round half up, the em ratio in 16.16 fixed point",
         "fits": 14,
         "of": 30,
         "worst": 229,
@@ -2067,6 +2135,15 @@
         "model": "usWin, or sTypo when fsSelection bit 7 is set; round half up, the em ratio in single precision",
         "table": "usWin, or sTypo when fsSelection bit 7 is set",
         "rounding": "round half up, the em ratio in single precision",
+        "fits": 28,
+        "of": 30,
+        "worst": 1,
+        "missed": ["split-2000:ascent", "split-2560:descent"]
+      },
+      {
+        "model": "usWin, or sTypo when fsSelection bit 7 is set; round half up, the em ratio in 16.16 fixed point",
+        "table": "usWin, or sTypo when fsSelection bit 7 is set",
+        "rounding": "round half up, the em ratio in 16.16 fixed point",
         "fits": 28,
         "of": 30,
         "worst": 1,

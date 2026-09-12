@@ -229,34 +229,39 @@ describe('the face box probe', () => {
     ]);
   });
 
-  it('keeps the em ratio in double precision through DirectWrite, unlike CoreText', () => {
-    // 0.9285 and 0.2625 are below their halves as 32-bit floats, and DirectWrite
-    // rounded both up: the ratio it scales is not a float. T14 on macOS says the
-    // opposite of CoreText, 247/247 against 246/247. ADR 0053.
+  it('keeps the em ratio exact through DirectWrite, unlike CoreText', () => {
+    // Both ratios sit below the half as 32-bit floats and as 16.16 fixed point,
+    // and DirectWrite rounded them up. ADR 0053.
     const dropped = ['split-2000:ascent', 'split-2560:descent'];
     for (const key of dropped) {
       const [id, side] = key.split(':') as [string, 'ascent' | 'descent'];
       const { spec } = FIXTURE.fonts.find((f) => f.id === id)!;
       const units = side === 'ascent' ? spec.winAscent : spec.winDescent;
-      const single = Math.fround(units / spec.unitsPerEm) * FIXTURE.browser.boxPx;
+      const ratio = units / spec.unitsPerEm;
+      const single = Math.fround(ratio) * FIXTURE.browser.boxPx;
+      const fixed = (Math.round(ratio * 65536) / 65536) * FIXTURE.browser.boxPx;
       const exact = exactBoxOf(id)[side];
       expect(exact - Math.floor(exact), key).toBe(0.5);
       expect(single, key).toBeLessThan(exact);
+      expect(fixed, key).toBeLessThan(exact);
       const row = FIXTURE.browser.rows.find((r) => r.id === id)!;
       expect(row.box[side], key).toBe(Math.floor(exact + 0.5));
       expect(row.box[side], key).not.toBe(Math.floor(single + 0.5));
+      expect(row.box[side], key).not.toBe(Math.floor(fixed + 0.5));
     }
-    const single = FIXTURE.faceBox.scores.find(
-      (s) =>
-        s.model ===
-        'usWin, or sTypo when fsSelection bit 7 is set; round half up, the em ratio in single precision',
-    )!;
-    expect(single.missed).toEqual(dropped);
+    for (const held of ['single precision', '16.16 fixed point']) {
+      const model = FIXTURE.faceBox.scores.find(
+        (s) =>
+          s.model ===
+          `usWin, or sTypo when fsSelection bit 7 is set; round half up, the em ratio in ${held}`,
+      )!;
+      expect(model.missed, held).toEqual(dropped);
+    }
   });
 
   it('rounds the box as CoreText does when the library is indexed for macOS', () => {
-    // Same probe file, other rasteriser: hhea through bit 7, and the ratio a
-    // 32-bit float, so 2464/2560 lands on 962 and 544/2560 on 213. ADR 0053.
+    // Same probe file, other rasteriser: hhea through bit 7, and the ratio as
+    // 16.16 fixed point, so 2464/2560 lands on 962 and 544/2560 on 212. ADR 0053.
     const dir = mkdtempSync(join(tmpdir(), 'pptx-studio-t13-mac-'));
     writeFileSync(join(dir, 'split-2560.ttf'), bytesOf('split-2560'));
     const mac = indexFonts({ extra: [dir], system: false, platform: 'darwin' });
@@ -265,8 +270,11 @@ describe('the face box probe', () => {
     expect((spec.hheaAscender * 1000) / spec.unitsPerEm).toBe(962.5);
     expect((-spec.hheaDescender * 1000) / spec.unitsPerEm).toBe(212.5);
     expect(box.ascent * 1000).toBe(962);
-    expect(box.descent * 1000).toBe(213);
-    expect(box.ideographic * 1000).toBe(213);
+    expect(box.descent * 1000).toBe(212);
+    expect(box.ideographic * 1000).toBe(212);
+    // 544/2560 is 0.2125, above the half as a float and below it as 16.16.
+    expect(Math.fround(0.2125)).toBeGreaterThan(0.2125);
+    expect(Math.round(0.2125 * 65536) / 65536).toBeLessThan(0.2125);
     const win = createFontMeasurer(library).faceBox.box(family);
     expect(win.ascent * 1000).toBe(913);
     expect(win.descent * 1000).toBe(263);
@@ -318,8 +326,8 @@ describe('the face box probe', () => {
   });
 
   it('cannot answer the smaller size too, because the browser rounds the fallback per size', () => {
-    // 672/2560 is 26.25 px at 100 px and 262.5 at 1000: the browser said 26 and
-    // 263, and no one fraction of the em is both. The engine never asks at 100.
+    // 672/2560 is 26.25 px at 100 px and 262.5 at 1000, the browser said 26 and
+    // 263, and no one fraction of the em is both.
     const [small, probe] = FIXTURE.browser.baselineSizes;
     expect(probe).toBe(FACE_BOX_PX);
     const row = FIXTURE.browser.rows.find((r) => r.id === 'split-2560')!;

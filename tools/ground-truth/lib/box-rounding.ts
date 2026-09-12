@@ -37,6 +37,12 @@ const single = (box: Box, unitsPerEm: number, px: number): Box => ({
   descent: Math.fround(box.descent / unitsPerEm) * px,
 });
 
+/** The em ratio held as 16.16 fixed point, nearest, which is CoreText's `Fixed`. */
+const fixed = (box: Box, unitsPerEm: number, px: number): Box => ({
+  ascent: (Math.round((box.ascent / unitsPerEm) * 65536) / 65536) * px,
+  descent: (Math.round((box.descent / unitsPerEm) * 65536) / 65536) * px,
+});
+
 const each =
   (round: (x: number) => number, scale: typeof exact = exact): BoxRounding =>
   (box, unitsPerEm, px) => {
@@ -48,6 +54,7 @@ export const BOX_ROUNDINGS: Readonly<Record<string, BoxRounding>> = {
   exact,
   'round half up': each(halfUp),
   'round half up, the em ratio in single precision': each(halfUp, single),
+  'round half up, the em ratio in 16.16 fixed point': each(halfUp, fixed),
   'round half to even': each(halfEven),
   floor: each(Math.floor),
   ceil: each(Math.ceil),

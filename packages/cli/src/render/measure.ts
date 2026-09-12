@@ -32,6 +32,9 @@ import type { FontBackend } from './sfnt.js';
  */
 const FIXED = 65536;
 
+/** CoreText's `Fixed`: the em ratio is held as 16.16 before the box rounds. ADR 0053. */
+const EM_FIXED = 65536;
+
 /**
  * `hmtx.advanceWidth` is a `UFWORD`, so this is never negative and truncation
  * and flooring are one rule. ADR 0042.
@@ -47,12 +50,12 @@ function quantiseKern(px: number): number {
 /**
  * A box metric as the browser probe reports it: read at `FACE_BOX_PX`, rounded
  * half up to the pixel, and handed back as a fraction of the em. CoreText holds
- * the em ratio in single precision first. T13 30/30, T14 247/247. ADR 0053.
+ * the em ratio as 16.16 fixed point first. T13 30/30, T14 248/248. ADR 0053.
  */
 function boxPixels(units: number, unitsPerEm: number, backend: FontBackend): number {
   const px =
     backend === 'coretext'
-      ? Math.fround(units / unitsPerEm) * FACE_BOX_PX
+      ? (Math.round((units / unitsPerEm) * EM_FIXED) / EM_FIXED) * FACE_BOX_PX
       : (units * FACE_BOX_PX) / unitsPerEm;
   return Math.floor(px + 0.5) / FACE_BOX_PX;
 }

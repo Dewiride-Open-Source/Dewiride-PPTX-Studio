@@ -470,9 +470,9 @@ Four answers, each with every rival scored:
   when `fsSelection` bit 7 is set**, each side **rounded half up to a whole pixel** at the size it is
   read — 30/30, where reading `usWin` alone scores 28, `sTypo` alone 14, and `hhea`, which is the
   first thing anyone reaches for, scores 12. Only the 2048, 2000 and 2560 em probes separate the
-  roundings: the exact fraction scores 25, ceil 29, half up on the em ratio held in single
-  precision 28 (which is CoreText's rounding, and not DirectWrite's), half-to-even 27, floor
-  26 and Blink's Linux borrow-from-the-ascent 28.
+  roundings: the exact fraction scores 25, ceil 29, half up on the em ratio held as 16.16 fixed
+  point 28 (which is CoreText's rounding, and not DirectWrite's or FreeType's), as does the ratio
+  held in single precision, half-to-even 27, floor 26 and Blink's Linux borrow-from-the-ascent 28.
 - Pair kerning comes from **GPOS when the font has a `kern` feature, and the legacy `kern` table
   otherwise** — 90/90. The font that carries both, saying −200 in one and −100 in the other, is the
   only probe that can separate them: preferring the legacy table scores 84.

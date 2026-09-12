@@ -241,10 +241,10 @@ descent from `OS/2.usWinAscent`/`usWinDescent` through DirectWrite and from
 `hhea.ascender`/`descender` through FreeType, with `fsSelection` bit 7 moving
 both onto `sTypo`; through CoreText it reports `hhea` whatever bit 7 says. No
 one reading fits two of them: T13's probes score 15/15, 7/15 and 6/15 on
-Windows, where 93 real faces score 93/93 on Linux and 247 score 247/247 on
-macOS, the rivals missing by up to 100 px on a 1000 px em. CoreText also holds
-the em ratio in single precision before it rounds, which moves a box that sits
-exactly on the half; DirectWrite does not. See
+Windows, where 94 faces score 94/94 on Linux and 248 score 248/248 on macOS,
+the rivals missing by up to 100 px on a 1000 px em. CoreText also holds the em
+ratio as 16.16 fixed point before it rounds, which moves a box that sits exactly
+on the half; DirectWrite and FreeType do not. See
 [ADR 0045](../../docs/adr/phase-3-text/0045-the-face-box-belongs-to-the-rasteriser.md)
 and [ADR 0053](../../docs/adr/phase-3-text/0053-what-linux-and-macos-said.md).
 

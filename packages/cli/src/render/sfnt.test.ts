@@ -228,7 +228,7 @@ describe('the face box', () => {
   });
 
   it('reads hhea through CoreText whatever bit 7 says, which only this probe can show', () => {
-    // On macos-latest split-usetypo was the one face of 247 with bit 7 set and
+    // On macos-latest split-usetypo was the one face of 248 with bit 7 set and
     // hhea apart from sTypo; CoreText read 800/200. ADR 0053.
     const { spec } = FIXTURE.fonts.find((f) => f.id === 'split-usetypo')!;
     const face = facesIn(bytesOf('split-usetypo'), 'split-usetypo', 'coretext')[0]!;

@@ -205,6 +205,7 @@ describe('the T14 gate, green', () => {
         { name: 'exact', fits: 0, of: 1 },
         { name: 'round half up', fits: 1, of: 1 },
         { name: 'round half up, the em ratio in single precision', fits: 1, of: 1 },
+        { name: 'round half up, the em ratio in 16.16 fixed point', fits: 1, of: 1 },
         { name: 'round half to even', fits: 1, of: 1 },
         { name: 'floor', fits: 0, of: 1 },
         { name: 'ceil', fits: 0, of: 1 },
@@ -217,19 +218,20 @@ describe('the T14 gate, green', () => {
     });
   });
 
-  it('separates the single-precision ratio from half up on a box whose half it drops', () => {
-    // 672/2560 is 0.2625, which a 32-bit float holds as 0.26249998...: the
-    // browser that reported 262 for it kept the ratio in single precision.
+  it('separates 16.16 fixed point from single precision and from half up on one box', () => {
+    // split-2560 through CoreText: 2464/2560 is 962.5 and 544/2560 is 212.5,
+    // and macos-latest reported 962/212. ADR 0053.
     const face = faceWith(
       [gatedRow('latin-short', 16, 100, 100)],
-      { ascent: 2336, descent: 672 },
-      { ascent: 913, descent: 262 },
+      { ascent: 2464, descent: 544 },
+      { ascent: 962, descent: 212 },
     );
     const run = runWith([{ ...face, unitsPerEm: 2560 }]);
     const fits = Object.fromEntries(score(run).faceBox.variants.map((v) => [v.name, v.fits]));
-    expect(fits['round half up, the em ratio in single precision']).toBe(1);
+    expect(fits['round half up, the em ratio in 16.16 fixed point']).toBe(1);
+    expect(fits['round half up, the em ratio in single precision']).toBe(0);
     expect(fits['round half up']).toBe(0);
-    expect(fits['round half to even']).toBe(0);
+    expect(fits['round half to even']).toBe(1);
   });
 
   it('scores every reading of the box, and separates none on a face that agrees with itself', () => {
@@ -284,7 +286,7 @@ describe('the T14 gate, green', () => {
   });
 
   it('scores macOS against hhea alone, which is what CoreText read through bit 7', () => {
-    // 247/247 on macos-latest against 246/247 for FreeType's composite, the one
+    // 248/248 on macos-latest against 247/248 for FreeType's composite, the one
     // face apart being the probe built with bit 7 set. ADR 0053.
     expect(shippedBoxFor('darwin')).toBe('hhea.ascender/descender');
     expect(shippedBoxFor('darwin')).not.toBe(shippedBoxFor('linux'));

@@ -208,7 +208,7 @@ const CORETEXT_BOX = 'hhea.ascender/descender';
  *
  * A reading that needs a table this face has no bytes for answers `undefined`
  * and is scored over the faces that carry it. T13 settled DirectWrite at 30/30;
- * T14 settled FreeType at 93/93 and CoreText at 247/247. ADR 0045, ADR 0053.
+ * T14 settled FreeType at 94/94 and CoreText at 248/248. ADR 0045, ADR 0053.
  */
 export const BOX_READINGS: Readonly<
   Record<string, (candidates: BoxCandidates) => BoxPair | undefined>

@@ -70,9 +70,9 @@ export const METRIC_SPLIT_2000: Partial<FontSpec> = {
 /**
  * The split on a 2560 em, where every usWin and hhea side sits on the half at `BOX_PX`.
  *
- * As 32-bit floats 2336/2560 and 544/2560 round up while 672/2560 and 2464/2560
- * round down, so a browser holding the em ratio in single precision reports
- * 913/262 through usWin and 962/213 through hhea; half up says 913/263 and 963/213.
+ * As 16.16 fixed point 2336/2560 rounds up while 672, 2464 and 544/2560 round
+ * down, so a browser holding the em ratio that way reports 913/262 through usWin
+ * and 962/212 through hhea; half up says 913/263 and 963/213, a float 962/213.
  */
 export const METRIC_SPLIT_2560: Partial<FontSpec> = {
   familyName: 'PptxStudio Split 2560',
@@ -226,7 +226,7 @@ export const PROBES: readonly Probe[] = [
   },
   {
     id: 'split-2560',
-    asks: 'whether the em ratio is held in single precision before the half rounds',
+    asks: 'whether the em ratio is held in fixed or single precision before the half rounds',
     spec: METRIC_SPLIT_2560,
   },
 ];

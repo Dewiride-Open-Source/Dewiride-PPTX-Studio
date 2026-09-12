@@ -22,7 +22,7 @@ const USE_TYPO_METRICS = 0x0080;
  * The rasteriser a Chromium reads a face's vertical metrics through.
  *
  * T13 scored `usWin` 30/30 against DirectWrite on fonts built to disagree; T14
- * scored `hhea` 93/93 against FreeType and 247/247 against CoreText on real
+ * scored `hhea` 94/94 against FreeType and 248/248 against CoreText on real
  * faces. One reader cannot answer for all three. ADR 0045, ADR 0053.
  */
 export type FontBackend = 'directwrite' | 'freetype' | 'coretext';
@@ -548,7 +548,7 @@ function ideographicOf(tables: Tables): number | undefined {
  * The vertical metrics a browser reports for the face.
  *
  * Bit 7 wins on DirectWrite and FreeType, which otherwise answer `usWin` and
- * `hhea`; CoreText answers `hhea` either way, 247/247. ADR 0045, ADR 0053.
+ * `hhea`; CoreText answers `hhea` either way, 248/248. ADR 0045, ADR 0053.
  */
 function metricsOf(tables: Tables, subject: string, backend: FontBackend): FaceMetrics {
   const head = readerOf(required(tables, 'head', subject));
