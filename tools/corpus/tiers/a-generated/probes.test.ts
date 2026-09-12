@@ -9,6 +9,7 @@ import { buildProbePackage } from './markup/chassis.ts';
 import { PROBE_DECKS } from './decks/index.ts';
 import { outputName } from './markup/types.ts';
 import { readZip } from '../../../ground-truth/lib/zip.ts';
+import { CAPS } from '../../manifest/schema.ts';
 
 const CORPUS = repoPath('corpus/decks');
 
@@ -63,12 +64,13 @@ describe.each(PROBE_DECKS.map((deck) => [deck.id, deck] as const))('%s', (id, de
     expect(again).toBe(first);
   });
 
-  it('stores every entry, so its hash does not depend on which zlib built it', () => {
+  it('stores every entry unless its module says otherwise, so its hash does not depend on zlib', () => {
     // ADR 0009 committed bytes rather than recipes because a recipe's hash is
-    // the hash of a build. Deflating would put zlib's version straight back
-    // into `C-REGEN`. `a35-zip-shapes` is the one deck that opts out, and it
-    // opts out because it is the deck *about* compression - which is the whole
-    // reason the exception is where it is rather than anywhere else.
+    // the hash of a build. Deflating puts zlib's version straight back into
+    // `C-REGEN`, so a deck opts out only by saying so: `a35-zip-shapes` because
+    // it is the deck about compression, `a46-hundred-slides` because stored it
+    // would sit over the per-file cap.
+    const deflates = deck.build().deflate === true;
     const { bytes } = build(id);
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     let offset = 0;
@@ -76,7 +78,7 @@ describe.each(PROBE_DECKS.map((deck) => [deck.id, deck] as const))('%s', (id, de
     let deflated = 0;
     while (view.getUint32(offset, true) === 0x04034b50) {
       const method = view.getUint16(offset + 8, true);
-      if (id === 'a35-zip-shapes') {
+      if (deflates) {
         expect(method, 'compression method').toBeOneOf([0, 8]);
         if (method === 8) deflated += 1;
       } else {
@@ -91,7 +93,8 @@ describe.each(PROBE_DECKS.map((deck) => [deck.id, deck] as const))('%s', (id, de
     expect(checked).toBeGreaterThan(15);
     // And the exception has to be a real one: a deck that claimed to deflate
     // and stored everything would pass the branch above while testing nothing.
-    if (id === 'a35-zip-shapes') expect(deflated).toBeGreaterThan(10);
+    if (deflates) expect(deflated).toBeGreaterThan(10);
+    expect(['a35-zip-shapes', 'a46-hundred-slides'].includes(id)).toBe(deflates);
   });
 
   it('has the archive shape its module declares', () => {
@@ -179,16 +182,15 @@ describe('the roster as a whole', () => {
   });
 
   it('stays inside the corpus size caps', () => {
-    // 512 KiB per committed file and 12 MiB total, both enforced by
-    // `C012-size-cap`. Checking here as well means a deck that grows past the
-    // cap fails in the test that built it rather than in the gate.
+    // The caps `C012-size-cap` enforces. Checking here as well means a deck
+    // that grows past one fails in the test that built it rather than in the gate.
     let total = 0;
     for (const deck of PROBE_DECKS) {
       const { bytes } = buildProbePackage(deck.build());
-      expect(bytes.byteLength, deck.id).toBeLessThan(512 * 1024);
+      expect(bytes.byteLength, deck.id).toBeLessThan(CAPS.perFile);
       total += bytes.byteLength;
     }
-    expect(total).toBeLessThan(12 * 1024 * 1024);
+    expect(total).toBeLessThan(CAPS.total);
   });
 
   it('describes itself in the manifest voice', () => {

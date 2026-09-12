@@ -256,17 +256,31 @@ export function picture(
     readonly cy: number;
     /** Written as `@descr` whether or not it is empty, which is what PowerPoint does. */
     readonly description: string;
+    /** `a:srcRect`, each side in thousandths of a percent of the image. */
+    readonly srcRect?: {
+      readonly l: number;
+      readonly t: number;
+      readonly r: number;
+      readonly b: number;
+    };
+    /** `a:ln` markup, drawn wholly outside the picture (ADR 0037). */
+    readonly line?: string;
   },
 ): string {
+  const crop =
+    spec.srcRect === undefined
+      ? ''
+      : `<a:srcRect l="${String(spec.srcRect.l)}" t="${String(spec.srcRect.t)}" r="${String(spec.srcRect.r)}" b="${String(spec.srcRect.b)}"/>`;
   return (
     '<p:pic><p:nvPicPr>' +
     cNvPrXml({ ...spec, descr: spec.description }) +
     '<p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/>' +
     '</p:nvPicPr>' +
-    `<p:blipFill><a:blip r:embed="${spec.relId}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>` +
+    `<p:blipFill><a:blip r:embed="${spec.relId}"/>${crop}<a:stretch><a:fillRect/></a:stretch></p:blipFill>` +
     '<p:spPr>' +
     `<a:xfrm><a:off x="${String(spec.x)}" y="${String(spec.y)}"/><a:ext cx="${String(spec.cx)}" cy="${String(spec.cy)}"/></a:xfrm>` +
     prstGeom('rect') +
+    (spec.line ?? '') +
     '</p:spPr></p:pic>'
   );
 }

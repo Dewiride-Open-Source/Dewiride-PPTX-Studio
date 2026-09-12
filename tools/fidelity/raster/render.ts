@@ -53,7 +53,17 @@ export interface Geometry {
   /** The canvas, grown to whole cells and filled white behind the slide. */
   readonly padWidth: number;
   readonly padHeight: number;
+  /** The side of one cell, in raster pixels. */
+  readonly cell: number;
 }
+
+/** The width a slide is drawn at and the cell it is reduced by: 960 and 8, unless a zoom says otherwise. */
+export interface RasterAt {
+  readonly width: number;
+  readonly cell: number;
+}
+
+export const STANDARD_RASTER: RasterAt = { width: RASTER_WIDTH, cell: CELL };
 
 /**
  * The raster a slide of this shape is compared at.
@@ -62,16 +72,23 @@ export interface Geometry {
  * squashed into a 16:9 frame; the canvas is then grown to whole cells, because
  * a partial cell would average over pixels that do not exist.
  */
-export function geometryOf(cx: number, cy: number): Geometry {
+export function geometryOf(cx: number, cy: number, at: RasterAt = STANDARD_RASTER): Geometry {
   if (!(cx > 0) || !(cy > 0)) {
     throw new FidelityError('FID_RASTER_GEOMETRY', `slide is ${String(cx)} by ${String(cy)} EMU`);
   }
-  const drawHeight = Math.round((RASTER_WIDTH * cy) / cx);
+  if (!Number.isInteger(at.width) || at.width < 1 || !Number.isInteger(at.cell) || at.cell < 1) {
+    throw new FidelityError(
+      'FID_RASTER_GEOMETRY',
+      `${String(at.width)} px wide in ${String(at.cell)} px cells is not a raster`,
+    );
+  }
+  const drawHeight = Math.round((at.width * cy) / cx);
   return {
-    drawWidth: RASTER_WIDTH,
+    drawWidth: at.width,
     drawHeight,
-    padWidth: Math.ceil(RASTER_WIDTH / CELL) * CELL,
-    padHeight: Math.ceil(drawHeight / CELL) * CELL,
+    padWidth: Math.ceil(at.width / at.cell) * at.cell,
+    padHeight: Math.ceil(drawHeight / at.cell) * at.cell,
+    cell: at.cell,
   };
 }
 
@@ -107,6 +124,7 @@ interface PptxApi {
     };
   };
   readonly rsvg: {
+    mediaFromStore: (store: unknown) => unknown;
     renderSlide: (sheet: unknown, size: unknown, options: unknown) => string;
     layoutSlide: (sheet: unknown) => readonly PlacedProbe[];
     flatten: (placed: readonly PlacedProbe[]) => readonly PlacedProbe[];
@@ -120,6 +138,12 @@ export interface DrawnSlide {
   readonly partName: string;
   /** Every shape drawn, in paint order, scaled to raster pixels. */
   readonly shapes: readonly PlacedBox[];
+}
+
+/** A deck the page has opened once, kept for the run. */
+interface LoadedDeck {
+  readonly store: ReturnType<PptxApi['opc']['PartStore']['open']>;
+  readonly document: ReturnType<PptxApi['model']['loadDocument']>;
 }
 
 /** The shape `drawSlide` has once it is a property of the page's `globalThis`. */
@@ -138,9 +162,18 @@ export async function drawSlide(input: {
   width: number;
 }): Promise<DrawnSlide> {
   const api = (globalThis as unknown as { pptx: unknown }).pptx as PptxApi;
-  const bytes = new Uint8Array(await (await fetch(input.url)).arrayBuffer());
-  const store = api.opc.PartStore.open(bytes);
-  const document_ = api.model.loadDocument(store);
+  // One load per deck per run: a hundred-slide deck is not parsed a hundred times.
+  const page = globalThis as unknown as { pptxLoaded?: Map<string, LoadedDeck> };
+  const loaded = (page.pptxLoaded ??= new Map<string, LoadedDeck>());
+  let deck = loaded.get(input.url);
+  if (deck === undefined) {
+    const bytes = new Uint8Array(await (await fetch(input.url)).arrayBuffer());
+    const store = api.opc.PartStore.open(bytes);
+    deck = { store, document: api.model.loadDocument(store) };
+    loaded.set(input.url, deck);
+  }
+  const store = deck.store;
+  const document_ = deck.document;
   const size = document_.slideSize;
   const drawHeight = Math.round((input.width * size.cy) / size.cx);
 
@@ -150,13 +183,7 @@ export async function drawSlide(input: {
     width: input.width,
     height: drawHeight,
     idPrefix: `s${String(input.index)}`,
-    media: (embed: string, part: string) => {
-      const target = store.relationships(part).targetOf(embed);
-      if (target === undefined) return undefined;
-      const contentType = store.contentTypeOf(target);
-      if (contentType === undefined) return undefined;
-      return { bytes: store.read(target), contentType };
-    },
+    media: api.rsvg.mediaFromStore(store),
     text: { defaultTextStyle: document_.defaultTextStyle },
   });
 
@@ -184,11 +211,13 @@ export async function drawSlide(input: {
  * here that anything outside the repository could reach.
  */
 export async function injectHarness(page: Page): Promise<void> {
-  await page.addScriptTag({
-    content:
-      `globalThis.reduce = ${reduceRgba.toString()};
-` + `globalThis.drawSlide = ${drawSlide.toString()};`,
-  });
+  await injectReduce(page);
+  await page.addScriptTag({ content: `globalThis.drawSlide = ${drawSlide.toString()};` });
+}
+
+/** The reduction alone, for a page that draws by itself and is only asked to score. */
+export async function injectReduce(page: Page): Promise<void> {
+  await page.addScriptTag({ content: `globalThis.reduce = ${reduceRgba.toString()};` });
 }
 
 export interface SlideRaster {
@@ -278,11 +307,12 @@ export async function renderSlide(
     { url: deckUrl, index: slideIndex, cell: CELL, width: RASTER_WIDTH },
   );
 
-  const geometry = {
+  const geometry: Geometry = {
     drawWidth: RASTER_WIDTH,
     drawHeight: result.drawHeight,
     padWidth: Math.ceil(RASTER_WIDTH / CELL) * CELL,
     padHeight: Math.ceil(result.drawHeight / CELL) * CELL,
+    cell: CELL,
   };
   if (
     result.natural.width !== geometry.drawWidth ||
@@ -332,7 +362,7 @@ export async function oracleGrid(
   page: Page,
   pngUrl: string,
   geometry: Geometry,
-): Promise<{ grid: Grid; rasterSha256: string }> {
+): Promise<{ grid: Grid; rasterSha256: string; natural: { width: number; height: number } }> {
   const result = await page.evaluate(
     async ({ url, cell, geo }) => {
       const reduce = (globalThis as unknown as { reduce: (input: unknown) => unknown }).reduce;
@@ -354,9 +384,10 @@ export async function oracleGrid(
         rasterSha256: [...new Uint8Array(digest)]
           .map((b) => b.toString(16).padStart(2, '0'))
           .join(''),
+        natural: { width: image.naturalWidth, height: image.naturalHeight },
       };
     },
-    { url: pngUrl, cell: CELL, geo: geometry },
+    { url: pngUrl, cell: geometry.cell, geo: geometry },
   );
-  return { grid: result.grid as Grid, rasterSha256: result.rasterSha256 };
+  return { grid: result.grid as Grid, rasterSha256: result.rasterSha256, natural: result.natural };
 }

@@ -27,7 +27,7 @@ import { describe, expect, it } from 'vitest';
  *
  * So this file exercises the comparator from three directions:
  *
- * 1. It agrees, on all fifty-four decks.
+ * 1. It agrees, on all fifty-five decks.
  * 2. It keeps agreeing when the archive is deliberately rebuilt differently -
  *    a normalised entry order and a different deflate level - which is where a
  *    byte-equality gate would be red.
@@ -72,8 +72,8 @@ const encode = (text: string): Uint8Array => new TextEncoder().encode(text);
 describe('a round trip of every committed deck', () => {
   const results = DECKS.map((deck) => ({ deck, result: roundTripPackage(deck.bytes) }));
 
-  it('reads and writes all fifty-four with nothing to report', () => {
-    expect(results).toHaveLength(54);
+  it('reads and writes all fifty-five with nothing to report', () => {
+    expect(results).toHaveLength(55);
     const failures = results
       .filter(({ result }) => !result.ok)
       .map(({ deck, result }) => deck.id + ': ' + JSON.stringify(result.comparison.differences));
@@ -97,10 +97,10 @@ describe('a round trip of every committed deck', () => {
 
     expect(totals.xml + totals.binary + totals.relationships).toBe(parts);
     expect(totals.same).toBe(parts);
-    expect(parts).toBe(1516);
+    expect(parts).toBe(1737);
 
-    // 553 relationship parts, 46 compared as bytes, and the remaining 875 as
-    // canonical XML. The 46 is wider than the 23 parts under `/ppt/media/` that
+    // 676 relationship parts, 48 compared as bytes, and the remaining 1013 as
+    // canonical XML. The 48 is wider than the 25 parts under `/ppt/media/` that
     // the media sweep can touch: it also counts five `.fntdata`, five embedded
     // workbooks, eleven `docProps/thumbnail.jpeg` and two `vbaProject.bin`.
     //
@@ -116,9 +116,9 @@ describe('a round trip of every committed deck', () => {
     // its input, which matched nothing; before the fix these three compared as
     // opaque bytes, which is right about the answer and wrong about everything
     // else, including where a difference would be reported.
-    expect(totals.relationships).toBe(569);
-    expect(totals.binary).toBe(46);
-    expect(totals.xml).toBe(901);
+    expect(totals.relationships).toBe(676);
+    expect(totals.binary).toBe(48);
+    expect(totals.xml).toBe(1013);
   });
 
   it('renames no relationship id, because this writer never renumbers', () => {

@@ -11,7 +11,16 @@ import { describe, expect, it } from 'vitest';
 
 import { FidelityError } from '../errors.ts';
 
-import { decodeGrid, encodeGrid } from './grid.ts';
+import {
+  GRID_SET_BYTES,
+  MAX_SET_SLIDES,
+  decodeGrid,
+  decodeGridSet,
+  encodeGrid,
+  encodeGridSet,
+  gridSetBytes,
+  shardGridSets,
+} from './grid.ts';
 import { reduceRgba, type Grid } from './reduce.ts';
 import { differenceOf, regionsOf, scoreOf } from './score.ts';
 
@@ -283,5 +292,69 @@ describe('the committed grid file', () => {
   it('refuses a file whose length does not match its own header', () => {
     const bytes = encodeGrid(gridOf(raster(WHITE)));
     expect(() => decodeGrid(bytes.subarray(0, bytes.length - 1), 'test')).toThrow(/bytes, not the/);
+  });
+});
+
+describe('the committed grid set', () => {
+  const entry = (n: number): { key: string; grid: Grid } => ({
+    key: `deck-${String(n).padStart(2, '0')}`,
+    grid: gridOf(raster(WHITE)),
+  });
+
+  it('counts its bytes exactly, which the shard budget rests on', () => {
+    const one = entry(1);
+    expect(encodeGridSet([one]).length).toBe(6 + gridSetBytes(one.key, one.grid));
+    const three = [entry(1), entry(2), entry(3)];
+    expect(encodeGridSet(three).length).toBe(
+      6 + three.reduce((n, e) => n + gridSetBytes(e.key, e.grid), 0),
+    );
+  });
+
+  it('shards by bytes, in order, and every shard fits the budget', () => {
+    const grids = Array.from({ length: 10 }, (_, i) => entry(i + 1));
+    const each = gridSetBytes(grids[0]!.key, grids[0]!.grid);
+    const shards = shardGridSets(grids, 6 + 4 * each);
+    expect(shards.map((shard) => shard.length)).toEqual([4, 4, 2]);
+    expect(shards.flat().map((e) => e.key)).toEqual(grids.map((e) => e.key));
+    for (const shard of shards)
+      expect(encodeGridSet(shard).length).toBeLessThanOrEqual(6 + 4 * each);
+    expect(shardGridSets(grids)).toHaveLength(1);
+  });
+
+  it('holds a hundred 16:9 slides in three sets under the per-file cap, and an A4 deck too', () => {
+    const wide = {
+      width: 120,
+      height: 68,
+      cell: 8,
+      luma: [],
+      chromaWidth: 60,
+      chromaHeight: 34,
+      cb: [],
+      cr: [],
+    };
+    const tall = { ...wide, width: 120, height: 170, chromaHeight: 85 };
+    expect(Math.ceil((100 * gridSetBytes('a46-hundred-slides-100', wide)) / GRID_SET_BYTES)).toBe(
+      3,
+    );
+    expect(gridSetBytes('a41-a4-01', tall)).toBeLessThan(GRID_SET_BYTES);
+    expect(GRID_SET_BYTES).toBeLessThan(512 * 1024);
+  });
+
+  it('refuses a set of more than 255 slides rather than counting them in one byte', () => {
+    const grids = Array.from({ length: MAX_SET_SLIDES + 1 }, (_, i) => entry(i + 1));
+    expect(() => encodeGridSet(grids)).toThrow(FidelityError);
+    expect(shardGridSets(grids, 1 << 30).map((shard) => shard.length)).toEqual([255, 1]);
+  });
+
+  it('refuses a grid that would not fit a set on its own', () => {
+    const one = entry(1);
+    expect(() => shardGridSets([one], gridSetBytes(one.key, one.grid))).toThrow(FidelityError);
+  });
+
+  it('round-trips a set', () => {
+    const grids = [entry(1), entry(2)];
+    const back = decodeGridSet(encodeGridSet(grids), 'test');
+    expect([...back.keys()]).toEqual(['deck-01', 'deck-02']);
+    expect(back.get('deck-01')).toEqual(grids[0]!.grid);
   });
 });

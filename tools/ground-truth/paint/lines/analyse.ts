@@ -39,6 +39,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readBmp, type Bitmap } from '../../lib/bmp.ts';
+import { crossings, ink, runsOf, sampleCol, sampleRow } from '../../lib/profile.ts';
 import {
   ARROW_SIZES,
   ARROW_TYPES,
@@ -143,111 +144,8 @@ function coarse(deck: string): { file: string; scale: number } | null {
 }
 
 /* -------------------------------------------------------------------------- */
-/* sampling                                                                   */
+/* encoding                                                                   */
 /* -------------------------------------------------------------------------- */
-
-/** Ink coverage over a white slide: `1 - min(r,g,b)/255`. See the header. */
-function ink(bmp: Bitmap, x: number, y: number): number {
-  const [r, g, b] = bmp.pixel(x, y);
-  return 1 - Math.min(r, g, b) / 255;
-}
-
-/**
- * The pixel row or column whose centre is nearest a point coordinate, clamped
- * into the bitmap.
- *
- * The clamp is deliberate rather than defensive. A read window that runs off
- * the slide is a probe laid out wrongly, and clamping turns that into a
- * plausible-looking measurement of the slide's edge - so this reports it
- * instead, and the caller decides.
- */
-function pixelAt(points: number, scale: number, limit: number, what: string): number {
-  const at = Math.floor(points * scale);
-  if (at < 0 || at >= limit) {
-    throw new Error(
-      `${what}: ${String(points)}pt is pixel ${String(at)}, outside 0..${String(limit - 1)} - the probe is off the slide`,
-    );
-  }
-  return at;
-}
-
-interface Sampled {
-  /** Coverage per sample, in order. */
-  readonly cover: number[];
-  /** The point coordinate of sample 0's centre. */
-  readonly start: number;
-  /** Points per sample. */
-  readonly step: number;
-}
-
-function sampleRow(
-  bmp: Bitmap,
-  scale: number,
-  y: number,
-  x0: number,
-  x1: number,
-  what: string,
-): Sampled {
-  const row = pixelAt(y, scale, bmp.height, what);
-  const from = Math.max(0, Math.round(x0 * scale));
-  const to = Math.min(bmp.width - 1, Math.round(x1 * scale));
-  const cover: number[] = [];
-  for (let x = from; x <= to; x++) cover.push(ink(bmp, x, row));
-  return { cover, start: (from + 0.5) / scale, step: 1 / scale };
-}
-
-function sampleCol(
-  bmp: Bitmap,
-  scale: number,
-  x: number,
-  y0: number,
-  y1: number,
-  what: string,
-): Sampled {
-  const col = pixelAt(x, scale, bmp.width, what);
-  const from = Math.max(0, Math.round(y0 * scale));
-  const to = Math.min(bmp.height - 1, Math.round(y1 * scale));
-  const cover: number[] = [];
-  for (let y = from; y <= to; y++) cover.push(ink(bmp, col, y));
-  return { cover, start: (from + 0.5) / scale, step: 1 / scale };
-}
-
-/**
- * Where coverage crosses one half, to sub-pixel precision.
- *
- * An antialiased edge does not jump from 0 to 1; it passes through the
- * intervening values in one or two pixels, and where it crosses 0.5 is where
- * the geometric edge is. Linear interpolation between the two straddling
- * samples locates that to about a tenth of a pixel, which is why every length
- * in this experiment is quoted from crossings and not from run lengths in whole
- * pixels.
- */
-function crossings(s: Sampled): { at: number; rising: boolean }[] {
-  const out: { at: number; rising: boolean }[] = [];
-  for (let i = 0; i + 1 < s.cover.length; i++) {
-    const a = s.cover[i]!;
-    const b = s.cover[i + 1]!;
-    if (a < 0.5 && b >= 0.5) {
-      out.push({ at: s.start + (i + (0.5 - a) / (b - a)) * s.step, rising: true });
-    } else if (a >= 0.5 && b < 0.5) {
-      out.push({ at: s.start + (i + (a - 0.5) / (a - b)) * s.step, rising: false });
-    }
-  }
-  return out;
-}
-
-/** Alternating ink/gap lengths from a crossing list, in points. */
-function runsOf(cross: { at: number; rising: boolean }[]): { on: number[]; off: number[] } {
-  const on: number[] = [];
-  const off: number[] = [];
-  for (let i = 0; i + 1 < cross.length; i++) {
-    const a = cross[i]!;
-    const b = cross[i + 1]!;
-    if (a.rising && !b.rising) on.push(b.at - a.at);
-    else if (!a.rising && b.rising) off.push(b.at - a.at);
-  }
-  return { on, off };
-}
 
 /** Coverage as one byte per sample. */
 function packCover(cover: readonly number[]): string {

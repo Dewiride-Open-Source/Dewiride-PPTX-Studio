@@ -52,7 +52,7 @@ of the fonts.
 | `C009-double-claim`   | no file is claimed twice                                                |
 | `C010-sha256`         | committed bytes hash to what the manifest says                          |
 | `C011-bytes`          | committed size matches                                                  |
-| `C012-size-cap`       | 512 KiB per file, 12 MiB total                                          |
+| `C012-size-cap`       | 512 KiB per file, 16 MiB total                                          |
 | `C013-feature-key`    | every `features` key is a real census key; decks have one, fixtures tag |
 | `C014-recipe-tool`    | `recipe.tool` names a file that exists under `tools/`                   |
 | `C015-derivation`     | a redacted derivative names its original's hash, and it differs         |

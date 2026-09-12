@@ -20,6 +20,7 @@ import {
   pathGeometry,
   resolveColor,
   resolvePattern,
+  deviceStrokeWidth,
   svgStops,
   svgStroke,
   toHexColor,
@@ -33,7 +34,7 @@ import {
 import { blipPaint, type MediaResolver } from './image/blip.js';
 import { dataUri, imageSize } from './image/header.js';
 import { element, num, type AttributeValue, type SvgElement } from './node.js';
-import type { Box } from './transform.js';
+import { EMU_PER_POINT, type Box } from './transform.js';
 
 export type Attrs = Record<string, AttributeValue>;
 
@@ -45,12 +46,15 @@ export class Defs {
   private readonly prefix: string;
   /** How an image fill reaches its picture; absent means none can be drawn. */
   readonly media: MediaResolver | undefined;
+  /** Device pixels to the point the slide is drawn at, or null for a scale nobody has named. */
+  readonly pxPerPt: number | null;
 
   // Written out rather than declared as a parameter property: the repository
   // lints for `erasableSyntaxOnly`, so nothing here may need a runtime shim.
-  constructor(prefix: string, media?: MediaResolver) {
+  constructor(prefix: string, media?: MediaResolver, pxPerPt: number | null = null) {
     this.prefix = prefix;
     this.media = media;
+    this.pxPerPt = pxPerPt;
   }
 
   id(): string {
@@ -302,10 +306,15 @@ export function strokeAttributes(
   defs: Defs,
   forced?: StrokeBand,
 ): StrokePaint | null {
-  if (line === null || line.fill.type === 'none' || line.width <= 0) return null;
+  if (line === null || line.fill.type === 'none' || line.width < 0) return null;
 
   const band: StrokeBand = forced ?? (line.algn === 'in' ? 'in' : 'centre');
-  const svg = svgStroke(line);
+  // At a named device scale the export's whole-pixel widths; otherwise the true width, and a
+  // hairline as one screen pixel that no transform scales (F2, `zoom.json`).
+  const hairline = line.width === 0;
+  const drawnWidth =
+    defs.pxPerPt === null ? line.width : deviceStrokeWidth(line.width, defs.pxPerPt);
+  const svg = svgStroke(line, drawnWidth);
   const attrs: Attrs = {
     'stroke-linecap': svg['stroke-linecap'],
     'stroke-linejoin': svg['stroke-linejoin'],
@@ -313,9 +322,15 @@ export function strokeAttributes(
   };
   // A one-sided band is drawn at double width and clipped to that side, which
   // leaves exactly the half that was asked for.
-  attrs['stroke-width'] = band === 'centre' ? line.width : line.width * 2;
-  if (svg['stroke-dasharray'] !== null) {
-    const array = band === 'centre' ? svg : svgStroke(line, line.width * 2);
+  if (hairline && defs.pxPerPt === null) {
+    attrs['stroke-width'] = band === 'centre' ? 1 : 2;
+    attrs['vector-effect'] = 'non-scaling-stroke';
+  } else {
+    attrs['stroke-width'] = band === 'centre' ? drawnWidth : drawnWidth * 2;
+  }
+  // A zero width has no dashes to draw: a dashed hairline is solid.
+  if (svg['stroke-dasharray'] !== null && !hairline) {
+    const array = band === 'centre' ? svg : svgStroke(line, drawnWidth * 2);
     attrs['stroke-dasharray'] = (array['stroke-dasharray'] ?? [])
       .map((value) => num(value))
       .join(' ');
@@ -338,37 +353,36 @@ export function strokeAttributes(
 /* effects                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const PRIMITIVE_TAG = {
-  gaussian: 'feGaussianBlur',
-  offset: 'feOffset',
-  flood: 'feFlood',
-  composite: 'feComposite',
-  merge: 'feMerge',
-  morphology: 'feMorphology',
-  matrix: 'feTransform',
-} as const;
+/**
+ * A filter is written in points, not EMU: Chromium rasterises a rotated filter at the
+ * resolution of its user space, and 12700 units to the point is seconds a shape (ADR 0054).
+ */
+const FILTER_UNIT = EMU_PER_POINT;
+const INTO_FILTER_SPACE = `scale(${num(FILTER_UNIT)})`;
+const OUT_OF_FILTER_SPACE = `scale(${String(1 / FILTER_UNIT)})`;
 
 /**
- * The `filter` attribute for one shape's effects, or `null` for none.
+ * A shape's children under its effects, or the children as they were for none.
  *
- * `paint` builds the graph and this writes it out. One primitive has no SVG
- * counterpart: an outer shadow's full transform - scale, skew and offset
- * together - is a `matrix`, and SVG filters have no affine primitive. It is
- * emitted as an `feOffset` of the matrix's translation, which is exact for the
- * shadows that only offset and is the visible part of the rest.
+ * One primitive has no SVG counterpart: an outer shadow's full transform - scale, skew
+ * and offset together - is a `matrix`, and SVG filters have no affine primitive. It is
+ * emitted as an `feOffset` of the matrix's translation, which is exact for the shadows
+ * that only offset and is the visible part of the rest.
  */
-export function effectFilterAttribute(
+export function withEffects(
+  children: readonly SvgElement[],
   effects: readonly Effect[],
   ctx: ColorContext,
   box: Box,
   defs: Defs,
-): Attrs {
-  if (effects.length === 0) return {};
+): readonly SvgElement[] {
+  if (effects.length === 0) return children;
   const graph = effectFilter(effects, { x: 0, y: 0, w: box.cx, h: box.cy }, (color) => {
     const rgba = resolveColor(color, ctx);
     return { css: css(rgba), alpha: rgba.a };
   });
-  if (graph.primitives.length === 0) return {};
+  if (graph.primitives.length === 0) return children;
+  const pt = (emu: number): number => emu / FILTER_UNIT;
 
   const nodes = graph.primitives.map((primitive) => {
     switch (primitive.op) {
@@ -376,14 +390,14 @@ export function effectFilterAttribute(
         return element('feGaussianBlur', {
           in: primitive.in,
           result: primitive.result,
-          stdDeviation: primitive.stdDeviation,
+          stdDeviation: pt(primitive.stdDeviation),
         });
       case 'offset':
         return element('feOffset', {
           in: primitive.in,
           result: primitive.result,
-          dx: primitive.dx,
-          dy: primitive.dy,
+          dx: pt(primitive.dx),
+          dy: pt(primitive.dy),
         });
       case 'flood':
         return element('feFlood', {
@@ -409,15 +423,15 @@ export function effectFilterAttribute(
           in: primitive.in,
           result: primitive.result,
           operator: primitive.operator,
-          radius: primitive.radius,
+          radius: pt(primitive.radius),
         });
       case 'matrix':
       default:
         return element('feOffset', {
           in: primitive.in,
           result: primitive.result,
-          dx: primitive.matrix[4],
-          dy: primitive.matrix[5],
+          dx: pt(primitive.matrix[4]),
+          dy: pt(primitive.matrix[5]),
         });
     }
   });
@@ -433,15 +447,17 @@ export function effectFilterAttribute(
       {
         id,
         filterUnits: 'userSpaceOnUse',
-        x: -left,
-        y: -top,
-        width: box.cx + left + graph.margin.right,
-        height: box.cy + top + graph.margin.bottom,
+        x: pt(-left),
+        y: pt(-top),
+        width: pt(box.cx + left + graph.margin.right),
+        height: pt(box.cy + top + graph.margin.bottom),
       },
       nodes,
     ),
   );
-  return { filter: `url(#${id})` };
+  return [
+    element('g', { transform: INTO_FILTER_SPACE, filter: `url(#${id})` }, [
+      element('g', { transform: OUT_OF_FILTER_SPACE }, children),
+    ]),
+  ];
 }
-
-export { PRIMITIVE_TAG };

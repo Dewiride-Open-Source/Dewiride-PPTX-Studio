@@ -30,6 +30,25 @@ declare const OffscreenCanvas: new (
 declare const navigator: { userAgent: string };
 
 /** One face, as this machine actually resolves it. */
+/** Which recorded lock and digest set this machine is compared against. */
+export function currentEnvId(): string {
+  return `${process.platform}-${process.arch}`;
+}
+
+/** The first family of each stack in the markup, which is the face the run asked for. */
+export function familiesOf(markup: string): readonly string[] {
+  const families = new Set<string>();
+  for (const match of markup.matchAll(/font-family="([^"]*)"/g)) {
+    const first = (match[1] ?? '').split(',')[0] ?? '';
+    const name = first
+      .trim()
+      .replace(/^&quot;|&quot;$/g, '')
+      .replace(/^'|'$/g, '');
+    if (name.length > 0) families.add(name);
+  }
+  return [...families];
+}
+
 export interface FaceProbe {
   readonly family: string;
   /** False means every generic showed through, so nothing of this face is here. */

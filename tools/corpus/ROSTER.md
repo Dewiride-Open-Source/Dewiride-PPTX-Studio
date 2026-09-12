@@ -1,6 +1,6 @@
 # The corpus roster
 
-What sub-phase 1.1's corpus holds, now fifty-four decks, deck by deck, and which experiment gates the ones that
+What sub-phase 1.1's corpus holds, now fifty-five decks, deck by deck, and which experiment gates the ones that
 cannot be written yet. ADR 0009 decides _where a fixture may come from_; this decides _what is in
 the corpus_.
 
@@ -15,7 +15,7 @@ closed: forty-six of forty-seven keys covered, one declared.
 
 | Tier  | Producer                              | Planned | Built  |
 | ----- | ------------------------------------- | ------- | ------ |
-| **A** | `tools/corpus/tiers/a-generated`      | 44      | **44** |
+| **A** | `tools/corpus/tiers/a-generated`      | 45      | **45** |
 | **B** | Microsoft PowerPoint 365 (16.0.20326) | 9       | **9**  |
 | **C** | `packages/opc`'s own writer           | 1       | **1**  |
 
@@ -113,17 +113,18 @@ is authoritative about is that stored values are applied verbatim in view mode.
 
 ### Structure — built
 
-| id                | probes                                                                                   | first to emit                    |
-| ----------------- | ---------------------------------------------------------------------------------------- | -------------------------------- |
-| `a12-masters`     | three masters, three themes, three `p:clrMap`s, `a:overrideClrMapping`                   | —                                |
-| `a13-sections`    | `p14:sectionLst`, `p:custShowLst`, a slide in two shows and one listed twice             | `section`, `customShow`          |
-| `a14-notes`       | notes master, handout master, three notes slides, and the `hdr`/`sldImg` pair            | `notesSlide`                     |
-| `a15-comments`    | `p:cmLst` and `p:cmAuthorLst`, **and** the 2018 `p188:cmLst` PowerPoint writes           | `comment`                        |
-| `a16-transitions` | all 21 `p:transition` effects across a master, 18 layouts and 3 slides                   | `transition`, `alternateContent` |
-| `a17-animations`  | `p:timing` nine levels deep, every behaviour but audio and video, `p:bldLst`             | `animation`                      |
-| `a18-slide-sizes` | `screen4x3`, and a `p:notesSz` in a different aspect ratio from the slide                | —                                |
-| `a19-decorative`  | `adec:decorative`, `@descr`, `@title`, `@hidden`, and `p:spTree` reading order           | `decorative`                     |
-| `a45-backgrounds` | `p:bgRef` across the 1000 offset, an explicit `p:bgPr`, and a layout-supplied background | first `p:bgPr`                   |
+| id                   | probes                                                                                   | first to emit                                                            |
+| -------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `a12-masters`        | three masters, three themes, three `p:clrMap`s, `a:overrideClrMapping`                   | —                                                                        |
+| `a13-sections`       | `p14:sectionLst`, `p:custShowLst`, a slide in two shows and one listed twice             | `section`, `customShow`                                                  |
+| `a14-notes`          | notes master, handout master, three notes slides, and the `hdr`/`sldImg` pair            | `notesSlide`                                                             |
+| `a15-comments`       | `p:cmLst` and `p:cmAuthorLst`, **and** the 2018 `p188:cmLst` PowerPoint writes           | `comment`                                                                |
+| `a16-transitions`    | all 21 `p:transition` effects across a master, 18 layouts and 3 slides                   | `transition`, `alternateContent`                                         |
+| `a17-animations`     | `p:timing` nine levels deep, every behaviour but audio and video, `p:bldLst`             | `animation`                                                              |
+| `a18-slide-sizes`    | `screen4x3`, and a `p:notesSz` in a different aspect ratio from the slide                | —                                                                        |
+| `a19-decorative`     | `adec:decorative`, `@descr`, `@title`, `@hidden`, and `p:spTree` reading order           | `decorative`                                                             |
+| `a45-backgrounds`    | `p:bgRef` across the 1000 offset, an explicit `p:bgPr`, and a layout-supplied background | first `p:bgPr`                                                           |
+| `a46-hundred-slides` | a hundred slides of nine kinds from one deterministic schedule, Gate 3's deck            | first deck past ten slides; deflated for scale, not to probe compression |
 
 Four corrections came out of building these, and all four are measurements rather than opinions.
 

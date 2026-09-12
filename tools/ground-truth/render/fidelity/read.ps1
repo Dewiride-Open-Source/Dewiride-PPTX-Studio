@@ -3,7 +3,7 @@
 #   powershell -File tools/ground-truth/render/fidelity/read.ps1 -Dir <work-dir>
 #
 # Reads `oracle-inputs.json`, opens each deck and exports every slide as a PNG
-# at the width the harness rasterises at.
+# at the width the harness rasterises at, and at each zoom width the deck names.
 #
 # ## Every slide is exported twice
 #
@@ -17,7 +17,8 @@
 #
 # The corpus is not all 16:9 - `a41-a4` and `a42-custom-size` exist precisely so
 # that something asks this question. The width is fixed and the height follows
-# the deck's own aspect, which is the same rule `geometryOf` applies on our side.
+# the deck's own aspect, which is the same rule `geometryOf` applies on our side,
+# rounded half up as `Math.round` rounds.
 #
 # `Open2007` with `OpenAndRepair:=msoFalse`, for the reason every other read.ps1
 # gives: `Open` silently repairs, and a silently repaired deck is not the deck
@@ -77,41 +78,46 @@ try {
             $pres = $app.Presentations.Open2007($full, $msoTrue, $msoFalse, $msoFalse, $msoFalse)
             $pageWidth = [double]$pres.PageSetup.SlideWidth
             $pageHeight = [double]$pres.PageSetup.SlideHeight
-            $height = [int][Math]::Round($rasterWidth * $pageHeight / $pageWidth)
             $record.pointWidth = $pageWidth
             $record.pointHeight = $pageHeight
-            $record.pixelWidth = $rasterWidth
-            $record.pixelHeight = $height
+            $widths = @($rasterWidth) + @($deck.zoomWidths)
 
             for ($i = 1; $i -le $pres.Slides.Count; $i++) {
                 $slide = $pres.Slides.Item($i)
-                $name = ('{0}-{1:d2}.png' -f $deck.id, $i)
-                $keep = Join-Path $root $name
-                $again = Join-Path $root ('{0}-{1:d2}.again.png' -f $deck.id, $i)
+                foreach ($w in $widths) {
+                    $width = [int]$w
+                    $height = [int][Math]::Round($width * $pageHeight / $pageWidth, [MidpointRounding]::AwayFromZero)
+                    $name = ('{0}-{1:d2}.{2}.png' -f $deck.id, $i, $width)
+                    $againName = ('{0}-{1:d2}.{2}.again.png' -f $deck.id, $i, $width)
+                    $keep = Join-Path $root $name
+                    $again = Join-Path $root $againName
 
-                $slide.Export($keep, 'PNG', $rasterWidth, $height)
-                $slide.Export($again, 'PNG', $rasterWidth, $height)
+                    $slide.Export($keep, 'PNG', $width, $height)
+                    $slide.Export($again, 'PNG', $width, $height)
 
-                # Both are kept. Whether the two agree is decided on their
-                # decoded pixels in `analyse.ts`, not here on their bytes:
-                # PowerPoint writes a palettised PNG and the palette order is not
-                # stable between exports, so byte equality answers a question
-                # about the encoder rather than about the picture.
-                $a = [IO.File]::ReadAllBytes($keep)
-                $b = [IO.File]::ReadAllBytes($again)
-                $sameBytes = $a.Length -eq $b.Length
-                if ($sameBytes) {
-                    for ($k = 0; $k -lt $a.Length; $k++) {
-                        if ($a[$k] -ne $b[$k]) { $sameBytes = $false; break }
+                    # Both are kept. Whether the two agree is decided on their
+                    # decoded pixels in `analyse.ts`, not here on their bytes:
+                    # PowerPoint writes a palettised PNG and the palette order is not
+                    # stable between exports, so byte equality answers a question
+                    # about the encoder rather than about the picture.
+                    $a = [IO.File]::ReadAllBytes($keep)
+                    $b = [IO.File]::ReadAllBytes($again)
+                    $sameBytes = $a.Length -eq $b.Length
+                    if ($sameBytes) {
+                        for ($k = 0; $k -lt $a.Length; $k++) {
+                            if ($a[$k] -ne $b[$k]) { $sameBytes = $false; break }
+                        }
                     }
-                }
 
-                $record.slides += [ordered]@{
-                    slide     = $i
-                    file      = $name
-                    again     = ('{0}-{1:d2}.again.png' -f $deck.id, $i)
-                    bytes     = $a.Length
-                    sameBytes = $sameBytes
+                    $record.slides += [ordered]@{
+                        slide     = $i
+                        width     = $width
+                        height    = $height
+                        file      = $name
+                        again     = $againName
+                        bytes     = $a.Length
+                        sameBytes = $sameBytes
+                    }
                 }
             }
         }

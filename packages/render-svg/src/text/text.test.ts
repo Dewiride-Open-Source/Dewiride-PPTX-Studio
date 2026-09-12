@@ -7,6 +7,7 @@ import { parseXmlString } from '@pptx-studio/xml';
 import fixture from '../../../../corpus/ground-truth/text-rendering.json' with { type: 'json' };
 import frames from '../../../../corpus/ground-truth/frames.json' with { type: 'json' };
 import columns from '../../../../corpus/ground-truth/wordart-columns.json' with { type: 'json' };
+import bullets from '../../../../corpus/ground-truth/bullets.json' with { type: 'json' };
 import { layoutSheet, type Placed } from '../layout.js';
 import { RenderError } from '../errors.js';
 import { serializeSvg, type SvgElement, type SvgNode } from '../node.js';
@@ -153,6 +154,7 @@ function paragraph(
     spaceAfter: { kind: 'points', value: 0 },
     runs,
     endRun: runs[0] ?? run(''),
+    bullet: null,
     ...over,
   };
 }
@@ -554,6 +556,153 @@ describe('layoutText', () => {
   });
 });
 
+/* -------------------------------------------------------------------------- */
+/* the bullet                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/** A character bullet measured by the flat measurer at exactly `advancePt`. */
+function bulletOf(advancePt: number): ResolvedParagraph['bullet'] {
+  return {
+    kind: 'text',
+    text: '\u2022',
+    typeface: 'Arial',
+    sz: Math.round(advancePt * 100),
+    color: { r: 0, g: 0, b: 0, a: 1 },
+  };
+}
+
+describe('where the bullet and the first line go, re-derived from T5', () => {
+  const rows = bullets.indents as readonly {
+    id: string;
+    marL: number;
+    indent: number;
+    bulletPt: number;
+    textLeftPt: number;
+  }[];
+  const wraps = bullets.wraps as readonly {
+    id: string;
+    marL: number;
+    indent: number;
+    secondLinePt: number;
+  }[];
+
+  it(`starts the first line where PowerPoint did on all ${String(rows.length)} rows`, () => {
+    expect(rows.length).toBeGreaterThan(100);
+    for (const row of rows) {
+      const block = laid(
+        body([
+          paragraph([run('x')], {
+            marginLeft: row.marL,
+            indent: row.indent,
+            bullet: bulletOf(row.bulletPt),
+          }),
+        ]),
+      );
+      const line = block.lines[0]!;
+      expect(line.leftPt, row.id).toBeCloseTo(row.textLeftPt, 2);
+      // The bullet sits at max(0, marL + min(0, indent)), from the frame's own edge.
+      expect(line.leftPt + (line.bullet?.leftPt ?? Number.NaN), row.id).toBeCloseTo(
+        Math.max(0, row.marL + Math.min(0, row.indent)),
+        2,
+      );
+      expect(line.bullet?.text).toBe('\u2022');
+      expect(line.bullet?.widthPt).toBeCloseTo(row.bulletPt, 2);
+    }
+  });
+
+  it(`starts a wrapped line at marL and nothing else on all ${String(wraps.length)} rows`, () => {
+    for (const row of wraps) {
+      // Twenty characters of thirty-two points wrap in six hundred.
+      const block = laid(
+        body([
+          paragraph([run('abcdefghij klmnopqrst uvwxyz')], {
+            marginLeft: row.marL,
+            indent: row.indent,
+            bullet: bulletOf(28.75),
+          }),
+        ]),
+      );
+      expect(block.lines.length, row.id).toBeGreaterThan(1);
+      expect(block.lines[1]!.leftPt, row.id).toBeCloseTo(row.secondLinePt, 2);
+      expect(block.lines[1]!.bullet).toBeNull();
+    }
+  });
+
+  it('starts a bulletless first line at marL plus indent, which is not where a bulleted one starts', () => {
+    const bare = laid(body([paragraph([run('x')], { marginLeft: 24, indent: -24 })]));
+    expect(bare.lines[0]!.leftPt).toBe(0);
+    expect(bare.lines[0]!.bullet).toBeNull();
+    const dotted = laid(
+      body([paragraph([run('x')], { marginLeft: 24, indent: -24, bullet: bulletOf(28.75) })]),
+    );
+    expect(dotted.lines[0]!.leftPt).toBeCloseTo(28.75, 2);
+  });
+
+  it('scales the bullet with the stored autofit like every run', () => {
+    const block = laid(
+      body([paragraph([run('x')], { marginLeft: 0, indent: 0, bullet: bulletOf(20) })], {
+        fontScale: 0.5,
+      }),
+    );
+    expect(block.lines[0]!.bullet?.font.sz).toBe(1000);
+    expect(block.lines[0]!.bullet?.widthPt).toBeCloseTo(10, 2);
+  });
+});
+
+describe('the bullet through the cascade', () => {
+  const bodyPlaceholder = (paragraphs: string): Sheet =>
+    slideWithText(`<p:txBody><a:bodyPr/><a:lstStyle/>${paragraphs}</p:txBody>`, '<p:ph idx="1"/>');
+
+  it("reads the master's body style bullet for a content placeholder", () => {
+    const placed = layoutSheet(
+      bodyPlaceholder('<a:p><a:r><a:rPr lang="en-US" sz="2400"/><a:t>One</a:t></a:r></a:p>'),
+    )[0];
+    const text = resolveText(placed as Placed);
+    const bullet = text?.paragraphs[0]?.bullet;
+    expect(bullet?.kind).toBe('text');
+    if (bullet?.kind !== 'text') throw new Error('no text bullet');
+    // The character the level names, in the face it names, at the first run's size.
+    expect(bullet.text).toBe('\u2022');
+    expect(bullet.typeface).toBe('Arial');
+    expect(bullet.sz).toBe(2400);
+    expect(text?.paragraphs[0]?.marginLeft).toBeCloseTo(27, 3);
+  });
+
+  it('draws nothing where a paragraph says a:buNone, and numbers an autonumber run', () => {
+    const placed = layoutSheet(
+      bodyPlaceholder(
+        '<a:p><a:pPr><a:buNone/></a:pPr><a:r><a:rPr lang="en-US"/><a:t>Plain</a:t></a:r></a:p>' +
+          '<a:p><a:pPr><a:buAutoNum type="arabicPeriod"/></a:pPr><a:r><a:rPr lang="en-US"/><a:t>a</a:t></a:r></a:p>' +
+          '<a:p><a:pPr lvl="1"/><a:r><a:rPr lang="en-US"/><a:t>deeper</a:t></a:r></a:p>' +
+          '<a:p><a:pPr><a:buAutoNum type="arabicPeriod"/></a:pPr><a:r><a:rPr lang="en-US"/><a:t>b</a:t></a:r></a:p>',
+      ),
+    )[0];
+    const paragraphs = resolveText(placed as Placed)?.paragraphs ?? [];
+    expect(paragraphs[0]?.bullet).toBeNull();
+    expect(paragraphs.map((p) => (p.bullet?.kind === 'text' ? p.bullet.text : null))).toEqual([
+      null,
+      '1.',
+      '\u2013',
+      '2.',
+    ]);
+  });
+
+  it('emits the bullet as its own text element, placed from the line', () => {
+    const placed = layoutSheet(
+      bodyPlaceholder('<a:p><a:r><a:rPr lang="en-US" sz="2000"/><a:t>One</a:t></a:r></a:p>'),
+    )[0];
+    const block = textBlockOf(placed as Placed, createTextEngine({ measurer: flatMeasurer }));
+    if (block === null) throw new Error('no block');
+    const svg = svgOf(block);
+    const texts = [...svg.matchAll(/<text x="([^"]+)" y="([^"]+)"/g)].map((m) => Number(m[1]));
+    expect(texts).toHaveLength(2);
+    // The text starts at marL and the bullet in the hanging indent, seven points in.
+    expect(texts[0]).toBeCloseTo(7.2 + 27, 1);
+    expect(texts[1]).toBeCloseTo(7.2, 1);
+    expect(svg).toContain('>\u2022<');
+  });
+});
+
 describe('strutHeight', () => {
   it("lands a browser's baseline where the layout put it", () => {
     const face = { ascent: 0.9, descent: 0.25, ideographic: 0.12 };
@@ -624,17 +773,29 @@ const CLR_MAP =
   'folHlink="folHlink"/>';
 
 /** The master a slide inherits from, which is where the theme hangs. */
+/** A body style with a bullet on its first level, as every PowerPoint master carries. */
+const TX_STYLES =
+  '<p:txStyles><p:titleStyle><a:lvl1pPr/></p:titleStyle><p:bodyStyle>' +
+  '<a:lvl1pPr marL="342900" indent="-342900"><a:buFont typeface="Arial"/><a:buChar char="\u2022"/>' +
+  '<a:defRPr sz="2000"/></a:lvl1pPr>' +
+  '<a:lvl2pPr marL="742950" indent="-285750"><a:buChar char="\u2013"/><a:defRPr sz="1800"/></a:lvl2pPr>' +
+  '</p:bodyStyle><p:otherStyle><a:lvl1pPr/></p:otherStyle></p:txStyles>';
+
 function masterSheet(): Sheet {
-  const xml = `<p:sldMaster ${NS}><p:cSld name="master">${SP_TREE_HEAD}</p:spTree></p:cSld>${CLR_MAP}</p:sldMaster>`;
+  const xml =
+    `<p:sldMaster ${NS}><p:cSld name="master">${SP_TREE_HEAD}` +
+    '<p:sp><p:nvSpPr><p:cNvPr id="3" name="Body"/><p:cNvSpPr/><p:nvPr><p:ph type="body" idx="1"/></p:nvPr>' +
+    '</p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p/></p:txBody></p:sp>' +
+    `</p:spTree></p:cSld>${CLR_MAP}${TX_STYLES}</p:sldMaster>`;
   const theme = parseTheme(parseXmlString(THEME_XML).root, '/ppt/theme/theme1.xml');
   return { ...parseSheet(parseXmlString(xml).root, '/ppt/slideMaster1.xml'), parent: null, theme };
 }
 
 /** One slide holding one text shape, parsed the way a real package is. */
-function slideWithText(txBody: string): Sheet {
+function slideWithText(txBody: string, ph = ''): Sheet {
   const xml =
     `<p:sld ${NS}><p:cSld name="slide">${SP_TREE_HEAD}` +
-    '<p:sp><p:nvSpPr><p:cNvPr id="2" name="probe"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
+    `<p:sp><p:nvSpPr><p:cNvPr id="2" name="probe"/><p:cNvSpPr/><p:nvPr>${ph}</p:nvPr></p:nvSpPr>` +
     '<p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="7620000" cy="3048000"/></a:xfrm>' +
     '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>' +
     txBody +

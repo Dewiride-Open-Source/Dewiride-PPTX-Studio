@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import lines from '../../../../corpus/ground-truth/lines.json' with { type: 'json' };
+import zoom from '../../../../corpus/ground-truth/zoom.json' with { type: 'json' };
 import { PaintError } from '../errors.js';
 import { COMPOUND_RUNS } from './compound-table.js';
 import { PRESET_DASHES, PRESET_DASH_NAMES, isPresetDashName } from './dash-table.js';
@@ -9,9 +10,11 @@ import {
   DEFAULT_LINE_JOIN,
   DEFAULT_LINE_WIDTH,
   DEFAULT_MITER_LIMIT,
+  EMU_PER_POINT,
   compoundRails,
   dashArray,
   dashSegments,
+  deviceStrokeWidth,
   markerGeometry,
   markerOvershoot,
   resolveLine,
@@ -310,6 +313,98 @@ describe('width and alignment', () => {
 /* -------------------------------------------------------------------------- */
 /* the compound strokes                                                       */
 /* -------------------------------------------------------------------------- */
+
+/* -------------------------------------------------------------------------- */
+/* the width at another export width (F2)                                     */
+/* -------------------------------------------------------------------------- */
+
+/** F2's measure of one probe at one export width, in pixels of that export. */
+interface ZoomMeasure {
+  readonly inkPx?: number;
+  readonly periodPx?: number | null;
+}
+
+/** Every F2 case of a family: the probe, its device scale, and what PowerPoint drew. */
+function zoomCases(
+  family: string,
+): { id: string; widthPt: number; scale: number; seen: ZoomMeasure }[] {
+  const out: { id: string; widthPt: number; scale: number; seen: ZoomMeasure }[] = [];
+  const measured = zoom.measured as Record<string, Record<string, ZoomMeasure>>;
+  for (const probe of zoom.probes) {
+    if (probe.family !== family) continue;
+    for (const width of zoom.widths) {
+      const seen = measured[probe.id]?.[String(width)];
+      if (seen === undefined) continue;
+      out.push({ id: probe.id, widthPt: probe.widthPt ?? 0, scale: width / zoom.slide.w, seen });
+    }
+  }
+  return out;
+}
+
+describe('the width at another export width, re-derived from F2', () => {
+  const drawnPx = (widthPt: number, scale: number): number =>
+    (deviceStrokeWidth(widthPt * EMU_PER_POINT, scale) / EMU_PER_POINT) * scale;
+
+  it('draws a hairline as one device pixel at every width, 42 of 42', () => {
+    const cases = zoomCases('hairline');
+    expect(cases).toHaveLength(42);
+    for (const c of cases) {
+      expect(drawnPx(0, c.scale)).toBe(1);
+      expect(Math.abs((c.seen.inkPx ?? 0) - 1)).toBeLessThanOrEqual(zoom.tolerancePx);
+    }
+    expect(zoom.findings.hairline).toBe('H1');
+  });
+
+  it('rounds a stroke to whole pixels and never under one, 56 of 56 and 14 of 14', () => {
+    const cases = [...zoomCases('thin'), ...zoomCases('border')];
+    expect(cases).toHaveLength(70);
+    for (const c of cases) {
+      const predicted = drawnPx(c.widthPt, c.scale);
+      expect(Number.isInteger(predicted)).toBe(true);
+      expect(Math.abs((c.seen.inkPx ?? 0) - predicted)).toBeLessThanOrEqual(zoom.tolerancePx);
+    }
+    expect(zoom.findings.thin).toBe('T4');
+    expect(zoom.findings.border).toBe('T4');
+  });
+
+  it('refutes the readings anyone would write first, with their scores', () => {
+    const losers = [...zoom.candidates.hairline, ...zoom.candidates.thin].filter(
+      (score) => score.model !== 'H1' && score.model !== 'T4',
+    );
+    expect(losers).toHaveLength(8);
+    for (const score of losers) expect(score.fits).toBeLessThan(score.of);
+    // Half a point says two pixels at 4 px/pt; the fixture drew one.
+    expect(0.5 * 4).toBe(2);
+    expect(drawnPx(0, 4)).toBe(1);
+    // The true width says a quarter of a pixel for 0.25 pt at 1 px/pt; the fixture drew one.
+    expect(0.25 * 1).toBe(0.25);
+    expect(drawnPx(0.25, 1)).toBe(1);
+    // Rounding up says two pixels for 1.1 pt at 1.25 px/pt (1.375); the fixture drew one.
+    expect(Math.ceil(1.1 * 1.25)).toBe(2);
+    expect(drawnPx(1.1, 1.25)).toBe(1);
+  });
+
+  it('keeps the dash period at multiples of the drawn width, 7 of 7 on a quarter-point dash', () => {
+    const cases = zoomCases('dash').filter((c) => c.id === 'dash-quarter');
+    expect(cases).toHaveLength(7);
+    const dashed = resolveLine({ ...blankLine(), w: 3175, dash: { kind: 'preset', val: 'dash' } });
+    for (const c of cases) {
+      const drawn = deviceStrokeWidth(dashed.width, c.scale);
+      const array = svgStroke(dashed, drawn)['stroke-dasharray'] ?? [];
+      const periodPx = (array.reduce((a, b) => a + b, 0) / EMU_PER_POINT) * c.scale;
+      expect(Math.abs(periodPx - (c.seen.periodPx ?? 0))).toBeLessThanOrEqual(zoom.tolerancePx);
+    }
+    expect(zoom.findings.dashOnHairline).toBe('D1');
+  });
+
+  it('refuses a device scale under the floor strokes are rounded for', () => {
+    expect(() => deviceStrokeWidth(12700, 0)).toThrow(PaintError);
+    expect(() => deviceStrokeWidth(12700, Number.NaN)).toThrow(PaintError);
+    expect(() => deviceStrokeWidth(12700, 0.04)).toThrow(PaintError);
+    // At the floor a hairline is twenty points, the widest one device pixel ever is.
+    expect(deviceStrokeWidth(0, 0.05)).toBe(20 * 12700);
+  });
+});
 
 describe('the compound strokes', () => {
   it('re-derives every shipped division from the measured crossings', () => {

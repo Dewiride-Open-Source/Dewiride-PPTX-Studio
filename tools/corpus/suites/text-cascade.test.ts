@@ -20,7 +20,7 @@ import {
 import { describe, expect, it } from 'vitest';
 
 /**
- * Sub-phase 3.1's honest check: the cascade against fifty-four real decks.
+ * Sub-phase 3.1's honest check: the cascade against fifty-five real decks.
  *
  * The unit suite is written from `corpus/ground-truth/text-cascade.json` and
  * proves the resolver reproduces what PowerPoint did on 39 packages built to
@@ -167,9 +167,9 @@ describe('the text cascade over every committed deck', () => {
     }
   }
 
-  it('parses and resolves all fifty-four without throwing', () => {
+  it('parses and resolves all fifty-five without throwing', () => {
     expect(failures).toEqual([]);
-    expect(DECKS).toHaveLength(54);
+    expect(DECKS).toHaveLength(55);
   });
 
   it('resolves every paragraph to a size, a margin and an indent a slide could hold', () => {

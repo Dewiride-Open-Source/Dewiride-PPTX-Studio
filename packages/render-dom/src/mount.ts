@@ -22,12 +22,11 @@
  * image: they belong to **no** namespace and must go through `setAttribute`,
  * with the single exception of `xlink:href`, which this package never emits.
  *
- * ## Zoom is a transform, never a re-layout
+ * ## Zoom is a mount at that width, never a re-layout
  *
- * The mounted `<svg>` carries a `viewBox` in EMU and is sized in CSS pixels, so
- * scaling it is one attribute and no arithmetic. The plan's rule is the reason:
- * font metrics are not linear in point size, so a renderer that re-lays out per
- * zoom level changes the line breaks as the user zooms.
+ * The `<svg>` carries a `viewBox` in EMU and is sized in CSS pixels. Text is laid out
+ * once at one point size, so the line breaks are the same at every zoom; strokes are
+ * rounded to the device pixels of the mounted width (F2), so a zoom is another mount.
  */
 
 import {
@@ -84,8 +83,6 @@ export interface MountedSlide {
   readonly placed: readonly Placed[];
   /** The element drawing a given `p:cNvPr/@id`, for hit-testing and selection. */
   element(cNvPrId: number): SVGElement | null;
-  /** Resize without re-laying anything out: the viewBox does the work. */
-  resize(width: number, height: number): void;
   /** Detach from the host. The nodes stay valid, so a caller may re-attach. */
   unmount(): void;
 }
@@ -136,10 +133,6 @@ export function mountSlide(
     placed: rendered.placed,
     element(cNvPrId: number): SVGElement | null {
       return byId.get(cNvPrId) ?? null;
-    },
-    resize(width: number, height: number): void {
-      root.setAttribute('width', String(width));
-      root.setAttribute('height', String(height));
     },
     unmount(): void {
       root.remove();

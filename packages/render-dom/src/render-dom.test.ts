@@ -131,17 +131,6 @@ describe('mountSlide', () => {
     mounted.unmount();
   });
 
-  it('resizes without re-laying anything out', () => {
-    const mounted = mountSlide(host(), sheetOf([shape(2, 0, 0, 100, 100, '000000')]), SIZE);
-    const before = mounted.root.querySelector('path')?.getAttribute('d');
-    mounted.resize(640, 360);
-    expect(mounted.root.getAttribute('width')).toBe('640');
-    expect(mounted.root.getAttribute('height')).toBe('360');
-    // The viewBox does the work, so nothing about the geometry changed.
-    expect(mounted.root.querySelector('path')?.getAttribute('d')).toBe(before);
-    mounted.unmount();
-  });
-
   it('empties the host and can be detached again', () => {
     const container = host();
     container.appendChild(document.createElement('span'));

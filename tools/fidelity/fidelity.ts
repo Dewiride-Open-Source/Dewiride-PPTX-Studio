@@ -14,7 +14,7 @@
  * gated, on a digest, with no tolerance to loosen. ADR 0035.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { fidelityProbes, slideKey } from '../ground-truth/render/fidelity/probes.ts';
@@ -23,15 +23,14 @@ import { repoPath } from '../repo/root.ts';
 import { blameOf } from './blame.ts';
 import { FidelityError } from './errors.ts';
 import { claimFixtures } from './fixtures.ts';
-import { decodeGridSet } from './metric/grid.ts';
-import type { Grid } from './metric/reduce.ts';
 import { differenceOf, scoreOf } from './metric/score.ts';
+import { openOracle } from './oracle.ts';
 import { openHarness, servedUrl } from './raster/browser.ts';
 import {
   assertSameEnvironment,
+  currentEnvId,
   familiesDrawn,
   probeEnvironment,
-  type Environment,
 } from './raster/fonts.ts';
 import { injectHarness, renderSlide, type SlideRaster } from './raster/render.ts';
 import {
@@ -39,7 +38,9 @@ import {
   assertExpectedCount,
   assertMayRecord,
   baselineGaps,
+  baselineJson,
   parseRecordArgs,
+  readBaseline,
 } from './record.ts';
 import {
   corpusMeanBp,
@@ -52,39 +53,23 @@ import {
 const FIXTURES = repoPath('corpus/ground-truth/render/fidelity');
 const OUT = repoPath('fidelity');
 
-/** Which recorded lock and digest set this machine is compared against. */
-const ENV_ID = `${process.platform}-${process.arch}`;
+const ENV_ID = currentEnvId();
 
 const args = parseRecordArgs(process.argv.slice(2));
 const record = args.record;
 
-interface Expected {
-  readonly environment: Environment;
-  readonly slides: Readonly<Record<string, { rasterSha256: string; svgSha256: string }>>;
-}
-
-interface Oracle {
-  readonly noiseFloor: { worstMeanBpDrop: number; worstMaxD: number };
-  readonly records: readonly { key: string }[];
-}
-
-const oracle = JSON.parse(readFileSync(join(FIXTURES, 'oracle.json'), 'utf8')) as Oracle;
-const oracleKeys = new Set(oracle.records.map((row) => row.key));
+const oracle = openOracle(FIXTURES);
 
 /* ------------------------------------------ the baseline, and leave to write it */
 
 const expectedPath = join(FIXTURES, `expected.${ENV_ID}.json`);
-let expected: Expected | null = null;
-try {
-  expected = JSON.parse(readFileSync(expectedPath, 'utf8')) as Expected;
-} catch {
-  if (!record) {
-    throw new FidelityError(
-      'FID_ENV_UNKNOWN',
-      `no expected.${ENV_ID}.json; this machine has never recorded a baseline`,
-      ENV_ID,
-    );
-  }
+const expected = readBaseline(expectedPath);
+if (expected === null && !record) {
+  throw new FidelityError(
+    'FID_ENV_UNKNOWN',
+    `no expected.${ENV_ID}.json; this machine has never recorded a baseline`,
+    ENV_ID,
+  );
 }
 
 assertMayRecord(args, { inCi: process.env['CI'] !== undefined, hasBaseline: expected !== null });
@@ -100,7 +85,7 @@ const unsupported: { key: string; reason: string }[] = [];
 for (const probe of fidelityProbes()) {
   for (let slide = 1; slide <= probe.slides; slide++) {
     const key = slideKey(probe.id, slide);
-    if (!oracleKeys.has(key)) {
+    if (!oracle.keys.has(key)) {
       throw new FidelityError('FID_ORACLE_MISSING', `no committed oracle grid for ${key}`, key);
     }
     try {
@@ -143,24 +128,10 @@ if (expected !== null) {
 
 /* ------------------------------------------------------------- the scoring */
 
-const oracleGrids = new Map<string, ReturnType<typeof decodeGridSet>>();
-function oracleGridFor(deck: string, key: string): Grid {
-  let set = oracleGrids.get(deck);
-  if (set === undefined) {
-    const file = `${deck}.ppt.grids`;
-    set = decodeGridSet(new Uint8Array(readFileSync(join(FIXTURES, 'grids', file))), file);
-    oracleGrids.set(deck, set);
-  }
-  const grid = set.get(key);
-  if (grid === undefined)
-    throw new FidelityError('FID_ORACLE_MISSING', `no oracle grid for ${key}`, key);
-  return grid;
-}
-
 const results: SlideResult[] = [];
 for (const [key, raster] of rendered) {
   const deck = key.slice(0, key.lastIndexOf('-'));
-  const difference = differenceOf(raster.grid, oracleGridFor(deck, key));
+  const difference = differenceOf(raster.grid, oracle.gridFor(key));
   const score = scoreOf(difference);
   const was = expected?.slides[key];
   results.push({
@@ -186,8 +157,8 @@ const changed = results.filter((slide) => slide.changed);
 const report: RunReport = {
   envId: ENV_ID,
   slides: results,
-  noiseFloorBp: oracle.noiseFloor.worstMeanBpDrop,
-  noiseFloorMaxD: oracle.noiseFloor.worstMaxD,
+  noiseFloorBp: oracle.oracle.noiseFloor.worstMeanBpDrop,
+  noiseFloorMaxD: oracle.oracle.noiseFloor.worstMaxD,
   substituted: environment.faces.filter((face) => !face.available).map((face) => face.family),
 };
 
@@ -199,19 +170,15 @@ if (record) {
   assertExpectedCount(args, changed.length + gaps.unrecorded.length + gaps.vanished.length);
   writeFileSync(
     expectedPath,
-    `${JSON.stringify(
+    baselineJson(
       {
-        $comment: 'GENERATED by tools/fidelity/fidelity.ts --record. Do not edit by hand.',
         environment,
         slides: Object.fromEntries(
-          [...results]
-            .sort((a, b) => (a.key < b.key ? -1 : 1))
-            .map((r) => [r.key, { rasterSha256: r.rasterSha256, svgSha256: r.svgSha256 }]),
+          results.map((r) => [r.key, { rasterSha256: r.rasterSha256, svgSha256: r.svgSha256 }]),
         ),
       },
-      null,
-      2,
-    )}\n`,
+      'tools/fidelity/fidelity.ts',
+    ),
   );
   claimFixtures([
     {
@@ -227,6 +194,7 @@ if (record) {
         tool: 'tools/fidelity/fidelity.ts',
         args: args.bootstrap ? ['--record', '--bootstrap'] : ['--record'],
       },
+      addedIn: '3.9',
     },
   ]);
 }
@@ -241,15 +209,21 @@ console.log(
     `(oracle noise floor ${String(report.noiseFloorBp)} bp)`,
 );
 
-if (gaps.vanished.length > 0) {
+if (record) {
+  const rewritten = [...changed.map((slide) => slide.key), ...gaps.unrecorded, ...gaps.vanished];
+  console.log(
+    `fidelity: recorded ${expectedPath}` +
+      (rewritten.length === 0
+        ? ''
+        : `, moving ${String(rewritten.length)}: ${rewritten.join(', ')}`),
+  );
+} else if (gaps.vanished.length > 0) {
   throw new FidelityError(
     'FID_RENDER_CHANGED',
     `${String(gaps.vanished.length)} recorded slide(s) are no longer drawn: ` +
       gaps.vanished.join(', '),
   );
-}
-
-if (changed.length > 0) {
+} else if (changed.length > 0) {
   throw new FidelityError(
     'FID_RENDER_CHANGED',
     `${String(changed.length)} slide(s) rasterise differently than recorded: ` +

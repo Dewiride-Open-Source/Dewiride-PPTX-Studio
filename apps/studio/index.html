@@ -236,17 +236,30 @@
         font-size: 0.7rem;
         font-variant-numeric: tabular-nums;
       }
-      .strip .thumb-svg svg {
+      .strip .thumb-svg > svg {
         display: block;
-        border-radius: 3px;
+        background: #fff;
       }
       .slides .stage {
         border: 1px solid var(--line);
-        border-radius: 8px;
         background: var(--panel);
         align-self: flex-start;
-        overflow: hidden;
+        max-width: 100%;
+        max-height: 75vh;
+        overflow: auto;
         touch-action: none;
+      }
+      .slides .stage > svg {
+        display: block;
+        background: #fff;
+      }
+      .slides .bad {
+        color: #c0392b;
+        font-size: 0.8rem;
+      }
+      .stage-controls select.zoom {
+        font: inherit;
+        font-size: 0.8rem;
       }
       .stage-controls {
         display: flex;
@@ -301,11 +314,12 @@
         code <code>pptx-studio inspect</code> and <code>pptx-studio roundtrip</code> run.
       </p>
       <p class="lead">
-        Slides are drawn too — geometry, fills, gradients, patterns, strokes, effects and nested
-        rotated groups, with a debug overlay on any shape you click, and text laid out and drawn as
-        real <code>&lt;text&gt;</code>: the cascade, line breaking, autofit, bullets, anchoring and
-        the baseline PowerPoint itself puts the glyphs on. See also
-        <a href="./gallery.html">the 187 preset shapes</a>, with their adjust handles live.
+        Slides are drawn too — geometry, fills, pictures, gradients, patterns, strokes, effects and
+        nested rotated groups, at any zoom from a thumbnail strip to 400 %, with a debug overlay on
+        any shape you click, and text laid out and drawn as real <code>&lt;text&gt;</code>: the
+        cascade, line breaking, autofit, bullets, anchoring and the baseline PowerPoint itself puts
+        the glyphs on. See also <a href="./gallery.html">the 187 preset shapes</a>, with their
+        adjust handles live.
       </p>
 
       <div id="drop" role="button" tabindex="0" aria-describedby="status">
@@ -319,11 +333,11 @@
     </main>
 
     <footer>
-      Pre-alpha, at sub-phase 3.8 of the plan. Gate 1 of
+      Pre-alpha, at sub-phase 3.11 of the plan. Gate 1 of
       <a href="https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio">PPTX Studio</a>: a
       package is read, described, and handed back with its charts, SmartArt, animations, OLE objects
       and macros intact — because parts nobody edited are copied out of the source archive still
-      compressed rather than regenerated. Rendering starts at phase 2.
+      compressed rather than regenerated. Gate 3: a hundred slides, drawn here at any zoom.
     </footer>
 
     <script type="module" src="./dist/main.js"></script>

@@ -20,7 +20,7 @@ import { element, serializeSvg, type SvgElement } from './node.js';
 import { Defs, fillAttributes } from './paint.js';
 import { shapeNodes } from './shape.js';
 import { createTextEngine, type TextOptions } from './text/draw.js';
-import type { Box } from './transform.js';
+import { EMU_PER_POINT, type Box } from './transform.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -39,7 +39,10 @@ export interface RenderOptions {
    * Defaults to something unique per call.
    */
   readonly idPrefix?: string;
-  /** `width` and `height` attributes, in CSS pixels. Omitted when absent. */
+  /**
+   * `width` and `height` attributes, in CSS pixels. Omitted when absent. A width also names the
+   * device scale strokes are rounded to whole pixels at; without one they keep their true width.
+   */
   readonly width?: number;
   readonly height?: number;
   /** Leave off `xmlns`, for a fragment going into an existing SVG document. */
@@ -104,7 +107,9 @@ export interface SlideRender {
  * against without walking the DOM back.
  */
 export function slideNode(sheet: Sheet, size: SlideSize, options: RenderOptions = {}): SlideRender {
-  const defs = new Defs(options.idPrefix ?? nextPrefix(), options.media);
+  // A named width names the device scale, and strokes are drawn as the export draws them at it.
+  const pxPerPt = options.width === undefined ? null : options.width / (size.cx / EMU_PER_POINT);
+  const defs = new Defs(options.idPrefix ?? nextPrefix(), options.media, pxPerPt);
   const placed = options.inherited === false ? layoutSheet(sheet) : layoutSlide(sheet);
   const background = backgroundNode(sheet, size, defs);
   const engine = options.text === false ? null : createTextEngine(options.text ?? {});

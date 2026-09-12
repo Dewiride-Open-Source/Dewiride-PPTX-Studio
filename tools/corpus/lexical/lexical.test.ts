@@ -73,7 +73,7 @@ const measured = new Map<string, FormEvidence>(MEASURED.map((row) => [key(row), 
 
 describe('the corpus is a corpus of producers', () => {
   it('reads every committed deck of all three collections', () => {
-    expect(DECKS).toHaveLength(54);
+    expect(DECKS).toHaveLength(55);
     expect(new Set(DECKS.map((deck) => deck.collection))).toEqual(
       new Set(['decks', 'authored', 'written']),
     );

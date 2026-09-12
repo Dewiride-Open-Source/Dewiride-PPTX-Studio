@@ -23,17 +23,13 @@ import type { Page } from 'playwright';
 import { regionShapes } from '../fidelity/blame.ts';
 import { FidelityError } from '../fidelity/errors.ts';
 import { gridSvg, heatmapSvg } from '../fidelity/heatmap.ts';
-import { decodeGridSet } from '../fidelity/metric/grid.ts';
-import type { Grid } from '../fidelity/metric/reduce.ts';
 import { differenceOf, regionsOf, scoreOf, type Region } from '../fidelity/metric/score.ts';
+import { openOracle } from '../fidelity/oracle.ts';
 import { openHarness, servedUrl } from '../fidelity/raster/browser.ts';
 import { injectHarness, renderSlide, slideMarkup } from '../fidelity/raster/render.ts';
 import { fidelityProbes, slideKey } from '../ground-truth/render/fidelity/probes.ts';
-import { repoPath } from '../repo/root.ts';
 
 import { GATE2_FEATURES, MARKUP_PATTERNS, type SlideFacts } from './features.ts';
-
-const ORACLE = repoPath('corpus/ground-truth/render/fidelity');
 
 /** The floor a region has to reach to be worth ranking, in levels of 255. */
 const REGION_FLOOR = 16;
@@ -193,20 +189,7 @@ export async function runGate2(options: GateOptions): Promise<GateRun> {
     const featuresOf = (key: string): string[] =>
       coverage.filter((entry) => entry.slides.includes(key)).map((entry) => entry.key);
 
-    const grids = new Map<string, ReturnType<typeof decodeGridSet>>();
-    const oracleGridFor = (deck: string, key: string): Grid => {
-      let set = grids.get(deck);
-      if (set === undefined) {
-        const file = `${deck}.ppt.grids`;
-        set = decodeGridSet(new Uint8Array(readFileSync(join(ORACLE, 'grids', file))), file);
-        grids.set(deck, set);
-      }
-      const grid = set.get(key);
-      if (grid === undefined) {
-        throw new FidelityError('FID_ORACLE_MISSING', `no oracle grid for ${key}`, key);
-      }
-      return grid;
-    };
+    const oracle = openOracle();
 
     const slides: SlideReport[] = [];
     const notDrawn: { key: string; reason: string }[] = [];
@@ -230,7 +213,7 @@ export async function runGate2(options: GateOptions): Promise<GateRun> {
         continue;
       }
 
-      const theirs = oracleGridFor(slide.deck, key);
+      const theirs = oracle.gridFor(key);
       const difference = differenceOf(raster.grid, theirs);
       const score = scoreOf(difference);
 

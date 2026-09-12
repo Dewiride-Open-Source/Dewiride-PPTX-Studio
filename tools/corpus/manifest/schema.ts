@@ -81,8 +81,8 @@ export const NON_ANSWERS = ['NONE', 'NOASSERTION', 'UNKNOWN', 'TBD', ''] as cons
 export const CAPS = {
   /** One committed file. */
   perFile: 512 * 1024,
-  /** Everything committed under `corpus/`, across every collection. */
-  total: 12 * 1024 * 1024,
+  /** Everything committed under `corpus/`, across every collection; a hundred-slide oracle at four zooms is 6 MiB of it (ADR 0054). */
+  total: 16 * 1024 * 1024,
 } as const;
 
 // -------------------------------------------------------------------- shapes

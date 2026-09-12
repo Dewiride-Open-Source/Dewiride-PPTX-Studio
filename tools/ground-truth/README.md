@@ -270,6 +270,31 @@ Four things worth copying:
   hundred thousand again, collapsing every gradient to its last stop. Seventeen samples at once, and
   not one unit test.
 
+### F2 — what the export does at another width _(added in 3.11)_
+
+Every stroke rule the renderer holds was measured at one or two export widths, and one width cannot
+say whether a hairline is one device pixel or half a point. F2 exports the same seven slides at
+120, 240, 480, 960, 1200, 1920 and 3840 pixels wide — a thumbnail to 4 px/pt, and 1.25 so a 6-pt
+tile lands between pixels — each twice, and scores every candidate reading against every width.
+
+```bash
+node tools/ground-truth/render/zoom/build-deck.ts <dir>
+powershell -File tools/ground-truth/render/zoom/read.ps1 -Dir <dir>
+node tools/ground-truth/render/zoom/analyse.ts <dir>
+npx prettier --write corpus/ground-truth/zoom.json
+node tools/ground-truth/render/zoom/write-tables.ts
+```
+
+There is no `author.ps1`: nothing here needs PowerPoint to author. `probes.ts` refuses at build
+time any two readings no width in the list could separate, and `analyse.ts` throws unless exactly
+one reading per family fits every case — which is how the marker family grew from four readings to
+eight and the width list grew by 1200. What it settled: a `w="0"` line is one device pixel at
+every width and every angle; a stroke is drawn at `round(w·s)` whole pixels, never under one; a
+dashed hairline is solid; a triangle head is a 10-pt vector head on any line of two points or less
+and five whole-pixel pens above it; a picture border stays outside its frame with the whole-pixel
+stroke snapped half up; the 6-pt pattern tile holds from 960 up but its coverage does not; and a
+16:9 slide asked for 120 by 68 is stretched, not letterboxed. ADR 0054.
+
 ### T5 — bullets, fields and script runs _(added in 3.5)_
 
 The cheap half first again, and it settled three whole vocabularies before a probe existed.

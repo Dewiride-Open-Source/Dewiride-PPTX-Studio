@@ -425,3 +425,130 @@ describe('experiment B - the probe font and the EOT writer', () => {
     expect(v22.charset).toBe(0);
   });
 });
+
+/* -------------------------------------------------------------------------- */
+/* F2 - what the export does at another width                                 */
+/* -------------------------------------------------------------------------- */
+
+interface ZoomProbe {
+  readonly id: string;
+  readonly family: string;
+  readonly widthPt?: number;
+  readonly periodPt?: number;
+  readonly read: { readonly kind: string; readonly y0?: number; readonly y1?: number };
+}
+interface ZoomScore {
+  readonly model: string;
+  readonly fits: number;
+  readonly of: number;
+}
+interface ZoomFixture {
+  readonly widths: readonly number[];
+  readonly slide: { readonly w: number };
+  readonly tolerancePx: number;
+  readonly boxTolerancePx: number;
+  readonly findings: {
+    readonly markerOnHairline: string;
+    readonly patternScaledFrom: number;
+    readonly patternCoverageNominalFrom: number | null;
+    readonly borderEdge: string;
+    readonly frameStretched: boolean;
+    readonly textLinear: boolean;
+    readonly textDroppedBelowPx: number;
+    readonly gradientIdenticalFrom: number | null;
+    readonly exportCeiling: unknown;
+  };
+  readonly candidates: Readonly<Record<string, readonly ZoomScore[]>>;
+  readonly probes: readonly ZoomProbe[];
+  readonly measured: Readonly<
+    Record<
+      string,
+      Readonly<
+        Record<string, { boxH?: number; periodPx?: number | null; innerEdgePx?: number | null }>
+      >
+    >
+  >;
+}
+
+describe('experiment F2 - what the export does at another width', () => {
+  const zoom = readJson<ZoomFixture>('zoom.json');
+  const cases = (family: string) =>
+    zoom.probes
+      .filter((probe) => probe.family === family)
+      .flatMap((probe) =>
+        zoom.widths.map((width) => ({
+          probe,
+          width,
+          scale: width / zoom.slide.w,
+          seen: zoom.measured[probe.id]![String(width)]!,
+        })),
+      );
+
+  it('names one perfect reading per family, and every rival misses', () => {
+    for (const [family, scores] of Object.entries(zoom.candidates)) {
+      const perfect = scores.filter((score) => score.fits === score.of);
+      expect(perfect, family).toHaveLength(1);
+      expect(scores.length, family).toBeGreaterThan(1);
+    }
+  });
+
+  it('sizes a triangle head from a 10-pt vector pen up to 2 pt and from whole pixels above, 49 of 49', () => {
+    const rule = (widthPt: number, scale: number): number =>
+      widthPt <= 2 ? 5 * Math.max(1, 2 * scale) : 5 * Math.max(1, Math.round(widthPt * scale));
+    const all = cases('marker');
+    expect(all).toHaveLength(49);
+    for (const c of all) {
+      const predicted = rule(c.probe.widthPt ?? 0, c.scale);
+      expect(
+        Math.abs((c.seen.boxH ?? 0) - predicted),
+        `${c.probe.id}@${String(c.width)}`,
+      ).toBeLessThanOrEqual(zoom.boxTolerancePx);
+    }
+    // Five nominal widths says nothing on a hairline; the export drew a 10-pt head.
+    expect(
+      cases('marker').filter((c) => c.probe.widthPt === 0 && c.width === 3840)[0]?.seen.boxH,
+    ).toBeGreaterThan(30);
+    // A rounded 2-pt pen at 1.25 px/pt says 15 px; the export drew 12.
+    expect(
+      cases('marker').filter((c) => c.probe.widthPt === 0 && c.width === 1200)[0]?.seen.boxH,
+    ).toBe(12);
+    expect(zoom.findings.markerOnHairline).toBe('M8');
+  });
+
+  it('keeps the 6-pt pattern tile from 960 up and loses it below', () => {
+    const horz = cases('pattern').filter((c) => c.probe.id === 'pattern-horz');
+    for (const c of horz) {
+      if (c.width >= 960) {
+        expect(Math.abs((c.seen.periodPx ?? 0) - 6 * c.scale), String(c.width)).toBeLessThanOrEqual(
+          zoom.tolerancePx,
+        );
+      }
+    }
+    expect(horz.find((c) => c.width === 480)?.seen.periodPx).toBeNull();
+    expect(horz.find((c) => c.width === 240)?.seen.periodPx).toBe(3);
+    expect(zoom.findings.patternScaledFrom).toBe(960);
+    expect(zoom.findings.patternCoverageNominalFrom).toBe(1920);
+  });
+
+  it('keeps a picture border wholly outside, snapped to the pixel grid half up, 8 of 8', () => {
+    const borders = cases('border').filter((c) => (c.probe.widthPt ?? 1) * c.scale >= 1);
+    expect(borders).toHaveLength(8);
+    for (const c of borders) {
+      const edge = (((c.probe.read.y0 ?? 0) + (c.probe.read.y1 ?? 0)) / 2) * c.scale;
+      const predicted = Math.round(edge) - edge;
+      expect(
+        Math.abs((c.seen.innerEdgePx ?? 0) - predicted),
+        `${c.probe.id}@${String(c.width)}`,
+      ).toBeLessThanOrEqual(zoom.tolerancePx);
+    }
+    expect(zoom.findings.borderEdge).toBe('O4');
+  });
+
+  it('records what does not scale: the frame stretches, text scales, nothing is dropped', () => {
+    expect(zoom.findings.frameStretched).toBe(true);
+    expect(zoom.findings.textLinear).toBe(true);
+    expect(zoom.findings.textDroppedBelowPx).toBe(0);
+    expect(zoom.findings.gradientIdenticalFrom).toBe(480);
+    expect(zoom.findings.exportCeiling).toBeNull();
+  });
+});

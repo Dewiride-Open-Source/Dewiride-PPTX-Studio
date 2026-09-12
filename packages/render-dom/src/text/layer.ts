@@ -165,6 +165,15 @@ function lineElement(document: Document, line: TextLine): HTMLElement {
   style.whiteSpace = 'pre';
   if (line.wordSpacingPt !== 0) style.wordSpacing = px(line.wordSpacingPt);
 
+  // The bullet is placed from the line's left edge, outside the flow the pieces share.
+  if (line.bullet !== null) {
+    const bullet = pieceElement(document, line.bullet);
+    bullet.style.position = 'absolute';
+    bullet.style.left = px(line.bullet.leftPt);
+    bullet.style.top = '0';
+    el.appendChild(bullet);
+  }
+
   for (const piece of line.pieces) {
     if (piece.upright.length > 0) {
       for (const glyph of piece.upright) el.appendChild(uprightElement(document, piece, glyph));

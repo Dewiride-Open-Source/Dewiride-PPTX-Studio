@@ -15,18 +15,19 @@
  */
 
 import { parseSheet, parseTheme, type Sheet, type Shape, type Xfrm } from '@pptx-studio/model';
-import type { BlipEffect, Color } from '@pptx-studio/paint';
+import { effectFilter, type BlipEffect, type Color } from '@pptx-studio/paint';
 import { parseXmlString } from '@pptx-studio/xml';
 import { describe, expect, it } from 'vitest';
 
 import fixture from '../../../corpus/ground-truth/transforms.json' with { type: 'json' };
 import pictures from '../../../corpus/ground-truth/pictures.json' with { type: 'json' };
+import zoom from '../../../corpus/ground-truth/zoom.json' with { type: 'json' };
 
 import { layoutSheet, layoutSlide, inheritedSheets, flatten, type Placed } from './layout.js';
 import { RenderError } from './errors.js';
 import { blipPaint } from './image/blip.js';
 import { Defs } from './paint.js';
-import { serializeSvg } from './node.js';
+import { num, serializeSvg } from './node.js';
 import { renderSlide, slideNode } from './slide.js';
 import {
   UNIT_CHILD_SPACE,
@@ -945,6 +946,129 @@ describe('strokes', () => {
  * Both numbers are read off `corpus/ground-truth/pictures.json`, so the two
  * constructions below are asserted against PowerPoint rather than each other.
  */
+describe('strokes at a named width, re-derived from F2', () => {
+  const BLACK = '<a:solidFill><a:srgbClr val="000000"/></a:solidFill>';
+  const ln = (w: string, extra = ''): string => `<a:ln w="${w}">${BLACK}${extra}</a:ln>`;
+  // A 400-pt line across the slide at y = 100 pt, the F2 hairline probe's own geometry.
+  const LINE_RECT = { x: 1270000, y: 1270000, cx: 5080000, cy: 0 };
+  const lineSlide = (line: string): Sheet =>
+    buildChain({ shapes: [sp({ rect: LINE_RECT, prst: 'line', line, name: 'probe' })] }).slide;
+  const strokeWidth = (markup: string): string =>
+    /stroke-width="([^"]+)"/.exec(markup)?.[1] ?? 'none';
+
+  it('draws a w="0" line as one device pixel at the width it is asked for', () => {
+    const slide = lineSlide(ln('0'));
+    expect(strokeWidth(renderSlide(slide, SIZE, { idPrefix: 'h', width: 960 }))).toBe('12700');
+    expect(strokeWidth(renderSlide(slide, SIZE, { idPrefix: 'h', width: 3840 }))).toBe('3175');
+    expect(strokeWidth(renderSlide(slide, SIZE, { idPrefix: 'h', width: 120 }))).toBe('101600');
+    expect(zoom.findings.hairline).toBe('H1');
+  });
+
+  it('draws a w="0" line as one screen pixel that no transform scales when no width is named', () => {
+    const markup = renderSlide(lineSlide(ln('0')), SIZE, { idPrefix: 'h' });
+    expect(markup).toContain('stroke-width="1"');
+    expect(markup).toContain('vector-effect="non-scaling-stroke"');
+  });
+
+  it('draws a dashed hairline solid', () => {
+    const slide = lineSlide(ln('0', '<a:prstDash val="dash"/>'));
+    expect(renderSlide(slide, SIZE, { idPrefix: 'd', width: 960 })).not.toContain(
+      'stroke-dasharray',
+    );
+    expect(renderSlide(slide, SIZE, { idPrefix: 'd' })).not.toContain('stroke-dasharray');
+    expect(zoom.findings.dashOnHairline).toBe('D1');
+  });
+
+  it('rounds a stroke to whole pixels at the named width, never under one', () => {
+    const quarter = lineSlide(ln('3175'));
+    const oneAndAHalf = lineSlide(ln('19050'));
+    const elevenTenths = lineSlide(ln('13970'));
+    expect(strokeWidth(renderSlide(quarter, SIZE, { idPrefix: 'q', width: 960 }))).toBe('12700');
+    expect(strokeWidth(renderSlide(oneAndAHalf, SIZE, { idPrefix: 'q', width: 960 }))).toBe(
+      '25400',
+    );
+    expect(strokeWidth(renderSlide(elevenTenths, SIZE, { idPrefix: 'q', width: 3840 }))).toBe(
+      '12700',
+    );
+    // No width names no device, and the true width stays.
+    expect(strokeWidth(renderSlide(oneAndAHalf, SIZE, { idPrefix: 'q' }))).toBe('19050');
+    expect(zoom.findings.thin).toBe('T4');
+  });
+
+  it('draws a picture border at the drawn width, under a band clip the zoom never moves', () => {
+    const id = nextId++;
+    const pic =
+      `<p:pic><p:nvPicPr><p:cNvPr id="${String(id)}" name="picture"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>` +
+      '<p:blipFill><a:blip r:embed="rId9"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
+      '<p:spPr><a:xfrm><a:off x="1270000" y="1270000"/><a:ext cx="3810000" cy="1270000"/></a:xfrm>' +
+      `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${ln('3175')}</p:spPr></p:pic>`;
+    const { slide } = buildChain({ shapes: [pic] });
+    const at960 = renderSlide(slide, SIZE, { idPrefix: 'p', width: 960 });
+    const at240 = renderSlide(slide, SIZE, { idPrefix: 'p', width: 240 });
+    // A quarter point is one pixel at 960 and four points at 240, doubled for the one-sided band.
+    expect(at960).toContain('stroke-width="25400"');
+    expect(at240).toContain('stroke-width="101600"');
+    // The clip keeping the outer half reaches the same constant distance at both.
+    const clipOf = (markup: string): string =>
+      /<clipPath[^>]*><path d="(M[^ ]+ [^H]+H[^V]+V[^H]+H[^Z]+Z)/.exec(markup)?.[1] ?? '';
+    expect(clipOf(at960)).toBe(clipOf(at240));
+    // Twice a quarter point plus the twenty-point pixel of the 5 % floor: 40.5 pt out.
+    expect(clipOf(at960).startsWith(`M-${String(40.5 * 12700)} -${String(40.5 * 12700)}H`)).toBe(
+      true,
+    );
+    expect(zoom.findings.border).toBe('T4');
+  });
+
+  /** Ink per column across a horizontal line, from the SVG drawn at `width` in this browser. */
+  async function inkAcross(markup: string, width: number, height: number): Promise<number> {
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+    URL.revokeObjectURL(href);
+    const data = context.getImageData(0, 0, width, height).data;
+    const scale = width / 960;
+    let total = 0;
+    let columns = 0;
+    for (
+      let x = Math.round(150 * scale);
+      x <= Math.round(450 * scale);
+      x += Math.max(1, Math.round(10 * scale))
+    ) {
+      for (let y = Math.round(84 * scale); y <= Math.round(116 * scale); y++) {
+        const at = (y * width + x) * 4;
+        total += 1 - Math.min(data[at]!, data[at + 1]!, data[at + 2]!) / 255;
+      }
+      columns += 1;
+    }
+    return total / columns;
+  }
+
+  it('inks one pixel per column at 240 and at 3840 wide, as PowerPoint does', async () => {
+    const slide = lineSlide(ln('0'));
+    const at = (width: number): Promise<number> =>
+      inkAcross(
+        renderSlide(slide, SIZE, { idPrefix: 'r', width, height: (width * 9) / 16 }),
+        width,
+        (width * 9) / 16,
+      );
+    const [small, reference, large] = await Promise.all([at(240), at(960), at(3840)]);
+    expect(Math.abs(small - 1)).toBeLessThanOrEqual(zoom.tolerancePx);
+    expect(Math.abs(reference - 1)).toBeLessThanOrEqual(zoom.tolerancePx);
+    expect(Math.abs(large - 1)).toBeLessThanOrEqual(zoom.tolerancePx);
+    // A stroke that scaled with the slide would ink four times as much at 4x.
+    expect(Math.abs(large - 4 * reference)).toBeGreaterThan(1);
+  });
+});
+
 describe('the outline band, re-derived', () => {
   const WIDTH = 152400;
   const LINE = `<a:ln w="${String(WIDTH)}"><a:solidFill><a:srgbClr val="FF00FF"/></a:solidFill></a:ln>`;
@@ -976,6 +1100,46 @@ describe('the outline band, re-derived', () => {
     expect(band.picture.insidePt).toBe(0);
     expect(markup).toContain('clip-rule="evenodd"');
     expect(markup).toContain('clipPath');
+  });
+
+  it('keeps the picture under a clipped band: the fill is one path and the band another', async () => {
+    // A one-pixel red PNG, so the picture is a colour and not a gap.
+    const red =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    const media = (): { bytes: Uint8Array; contentType: string } => ({
+      bytes: Uint8Array.from(atob(red), (c) => c.charCodeAt(0)),
+      contentType: 'image/png',
+    });
+    const width = 480;
+    const markup = renderSlide(buildChain({ shapes: [pic()] }).slide, SIZE, {
+      idPrefix: 'k',
+      media,
+      width,
+      height: 270,
+    });
+    const paths = [...markup.matchAll(/<path [^>]*>/g)].map((m) => m[0]);
+    expect(paths).toHaveLength(3);
+    expect(paths[1]).toContain('fill="url(#k-1)"');
+    expect(paths[1]).not.toContain('clip-path');
+    expect(paths[2]).toContain('fill="none"');
+    expect(paths[2]).toContain('clip-path="url(#k-2)"');
+    // And the pixel inside the frame is the picture's, not the page's white.
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = 270;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, 270);
+    context.drawImage(image, 0, 0, width, 270);
+    URL.revokeObjectURL(href);
+    // The picture is 108 pt square at 0.5 px/pt; sample its centre.
+    const [r, g, b] = context.getImageData(27, 27, 1, 1).data;
+    expect([r, g, b]).toEqual([255, 0, 0]);
   });
 
   it('leaves a shape band centred, with no clip at all', () => {
@@ -1106,5 +1270,89 @@ describe('the blip colour effects, evaluated', () => {
     const ones = table.split(' ').flatMap((value, at) => (value === '1' ? [at] : []));
     // 0xF1 is 241; rounding a 0..1 channel instead lands on 0 or 1.
     expect(ones).toStrictEqual([0xf1]);
+  });
+});
+
+/**
+ * A shape's effects are a filter in points. Chromium rasterises a rotated filter at the
+ * resolution of its user space: the same glow written in EMU took nine seconds a shape on
+ * a 120-pixel thumbnail and thirty milliseconds in points (ADR 0054).
+ */
+describe('effects, in point space', () => {
+  const GLOW_EMU = 76200;
+  const GLOW =
+    `<a:effectLst><a:glow rad="${String(GLOW_EMU)}"><a:srgbClr val="4472C4"><a:alpha val="40000"/>` +
+    '</a:srgbClr></a:glow></a:effectLst>';
+  const RECT = { x: 4572000, y: 2286000, cx: 3048000, cy: 2286000 };
+
+  function glowed(rot: number): string {
+    return renderSlide(
+      buildChain({ shapes: [sp({ rect: RECT, rot, fill: SOLID('4472C4'), line: GLOW })] }).slide,
+      SIZE,
+      { idPrefix: 't' },
+    );
+  }
+
+  it('writes the filter in points, inside a scale pair around the paths', () => {
+    const markup = glowed(15);
+    // The dilate is what `paint` asked for, 12700 times smaller: 76200 EMU is 6 pt.
+    const graph = effectFilter(
+      [{ kind: 'glow', rad: GLOW_EMU, color: { space: 'srgb', hex: '4472C4', transforms: [] } }],
+      { x: 0, y: 0, w: RECT.cx, h: RECT.cy },
+      () => ({ css: '#4472C4', alpha: 0.4 }),
+    );
+    const dilate = graph.primitives.find((p) => p.op === 'morphology');
+    if (dilate?.op !== 'morphology') throw new Error('no dilate');
+    expect(dilate.radius).toBeLessThan(GLOW_EMU);
+    expect(markup).toContain(`operator="dilate" radius="${num(dilate.radius / 12700)}"`);
+    expect(markup).toContain(
+      `<filter id="t-1" filterUnits="userSpaceOnUse" x="${num(-graph.margin.left / 12700)}"`,
+    );
+    const region = /<filter [^>]*width="([0-9.]+)"/.exec(markup);
+    expect(Number(region?.[1])).toBeCloseTo(
+      (RECT.cx + graph.margin.left + graph.margin.right) / 12700,
+      3,
+    );
+    const into = /transform="scale\(([0-9.]+)\)" filter="url\(#t-1\)"/.exec(markup);
+    const outOf = /<g transform="scale\(([0-9.e-]+)\)"><path /.exec(markup);
+    expect(into?.[1]).toBe('12700');
+    expect(Number(into?.[1]) * Number(outOf?.[1])).toBeCloseTo(1, 12);
+  });
+
+  it('leaves a shape without effects alone', () => {
+    const markup = renderSlide(
+      buildChain({ shapes: [sp({ rect: RECT, rot: 15, fill: SOLID('4472C4') })] }).slide,
+      SIZE,
+      { idPrefix: 't' },
+    );
+    expect(markup).not.toContain('<filter');
+    expect(markup).not.toContain('scale(12700)');
+  });
+
+  it('draws the glow beside the shape, and the shape where it was', async () => {
+    const width = 960;
+    const height = 540;
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([glowed(15)], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, height);
+    const started = performance.now();
+    context.drawImage(image, 0, 0, width, height);
+    const pixel = (x: number, y: number): number[] => [...context.getImageData(x, y, 1, 1).data];
+    URL.revokeObjectURL(href);
+    // The centre is the fill; three points above the turned top edge is glow; the corner is not.
+    const centre = pixel(480, 270);
+    expect(Math.abs((centre[0] ?? 0) - 0x44) + Math.abs((centre[2] ?? 0) - 0xc4)).toBeLessThan(4);
+    const above = pixel(480, 174);
+    expect(above[2]).toBeGreaterThan((above[0] ?? 0) + 20);
+    expect(pixel(2, 2).slice(0, 3)).toEqual([255, 255, 255]);
+    expect(performance.now() - started).toBeLessThan(3000);
   });
 });

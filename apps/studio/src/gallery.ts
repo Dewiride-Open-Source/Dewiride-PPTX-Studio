@@ -19,6 +19,8 @@ import { mountOverlay, mountSlide, type MountedOverlay } from '@pptx-studio/rend
 import type { OverlayGuide, Placed } from '@pptx-studio/render-svg';
 import { parseXmlString } from '@pptx-studio/xml';
 
+import { el } from './element.js';
+
 const NS =
   'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"' +
   ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"' +
@@ -81,17 +83,6 @@ function sheetFor(prst: string, adjust: readonly PresetGuide[], size: number): S
     parent: null,
     theme: THEME,
   };
-}
-
-function el<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className = '',
-  text = '',
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className !== '') node.className = className;
-  if (text !== '') node.textContent = text;
-  return node;
 }
 
 function need(id: string): HTMLElement {
