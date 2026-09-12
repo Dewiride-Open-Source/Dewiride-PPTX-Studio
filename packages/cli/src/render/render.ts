@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 
 import { PartStore } from '@pptx-studio/opc';
 import { loadDocument } from '@pptx-studio/model';
-import { renderSlide, type MediaResolver } from '@pptx-studio/render-svg';
+import { mediaFromStore, renderSlide } from '@pptx-studio/render-svg';
 
 import { RenderError } from './errors.js';
 import { indexFonts, type FontLibrary } from './faces.js';
@@ -67,17 +67,6 @@ export interface RenderResult {
   readonly facesIndexed: number;
 }
 
-/** The media resolver: an rId means the rels of the part the fill was written in. */
-function mediaFrom(store: PartStore): MediaResolver {
-  return (embed: string, part: string) => {
-    const target = store.relationships(part).targetOf(embed);
-    if (target === undefined) return undefined;
-    const contentType = store.contentTypeOf(target);
-    if (contentType === undefined) return undefined;
-    return { bytes: store.read(target), contentType };
-  };
-}
-
 /**
  * Render a deck that is already in memory.
  *
@@ -121,7 +110,7 @@ export function renderDeck(bytes: Uint8Array, options: RenderDeckOptions = {}): 
       )
     : null;
 
-  const media = mediaFrom(store);
+  const media = mediaFromStore(store);
   const wanted =
     slide === null
       ? document.slides.map((sheet, at) => ({ sheet, number: at + 1 }))

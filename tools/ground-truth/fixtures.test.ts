@@ -447,7 +447,17 @@ interface ZoomFixture {
   readonly slide: { readonly w: number };
   readonly tolerancePx: number;
   readonly boxTolerancePx: number;
-  readonly findings: Readonly<Record<string, unknown>>;
+  readonly findings: {
+    readonly markerOnHairline: string;
+    readonly patternScaledFrom: number;
+    readonly patternCoverageNominalFrom: number | null;
+    readonly borderEdge: string;
+    readonly frameStretched: boolean;
+    readonly textLinear: boolean;
+    readonly textDroppedBelowPx: number;
+    readonly gradientIdenticalFrom: number | null;
+    readonly exportCeiling: unknown;
+  };
   readonly candidates: Readonly<Record<string, readonly ZoomScore[]>>;
   readonly probes: readonly ZoomProbe[];
   readonly measured: Readonly<

@@ -107,6 +107,7 @@ interface PptxApi {
     };
   };
   readonly rsvg: {
+    mediaFromStore: (store: unknown) => unknown;
     renderSlide: (sheet: unknown, size: unknown, options: unknown) => string;
     layoutSlide: (sheet: unknown) => readonly PlacedProbe[];
     flatten: (placed: readonly PlacedProbe[]) => readonly PlacedProbe[];
@@ -150,13 +151,7 @@ export async function drawSlide(input: {
     width: input.width,
     height: drawHeight,
     idPrefix: `s${String(input.index)}`,
-    media: (embed: string, part: string) => {
-      const target = store.relationships(part).targetOf(embed);
-      if (target === undefined) return undefined;
-      const contentType = store.contentTypeOf(target);
-      if (contentType === undefined) return undefined;
-      return { bytes: store.read(target), contentType };
-    },
+    media: api.rsvg.mediaFromStore(store),
     text: { defaultTextStyle: document_.defaultTextStyle },
   });
 
