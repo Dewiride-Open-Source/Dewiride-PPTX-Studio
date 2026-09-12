@@ -102,7 +102,9 @@ branch and commented "Still red". The candidate gate, 34688374783, passed its fi
 ranges `example.ts` had written. Release 34692318833 then published `cli@0.3.0`,
 `render-svg@0.2.0`, `text@0.2.0` and `render-dom@0.1.1` over OIDC; canary 34692582931 installed
 that `latest` set, typechecked, smoked, built, and had `npm audit signatures` verify every one,
-failing only on the twelve versions that read `neither` — the state that waits on the deprecations.
+failing only on the twelve versions that read `neither`. The twelve were deprecated by hand, and canary
+34699970846 read 16 with provenance, 12 deprecated, none `neither`, went green, and its `report` job
+closed #23 with the run URL: the loop has now run every branch it has.
 
 | mutant                                     | killed by                                                            |
 | ------------------------------------------ | -------------------------------------------------------------------- |
@@ -144,16 +146,15 @@ record's own first run — every committed range stale until `example.ts` wrote 
 
 ## Open questions
 
-1. **The twelve deprecations** are a person's OTP, and the canary is red until they are run.
-2. **A revoked publisher is still invisible between releases**, from
+1. **A revoked publisher is still invisible between releases**, from
    [0049](0049-the-right-to-publish-cannot-be-monitored.md), and the preflight still mints tokens
    it never uses, from [0048](0048-every-package-proves-it-can-publish.md); npm has no read-only
    form of either question.
-3. **One package manager, one Node version** in the scratch install, from
+2. **One package manager, one Node version** in the scratch install, from
    [0046](0046-nothing-gated-the-thing-being-published.md).
-4. **The canary issue has one label and one title**, so two distinct failures on one day share an
+3. **The canary issue has one label and one title**, so two distinct failures on one day share an
    issue. The run URL in each comment is what tells them apart.
-5. **A canary inside the registry's replication window reads half a release.** Run 34692440841,
+4. **A canary inside the registry's replication window reads half a release.** Run 34692440841,
    dispatched two minutes after the release, was served `render-svg@0.2.0` — which asks
    `text@^0.2.0` — minutes before it was served `text@0.2.0`, and the install failed on
    `ETARGET`. The window closed on its own; a canary dispatched by hand after a release should wait
