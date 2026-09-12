@@ -139,16 +139,25 @@ export function shapeNodes(
     clip = `url(#${id})`;
   }
 
-  const children: SvgElement[] = paths.map((path) =>
-    element('path', {
-      d: path.d,
-      // `a:path/@fill="none"` is the path saying it is an outline, not the shape
-      // saying it has no fill - `smileyFace`'s mouth against its face.
-      ...(path.fill === 'none' ? { fill: 'none' } : fill),
-      ...(path.stroke && stroke !== null ? stroke.attrs : { stroke: 'none' }),
-      ...(clip !== null && path.stroke ? { 'clip-path': clip } : {}),
-    }),
-  );
+  // `a:path/@fill="none"` is the path saying it is an outline, not the shape
+  // saying it has no fill - `smileyFace`'s mouth against its face.
+  const children: SvgElement[] = paths.flatMap((path) => {
+    const fillAttrs = path.fill === 'none' ? { fill: 'none' } : fill;
+    if (clip === null || !path.stroke || stroke === null) {
+      return [
+        element('path', {
+          d: path.d,
+          ...fillAttrs,
+          ...(path.stroke && stroke !== null ? stroke.attrs : { stroke: 'none' }),
+        }),
+      ];
+    }
+    // A clipped band is its own path: clipping the fill with it would keep only the band.
+    return [
+      element('path', { d: path.d, ...fillAttrs, stroke: 'none' }),
+      element('path', { d: path.d, fill: 'none', ...stroke.attrs, 'clip-path': clip }),
+    ];
+  });
 
   const transform = frameTransform(placed.frame);
   const filter = effectFilterAttribute(

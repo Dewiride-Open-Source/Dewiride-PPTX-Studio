@@ -1095,6 +1095,46 @@ describe('the outline band, re-derived', () => {
     expect(markup).toContain('clipPath');
   });
 
+  it('keeps the picture under a clipped band: the fill is one path and the band another', async () => {
+    // A one-pixel red PNG, so the picture is a colour and not a gap.
+    const red =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
+    const media = (): { bytes: Uint8Array; contentType: string } => ({
+      bytes: Uint8Array.from(atob(red), (c) => c.charCodeAt(0)),
+      contentType: 'image/png',
+    });
+    const width = 480;
+    const markup = renderSlide(buildChain({ shapes: [pic()] }).slide, SIZE, {
+      idPrefix: 'k',
+      media,
+      width,
+      height: 270,
+    });
+    const paths = [...markup.matchAll(/<path [^>]*>/g)].map((m) => m[0]);
+    expect(paths).toHaveLength(3);
+    expect(paths[1]).toContain('fill="url(#k-1)"');
+    expect(paths[1]).not.toContain('clip-path');
+    expect(paths[2]).toContain('fill="none"');
+    expect(paths[2]).toContain('clip-path="url(#k-2)"');
+    // And the pixel inside the frame is the picture's, not the page's white.
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = 270;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, 270);
+    context.drawImage(image, 0, 0, width, 270);
+    URL.revokeObjectURL(href);
+    // The picture is 108 pt square at 0.5 px/pt; sample its centre.
+    const [r, g, b] = context.getImageData(27, 27, 1, 1).data;
+    expect([r, g, b]).toEqual([255, 0, 0]);
+  });
+
   it('leaves a shape band centred, with no clip at all', () => {
     expect(band.shape.insidePt).toBe(pictures.outlinePt / 2);
     expect(band.shape.outsidePt).toBe(pictures.outlinePt / 2);
