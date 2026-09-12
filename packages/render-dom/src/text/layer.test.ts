@@ -63,6 +63,7 @@ function paragraph(
     spaceAfter: { kind: 'points', value: 0 },
     runs,
     endRun: runs[0] ?? run(''),
+    bullet: null,
     ...over,
   };
 }

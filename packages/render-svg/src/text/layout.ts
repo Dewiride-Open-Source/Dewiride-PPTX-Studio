@@ -18,6 +18,7 @@
 
 import {
   blockOrigin,
+  bulletLayout,
   columnBox,
   contentBox,
   createFaceBoxProbe,
@@ -117,6 +118,12 @@ export interface PieceRule {
 }
 
 export interface TextLine {
+  /**
+   * The paragraph's bullet, on its first line only, placed from the line's own left edge.
+   *
+   * Negative `leftPt`, usually: the bullet sits in the hanging indent to the left of the text.
+   */
+  readonly bullet: TextPiece | null;
   /** Points from the frame's top-left corner, before the block is turned. */
   readonly topPt: number;
   readonly heightPt: number;
@@ -576,6 +583,15 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
     const { text: whole, measure } = rangeMeasurer(cells, measurer, scale);
     const marginLeft = paragraph.marginLeft;
     const firstIndent = paragraph.indent;
+    // Where the bullet goes and where the first line starts: T5's rule, over the
+    // bullet's own measured advance. Stacked frames draw no bullet.
+    const bullet = paragraph.bullet?.kind === 'text' && !stackedGlyphs ? paragraph.bullet : null;
+    const bulletFont: RunFont | null =
+      bullet === null ? null : { family: bullet.typeface, sz: Math.round(bullet.sz * scale) };
+    const bulletAdvance =
+      bullet === null || bulletFont === null ? 0 : measurer.measure(bullet.text, bulletFont).width;
+    const placedBullet =
+      bullet === null ? null : bulletLayout(marginLeft, firstIndent, bulletAdvance);
 
     if (index > 0) cursor += spacingPoints(paragraph.spaceBefore, lineSizeOf(cells, scale));
 
@@ -616,16 +632,38 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
         ? lineCells.reduce((sum, cell) => sum + cell, 0)
         : measure(box.start, box.measuredEnd);
       const indent = lineIndex === 0 ? firstIndent : 0;
+      const lineLeft =
+        placedBullet === null
+          ? marginLeft + indent
+          : lineIndex === 0
+            ? placedBullet.firstLineLeftPt
+            : placedBullet.wrappedLeftPt;
       const lastLine = lineIndex === boxes.length - 1;
       const stretched = stretches(paragraph.align, lastLine);
-      const available = column.widthPt - marginLeft - indent;
+      const available = column.widthPt - lineLeft;
       const offset = stretched ? 0 : alignOffset(paragraph.align, available, anchorWidth);
       const drop = heightPt * baselineShareOf(face);
       lines.push({
+        bullet:
+          bullet !== null && bulletFont !== null && placedBullet !== null && lineIndex === 0
+            ? {
+                source: bullet.text,
+                text: bullet.text,
+                font: bulletFont,
+                cssFamily: cssFamilyFor(bulletFont),
+                color: bullet.color,
+                highlight: null,
+                leftPt: placedBullet.bulletLeftPt - (lineLeft + offset),
+                widthPt: bulletAdvance,
+                risePt: 0,
+                rules: [],
+                upright: [],
+              }
+            : null,
         topPt: cursor,
         heightPt,
         baselinePt: cursor + drop,
-        leftPt: marginLeft + indent + offset,
+        leftPt: lineLeft + offset,
         widthPt: stretched ? available : stackedGlyphs ? anchorWidth : widthPt,
         sizePt: size,
         strutPt: strutHeight(drop, face, size),

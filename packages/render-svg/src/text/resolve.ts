@@ -12,6 +12,13 @@ import {
   resolveAnchor,
   resolveAnchorCtr,
   resolveBody,
+  resolveBulletAutoNum,
+  resolveBulletBlip,
+  resolveBulletChar,
+  resolveBulletColor,
+  resolveBulletFont,
+  resolveBulletKind,
+  resolveBulletSize,
   resolveColumns,
   resolveInsets,
   resolveIndent,
@@ -36,7 +43,14 @@ import {
   type VerticalText,
 } from '@pptx-studio/model';
 import { resolveColor, type ColorContext, type Fill, type Rgba } from '@pptx-studio/paint';
-import type { LineSpacing, RunFont } from '@pptx-studio/text';
+import {
+  drawableBullet,
+  numberParagraphs,
+  type DrawableBullet,
+  type LineSpacing,
+  type ResolvedBullet,
+  type RunFont,
+} from '@pptx-studio/text';
 
 import { RenderError } from '../errors.js';
 import type { Placed } from '../layout.js';
@@ -72,6 +86,8 @@ export interface ResolvedParagraph {
   readonly runs: readonly ResolvedRun[];
   /** The properties of the paragraph mark, which set an empty line's height. */
   readonly endRun: ResolvedRun;
+  /** What is drawn in front of the first line, or null where the cascade names no bullet. */
+  readonly bullet: DrawableBullet<Rgba> | null;
 }
 
 export interface ResolvedFrame {
@@ -164,6 +180,33 @@ function runOf(
   };
 }
 
+/** What the paragraph's own text draws in when nothing names a colour. */
+const INK: Rgba = { r: 0, g: 0, b: 0, a: 1 };
+
+/** The bullet the cascade names for a paragraph, before numbering; null where nobody said. */
+function bulletSpecOf(
+  context: TextContext,
+  paragraph: Paragraph,
+  colors: ColorContext,
+): ResolvedBullet<Rgba> | null {
+  const kind = resolveBulletKind(context, paragraph)?.value;
+  if (kind === undefined) return null;
+  const font = resolveBulletFont(context, paragraph)?.value;
+  const color = resolveBulletColor(context, paragraph)?.value;
+  const autoNum = resolveBulletAutoNum(context, paragraph)?.value;
+  return {
+    kind,
+    char: resolveBulletChar(context, paragraph)?.value,
+    scheme: autoNum?.type,
+    startAt: autoNum?.startAt,
+    blip: resolveBulletBlip(context, paragraph)?.value,
+    font: font?.kind === 'typeface' ? { kind: 'typeface', value: font.value.typeface } : font,
+    size: resolveBulletSize(context, paragraph)?.value,
+    color:
+      color?.kind === 'color' ? { kind: 'color', value: resolveColor(color.value, colors) } : color,
+  };
+}
+
 /**
  * The paragraphs of a body, split at every `a:br`.
  *
@@ -174,6 +217,8 @@ function paragraphOf(
   context: TextContext,
   paragraph: Paragraph,
   colors: ColorContext,
+  bullet: ResolvedBullet<Rgba> | null,
+  number: number | null,
 ): ResolvedParagraph {
   const ask = <T>(pick: Parameters<typeof resolveParagraph<T>>[2]): T | undefined =>
     resolveParagraph(context, paragraph, pick)?.value;
@@ -199,6 +244,18 @@ function paragraphOf(
           node: paragraph.node,
         } as TextContent);
 
+  const endRun = runOf(context, paragraph, endContent, colors, '', false);
+  // The bullet takes the first run's face, size and colour: measured, not the paragraph's.
+  const first = runs[0] ?? endRun;
+  const drawn =
+    bullet === null
+      ? null
+      : drawableBullet(
+          bullet,
+          { typeface: first.font.family, sz: first.font.sz, color: first.color ?? INK },
+          number ?? undefined,
+        );
+
   return {
     level: paragraph.level,
     align: ask((props) => props.algn) ?? 'l',
@@ -217,7 +274,8 @@ function paragraphOf(
       NO_SPACING,
     ),
     runs,
-    endRun: runOf(context, paragraph, endContent, colors, '', false),
+    endRun,
+    bullet: drawn === null || drawn.kind === 'none' ? null : drawn,
   };
 }
 
@@ -283,8 +341,24 @@ export function resolveText(placed: Placed, defaultTextStyle?: ListStyle): Resol
     );
   }
 
+  // Numbering is a property of a paragraph's place among its neighbours, so every
+  // bullet is resolved before any paragraph is.
+  const bullets = body.paragraphs.map((paragraph) => bulletSpecOf(context, paragraph, colors));
+  const numbers = numberParagraphs(
+    body.paragraphs.map((paragraph, index) => {
+      const bullet = bullets[index] ?? null;
+      return {
+        level: paragraph.level,
+        scheme: bullet?.kind === 'autonum' ? (bullet.scheme ?? null) : null,
+        startAt: bullet?.startAt ?? 1,
+      };
+    }),
+  );
+
   return {
     frame,
-    paragraphs: body.paragraphs.map((paragraph) => paragraphOf(context, paragraph, colors)),
+    paragraphs: body.paragraphs.map((paragraph, index) =>
+      paragraphOf(context, paragraph, colors, bullets[index] ?? null, numbers[index] ?? null),
+    ),
   };
 }

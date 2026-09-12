@@ -191,6 +191,17 @@ function lineNodes(line: TextLine): readonly SvgNode[] {
     );
   }
 
+  // The bullet is its own element: it is placed, where the line's pieces flow.
+  if (line.bullet !== null) {
+    out.push(
+      element(
+        'text',
+        { x: line.leftPt + line.bullet.leftPt, y: line.baselinePt, 'xml:space': 'preserve' },
+        [element('tspan', pieceAttrs(line.bullet), [textNode(line.bullet.text)])],
+      ),
+    );
+  }
+
   for (const piece of line.pieces) {
     const { fill, opacity } = paint(piece.color);
     for (const rule of piece.rules) {
