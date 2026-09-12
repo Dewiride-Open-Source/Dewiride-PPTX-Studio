@@ -15,12 +15,22 @@ import { repoPath } from '../../../repo/root.ts';
 /** The collections whose decks are scored, in the order they are reported. */
 export const COLLECTIONS: readonly string[] = ['decks', 'authored', 'written'];
 
+/**
+ * The widths a deck is also exported at, beyond 960: the thumbnail strip, 25 %, 200 % and 400 %
+ * of one pixel to the point. Gate 3's deck is the one that is looked at through a zoom.
+ */
+export const ZOOM_WIDTHS: Readonly<Record<string, readonly number[]>> = {
+  'a46-hundred-slides': [120, 240, 1920, 3840],
+};
+
 export interface FidelityProbe {
   readonly id: string;
   /** Repository-relative, so it is both a served URL and a path. */
   readonly path: string;
   readonly slides: number;
   readonly license: string;
+  /** Export widths beyond 960 the oracle also holds for this deck. */
+  readonly zoomWidths: readonly number[];
 }
 
 interface ManifestEntry {
@@ -58,6 +68,7 @@ export function fidelityProbes(): readonly FidelityProbe[] {
         path: `corpus/${collection}/${entry.path}`,
         slides,
         license: entry.license,
+        zoomWidths: ZOOM_WIDTHS[entry.id] ?? [],
       });
     }
   }
