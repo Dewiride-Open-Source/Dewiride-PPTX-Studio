@@ -21,6 +21,7 @@ import { describe, expect, it } from 'vitest';
 
 import fixture from '../../../corpus/ground-truth/transforms.json' with { type: 'json' };
 import pictures from '../../../corpus/ground-truth/pictures.json' with { type: 'json' };
+import zoom from '../../../corpus/ground-truth/zoom.json' with { type: 'json' };
 
 import { layoutSheet, layoutSlide, inheritedSheets, flatten, type Placed } from './layout.js';
 import { RenderError } from './errors.js';
@@ -945,6 +946,119 @@ describe('strokes', () => {
  * Both numbers are read off `corpus/ground-truth/pictures.json`, so the two
  * constructions below are asserted against PowerPoint rather than each other.
  */
+describe('strokes at a named width, re-derived from F2', () => {
+  const BLACK = '<a:solidFill><a:srgbClr val="000000"/></a:solidFill>';
+  const ln = (w: string, extra = ''): string => `<a:ln w="${w}">${BLACK}${extra}</a:ln>`;
+  // A 400-pt line across the slide at y = 100 pt, the F2 hairline probe's own geometry.
+  const LINE_RECT = { x: 1270000, y: 1270000, cx: 5080000, cy: 0 };
+  const lineSlide = (line: string): Sheet =>
+    buildChain({ shapes: [sp({ rect: LINE_RECT, prst: 'line', line, name: 'probe' })] }).slide;
+  const strokeWidth = (markup: string): string =>
+    /stroke-width="([^"]+)"/.exec(markup)?.[1] ?? 'none';
+
+  it('draws a w="0" line as one device pixel at the width it is asked for', () => {
+    const slide = lineSlide(ln('0'));
+    expect(strokeWidth(renderSlide(slide, SIZE, { idPrefix: 'h', width: 960 }))).toBe('12700');
+    expect(strokeWidth(renderSlide(slide, SIZE, { idPrefix: 'h', width: 3840 }))).toBe('3175');
+    expect(strokeWidth(renderSlide(slide, SIZE, { idPrefix: 'h', width: 120 }))).toBe('101600');
+    expect(zoom.findings.hairline).toBe('H1');
+  });
+
+  it('draws a w="0" line as one screen pixel that no transform scales when no width is named', () => {
+    const markup = renderSlide(lineSlide(ln('0')), SIZE, { idPrefix: 'h' });
+    expect(markup).toContain('stroke-width="1"');
+    expect(markup).toContain('vector-effect="non-scaling-stroke"');
+  });
+
+  it('draws a dashed hairline solid', () => {
+    const slide = lineSlide(ln('0', '<a:prstDash val="dash"/>'));
+    expect(renderSlide(slide, SIZE, { idPrefix: 'd', width: 960 })).not.toContain(
+      'stroke-dasharray',
+    );
+    expect(renderSlide(slide, SIZE, { idPrefix: 'd' })).not.toContain('stroke-dasharray');
+    expect(zoom.findings.dashOnHairline).toBe('D1');
+  });
+
+  it('rounds a stroke to whole pixels at the named width, never under one', () => {
+    const quarter = lineSlide(ln('3175'));
+    const oneAndAHalf = lineSlide(ln('19050'));
+    const elevenTenths = lineSlide(ln('13970'));
+    expect(strokeWidth(renderSlide(quarter, SIZE, { idPrefix: 'q', width: 960 }))).toBe('12700');
+    expect(strokeWidth(renderSlide(oneAndAHalf, SIZE, { idPrefix: 'q', width: 960 }))).toBe(
+      '25400',
+    );
+    expect(strokeWidth(renderSlide(elevenTenths, SIZE, { idPrefix: 'q', width: 3840 }))).toBe(
+      '12700',
+    );
+    // No width names no device, and the true width stays.
+    expect(strokeWidth(renderSlide(oneAndAHalf, SIZE, { idPrefix: 'q' }))).toBe('19050');
+    expect(zoom.findings.thin).toBe('T4');
+  });
+
+  it('clips a picture border at the drawn width, not the nominal one', () => {
+    const id = nextId++;
+    const pic =
+      `<p:pic><p:nvPicPr><p:cNvPr id="${String(id)}" name="picture"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>` +
+      '<p:blipFill><a:blip r:embed="rId9"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
+      '<p:spPr><a:xfrm><a:off x="1270000" y="1270000"/><a:ext cx="3810000" cy="1270000"/></a:xfrm>' +
+      `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${ln('3175')}</p:spPr></p:pic>`;
+    const { slide } = buildChain({ shapes: [pic] });
+    const markup = renderSlide(slide, SIZE, { idPrefix: 'p', width: 960 });
+    // A quarter point is one pixel at 960, doubled for the one-sided band.
+    expect(markup).toContain('stroke-width="25400"');
+    expect(zoom.findings.border).toBe('T4');
+  });
+
+  /** Ink per column across a horizontal line, from the SVG drawn at `width` in this browser. */
+  async function inkAcross(markup: string, width: number, height: number): Promise<number> {
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+    URL.revokeObjectURL(href);
+    const data = context.getImageData(0, 0, width, height).data;
+    const scale = width / 960;
+    let total = 0;
+    let columns = 0;
+    for (
+      let x = Math.round(150 * scale);
+      x <= Math.round(450 * scale);
+      x += Math.max(1, Math.round(10 * scale))
+    ) {
+      for (let y = Math.round(84 * scale); y <= Math.round(116 * scale); y++) {
+        const at = (y * width + x) * 4;
+        total += 1 - Math.min(data[at]!, data[at + 1]!, data[at + 2]!) / 255;
+      }
+      columns += 1;
+    }
+    return total / columns;
+  }
+
+  it('inks one pixel per column at 240 and at 3840 wide, as PowerPoint does', async () => {
+    const slide = lineSlide(ln('0'));
+    const at = (width: number): Promise<number> =>
+      inkAcross(
+        renderSlide(slide, SIZE, { idPrefix: 'r', width, height: (width * 9) / 16 }),
+        width,
+        (width * 9) / 16,
+      );
+    const [small, reference, large] = await Promise.all([at(240), at(960), at(3840)]);
+    expect(Math.abs(small - 1)).toBeLessThanOrEqual(zoom.tolerancePx);
+    expect(Math.abs(reference - 1)).toBeLessThanOrEqual(zoom.tolerancePx);
+    expect(Math.abs(large - 1)).toBeLessThanOrEqual(zoom.tolerancePx);
+    // A stroke that scaled with the slide would ink four times as much at 4x.
+    expect(Math.abs(large - 4 * reference)).toBeGreaterThan(1);
+  });
+});
+
 describe('the outline band, re-derived', () => {
   const WIDTH = 152400;
   const LINE = `<a:ln w="${String(WIDTH)}"><a:solidFill><a:srgbClr val="FF00FF"/></a:solidFill></a:ln>`;

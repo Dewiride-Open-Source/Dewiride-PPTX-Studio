@@ -290,6 +290,20 @@ export function markerOvershoot(end: LineEnd | null, strokeWidth: number): numbe
   return geometry.length - geometry.refX;
 }
 
+/**
+ * The width a stroke is drawn at, in EMU, at `pxPerPt` device pixels to the point.
+ *
+ * PowerPoint's export draws a stroke at its width rounded to whole device pixels and never under
+ * one, and a zero width as one pixel, at every export width from 120 to 3840 (F2, `zoom.json`).
+ */
+export function deviceStrokeWidth(widthEmu: number, pxPerPt: number): number {
+  if (!(pxPerPt > 0)) {
+    throw new PaintError('LINE_DEVICE_SCALE', `${String(pxPerPt)} device pixels to the point`);
+  }
+  const px = widthEmu <= 0 ? 1 : Math.max(1, Math.round((widthEmu / EMU_PER_POINT) * pxPerPt));
+  return (px / pxPerPt) * EMU_PER_POINT;
+}
+
 /** SVG stroke attributes for a single-rail stroke, in EMU. */
 export interface SvgStroke {
   readonly 'stroke-width': number;

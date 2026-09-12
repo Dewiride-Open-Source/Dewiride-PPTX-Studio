@@ -54,6 +54,8 @@ export type PaintErrorCode =
   | 'LINE_END_UNKNOWN'
   /** A line end `@w` or `@len` that is not `sm`, `med` or `lg`. Also refused. */
   | 'LINE_END_SIZE'
+  /** A device scale that is not a positive number of pixels to the point. A caller mistake. */
+  | 'LINE_DEVICE_SCALE'
   /**
    * A negative blur radius.
    *

@@ -131,7 +131,7 @@ export function shapeNodes(
         ? paths.map((path) => element('path', { d: path.d }))
         : [
             element('path', {
-              d: `${outside(box, stroke.line.width)} ${paths.map((path) => path.d).join(' ')}`,
+              d: `${outside(box, stroke.drawnWidth)} ${paths.map((path) => path.d).join(' ')}`,
               'clip-rule': 'evenodd',
             }),
           ];

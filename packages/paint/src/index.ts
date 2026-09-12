@@ -176,6 +176,7 @@ export {
   compoundRails,
   dashArray,
   dashSegments,
+  deviceStrokeWidth,
   markerGeometry,
   markerOvershoot,
   resolveLine,

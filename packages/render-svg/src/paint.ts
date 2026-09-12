@@ -20,6 +20,7 @@ import {
   pathGeometry,
   resolveColor,
   resolvePattern,
+  deviceStrokeWidth,
   svgStops,
   svgStroke,
   toHexColor,
@@ -45,12 +46,15 @@ export class Defs {
   private readonly prefix: string;
   /** How an image fill reaches its picture; absent means none can be drawn. */
   readonly media: MediaResolver | undefined;
+  /** Device pixels to the point the slide is drawn at, or null for a scale nobody has named. */
+  readonly pxPerPt: number | null;
 
   // Written out rather than declared as a parameter property: the repository
   // lints for `erasableSyntaxOnly`, so nothing here may need a runtime shim.
-  constructor(prefix: string, media?: MediaResolver) {
+  constructor(prefix: string, media?: MediaResolver, pxPerPt: number | null = null) {
     this.prefix = prefix;
     this.media = media;
+    this.pxPerPt = pxPerPt;
   }
 
   id(): string {
@@ -284,6 +288,8 @@ export interface StrokePaint {
   readonly attrs: Attrs;
   readonly band: StrokeBand;
   readonly line: ResolvedLine;
+  /** The single rail's width as drawn, in EMU; a hairline with no device scale is 0. */
+  readonly drawnWidth: number;
 }
 
 /**
@@ -302,10 +308,15 @@ export function strokeAttributes(
   defs: Defs,
   forced?: StrokeBand,
 ): StrokePaint | null {
-  if (line === null || line.fill.type === 'none' || line.width <= 0) return null;
+  if (line === null || line.fill.type === 'none' || line.width < 0) return null;
 
   const band: StrokeBand = forced ?? (line.algn === 'in' ? 'in' : 'centre');
-  const svg = svgStroke(line);
+  // At a named device scale the export's whole-pixel widths; otherwise the true width, and a
+  // hairline as one screen pixel that no transform scales (F2, `zoom.json`).
+  const hairline = line.width === 0;
+  const drawnWidth =
+    defs.pxPerPt === null ? line.width : deviceStrokeWidth(line.width, defs.pxPerPt);
+  const svg = svgStroke(line, drawnWidth);
   const attrs: Attrs = {
     'stroke-linecap': svg['stroke-linecap'],
     'stroke-linejoin': svg['stroke-linejoin'],
@@ -313,9 +324,15 @@ export function strokeAttributes(
   };
   // A one-sided band is drawn at double width and clipped to that side, which
   // leaves exactly the half that was asked for.
-  attrs['stroke-width'] = band === 'centre' ? line.width : line.width * 2;
-  if (svg['stroke-dasharray'] !== null) {
-    const array = band === 'centre' ? svg : svgStroke(line, line.width * 2);
+  if (hairline && defs.pxPerPt === null) {
+    attrs['stroke-width'] = band === 'centre' ? 1 : 2;
+    attrs['vector-effect'] = 'non-scaling-stroke';
+  } else {
+    attrs['stroke-width'] = band === 'centre' ? drawnWidth : drawnWidth * 2;
+  }
+  // A zero width has no dashes to draw: a dashed hairline is solid.
+  if (svg['stroke-dasharray'] !== null && !hairline) {
+    const array = band === 'centre' ? svg : svgStroke(line, drawnWidth * 2);
     attrs['stroke-dasharray'] = (array['stroke-dasharray'] ?? [])
       .map((value) => num(value))
       .join(' ');
@@ -331,7 +348,7 @@ export function strokeAttributes(
     if (paint['fill-opacity'] !== undefined) attrs['stroke-opacity'] = paint['fill-opacity'];
   }
 
-  return { attrs, band, line };
+  return { attrs, band, line, drawnWidth };
 }
 
 /* -------------------------------------------------------------------------- */
