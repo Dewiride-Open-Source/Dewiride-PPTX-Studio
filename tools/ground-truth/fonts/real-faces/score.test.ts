@@ -204,6 +204,7 @@ describe('the T14 gate, green', () => {
       variants: [
         { name: 'exact', fits: 0, of: 1 },
         { name: 'round half up', fits: 1, of: 1 },
+        { name: 'round half up, the em ratio in single precision', fits: 1, of: 1 },
         { name: 'round half to even', fits: 1, of: 1 },
         { name: 'floor', fits: 0, of: 1 },
         { name: 'ceil', fits: 0, of: 1 },
@@ -214,6 +215,21 @@ describe('the T14 gate, green', () => {
         },
       ],
     });
+  });
+
+  it('separates the single-precision ratio from half up on a box whose half it drops', () => {
+    // 672/2560 is 0.2625, which a 32-bit float holds as 0.26249998...: the
+    // browser that reported 262 for it kept the ratio in single precision.
+    const face = faceWith(
+      [gatedRow('latin-short', 16, 100, 100)],
+      { ascent: 2336, descent: 672 },
+      { ascent: 913, descent: 262 },
+    );
+    const run = runWith([{ ...face, unitsPerEm: 2560 }]);
+    const fits = Object.fromEntries(score(run).faceBox.variants.map((v) => [v.name, v.fits]));
+    expect(fits['round half up, the em ratio in single precision']).toBe(1);
+    expect(fits['round half up']).toBe(0);
+    expect(fits['round half to even']).toBe(0);
   });
 
   it('scores every reading of the box, and separates none on a face that agrees with itself', () => {
@@ -267,17 +283,17 @@ describe('the T14 gate, green', () => {
     expect(byName.get('hhea, or sTypo when fsSelection bit 7 is set')).toMatchObject({ fits: 1 });
   });
 
-  it('scores macOS against the DirectWrite reading, which is what ships there', () => {
-    // Nothing has measured CoreText, so the run scores the assumption the reader
-    // makes and `face-box-rival` names the table if the assumption is wrong.
-    expect(shippedBoxFor('darwin')).toBe(shippedBoxFor('win32'));
+  it('scores macOS against hhea alone, which is what CoreText read through bit 7', () => {
+    // 247/247 on macos-latest against 246/247 for FreeType's composite, the one
+    // face apart being the probe built with bit 7 set. ADR 0053.
+    expect(shippedBoxFor('darwin')).toBe('hhea.ascender/descender');
     expect(shippedBoxFor('darwin')).not.toBe(shippedBoxFor('linux'));
-    expect(rasteriserOf('darwin')).toContain('CoreText');
-    expect(rasteriserOf('darwin')).toContain('assumed');
+    expect(shippedBoxFor('darwin')).not.toBe(shippedBoxFor('win32'));
+    expect(rasteriserOf('darwin')).toBe('CoreText');
     expect(rasteriserOf('linux')).toBe('FreeType');
     expect(rasteriserOf('win32')).toBe('DirectWrite');
     const darwin = { ...GREEN, image: { ...GREEN.image, platform: 'darwin' } };
-    expect(reportMarkdown(darwin, score(darwin))).toContain('assumed to share');
+    expect(reportMarkdown(darwin, score(darwin))).toContain('through CoreText');
   });
 
   it('fits the box that sits exactly on one rounding, which is inclusive', () => {

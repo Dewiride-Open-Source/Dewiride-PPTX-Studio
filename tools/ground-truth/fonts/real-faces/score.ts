@@ -369,11 +369,7 @@ function scoreScripts(run: Run): ScriptScore[] {
 
 /** The reader's box under one rounding, against the whole pixel the browser reported. */
 function fitsBox(round: BoxRounding, face: RunFace, boxPx: number): boolean {
-  const scale = boxPx / face.unitsPerEm;
-  const { ascent, descent } = round({
-    ascent: face.box.reader.ascent * scale,
-    descent: face.box.reader.descent * scale,
-  });
+  const { ascent, descent } = round(face.box.reader, face.unitsPerEm, boxPx);
   return (
     Math.abs(ascent - face.box.browser.ascent) < EXACT_PX &&
     Math.abs(descent - face.box.browser.descent) < EXACT_PX
@@ -728,8 +724,8 @@ export function reportMarkdown(run: Run, verdict: Verdict): string {
   );
   parts.push(
     `This runner reads the box through ${rasteriserOf(run.image.platform)}, ` +
-      `so **${shippedBoxFor(run.image.platform)}** is the shipped reading here; the other ` +
-      'rasteriser reads a different table and is scored by T13. ADR 0045.',
+      `so **${shippedBoxFor(run.image.platform)}** is the shipped reading here; each of the ` +
+      'other two reads its own table and is scored on its own runner. ADR 0045, ADR 0053.',
   );
   parts.push(
     'A reading is scored over the faces whose tables carry the pair it names, and fits a face ' +
@@ -748,7 +744,8 @@ export function reportMarkdown(run: Run, verdict: Verdict): string {
     'That table scores the browser, not the reader: a box that lands on a whole pixel is ' +
       'reproduced by every rounding, so only the faces whose tables put it off one - a 2000 em ' +
       'on the half, a 2048 em elsewhere - separate the rows. T13 settled round half up on ' +
-      'DirectWrite, 28 of 28. ADR 0052.',
+      'DirectWrite, 30 of 30; CoreText holds the em ratio in single precision first, 247 of 247. ' +
+      'ADR 0052, ADR 0053.',
   );
 
   parts.push('### What the missing features cost');

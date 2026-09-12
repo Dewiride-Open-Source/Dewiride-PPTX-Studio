@@ -21,12 +21,13 @@ import {
 
 import type { FontLibrary, Resolved } from './faces.js';
 import { RenderError } from './errors.js';
+import type { FontBackend } from './sfnt.js';
 
 /**
  * The fixed-point step Chromium reports an advance in.
  *
  * Quantising each glyph advance toward zero and each kern adjustment to nearest
- * fits all 504 of T13's widths, where summing exact floats fits 198 and is out
+ * fits all 540 of T13's widths, where summing exact floats fits 234 and is out
  * by up to 1.04e-4 px. ADR 0042.
  */
 const FIXED = 65536;
@@ -45,11 +46,15 @@ function quantiseKern(px: number): number {
 
 /**
  * A box metric as the browser probe reports it: read at `FACE_BOX_PX`, rounded
- * half up to the pixel, and handed back as a fraction of the em. T13 28/28
- * against 25/28 for the exact fraction. ADR 0052.
+ * half up to the pixel, and handed back as a fraction of the em. CoreText holds
+ * the em ratio in single precision first. T13 30/30, T14 247/247. ADR 0053.
  */
-function boxPixels(units: number, unitsPerEm: number): number {
-  return Math.floor((units * FACE_BOX_PX) / unitsPerEm + 0.5) / FACE_BOX_PX;
+function boxPixels(units: number, unitsPerEm: number, backend: FontBackend): number {
+  const px =
+    backend === 'coretext'
+      ? Math.fround(units / unitsPerEm) * FACE_BOX_PX
+      : (units * FACE_BOX_PX) / unitsPerEm;
+  return Math.floor(px + 0.5) / FACE_BOX_PX;
 }
 
 export interface FaceUse {
@@ -180,13 +185,13 @@ export function createFontMeasurer(library: FontLibrary): FontMeasurer {
       const cached = boxes.get(family);
       if (cached !== undefined) return cached;
       const { metrics } = faceFor(family, false, false).face;
-      const descent = boxPixels(metrics.descent, metrics.unitsPerEm);
+      const descent = boxPixels(metrics.descent, metrics.unitsPerEm, metrics.backend);
       // Chromium answers the `BASE` `ideo` coordinate where the face has one and
-      // its own rounded box descent where it does not, 36 of 36 in T13.
+      // its own rounded box descent where it does not, 38 of 38 in T13.
       const ideographic =
         metrics.ideographic === undefined ? descent : metrics.ideographic / metrics.unitsPerEm;
       const box: FaceBox = {
-        ascent: boxPixels(metrics.ascent, metrics.unitsPerEm),
+        ascent: boxPixels(metrics.ascent, metrics.unitsPerEm, metrics.backend),
         descent,
         // Anything outside the em is unusable to `uprightPen`, and zero is what
         // the browser probe answers there. `packages/text/src/lines/baseline.ts`.

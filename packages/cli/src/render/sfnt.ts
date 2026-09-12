@@ -21,15 +21,17 @@ const USE_TYPO_METRICS = 0x0080;
 /**
  * The rasteriser a Chromium reads a face's vertical metrics through.
  *
- * T13 scored `usWin` 28/28 against DirectWrite on fonts built to disagree, and
- * T14 scored `hhea` 79/79 against FreeType on real faces where `usWin` reaches
- * 76/79. One reader cannot answer both. ADR 0045.
+ * T13 scored `usWin` 30/30 against DirectWrite on fonts built to disagree; T14
+ * scored `hhea` 93/93 against FreeType and 247/247 against CoreText on real
+ * faces. One reader cannot answer for all three. ADR 0045, ADR 0053.
  */
-export type FontBackend = 'directwrite' | 'freetype';
+export type FontBackend = 'directwrite' | 'freetype' | 'coretext';
 
-/** FreeType on Linux, DirectWrite elsewhere. macOS is unmeasured. ADR 0045. */
+/** FreeType on Linux, CoreText on macOS, DirectWrite elsewhere. ADR 0045, ADR 0053. */
 export function backendFor(platform: string): FontBackend {
-  return platform === 'linux' ? 'freetype' : 'directwrite';
+  if (platform === 'linux') return 'freetype';
+  if (platform === 'darwin') return 'coretext';
+  return 'directwrite';
 }
 
 /** One ascent and descent in font units, the descent positive below the baseline. */
@@ -57,6 +59,8 @@ export interface FaceMetrics {
   readonly descent: number;
   /** Which table `ascent` and `descent` came out of, for the diagnostics. */
   readonly source: 'hhea' | 'usWin' | 'sTypo';
+  /** The rasteriser `source` was chosen for, which also fixes how the box rounds. */
+  readonly backend: FontBackend;
   /** The `BASE` `ideo` coordinate under `DFLT`, in font units below the baseline. */
   readonly ideographic: number | undefined;
   /** The pairs `ascent` and `descent` were chosen from, so a rival reading is scorable. */
@@ -543,8 +547,8 @@ function ideographicOf(tables: Tables): number | undefined {
 /**
  * The vertical metrics a browser reports for the face.
  *
- * Bit 7 wins on both backends; without it DirectWrite answers `usWin` and
- * FreeType `hhea`, measured 28/28 and 79/79. ADR 0045.
+ * Bit 7 wins on DirectWrite and FreeType, which otherwise answer `usWin` and
+ * `hhea`; CoreText answers `hhea` either way, 247/247. ADR 0045, ADR 0053.
  */
 function metricsOf(tables: Tables, subject: string, backend: FontBackend): FaceMetrics {
   const head = readerOf(required(tables, 'head', subject));
@@ -564,6 +568,7 @@ function metricsOf(tables: Tables, subject: string, backend: FontBackend): FaceM
       unitsPerEm,
       ...hheaPair,
       source: 'hhea',
+      backend,
       ideographic,
       candidates: { hhea: hheaPair, usWin: undefined, sTypo: undefined, useTypoMetrics: false },
     };
@@ -572,12 +577,20 @@ function metricsOf(tables: Tables, subject: string, backend: FontBackend): FaceM
   const usWin: MetricPair = { ascent: u16(r, 74), descent: u16(r, 76) };
   const sTypo: MetricPair = { ascent: i16(r, 68), descent: -i16(r, 70) };
   const useTypoMetrics = (u16(r, 62) & USE_TYPO_METRICS) !== 0;
-  const source = useTypoMetrics ? 'sTypo' : backend === 'freetype' ? 'hhea' : 'usWin';
+  const source =
+    backend === 'coretext'
+      ? 'hhea'
+      : useTypoMetrics
+        ? 'sTypo'
+        : backend === 'freetype'
+          ? 'hhea'
+          : 'usWin';
   const chosen = source === 'sTypo' ? sTypo : source === 'hhea' ? hheaPair : usWin;
   return {
     unitsPerEm,
     ...chosen,
     source,
+    backend,
     ideographic,
     candidates: { hhea: hheaPair, usWin, sTypo, useTypoMetrics },
   };

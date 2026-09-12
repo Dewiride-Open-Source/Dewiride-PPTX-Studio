@@ -67,6 +67,24 @@ export const METRIC_SPLIT_2000: Partial<FontSpec> = {
   typoDescender: -201,
 };
 
+/**
+ * The split on a 2560 em, where every usWin and hhea side sits on the half at `BOX_PX`.
+ *
+ * As 32-bit floats 2336/2560 and 544/2560 round up while 672/2560 and 2464/2560
+ * round down, so a browser holding the em ratio in single precision reports
+ * 913/262 through usWin and 962/213 through hhea; half up says 913/263 and 963/213.
+ */
+export const METRIC_SPLIT_2560: Partial<FontSpec> = {
+  familyName: 'PptxStudio Split 2560',
+  unitsPerEm: 2560,
+  hheaAscender: 2464,
+  hheaDescender: -544,
+  winAscent: 2336,
+  winDescent: 672,
+  typoAscender: 1792,
+  typoDescender: -256,
+};
+
 /** The font has A..H, so the kerned pair is AB and AC is the unkerned control. */
 const PAIR = [{ left: 'A', right: 'B', adjust: -200 }] as const;
 
@@ -206,6 +224,11 @@ export const PROBES: readonly Probe[] = [
     asks: 'whether a half rounds up or to even',
     spec: METRIC_SPLIT_2000,
   },
+  {
+    id: 'split-2560',
+    asks: 'whether the em ratio is held in single precision before the half rounds',
+    spec: METRIC_SPLIT_2560,
+  },
 ];
 
 /** The strings measured in every probe font. */
@@ -225,8 +248,8 @@ export const BOX_PX = 1000;
 /**
  * The sizes a baseline is scored at.
  *
- * Every BASE coordinate is a whole number of pixels at both. Only the 2048 em
- * probe's fallback descent is not, which is what that probe is there to show.
+ * Every BASE coordinate is a whole number of pixels at both. Only the 2048 and
+ * 2560 em probes' fallback descents are not, which is what they are there to show.
  */
 export const BASELINE_SIZES: readonly number[] = [100, 1000];
 

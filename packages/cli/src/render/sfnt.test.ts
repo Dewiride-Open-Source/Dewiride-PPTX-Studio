@@ -25,7 +25,11 @@ interface Baselines {
 
 interface Fixture {
   readonly chromium: string;
-  readonly faceBox: { readonly answer: string; readonly rounding: string };
+  readonly faceBox: {
+    readonly answer: string;
+    readonly rounding: string;
+    readonly scores: readonly { readonly model: string; readonly missed: readonly string[] }[];
+  };
   readonly kerning: {
     readonly answer: string;
     readonly scores: readonly {
@@ -213,19 +217,35 @@ describe('the face box', () => {
     expect(directwrite.metrics.ascent).toBe(spec.winAscent);
   });
 
-  it('follows fsSelection bit 7 onto sTypo through either rasteriser', () => {
+  it('follows fsSelection bit 7 onto sTypo through DirectWrite and FreeType', () => {
     const { spec } = FIXTURE.fonts.find((f) => f.id === 'split-usetypo')!;
     for (const backend of ['freetype', 'directwrite'] as const) {
       const face = facesIn(bytesOf('split-usetypo'), 'split-usetypo', backend)[0]!;
       expect(face.metrics.source, backend).toBe('sTypo');
+      expect(face.metrics.backend, backend).toBe(backend);
       expect(face.metrics.ascent, backend).toBe(spec.typoAscender);
     }
   });
 
-  it('names FreeType on Linux and DirectWrite everywhere else', () => {
+  it('reads hhea through CoreText whatever bit 7 says, which only this probe can show', () => {
+    // On macos-latest split-usetypo was the one face of 247 with bit 7 set and
+    // hhea apart from sTypo; CoreText read 800/200. ADR 0053.
+    const { spec } = FIXTURE.fonts.find((f) => f.id === 'split-usetypo')!;
+    const face = facesIn(bytesOf('split-usetypo'), 'split-usetypo', 'coretext')[0]!;
+    expect(spec.useTypoMetrics).toBe(true);
+    expect(spec.hheaAscender).not.toBe(spec.typoAscender);
+    expect(face.metrics.source).toBe('hhea');
+    expect(face.metrics.backend).toBe('coretext');
+    expect(face.metrics.ascent).toBe(spec.hheaAscender);
+    expect(face.metrics.descent).toBe(-spec.hheaDescender);
+    expect(face.metrics.candidates.useTypoMetrics).toBe(true);
+  });
+
+  it('names FreeType on Linux, CoreText on macOS and DirectWrite everywhere else', () => {
     expect(backendFor('linux')).toBe('freetype');
+    expect(backendFor('darwin')).toBe('coretext');
     expect(backendFor('win32')).toBe('directwrite');
-    expect(backendFor('darwin')).toBe('directwrite');
+    expect(backendFor('freebsd')).toBe('directwrite');
   });
   it('carries the shape the IPA Gothic faces have, so nothing new has to be built', () => {
     // Three distinct descents, and a usWin box taller than the em: 900 + 300 on
