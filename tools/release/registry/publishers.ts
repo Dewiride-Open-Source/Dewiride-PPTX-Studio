@@ -2,7 +2,7 @@
  * Ask npm whether this workflow may publish each package, before it publishes any.
  *
  * ```
- * node tools/release/publishers.ts
+ * node tools/release/registry/publishers.ts
  * ```
  *
  * Runs in the release before `changeset publish`, which goes one package at a
@@ -12,7 +12,7 @@
 
 import { readFileSync, readdirSync } from 'node:fs';
 
-import { repoPath } from '../repo/root.ts';
+import { repoPath } from '../../repo/root.ts';
 import { publishableIn } from './bootstrap.ts';
 import {
   type Attempt,

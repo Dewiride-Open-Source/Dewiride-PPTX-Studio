@@ -21,8 +21,11 @@ inspects the _shape_ of a tarball without ever installing or executing one. So t
 the same defect it was built to prevent: code nobody had run.
 
 This app closes that. `npm run smoke` renders every shipped deck through the installed packages and
-asserts the slide count, the SVG shape and a clean round trip; CI runs it after a lockfile-free
-install so every run re-resolves `^0.1.0` against the registry.
+asserts the slide count, the SVG shape and a clean round trip. It runs twice in CI: the release gate
+installs the tarballs this commit would publish into a copy of this directory, and the daily canary
+installs `latest` from the registry with no lockfile. The ranges in `package.json` are the caret of
+each workspace version, written by `pnpm version-packages` and refused by the gate when they are
+not, so `npm install` here gets what the last release proved.
 
 ## The tools
 
@@ -66,8 +69,8 @@ written against the API as published rather than around it. That awkward call si
 for the fix: `RenderDeckOptions` is every field optional and the three verb-only ones gone, so the
 same route is now one line. Consuming a package from outside is the only thing that shows you this.
 
-**A server with no fonts substitutes everything.** The route runs with `systemFonts: true`, so
-locally it finds the real ones; a container that ships none will draw every typeface in a fallback.
+**A server with no fonts substitutes everything.** The route leaves `systemFonts` at its default of
+true, so locally it finds the real ones; a container that ships none will draw every typeface in a fallback.
 The response carries the report either way — that is `FaceUse`, and the page shows it.
 
 ## The decks

@@ -308,8 +308,22 @@ describe('fontStack', () => {
   });
 
   it('never names one family twice', () => {
-    const names = fontStack('Calibri').split(', ');
-    expect(new Set(names).size).toBe(names.length);
+    for (const stack of [fontStack('Calibri'), fontStack('Aptos', 'Carlito')]) {
+      const names = stack.split(', ');
+      expect(new Set(names).size, stack).toBe(names.length);
+    }
+  });
+
+  it('leads with the face that drew the run, then the one asked for', () => {
+    // Carlito is already Calibri Light's stand-in two places down the list, so
+    // this is also the dedupe: it is named once, at the front.
+    expect(fontStack('Calibri Light', 'Carlito')).toBe(
+      '"Carlito", "Calibri Light", "Calibri", sans-serif',
+    );
+  });
+
+  it('is the same list when the drawn face is the one asked for', () => {
+    expect(fontStack('Arial', 'Arial')).toBe(fontStack('Arial'));
   });
 });
 

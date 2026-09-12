@@ -62,7 +62,7 @@ export interface TextPiece {
   /** The characters to draw, after `@cap` has been applied. */
   readonly text: string;
   readonly font: RunFont;
-  /** The family quoted for CSS, computed once so two emitters cannot differ. */
+  /** The CSS `font-family` value, computed once so two emitters cannot differ. */
   readonly cssFamily: string;
   readonly color: Rgba | null;
   readonly highlight: Rgba | null;
@@ -168,6 +168,13 @@ export interface LayoutTextOptions {
   readonly faceBox?: FaceBoxProbe | undefined;
   /** The rules for a typeface, so a caller decides what an unmeasured one gets. */
   readonly rulesFor: (typeface: string) => FaceRules;
+  /** The CSS `font-family` a piece is drawn in; defaults to the run's own family, quoted. */
+  readonly cssFamilyFor?: ((font: RunFont) => string) | undefined;
+}
+
+/** The run's own family, quoted: what a renderer that draws where it measured says. */
+export function askedFamily(font: RunFont): string {
+  return cssFamily(font.family);
 }
 
 /** A superscript or subscript is drawn at two thirds of the size it asked for. */
@@ -393,6 +400,7 @@ function piecesOf(
   measure: (from: number, to: number) => number,
   scale: number,
   rulesFor: (typeface: string) => FaceRules,
+  cssFamilyFor: (font: RunFont) => string,
   splitScripts: boolean,
 ): { pieces: readonly TextPiece[]; widthPt: number; sizePt: number } {
   const pieces: TextPiece[] = [];
@@ -420,7 +428,7 @@ function piecesOf(
         source: cell.source,
         text,
         font,
-        cssFamily: cssFamily(font.family),
+        cssFamily: cssFamilyFor(font),
         color: cell.run.color,
         highlight: cell.run.highlight,
         leftPt,
@@ -532,6 +540,7 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
   const { frame } = text;
   const measurer = options.measurer ?? createCanvasMeasurer();
   const faceBox = options.faceBox ?? createFaceBoxProbe();
+  const cssFamilyFor = options.cssFamilyFor ?? askedFamily;
   const { turnDeg, boxPt } = textTurn(frame, options);
 
   const axes = frameAxes(frame.vertical);
@@ -591,6 +600,7 @@ export function layoutText(text: ResolvedText, options: LayoutTextOptions): Text
         measure,
         scale,
         options.rulesFor,
+        cssFamilyFor,
         uprightGlyphs,
       );
       const size = sizePt === 0 ? (paragraph.endRun.font.sz * scale) / 100 : sizePt;

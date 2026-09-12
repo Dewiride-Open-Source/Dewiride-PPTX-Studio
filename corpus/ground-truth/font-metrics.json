@@ -52,6 +52,14 @@
     {
       "id": "base-no-ideo",
       "asks": "what a BASE table carrying no ideo coordinate falls back to"
+    },
+    {
+      "id": "split-2048",
+      "asks": "which whole pixel the face box rounds to, above and below the half"
+    },
+    {
+      "id": "split-2000",
+      "asks": "whether a half rounds up or to even"
     }
   ],
   "fonts": [
@@ -382,6 +390,40 @@
         "ideograph": 19968
       },
       "base64": "AAEAAAALAIAAAwAwQkFTRdUW1GwAAAC8AAAAUE9TLzJhWquBAAABDAAAAGBjbWFwAFtOagAAAWwAAAA8Z2x5ZhoaMgAAAAGoAAABRGhlYWRhbEM+AAAC7AAAADZoaGVhBXoBmwAAAyQAAAAkaG10eBaoArwAAANIAAAAKGxvY2EAAAZ4AAADcAAAACxtYXhwAAwABgAAA5wAAAAibmFtZRQkJpoAAAPAAAABBnBvc3T/nwAyAAAEyAAAACAAAQAAAAgAAAAEABIAA2hhbmdpY2Zicm9tbgAEREZMVAAaaGFuaQAaa2FuYQAabGF0bgAaAAYAAAAAAAIAAwAKAA4AEgABAmIAAf34AAEAAAAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAEAAIE4AArz/nAAAA4QBLAAAAAEAAAAAAfQCvAAAAAAAAAAAAAEAAwABAAAADAAEADAAAAAIAAgAAgAAACAASE4A//8AAAAgAEFOAP///+H/wbICAAEAAAAAAAAAAAABADwAAAIcAvgAAwAAAQEBAQA8AeAAAP4gAAAAAAL4AAAAAAABAFAAAAIIAGQAAwAAAQEBAQBQAbgAAP5IAAAAAABkAAAAAAABAFAAAAIIAMgAAwAAAQEBAQBQAbgAAP5IAAAAAADIAAAAAAABAFAAAAIIASwAAwAAAQEBAQBQAbgAAP5IAAAAAAEsAAAAAAABAFAAAAIIAZAAAwAAAQEBAQBQAbgAAP5IAAAAAAGQAAAAAAABAFAAAAIIAfQAAwAAAQEBAQBQAbgAAP5IAAAAAAH0AAAAAAABAFAAAAIIAlgAAwAAAQEBAQBQAbgAAP5IAAAAAAJYAAAAAAABAFAAAAIIArwAAwAAAQEBAQBQAbgAAP5IAAAAAAK8AAAAAAABAFAAAAIIAyAAAwAAAQEBAQBQAbgAAP5IAAAAAAMgAAAAAAABAAAAAQAAns1NfF8PPPUAAAPoAAAAAAAAAAAAAAAAAAAAAAAA/zgCWAMgAAAACAACAAEAAAAAAAEAAAMg/zgAAAJYAAAAAAJYAAEAAAAAAAAAAAAAAAAAAAAKAlgAPAGQAAACWABQAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAAAAAAAAAAkAAAAJAAAAEgAAABsAAAAkAAAALQAAADYAAAA/AAAASAAAAFEAAEAAAAKAAQAAQAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQBCAAMAAQQJAAEALAAAAAMAAQQJAAIADgAsAAMAAQQJAAMANgA6AAMAAQQJAAQALABwAAMAAQQJAAYAKACcAFAAcAB0AHgAUwB0AHUAZABpAG8AIABCAGEAcwBlACAATgBvAEkAZABlAG8AUgBlAGcAdQBsAGEAcgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAQgBhAHMAZQAgAE4AbwBJAGQAZQBvACAAMgAwADIANgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAQgBhAHMAZQAgAE4AbwBJAGQAZQBvAFAAcAB0AHgAUwB0AHUAZABpAG8AQgBhAHMAZQBOAG8ASQBkAGUAbwAAAAMAAAAAAAD/nAAyAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "id": "split-2048",
+      "family": "PptxStudio Split 2048",
+      "spec": {
+        "familyName": "PptxStudio Split 2048",
+        "unitsPerEm": 2048,
+        "hheaAscender": 1638,
+        "hheaDescender": -410,
+        "winAscent": 1902,
+        "winDescent": 451,
+        "typoAscender": 1434,
+        "typoDescender": -205,
+        "advance": 600,
+        "spaceAdvance": 400
+      },
+      "base64": "AAEAAAAKAIAAAwAgT1MvMmTPYUoAAACsAAAAYGNtYXAAewA8AAABDAAAADRnbHlmGhoyAAAAAUAAAAFEaGVhZGFsScoAAAKEAAAANmhoZWEIwADJAAACvAAAACRobXR4FqgCvAAAAuAAAAAobG9jYQAABngAAAMIAAAALG1heHAADAAGAAADNAAAACJuYW1lEsAkbAAAA1gAAAD+cG9zdP+fADIAAARYAAAAIAAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAEAAIABIBZr/MwAAB24BwwAAAAEAAAAAAfQCvAAAAAAAAAAAAAEAAwABAAAADAAEACgAAAAGAAQAAQACACAASP//AAAAIABB////4f/BAAEAAAAAAAAAAQA8AAACHAL4AAMAAAEBAQEAPAHgAAD+IAAAAAAC+AAAAAAAAQBQAAACCABkAAMAAAEBAQEAUAG4AAD+SAAAAAAAZAAAAAAAAQBQAAACCADIAAMAAAEBAQEAUAG4AAD+SAAAAAAAyAAAAAAAAQBQAAACCAEsAAMAAAEBAQEAUAG4AAD+SAAAAAABLAAAAAAAAQBQAAACCAGQAAMAAAEBAQEAUAG4AAD+SAAAAAABkAAAAAAAAQBQAAACCAH0AAMAAAEBAQEAUAG4AAD+SAAAAAAB9AAAAAAAAQBQAAACCAJYAAMAAAEBAQEAUAG4AAD+SAAAAAACWAAAAAAAAQBQAAACCAK8AAMAAAEBAQEAUAG4AAD+SAAAAAACvAAAAAAAAQBQAAACCAMgAAMAAAEBAQEAUAG4AAD+SAAAAAADIAAAAAAAAQAAAAEAAIBQeH9fDzz1AAAIAAAAAAAAAAAAAAAAAAAAAAAAAP5mAlgGZgAAAAgAAgABAAAAAAABAAAGZv5mAAACWAAAAAACWAABAAAAAAAAAAAAAAAAAAAACgJYADwBkAAAAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFAAAAAAAAAAJAAAACQAAABIAAAAbAAAAJAAAAC0AAAA2AAAAPwAAAEgAAABRAABAAAACgAEAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAQgADAAEECQABACoAAAADAAEECQACAA4AKgADAAEECQADADQAOAADAAEECQAEACoAbAADAAEECQAGACYAlgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAUwBwAGwAaQB0ACAAMgAwADQAOABSAGUAZwB1AGwAYQByAFAAcAB0AHgAUwB0AHUAZABpAG8AIABTAHAAbABpAHQAIAAyADAANAA4ACAAMgAwADIANgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAUwBwAGwAaQB0ACAAMgAwADQAOABQAHAAdAB4AFMAdAB1AGQAaQBvAFMAcABsAGkAdAAyADAANAA4AAAAAwAAAAAAAP+cADIAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "id": "split-2000",
+      "family": "PptxStudio Split 2000",
+      "spec": {
+        "familyName": "PptxStudio Split 2000",
+        "unitsPerEm": 2000,
+        "hheaAscender": 1602,
+        "hheaDescender": -398,
+        "winAscent": 1857,
+        "winDescent": 400,
+        "typoAscender": 1401,
+        "typoDescender": -201,
+        "advance": 600,
+        "spaceAdvance": 400
+      },
+      "base64": "AAEAAAAKAIAAAwAgT1MvMmR7YSEAAACsAAAAYGNtYXAAewA8AAABDAAAADRnbHlmGhoyAAAAAUAAAAFEaGVhZGFsSYIAAAKEAAAANmhoZWEInADVAAACvAAAACRobXR4FqgCvAAAAuAAAAAobG9jYQAABngAAAMIAAAALG1heHAADAAGAAADNAAAACJuYW1lEqwkUAAAA1gAAAD+cG9zdP+fADIAAARYAAAAIAAEAlgBkAAFAAACigK8/2oAyAGQASwAZP/OAZABLAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAABQWFNUAEAAIABIBXn/NwAAB0EBkAAAAAEAAAAAAfQCvAAAAAAAAAAAAAEAAwABAAAADAAEACgAAAAGAAQAAQACACAASP//AAAAIABB////4f/BAAEAAAAAAAAAAQA8AAACHAL4AAMAAAEBAQEAPAHgAAD+IAAAAAAC+AAAAAAAAQBQAAACCABkAAMAAAEBAQEAUAG4AAD+SAAAAAAAZAAAAAAAAQBQAAACCADIAAMAAAEBAQEAUAG4AAD+SAAAAAAAyAAAAAAAAQBQAAACCAEsAAMAAAEBAQEAUAG4AAD+SAAAAAABLAAAAAAAAQBQAAACCAGQAAMAAAEBAQEAUAG4AAD+SAAAAAABkAAAAAAAAQBQAAACCAH0AAMAAAEBAQEAUAG4AAD+SAAAAAAB9AAAAAAAAQBQAAACCAJYAAMAAAEBAQEAUAG4AAD+SAAAAAACWAAAAAAAAQBQAAACCAK8AAMAAAEBAQEAUAG4AAD+SAAAAAACvAAAAAAAAQBQAAACCAMgAAMAAAEBAQEAUAG4AAD+SAAAAAADIAAAAAAAAQAAAAEAAIFoeYFfDzz1AAAH0AAAAAAAAAAAAAAAAAAAAAAAAP5yAlgGQgAAAAgAAgABAAAAAAABAAAGQv5yAAACWAAAAAACWAABAAAAAAAAAAAAAAAAAAAACgJYADwBkAAAAlgAUAJYAFACWABQAlgAUAJYAFACWABQAlgAUAJYAFAAAAAAAAAAJAAAACQAAABIAAAAbAAAAJAAAAC0AAAA2AAAAPwAAAEgAAABRAABAAAACgAEAAEAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAQgADAAEECQABACoAAAADAAEECQACAA4AKgADAAEECQADADQAOAADAAEECQAEACoAbAADAAEECQAGACYAlgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAUwBwAGwAaQB0ACAAMgAwADAAMABSAGUAZwB1AGwAYQByAFAAcAB0AHgAUwB0AHUAZABpAG8AIABTAHAAbABpAHQAIAAyADAAMAAwACAAMgAwADIANgBQAHAAdAB4AFMAdAB1AGQAaQBvACAAUwBwAGwAaQB0ACAAMgAwADAAMABQAHAAdAB4AFMAdAB1AGQAaQBvAFMAcABsAGkAdAAyADAAMAAwAAAAAwAAAAAAAP+cADIAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
     }
   ],
   "browser": {
@@ -1281,41 +1323,582 @@
             "width": 600
           }
         }
+      },
+      {
+        "id": "split-2048",
+        "box": {
+          "ascent": 929,
+          "descent": 220
+        },
+        "widths": {
+          "8": {
+            "A": 2.34375,
+            "B": 2.34375,
+            "AB": 4.6875,
+            "AC": 4.6875,
+            "ABCDEFGH": 18.75,
+            "A B": 6.25
+          },
+          "12": {
+            "A": 3.515625,
+            "B": 3.515625,
+            "AB": 7.03125,
+            "AC": 7.03125,
+            "ABCDEFGH": 28.125,
+            "A B": 9.375
+          },
+          "16": {
+            "A": 4.6875,
+            "B": 4.6875,
+            "AB": 9.375,
+            "AC": 9.375,
+            "ABCDEFGH": 37.5,
+            "A B": 12.5
+          },
+          "32": {
+            "A": 9.375,
+            "B": 9.375,
+            "AB": 18.75,
+            "AC": 18.75,
+            "ABCDEFGH": 75,
+            "A B": 25
+          },
+          "100": {
+            "A": 29.296875,
+            "B": 29.296875,
+            "AB": 58.59375,
+            "AC": 58.59375,
+            "ABCDEFGH": 234.375,
+            "A B": 78.125
+          },
+          "1000": {
+            "A": 292.96875,
+            "B": 292.96875,
+            "AB": 585.9375,
+            "AC": 585.9375,
+            "ABCDEFGH": 2343.75,
+            "A B": 781.25
+          }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 74.4000015258789,
+            "ideographic": -22
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 743.2000122070312,
+            "ideographic": -220
+          }
+        },
+        "hanBaselines": null
+      },
+      {
+        "id": "split-2000",
+        "box": {
+          "ascent": 929,
+          "descent": 200
+        },
+        "widths": {
+          "8": {
+            "A": 2.399993896484375,
+            "B": 2.399993896484375,
+            "AB": 4.79998779296875,
+            "AC": 4.79998779296875,
+            "ABCDEFGH": 19.199951171875,
+            "A B": 6.3999786376953125
+          },
+          "12": {
+            "A": 3.5999908447265625,
+            "B": 3.5999908447265625,
+            "AB": 7.199981689453125,
+            "AC": 7.199981689453125,
+            "ABCDEFGH": 28.7999267578125,
+            "A B": 9.5999755859375
+          },
+          "16": {
+            "A": 4.79998779296875,
+            "B": 4.79998779296875,
+            "AB": 9.5999755859375,
+            "AC": 9.5999755859375,
+            "ABCDEFGH": 38.39990234375,
+            "A B": 12.799972534179688
+          },
+          "32": {
+            "A": 9.599990844726562,
+            "B": 9.599990844726562,
+            "AB": 19.199981689453125,
+            "AC": 19.199981689453125,
+            "ABCDEFGH": 76.7999267578125,
+            "A B": 25.5999755859375
+          },
+          "100": {
+            "A": 30,
+            "B": 30,
+            "AB": 60,
+            "AC": 60,
+            "ABCDEFGH": 240,
+            "A B": 80
+          },
+          "1000": {
+            "A": 300,
+            "B": 300,
+            "AB": 600,
+            "AC": 600,
+            "ABCDEFGH": 2400,
+            "A B": 800
+          }
+        },
+        "baselines": {
+          "100": {
+            "alphabetic": 0,
+            "hanging": 74.4000015258789,
+            "ideographic": -20
+          },
+          "1000": {
+            "alphabetic": 0,
+            "hanging": 743.2000122070312,
+            "ideographic": -200
+          }
+        },
+        "hanBaselines": null
       }
     ]
   },
   "measurements": {
-    "widths": 432,
-    "boxes": 24,
-    "baselines": 32
+    "widths": 504,
+    "boxes": 28,
+    "baselines": 36
   },
   "faceBox": {
-    "$comment": "The ascent and descent a browser reports for a face. Every real font sets hhea and usWin to the same numbers, so only a font built to disagree can say which was read.",
+    "$comment": "The ascent and descent a browser reports for a face. Every real font sets hhea and usWin to the same numbers, so only a font built to disagree can say which was read; and every probe on a 1000 em lands on a whole pixel, so only one that does not can say how the browser rounds it.",
     "answer": "usWin, or sTypo when fsSelection bit 7 is set",
+    "rounding": "round half up",
     "scores": [
       {
-        "model": "hhea.ascender/descender",
+        "model": "hhea.ascender/descender; exact",
+        "table": "hhea.ascender/descender",
+        "rounding": "exact",
         "fits": 12,
-        "of": 24,
-        "worst": 100
+        "of": 28,
+        "worst": 129.1953125,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
       },
       {
-        "model": "OS/2.usWinAscent/usWinDescent",
-        "fits": 22,
-        "of": 24,
-        "worst": 200
+        "model": "hhea.ascender/descender; round half up",
+        "table": "hhea.ascender/descender",
+        "rounding": "round half up",
+        "fits": 12,
+        "of": 28,
+        "worst": 129,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
       },
       {
-        "model": "OS/2.sTypoAscender/sTypoDescender",
-        "fits": 14,
-        "of": 24,
-        "worst": 200
+        "model": "hhea.ascender/descender; round half to even",
+        "table": "hhea.ascender/descender",
+        "rounding": "round half to even",
+        "fits": 12,
+        "of": 28,
+        "worst": 129,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
       },
       {
-        "model": "usWin, or sTypo when fsSelection bit 7 is set",
+        "model": "hhea.ascender/descender; floor",
+        "table": "hhea.ascender/descender",
+        "rounding": "floor",
+        "fits": 12,
+        "of": 28,
+        "worst": 130,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
+      },
+      {
+        "model": "hhea.ascender/descender; ceil",
+        "table": "hhea.ascender/descender",
+        "rounding": "ceil",
+        "fits": 12,
+        "of": 28,
+        "worst": 129,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
+      },
+      {
+        "model": "hhea.ascender/descender; round half up, borrowing one from the ascent where the descent rounded down",
+        "table": "hhea.ascender/descender",
+        "rounding": "round half up, borrowing one from the ascent where the descent rounded down",
+        "fits": 12,
+        "of": 28,
+        "worst": 130,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
+      },
+      {
+        "model": "OS/2.usWinAscent/usWinDescent; exact",
+        "table": "OS/2.usWinAscent/usWinDescent",
+        "rounding": "exact",
+        "fits": 23,
+        "of": 28,
+        "worst": 200,
+        "missed": [
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent"
+        ]
+      },
+      {
+        "model": "OS/2.usWinAscent/usWinDescent; round half up",
+        "table": "OS/2.usWinAscent/usWinDescent",
+        "rounding": "round half up",
+        "fits": 26,
+        "of": 28,
+        "worst": 200,
+        "missed": ["split-usetypo:ascent", "split-usetypo:descent"]
+      },
+      {
+        "model": "OS/2.usWinAscent/usWinDescent; round half to even",
+        "table": "OS/2.usWinAscent/usWinDescent",
+        "rounding": "round half to even",
+        "fits": 25,
+        "of": 28,
+        "worst": 200,
+        "missed": ["split-usetypo:ascent", "split-usetypo:descent", "split-2000:ascent"]
+      },
+      {
+        "model": "OS/2.usWinAscent/usWinDescent; floor",
+        "table": "OS/2.usWinAscent/usWinDescent",
+        "rounding": "floor",
         "fits": 24,
-        "of": 24,
-        "worst": 0
+        "of": 28,
+        "worst": 200,
+        "missed": [
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "split-2048:ascent",
+          "split-2000:ascent"
+        ]
+      },
+      {
+        "model": "OS/2.usWinAscent/usWinDescent; ceil",
+        "table": "OS/2.usWinAscent/usWinDescent",
+        "rounding": "ceil",
+        "fits": 25,
+        "of": 28,
+        "worst": 200,
+        "missed": ["split-usetypo:ascent", "split-usetypo:descent", "split-2048:descent"]
+      },
+      {
+        "model": "OS/2.usWinAscent/usWinDescent; round half up, borrowing one from the ascent where the descent rounded down",
+        "table": "OS/2.usWinAscent/usWinDescent",
+        "rounding": "round half up, borrowing one from the ascent where the descent rounded down",
+        "fits": 24,
+        "of": 28,
+        "worst": 200,
+        "missed": [
+          "split-usetypo:ascent",
+          "split-usetypo:descent",
+          "split-2048:ascent",
+          "split-2048:descent"
+        ]
+      },
+      {
+        "model": "OS/2.sTypoAscender/sTypoDescender; exact",
+        "table": "OS/2.sTypoAscender/sTypoDescender",
+        "rounding": "exact",
+        "fits": 14,
+        "of": 28,
+        "worst": 228.8046875,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
+      },
+      {
+        "model": "OS/2.sTypoAscender/sTypoDescender; round half up",
+        "table": "OS/2.sTypoAscender/sTypoDescender",
+        "rounding": "round half up",
+        "fits": 14,
+        "of": 28,
+        "worst": 229,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
+      },
+      {
+        "model": "OS/2.sTypoAscender/sTypoDescender; round half to even",
+        "table": "OS/2.sTypoAscender/sTypoDescender",
+        "rounding": "round half to even",
+        "fits": 14,
+        "of": 28,
+        "worst": 229,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
+      },
+      {
+        "model": "OS/2.sTypoAscender/sTypoDescender; floor",
+        "table": "OS/2.sTypoAscender/sTypoDescender",
+        "rounding": "floor",
+        "fits": 14,
+        "of": 28,
+        "worst": 229,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
+      },
+      {
+        "model": "OS/2.sTypoAscender/sTypoDescender; ceil",
+        "table": "OS/2.sTypoAscender/sTypoDescender",
+        "rounding": "ceil",
+        "fits": 14,
+        "of": 28,
+        "worst": 228,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
+      },
+      {
+        "model": "OS/2.sTypoAscender/sTypoDescender; round half up, borrowing one from the ascent where the descent rounded down",
+        "table": "OS/2.sTypoAscender/sTypoDescender",
+        "rounding": "round half up, borrowing one from the ascent where the descent rounded down",
+        "fits": 14,
+        "of": 28,
+        "worst": 230,
+        "missed": [
+          "split:ascent",
+          "split:descent",
+          "base-table:ascent",
+          "base-table:descent",
+          "base-no-dflt:ascent",
+          "base-no-dflt:descent",
+          "base-outsize:ascent",
+          "base-outsize:descent",
+          "base-no-ideo:ascent",
+          "base-no-ideo:descent",
+          "split-2048:ascent",
+          "split-2048:descent",
+          "split-2000:ascent",
+          "split-2000:descent"
+        ]
+      },
+      {
+        "model": "usWin, or sTypo when fsSelection bit 7 is set; exact",
+        "table": "usWin, or sTypo when fsSelection bit 7 is set",
+        "rounding": "exact",
+        "fits": 25,
+        "of": 28,
+        "worst": 0.5,
+        "missed": ["split-2048:ascent", "split-2048:descent", "split-2000:ascent"]
+      },
+      {
+        "model": "usWin, or sTypo when fsSelection bit 7 is set; round half up",
+        "table": "usWin, or sTypo when fsSelection bit 7 is set",
+        "rounding": "round half up",
+        "fits": 28,
+        "of": 28,
+        "worst": 0,
+        "missed": []
+      },
+      {
+        "model": "usWin, or sTypo when fsSelection bit 7 is set; round half to even",
+        "table": "usWin, or sTypo when fsSelection bit 7 is set",
+        "rounding": "round half to even",
+        "fits": 27,
+        "of": 28,
+        "worst": 1,
+        "missed": ["split-2000:ascent"]
+      },
+      {
+        "model": "usWin, or sTypo when fsSelection bit 7 is set; floor",
+        "table": "usWin, or sTypo when fsSelection bit 7 is set",
+        "rounding": "floor",
+        "fits": 26,
+        "of": 28,
+        "worst": 1,
+        "missed": ["split-2048:ascent", "split-2000:ascent"]
+      },
+      {
+        "model": "usWin, or sTypo when fsSelection bit 7 is set; ceil",
+        "table": "usWin, or sTypo when fsSelection bit 7 is set",
+        "rounding": "ceil",
+        "fits": 27,
+        "of": 28,
+        "worst": 1,
+        "missed": ["split-2048:descent"]
+      },
+      {
+        "model": "usWin, or sTypo when fsSelection bit 7 is set; round half up, borrowing one from the ascent where the descent rounded down",
+        "table": "usWin, or sTypo when fsSelection bit 7 is set",
+        "rounding": "round half up, borrowing one from the ascent where the descent rounded down",
+        "fits": 26,
+        "of": 28,
+        "worst": 1,
+        "missed": ["split-2048:ascent", "split-2048:descent"]
       }
     ]
   },
@@ -1325,44 +1908,44 @@
     "scores": [
       {
         "model": "the legacy kern table only",
-        "fits": 54,
-        "of": 72,
+        "fits": 66,
+        "of": 84,
         "worst": 200
       },
       {
         "model": "GPOS PairPos only, type 2 lookups only",
-        "fits": 60,
-        "of": 72,
+        "fits": 72,
+        "of": 84,
         "worst": 200
       },
       {
         "model": "GPOS PairPos only, following one type 9 Extension lookup",
-        "fits": 66,
-        "of": 72,
+        "fits": 78,
+        "of": 84,
         "worst": 200
       },
       {
         "model": "GPOS when it yields a pair, else the kern table, type 2 lookups only",
-        "fits": 66,
-        "of": 72,
+        "fits": 78,
+        "of": 84,
         "worst": 200
       },
       {
         "model": "GPOS when it yields a pair, else the kern table, following one type 9 Extension lookup",
-        "fits": 72,
-        "of": 72,
+        "fits": 84,
+        "of": 84,
         "worst": 0
       },
       {
         "model": "the kern table when present, else GPOS",
-        "fits": 66,
-        "of": 72,
+        "fits": 78,
+        "of": 84,
         "worst": 100
       },
       {
         "model": "neither",
-        "fits": 48,
-        "of": 72,
+        "fits": 60,
+        "of": 84,
         "worst": 200
       }
     ]
@@ -1374,39 +1957,39 @@
     "scores": [
       {
         "model": "exact float, no quantisation",
-        "fits": 150,
-        "of": 432,
+        "fits": 198,
+        "of": 504,
         "worst": 0.00010375976562215783
       },
       {
         "model": "advance and kern truncated at 1/65536 px",
-        "fits": 422,
-        "of": 432,
+        "fits": 494,
+        "of": 504,
         "worst": 0.0000152587890625
       },
       {
         "model": "advance and kern rounded at 1/65536 px",
-        "fits": 264,
-        "of": 432,
+        "fits": 317,
+        "of": 504,
         "worst": 0.0001220703125
       },
       {
         "model": "advance truncated, kern rounded, both at 1/65536 px",
-        "fits": 432,
-        "of": 432,
+        "fits": 504,
+        "of": 504,
         "worst": 0
       },
       {
         "model": "the whole string quantised once at 1/65536 px",
-        "fits": 288,
-        "of": 432,
+        "fits": 346,
+        "of": 504,
         "worst": 0.000091552734375
       }
     ]
   },
   "ideographic": {
     "$comment": "Where an upright East Asian glyph puts its baseline. A BASE table names a coordinate per script per baseline tag, so the reading has to say which tag, which script, and what a font without one falls back to; three fonts disagree with themselves on all three.",
-    "answer": "the BASE ideo coordinate of the DFLT script, else the face box descent",
+    "answer": "the BASE ideo coordinate of the DFLT script, else the face box descent, rounded as the box is",
     "hangingHonoured": [
       {
         "id": "base-table",
@@ -1428,158 +2011,176 @@
     "scores": [
       {
         "model": "the face box descent",
-        "fits": 24,
-        "of": 32,
+        "fits": 26,
+        "of": 36,
+        "worst": 900
+      },
+      {
+        "model": "the face box descent, rounded as the box is",
+        "fits": 28,
+        "of": 36,
         "worst": 900
       },
       {
         "model": "OS/2.usWinDescent",
-        "fits": 22,
-        "of": 32,
+        "fits": 24,
+        "of": 36,
         "worst": 900
       },
       {
         "model": "OS/2.sTypoDescender",
         "fits": 14,
-        "of": 32,
+        "of": 36,
         "worst": 1100
       },
       {
         "model": "hhea.descender",
         "fits": 12,
-        "of": 32,
+        "of": 36,
         "worst": 1000
       },
       {
         "model": "zero, the alphabetic baseline",
         "fits": 0,
-        "of": 32,
+        "of": 36,
         "worst": 1200
       },
       {
         "model": "the BASE ideo coordinate of the run script, else the face box descent",
-        "fits": 22,
-        "of": 32,
+        "fits": 24,
+        "of": 36,
+        "worst": 900
+      },
+      {
+        "model": "the BASE ideo coordinate of the run script, else the face box descent, rounded as the box is",
+        "fits": 26,
+        "of": 36,
         "worst": 900
       },
       {
         "model": "the BASE ideo coordinate of the run script, else OS/2.usWinDescent",
-        "fits": 20,
-        "of": 32,
+        "fits": 22,
+        "of": 36,
         "worst": 900
       },
       {
         "model": "the BASE ideo coordinate of the run script, else OS/2.sTypoDescender",
         "fits": 16,
-        "of": 32,
+        "of": 36,
         "worst": 1100
       },
       {
         "model": "the BASE ideo coordinate of the run script, else hhea.descender",
         "fits": 14,
-        "of": 32,
+        "of": 36,
         "worst": 1000
       },
       {
         "model": "the BASE ideo coordinate of the run script, else sTypoDescender where fsSelection bit 7 is set and hhea.descender otherwise",
         "fits": 16,
-        "of": 32,
+        "of": 36,
         "worst": 1000
       },
       {
         "model": "the BASE icfb coordinate of the run script, else the face box descent",
-        "fits": 16,
-        "of": 32,
+        "fits": 18,
+        "of": 36,
         "worst": 900
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script, else the face box descent",
-        "fits": 32,
-        "of": 32,
+        "fits": 34,
+        "of": 36,
+        "worst": 0.21484375
+      },
+      {
+        "model": "the BASE ideo coordinate of the DFLT script, else the face box descent, rounded as the box is",
+        "fits": 36,
+        "of": 36,
         "worst": 0
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script, else OS/2.usWinDescent",
-        "fits": 30,
-        "of": 32,
+        "fits": 32,
+        "of": 36,
         "worst": 200
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script, else OS/2.sTypoDescender",
         "fits": 22,
-        "of": 32,
+        "of": 36,
         "worst": 200
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script, else hhea.descender",
         "fits": 20,
-        "of": 32,
+        "of": 36,
         "worst": 100
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script, else sTypoDescender where fsSelection bit 7 is set and hhea.descender otherwise",
         "fits": 22,
-        "of": 32,
+        "of": 36,
         "worst": 100
       },
       {
         "model": "the BASE icfb coordinate of the DFLT script, else the face box descent",
-        "fits": 20,
-        "of": 32,
+        "fits": 22,
+        "of": 36,
         "worst": 630
       },
       {
         "model": "the BASE ideo coordinate of the latn script, else the face box descent",
-        "fits": 24,
-        "of": 32,
+        "fits": 26,
+        "of": 36,
         "worst": 110
       },
       {
         "model": "the BASE icfb coordinate of the latn script, else the face box descent",
-        "fits": 16,
-        "of": 32,
+        "fits": 18,
+        "of": 36,
         "worst": 630
       },
       {
         "model": "the BASE ideo coordinate of the hani script, else the face box descent",
-        "fits": 20,
-        "of": 32,
+        "fits": 22,
+        "of": 36,
         "worst": 900
       },
       {
         "model": "the BASE icfb coordinate of the hani script, else the face box descent",
-        "fits": 16,
-        "of": 32,
+        "fits": 18,
+        "of": 36,
         "worst": 900
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script or the latn script, else the face box descent",
-        "fits": 28,
-        "of": 32,
+        "fits": 30,
+        "of": 36,
         "worst": 110
       },
       {
         "model": "the BASE icfb coordinate of the DFLT script or the latn script, else the face box descent",
-        "fits": 16,
-        "of": 32,
+        "fits": 18,
+        "of": 36,
         "worst": 630
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script or the first script named, else the face box descent",
-        "fits": 28,
-        "of": 32,
+        "fits": 30,
+        "of": 36,
         "worst": 80
       },
       {
         "model": "the BASE icfb coordinate of the DFLT script or the first script named, else the face box descent",
-        "fits": 16,
-        "of": 32,
+        "fits": 18,
+        "of": 36,
         "worst": 630
       },
       {
         "model": "the BASE ideo coordinate of the DFLT script where it falls inside the em, else the face box descent",
-        "fits": 28,
-        "of": 32,
+        "fits": 30,
+        "of": 36,
         "worst": 900
       }
     ]

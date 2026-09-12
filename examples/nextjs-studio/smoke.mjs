@@ -2,8 +2,9 @@
  * The one assertion this example exists to make: the packages, installed from
  * the registry rather than linked from the workspace, render a real deck.
  *
- * Run by CI after a lockfile-free `npm install`, so a publish that ships a
- * broken exports map or an unresolvable dependency fails here.
+ * Run by the release gate against this commit's tarballs and by the canary
+ * against `latest`, so a broken exports map or an unresolvable dependency
+ * fails here.
  */
 
 import { readdirSync, readFileSync } from 'node:fs';

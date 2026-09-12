@@ -1,31 +1,32 @@
 /**
- * Which published packages carry a provenance attestation, and which do not.
+ * What a consumer can make of every version this scope has published.
  *
  * ```
- * node tools/release/attestations.ts [--require-all]
+ * node tools/release/registry/attestations.ts
  * ```
  *
  * Provenance is a claim about the published artifact, so only the registry can
- * answer it - and nothing here asked until ten packages had been described as
- * attested for a month without being. Runs in the canary, which is where
- * questions about the world rather than the commit belong. ADR 0047.
+ * answer it. Runs in the canary, where questions about the world belong, and
+ * fails on a version a consumer can neither verify nor be warned off. ADR 0051.
  */
 
 import { readFileSync, readdirSync } from 'node:fs';
 
-import { repoPath } from '../repo/root.ts';
+import { repoPath } from '../../repo/root.ts';
 import { escapedName } from './oidc.ts';
+import {
+  standings,
+  unverifiable,
+  unverifiableMessage,
+  type Packument,
+  type VersionStanding,
+} from './provenance.ts';
 
 const REGISTRY = 'https://registry.npmjs.org';
 
 interface Manifest {
   readonly name: string;
   readonly private?: boolean;
-}
-
-/** `dist.attestations` is where npm records provenance for a published version. */
-interface Version {
-  readonly dist?: { readonly attestations?: { readonly provenance?: unknown } };
 }
 
 const names = readdirSync(repoPath('packages'))
@@ -36,43 +37,36 @@ const names = readdirSync(repoPath('packages'))
   .map((manifest) => manifest.name)
   .sort();
 
-const attested: string[] = [];
-const bare: string[] = [];
+const all: VersionStanding[] = [];
 const absent: string[] = [];
 
 for (const name of names) {
-  const encoded = escapedName(name);
-  const tags = await fetch(`${REGISTRY}/-/package/${encoded}/dist-tags`, { cache: 'no-store' });
-  if (tags.status === 404) {
+  // The whole packument: it lags only the minutes after a name is created, which
+  // is `newcomers.ts`'s moment and never a daily monitor's.
+  const response = await fetch(`${REGISTRY}/${escapedName(name)}`, { cache: 'no-store' });
+  if (response.status === 404) {
     absent.push(name);
     continue;
   }
-  if (!tags.ok) throw new Error(`${name}: the registry answered ${String(tags.status)}`);
-  const latest = ((await tags.json()) as { latest?: string }).latest;
-  if (latest === undefined) throw new Error(`${name}: no latest tag`);
-
-  const at = await fetch(`${REGISTRY}/${encoded}/${latest}`, { cache: 'no-store' });
-  if (!at.ok) throw new Error(`${name}@${latest}: the registry answered ${String(at.status)}`);
-  const version = (await at.json()) as Version;
-  const line = `${name}@${latest}`;
-  if (version.dist?.attestations === undefined) bare.push(line);
-  else attested.push(line);
+  if (!response.ok) throw new Error(`${name}: the registry answered ${String(response.status)}`);
+  all.push(...standings(name, (await response.json()) as Packument));
 }
 
-for (const line of attested) console.log(`provenance  ${line}`);
-for (const line of bare) console.log(`none        ${line}`);
+const width = Math.max(...all.map((entry) => entry.standing.length));
+for (const entry of all) {
+  console.log(
+    `${entry.standing.padEnd(width)}  ${entry.name}@${entry.version}${entry.latest ? '  latest' : ''}`,
+  );
+}
 for (const name of absent) console.log(`absent      ${name}`);
+const count = (standing: string): number => all.filter((e) => e.standing === standing).length;
 console.log(
-  `\n${String(attested.length)} attested, ${String(bare.length)} without, ` +
-    `${String(absent.length)} not published`,
+  `\n${String(count('provenance'))} with provenance, ${String(count('deprecated'))} deprecated, ` +
+    `${String(count('neither'))} neither, ${String(absent.length)} not published`,
 );
 
-// A release publishes over OIDC, which attests automatically, so anything
-// without one was published some other way and a consumer cannot verify it.
-if (process.argv.includes('--require-all') && bare.length > 0) {
-  console.error(
-    `\n${String(bare.length)} published package(s) carry no provenance, so ` +
-      '`npm audit signatures` cannot verify them. A patch release over OIDC attests them.',
-  );
+const failures = unverifiable(all);
+if (failures.length > 0) {
+  console.error(`\n${unverifiableMessage(failures)}`);
   process.exitCode = 1;
 }

@@ -53,6 +53,7 @@ jobs:
             the packages this commit would publish
             round trip
             the font reader against Chromium, on real faces
+            the font reader against Chromium, on the probe fonts
         run: |
           runs="repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs"
           id=$(gh api "$runs?head_sha=$GITHUB_SHA&status=completed&per_page=1" \
@@ -108,7 +109,7 @@ jobs:
       # cannot go out over OIDC. `changeset publish` goes one at a time, so
       # finding that out halfway leaves a half-published release. Ask first.
       - name: Refuse to create a package npm does not have yet
-        run: node tools/release/newcomers.ts
+        run: node tools/release/registry/newcomers.ts
 
       - name: Version
         run: pnpm version-packages
@@ -119,7 +120,7 @@ jobs:
       - name: Consume the exact tarballs that are about to be published
         run: |
           pnpm build
-          node tools/release/candidate.ts "$RUNNER_TEMP/candidate"
+          node tools/release/candidate/candidate.ts "$RUNNER_TEMP/candidate"
 
       - name: Commit
         run: |
@@ -132,7 +133,7 @@ jobs:
       # package whose trusted publisher is missing fails partway through and
       # leaves the release half shipped. Ask for all of them first. ADR 0048.
       - name: Prove every package this release publishes can publish over OIDC
-        run: node tools/release/publishers.ts
+        run: node tools/release/registry/publishers.ts
 
       # npm rather than `pnpm publish` (pnpm/pnpm#11513), and NODE_AUTH_TOKEN
       # stays unset: with a token the CLI takes the legacy path and skips both

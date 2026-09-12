@@ -10,18 +10,11 @@ import { runRoundTrip, type RoundTripOptions } from './roundtrip.js';
 import { runValidate, type ValidateOptions } from './validate.js';
 
 /**
- * The command line.
+ * The command line, on `node:util.parseArgs` rather than a dependency.
  *
- * `node:util.parseArgs` rather than a dependency. A CLI whose entire job in
- * sub-phase 0.8 is one verb with five flags does not need an argument library,
- * and the ones on offer would each be larger than everything this package
- * contains.
- *
- * The verbs the plan gives this package - `roundtrip`, `render`, `validate`,
- * `fidelity`, `resolve`, `bisect` - are listed in the help text with the phase
- * that brings them, and asking for one says so rather than "unknown command".
- * A tool that knows what it will be able to do is more useful than one that
- * pretends the request was nonsense.
+ * A verb the plan promises but does not ship yet (`PLANNED`) is in the help
+ * text with the sub-phase that brings it, so asking for it says so rather than
+ * "unknown command".
  */
 
 interface PlannedVerb {
@@ -69,7 +62,7 @@ function usage(): string {
       ')',
     '  --out <path>     a directory, or a file when rendering one slide',
     '  --font-dir <d>   look for fonts here first; repeatable',
-    '  --no-system-fonts   do not look in this platform own font directories',
+    "  --no-system-fonts   do not look in this platform's own font directories",
     '  --no-text        draw geometry only, and ask no font questions',
     '  --json           what was drawn, and which face drew each typeface',
     '  --quiet          no summary after writing',

@@ -13,12 +13,13 @@ import {
   BOX_PX,
   BOX_TOLERANCE,
   glyphsOf,
+  rasteriserOf,
   shippedBoxFor,
   widthTolerance,
   type BoxCandidates,
   type BoxPair,
 } from './probes.ts';
-import { score, type Row, type Run, type RunFace, type Verdict } from './score.ts';
+import { reportMarkdown, score, type Row, type Run, type RunFace, type Verdict } from './score.ts';
 
 /** Every run below declares a Linux runner, which reads the box through FreeType. */
 const SHIPPED_BOX = shippedBoxFor('linux');
@@ -202,9 +203,15 @@ describe('the T14 gate, green', () => {
       scorable: 1,
       variants: [
         { name: 'exact', fits: 0, of: 1 },
-        { name: 'round', fits: 1, of: 1 },
+        { name: 'round half up', fits: 1, of: 1 },
+        { name: 'round half to even', fits: 1, of: 1 },
         { name: 'floor', fits: 0, of: 1 },
         { name: 'ceil', fits: 0, of: 1 },
+        {
+          name: 'round half up, borrowing one from the ascent where the descent rounded down',
+          fits: 0,
+          of: 1,
+        },
       ],
     });
   });
@@ -258,6 +265,19 @@ describe('the T14 gate, green', () => {
     expect(byName.get('OS/2.usWinAscent/usWinDescent')).toMatchObject({ fits: 0, separates: 1 });
     expect(byName.get('hhea.ascender/descender')).toMatchObject({ fits: 0, separates: 1 });
     expect(byName.get('hhea, or sTypo when fsSelection bit 7 is set')).toMatchObject({ fits: 1 });
+  });
+
+  it('scores macOS against the DirectWrite reading, which is what ships there', () => {
+    // Nothing has measured CoreText, so the run scores the assumption the reader
+    // makes and `face-box-rival` names the table if the assumption is wrong.
+    expect(shippedBoxFor('darwin')).toBe(shippedBoxFor('win32'));
+    expect(shippedBoxFor('darwin')).not.toBe(shippedBoxFor('linux'));
+    expect(rasteriserOf('darwin')).toContain('CoreText');
+    expect(rasteriserOf('darwin')).toContain('assumed');
+    expect(rasteriserOf('linux')).toBe('FreeType');
+    expect(rasteriserOf('win32')).toBe('DirectWrite');
+    const darwin = { ...GREEN, image: { ...GREEN.image, platform: 'darwin' } };
+    expect(reportMarkdown(darwin, score(darwin))).toContain('assumed to share');
   });
 
   it('fits the box that sits exactly on one rounding, which is inclusive', () => {

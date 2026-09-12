@@ -32,6 +32,41 @@ export const METRIC_SPLIT: Partial<FontSpec> = {
   typoDescender: -100,
 };
 
+/**
+ * The split on a 2048 em, so no metric lands on a whole pixel at `BOX_PX`.
+ *
+ * usWin is 928.7109375 over 220.21484375, one fraction each side of the half,
+ * so floor, ceil and round half up predict different pairs; no `BASE`, so the
+ * ideographic fallback is read off that fractional descent too.
+ */
+export const METRIC_SPLIT_2048: Partial<FontSpec> = {
+  familyName: 'PptxStudio Split 2048',
+  unitsPerEm: 2048,
+  hheaAscender: 1638,
+  hheaDescender: -410,
+  winAscent: 1902,
+  winDescent: 451,
+  typoAscender: 1434,
+  typoDescender: -205,
+};
+
+/**
+ * The split on a 2000 em, where usWin's ascent is exactly 928.5 px at `BOX_PX`.
+ *
+ * An even integer part, so half up says 929 and half to even says 928; the
+ * usWin descent and both hhea metrics are whole pixels.
+ */
+export const METRIC_SPLIT_2000: Partial<FontSpec> = {
+  familyName: 'PptxStudio Split 2000',
+  unitsPerEm: 2000,
+  hheaAscender: 1602,
+  hheaDescender: -398,
+  winAscent: 1857,
+  winDescent: 400,
+  typoAscender: 1401,
+  typoDescender: -201,
+};
+
 /** The font has A..H, so the kerned pair is AB and AC is the unkerned control. */
 const PAIR = [{ left: 'A', right: 'B', adjust: -200 }] as const;
 
@@ -161,6 +196,16 @@ export const PROBES: readonly Probe[] = [
       ideograph: IDEOGRAPH,
     },
   },
+  {
+    id: 'split-2048',
+    asks: 'which whole pixel the face box rounds to, above and below the half',
+    spec: METRIC_SPLIT_2048,
+  },
+  {
+    id: 'split-2000',
+    asks: 'whether a half rounds up or to even',
+    spec: METRIC_SPLIT_2000,
+  },
 ];
 
 /** The strings measured in every probe font. */
@@ -180,8 +225,8 @@ export const BOX_PX = 1000;
 /**
  * The sizes a baseline is scored at.
  *
- * Every candidate coordinate is a whole number of pixels at both, so a browser
- * that rounds a baseline to the pixel grid cannot make a reading fit or miss.
+ * Every BASE coordinate is a whole number of pixels at both. Only the 2048 em
+ * probe's fallback descent is not, which is what that probe is there to show.
  */
 export const BASELINE_SIZES: readonly number[] = [100, 1000];
 

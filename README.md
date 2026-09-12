@@ -3,6 +3,7 @@
 [![CI](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/actions/workflows/ci.yml/badge.svg)](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/actions/workflows/ci.yml)
 [![round trip](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FDewiride-Open-Source%2FDewiride-PPTX-Studio%2Fmain%2F.github%2Fbadges%2Froundtrip.json)](#the-round-trip-badge)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
+[![npm](https://img.shields.io/npm/v/@pptx-studio/render-svg)](https://www.npmjs.com/package/@pptx-studio/render-svg)
 
 **A PowerPoint renderer and layout-aware editor that runs entirely in the browser.**
 
@@ -10,7 +11,9 @@ Open a `.pptx`, see it rendered faithfully, edit every element on the slide, swi
 themes and have them genuinely cascade, then export a file that still opens in real PowerPoint with
 everything you did not touch left byte-for-byte intact.
 
-> **Status: pre-alpha, under active construction.** Nothing is published to npm yet. Sub-phases
+> **Status: pre-alpha, under active construction.** Twelve packages are on npm as
+> `@pptx-studio/*`, every `latest` with a provenance attestation a consumer can verify with
+> `npm audit signatures`; the API will change before 1.0. Sub-phases
 > 0.1 (repository skeleton), 0.2 (ZIP reader, decompression budgets, OPC part-name grammar), 0.3
 > (part store, content types, relationships, ZIP32 writer), 0.4 (XML tokenizer and node model), 0.5
 > (serializer and the byte-identical round-trip gate), 0.6 (schema order, Markup Compatibility,
@@ -91,7 +94,17 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | Picture shapes, and the border drawn outside them    | ✅ 2.13        |
 | Gate 2 side by side, with per-slide diff heatmaps    | ✅ 2.14        |
 | Painted: fills, strokes, gradients, effects, groups  | ✅ Gate 2      |
-| Text engine, viewer, fidelity scoreboard             | ⬜ Phase 3     |
+| Text parse and the 10-source cascade                 | ✅ 3.1         |
+| Measurement and the line model                       | ✅ 3.2         |
+| Line breaking                                        | ✅ 3.3         |
+| Autofit, view and edit modes                         | ✅ 3.4         |
+| Bullets, fields, script runs                         | ✅ 3.5         |
+| Anchors, insets, vertical text                       | ✅ 3.6         |
+| Font substitution and the guard                      | ✅ 3.7         |
+| Text in both renderers                               | ✅ 3.8         |
+| The fidelity harness, and the Linux baseline         | ✅ 3.9         |
+| First npm release: `render-svg` and `cli render`     | ✅ 3.10        |
+| A 100-slide deck at any zoom, entirely client-side   | ⬜ Gate 3      |
 | Tables and SmartArt                                  | ⬜ Phase 4     |
 | Select, move, resize, rotate                         | ⬜ Phase 5     |
 | Text editing                                         | ⬜ Phase 6     |
@@ -114,13 +127,14 @@ packages/
   render-dom/ the live renderer, over the same node tree as render-svg
   validate/ the repair firewall: the 29 rules a .pptx must not break
   writer/  export: dirty-part-only serialization, media GC, prepare hooks
-  cli/     the Node entry point — `pptx-studio inspect` and `validate`
+  cli/     the Node entry point — inspect, validate, roundtrip, bisect, render
 apps/
   studio/  drop a .pptx on a page; the parse Worker boundary lives here
 examples/
   nextjs-studio/ a Next.js app on the published packages, one tool per package
 tools/
-  layering/      the dependency-direction guard (see below)
+  repo/          the rules about the repo: structure, links, layering, legal, the plan table
+  release/       the candidate gate on this commit's tarballs, and what npm is asked
   eslint-rules/  local ESLint rules with no upstream equivalent
   schema-codegen/ the ECMA-376 element-order table generator
   geometry-codegen/ the preset-shape transcoder, and the 187-name cross-check
@@ -229,18 +243,20 @@ Requires Node ≥ 24.11 and pnpm ≥ 11.
 ```sh
 pnpm install
 pnpm browsers        # one-off: Chromium for the core test suite
-pnpm check           # structure, layering, docs, corpus, format, lint, typecheck,
-                     #   build, round trip, fidelity, Gate 2, package QA, test
+pnpm check           # structure, layering, legal, references, corpus, format, build,
+                     #   lint, typecheck, round trip, fidelity, Gate 2, package QA, test
 ```
 
-Individual steps: `pnpm layering`, `pnpm corpus`, `pnpm lint`, `pnpm typecheck`, `pnpm build`,
-`pnpm roundtrip`, `pnpm fidelity`, `pnpm gate2`, `pnpm test`.
+Individual steps: `pnpm structure`, `pnpm layering`, `pnpm legal`, `pnpm references`,
+`pnpm corpus`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm roundtrip`, `pnpm fidelity`,
+`pnpm gate2`, `pnpm pkg:qa`, `pnpm test`.
 
 To look inside a deck:
 
 ```sh
 node packages/cli/dist/cli.js inspect deck.pptx        # after pnpm build
 node packages/cli/dist/cli.js validate deck.pptx       # the 29 must-not-break rules
+node packages/cli/dist/cli.js render deck.pptx --out svg/   # every slide as SVG, no browser
 node packages/cli/dist/cli.js roundtrip deck.pptx      # is it still the same deck
 node packages/cli/dist/cli.js bisect a.pptx b.pptx     # which change broke it
 node tools/bench/serve.ts --decks <dir>                # then drop one on the page
@@ -263,8 +279,11 @@ LibreOffice.
 
 It sits **outside** `pnpm-workspace.yaml` on purpose and installs `@pptx-studio/*` from the public
 registry with npm. Nothing else in this repository does: everything here resolves through the pnpm
-link farm, so nothing else can tell whether a published tarball actually works. CI installs it
-without a lockfile on every run, so `^0.1.0` is re-resolved against the registry each time.
+link farm, so nothing else can tell whether a published tarball actually works. The release gate
+installs this commit's own tarballs into a copy of it, and the daily canary installs it without a
+lockfile with every `@pptx-studio/*` range pointed at `latest`; the ranges committed here are the
+caret of each workspace version, written by `pnpm version-packages` and refused by the gate when
+they are not.
 
 ```sh
 cd examples/nextjs-studio

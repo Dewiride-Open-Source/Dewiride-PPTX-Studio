@@ -12,7 +12,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import { LAST_RESORT_FAMILIES, substituteFor } from '@pptx-studio/text';
+import { LAST_RESORT_FAMILIES, TextError, cssFamily, substituteFor } from '@pptx-studio/text';
 
 import { RenderError } from './errors.js';
 import { backendFor, facesIn, type Face } from './sfnt.js';
@@ -25,6 +25,17 @@ const MAX_DEPTH = 4;
 /** Case and whitespace are not part of a typeface's identity for a lookup. */
 function key(family: string): string {
   return family.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+/** Whether a name can be written into the markup that would draw it. */
+function emittable(family: string): boolean {
+  try {
+    cssFamily(family);
+    return true;
+  } catch (error) {
+    if (error instanceof TextError && error.code === 'TEXT_FONT_FAMILY') return false;
+    throw error;
+  }
 }
 
 /** Code unit order, which is the same on every machine and in every locale. */
@@ -187,8 +198,9 @@ export function indexFonts(options: IndexOptions = {}): FontLibrary {
   const byFamily = new Map<string, Family>();
   const claim = (family: string, entry: IndexedFace): void => {
     const at = key(family);
-    // `name` ID 16 can be present and blank, and a blank name identifies nothing.
-    if (at === '') return;
+    // A blank `name` ID 16 identifies nothing, and a name the CSS shorthand
+    // refuses can never be drawn, so neither claims a family.
+    if (at === '' || !emittable(family)) return;
     const found = byFamily.get(at) ?? {
       name: family,
       slots: [undefined, undefined, undefined, undefined],

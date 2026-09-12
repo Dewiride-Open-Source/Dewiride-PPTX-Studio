@@ -93,12 +93,11 @@ jobs:
         run: npm run build
 
       # Provenance is a claim about the published artifact, so only the registry
-      # can answer it, and a release over OIDC attests automatically - anything
-      # without one was published some other way. Ten packages were described as
-      # attested for a month without being, because nothing asked. ADR 0047.
-      - name: Every published package carries a provenance attestation
+      # can answer it, per version: one a consumer can neither verify nor be
+      # warned off is the failure. ADR 0047, ADR 0051.
+      - name: Every published version is attested or deprecated
         if: always()
-        run: node tools/release/attestations.ts --require-all
+        run: node tools/release/registry/attestations.ts
 
       # Counting `dist.attestations` is not verifying it. This is the check a
       # consumer would run, in a project of its own because it audits a whole
@@ -113,12 +112,44 @@ jobs:
           npm init -y > /dev/null
           npm install --no-audit --no-fund $(node -p "const d = process.env.PACKAGES; require('fs').readdirSync(d).map((n) => require(d + '/' + n + '/package.json')).filter((p) => !p.private).map((p) => p.name + '@latest').join(' ')")
           npm audit signatures
-      # A monitor nobody reads is worse than no monitor, and a red square on a
-      # page is not read. A failure becomes an issue somebody owns.
-      - name: Say so, where it will be seen
-        if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # A red run becomes an issue somebody owns and the next green one closes it.
+  # Its own job, with no checkout and no install, because `issues: write` must
+  # never sit beside code installed from the registry. ADR 0051.
+  report:
+    name: an issue somebody owns
+    needs: published
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      TITLE: 'canary: what npm serves fails a check a consumer would run'
+    steps:
+      - name: Open the issue, or add this run to the one already open
+        if: needs.published.result == 'failure'
         run: |
-          echo "::error::the published packages do not work for a consumer; \
-          this does not block a release, and a release is how it gets fixed"
+          gh label create canary --force --color b60205 \
+            --description 'the daily check of @pptx-studio/* as npm serves them is red'
+          open=$(gh issue list --label canary --state open --limit 1 --json number --jq '.[0].number // empty')
+          today=$(date -u +%F)
+          body="The daily check of @pptx-studio/* as npm serves them went red on $today; the run says which step."
+          body="$body"$'\n\n'"$RUN"$'\n\n'"This blocks no release, and a release is how it gets fixed. The next green run closes this."
+          if [ -z "$open" ]; then
+            gh issue create --label canary --title "$TITLE" --body "$body"
+          else
+            gh issue comment "$open" --body "Still red on $today: $RUN"
+          fi
+
+      # `if`, never `&&`: an empty answer must not turn a green run red.
+      - name: Close the issue a green run answers
+        if: needs.published.result == 'success'
+        run: |
+          open=$(gh issue list --label canary --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then
+            gh issue close "$open" --comment "Green on $(date -u +%F): $RUN"
+          fi

@@ -10,6 +10,8 @@
  */
 
 import {
+  FACE_BOX_PX,
+  fontStack,
   kerningEnabled,
   type FaceBox,
   type FaceBoxProbe,
@@ -24,7 +26,7 @@ import { RenderError } from './errors.js';
  * The fixed-point step Chromium reports an advance in.
  *
  * Quantising each glyph advance toward zero and each kern adjustment to nearest
- * fits all 432 of T13's widths, where summing exact floats fits 150 and is out
+ * fits all 504 of T13's widths, where summing exact floats fits 198 and is out
  * by up to 1.04e-4 px. ADR 0042.
  */
 const FIXED = 65536;
@@ -41,6 +43,15 @@ function quantiseKern(px: number): number {
   return Math.round(px * FIXED) / FIXED;
 }
 
+/**
+ * A box metric as the browser probe reports it: read at `FACE_BOX_PX`, rounded
+ * half up to the pixel, and handed back as a fraction of the em. T13 28/28
+ * against 25/28 for the exact fraction. ADR 0052.
+ */
+function boxPixels(units: number, unitsPerEm: number): number {
+  return Math.floor((units * FACE_BOX_PX) / unitsPerEm + 0.5) / FACE_BOX_PX;
+}
+
 export interface FaceUse {
   readonly asked: string;
   readonly drawn: string;
@@ -51,6 +62,8 @@ export interface FaceUse {
 export interface FontMeasurer {
   readonly measurer: TextMeasurer;
   readonly faceBox: FaceBoxProbe;
+  /** The CSS family list a run is drawn in: the face that measured it, then the deck's own stack. */
+  readonly cssFamilyFor: (font: RunFont) => string;
   /** Every typeface asked for, and what it was drawn in. */
   used(): readonly FaceUse[];
   /** Code points no face in the library could draw. */
@@ -167,12 +180,14 @@ export function createFontMeasurer(library: FontLibrary): FontMeasurer {
       const cached = boxes.get(family);
       if (cached !== undefined) return cached;
       const { metrics } = faceFor(family, false, false).face;
+      const descent = boxPixels(metrics.descent, metrics.unitsPerEm);
       // Chromium answers the `BASE` `ideo` coordinate where the face has one and
-      // its own box descent where it does not, 30 of 30 in T13.
-      const ideographic = (metrics.ideographic ?? metrics.descent) / metrics.unitsPerEm;
+      // its own rounded box descent where it does not, 36 of 36 in T13.
+      const ideographic =
+        metrics.ideographic === undefined ? descent : metrics.ideographic / metrics.unitsPerEm;
       const box: FaceBox = {
-        ascent: metrics.ascent / metrics.unitsPerEm,
-        descent: metrics.descent / metrics.unitsPerEm,
+        ascent: boxPixels(metrics.ascent, metrics.unitsPerEm),
+        descent,
         // Anything outside the em is unusable to `uprightPen`, and zero is what
         // the browser probe answers there. `packages/text/src/lines/baseline.ts`.
         ideographic: ideographic > 0 && ideographic < 1 ? ideographic : 0,
@@ -185,6 +200,10 @@ export function createFontMeasurer(library: FontLibrary): FontMeasurer {
   return {
     measurer,
     faceBox,
+    cssFamilyFor(font: RunFont): string {
+      const face = faceFor(font.family, font.bold === true, font.italic === true);
+      return fontStack(face.asked, face.drawn);
+    },
     used(): readonly FaceUse[] {
       const seen = new Map<string, FaceUse>();
       for (const face of resolved.values()) {

@@ -13,6 +13,7 @@ import { serializeSvg, type SvgElement, type SvgNode } from '../node.js';
 
 import type { FaceBox, RunFont } from '@pptx-studio/text';
 
+import { createTextEngine, textBlockOf } from './draw.js';
 import { textNodes } from './emit.js';
 import {
   SHIFT_SIZE_RATIO,
@@ -744,7 +745,6 @@ describe('textNodes', () => {
     const block = laid(body([paragraph([run('A')])]), { rot: 90 });
     expect(svgOf(block)).toContain('rotate(90)');
   });
-
   it('never scales negatively, whatever the flip', () => {
     const block = laid(body([paragraph([run('A')])]), { flipH: true, rot: 30 });
     const svg = svgOf(block);
@@ -798,6 +798,54 @@ describe('textNodes', () => {
     const shifts = [...svg.matchAll(/dy="(-?[\d.]+)"/g)].map((match) => Number(match[1]));
     expect(shifts.length).toBe(2);
     expect((shifts[0] ?? 0) + (shifts[1] ?? 0)).toBeCloseTo(0, 6);
+  });
+});
+
+describe('the CSS family a piece is drawn in', () => {
+  it("is the run's own family, quoted, when nobody says otherwise", () => {
+    // A literal rather than askedFamily(...): the browser renderer measures
+    // through this exact string, so the markup must carry this exact string.
+    const block = laid(body([paragraph([run('a')])]));
+    expect(block.lines[0]?.pieces[0]?.cssFamily).toBe('"Arial"');
+    expect(svgOf(block)).toContain('font-family="&quot;Arial&quot;"');
+  });
+
+  it('asks the caller per piece, with the weight and style the piece is set in', () => {
+    const block = laid(
+      body([
+        paragraph([
+          run('a', { font: { family: 'Arial', sz: 3200, bold: true } }),
+          run('b', { font: { family: 'Georgia', sz: 3200, italic: true } }),
+        ]),
+      ]),
+      {
+        cssFamilyFor: (font: RunFont) =>
+          `${font.family}/${font.bold === true ? 'b' : ''}${font.italic === true ? 'i' : ''}`,
+      },
+    );
+    expect(block.lines[0]?.pieces.map((piece) => piece.cssFamily)).toEqual([
+      'Arial/b',
+      'Georgia/i',
+    ]);
+    expect(svgOf(block)).toContain('font-family="Arial/b"');
+  });
+
+  it('reaches the layout through the engine a slide is drawn with', () => {
+    const placed = layoutSheet(
+      slideWithText(
+        '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US">' +
+          '<a:latin typeface="Georgia"/></a:rPr><a:t>Alpha</a:t></a:r></a:p></p:txBody>',
+      ),
+    )[0] as Placed;
+    const options = { measurer: flatMeasurer, faceBox: flatFaceBox, rulesFor: () => flatRules };
+    const named = createTextEngine({
+      ...options,
+      cssFamilyFor: (font: RunFont) => `stack:${font.family}`,
+    });
+    expect(textBlockOf(placed, named)?.lines[0]?.pieces[0]?.cssFamily).toBe('stack:Georgia');
+    expect(textBlockOf(placed, createTextEngine(options))?.lines[0]?.pieces[0]?.cssFamily).toBe(
+      '"Georgia"',
+    );
   });
 });
 

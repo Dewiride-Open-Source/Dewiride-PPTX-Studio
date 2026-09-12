@@ -2,7 +2,7 @@
  * Refuse a release that would create a package npm does not have yet.
  *
  * ```
- * node tools/release/newcomers.ts
+ * node tools/release/registry/newcomers.ts
  * ```
  *
  * Runs before `changeset publish`, which publishes one package at a time and
@@ -11,7 +11,7 @@
 
 import { readFileSync, readdirSync } from 'node:fs';
 
-import { repoPath } from '../repo/root.ts';
+import { repoPath } from '../../repo/root.ts';
 import { bootstrapInstructions, newcomers, publishableIn } from './bootstrap.ts';
 import { escapedName } from './oidc.ts';
 

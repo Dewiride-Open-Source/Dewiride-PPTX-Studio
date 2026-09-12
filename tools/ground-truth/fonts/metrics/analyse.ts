@@ -16,6 +16,7 @@ import { join, resolve } from 'node:path';
 // The built package, not its source: `tools/` is run by Node directly and the
 // sources carry `.js` specifiers. Run `pnpm build` first.
 import { facesIn } from '../../../../packages/cli/dist/index.js';
+import { BOX_ROUNDINGS, boxRoundingNamed, type BoxPx } from '../../lib/box-rounding.ts';
 import { buildFont, type Baselines, type FontSpec, type KernPair } from '../../lib/truetype.ts';
 import { PROBES, STRINGS, SIZES, BOX_PX, BASELINE_SIZES, probeFonts } from './probes.ts';
 
@@ -49,7 +50,7 @@ interface Scored {
 }
 
 /** Refuse a question whose winner is not alone at the top. */
-function decide(question: string, scored: readonly Scored[]): Scored {
+function decide<T extends Scored>(question: string, scored: readonly T[]): T {
   const ranked = [...scored].sort((a, b) => b.fits - a.fits || a.worst - b.worst);
   const best = ranked[0];
   if (best === undefined) throw new Error(`${question}: nothing was scored`);
@@ -82,7 +83,7 @@ const rowOf = (id: string): Measured['measured'][number] => {
 };
 
 /* -------------------------------------------------------------------------- */
-/* question 1 - which table the font bounding box comes from                   */
+/* question 1 - which table the font bounding box comes from, rounded how      */
 /* -------------------------------------------------------------------------- */
 
 const BOX_READINGS = {
@@ -104,28 +105,55 @@ const BOX_READINGS = {
       : { ascent: s.winAscent, descent: s.winDescent },
 };
 
-const boxScores: Scored[] = Object.entries(BOX_READINGS).map(([model, read]) => {
-  let fits = 0;
-  let of = 0;
-  let worst = 0;
-  for (const probe of PROBES) {
-    const { spec } = buildFont(probe.spec);
-    const want = read(spec);
-    const got = rowOf(probe.id).box;
-    const scale = BOX_PX / spec.unitsPerEm;
-    for (const [predicted, measured] of [
-      [want.ascent * scale, got.ascent],
-      [want.descent * scale, got.descent],
-    ] as const) {
-      of += 1;
-      const off = Math.abs(predicted - measured);
-      if (off < 1e-9) fits += 1;
-      else worst = Math.max(worst, off);
+interface BoxScored extends Scored {
+  readonly table: string;
+  readonly rounding: string;
+  /** The pair the table names, so a later question reads the box the way this one settled. */
+  readonly read: (s: FontSpec) => { ascent: number; descent: number };
+  /** Every `id:ascent|descent` the model missed, so a table can say what separated it. */
+  readonly missed: readonly string[];
+}
+
+/** A table's pair at `px`, before any rounding. */
+function boxAt(
+  read: (typeof BOX_READINGS)[keyof typeof BOX_READINGS],
+  s: FontSpec,
+  px: number,
+): BoxPx {
+  const want = read(s);
+  return { ascent: (want.ascent * px) / s.unitsPerEm, descent: (want.descent * px) / s.unitsPerEm };
+}
+
+// Table and rounding are scored as one model: twelve 1000 em probes tie every
+// rounding, and only the two fractional probes separate them.
+const boxScores: BoxScored[] = Object.entries(BOX_READINGS).flatMap(([table, read]) =>
+  Object.entries(BOX_ROUNDINGS).map(([rounding, round]): BoxScored => {
+    let fits = 0;
+    let of = 0;
+    let worst = 0;
+    const missed: string[] = [];
+    for (const probe of PROBES) {
+      const { spec } = buildFont(probe.spec);
+      const want = round(boxAt(read, spec, BOX_PX));
+      const got = rowOf(probe.id).box;
+      for (const [side, predicted, measured] of [
+        ['ascent', want.ascent, got.ascent],
+        ['descent', want.descent, got.descent],
+      ] as const) {
+        of += 1;
+        const off = Math.abs(predicted - measured);
+        if (off < 1e-9) fits += 1;
+        else {
+          worst = Math.max(worst, off);
+          missed.push(`${probe.id}:${side}`);
+        }
+      }
     }
-  }
-  return { model, fits, of, worst };
-});
+    return { model: `${table}; ${rounding}`, table, rounding, read, fits, of, worst, missed };
+  }),
+);
 const boxAnswer = decide('the font bounding box', boxScores);
+const boxRounding = boxRoundingNamed(boxAnswer.rounding);
 
 /* -------------------------------------------------------------------------- */
 /* question 2 - which kerning table the browser honours                        */
@@ -263,17 +291,38 @@ const widthAnswer = decide('the width arithmetic', widthScores);
 /** The script a run is in, which a reading may or may not turn out to consult. */
 type Script = 'latn' | 'hani';
 
-/** The face box descent, which is what `measure.ts` reads today. */
-const boxDescent = (s: FontSpec): number =>
-  s.useTypoMetrics === true ? -s.typoDescender : s.winDescent;
+/** The face box as question 1 settled it, table and all, in font units. */
+const boxOf = boxAnswer.read;
 
-const FALLBACKS: Record<string, (s: FontSpec) => number> = {
+const toPx = (units: number, s: FontSpec, px: number): number => (units * px) / s.unitsPerEm;
+
+/** Pixels below the alphabetic baseline at `px`, positive downwards. */
+type Fallback = (s: FontSpec, px: number) => number;
+
+/** A reading in font units, which every table reading is. */
+const inUnits =
+  (units: (s: FontSpec) => number): Fallback =>
+  (s, px) =>
+    toPx(units(s), s, px);
+
+const boxDescent = inUnits((s) => boxOf(s).descent);
+
+/** The descent of the box as the browser reported it, whole pixels included. */
+const roundedBoxDescent: Fallback = (s, px) => {
+  const box = boxOf(s);
+  return boxRounding({ ascent: toPx(box.ascent, s, px), descent: toPx(box.descent, s, px) })
+    .descent;
+};
+
+const FALLBACKS: Record<string, Fallback> = {
   'the face box descent': boxDescent,
-  'OS/2.usWinDescent': (s) => s.winDescent,
-  'OS/2.sTypoDescender': (s) => -s.typoDescender,
-  'hhea.descender': (s) => -s.hheaDescender,
-  'sTypoDescender where fsSelection bit 7 is set and hhea.descender otherwise': (s) =>
+  'the face box descent, rounded as the box is': roundedBoxDescent,
+  'OS/2.usWinDescent': inUnits((s) => s.winDescent),
+  'OS/2.sTypoDescender': inUnits((s) => -s.typoDescender),
+  'hhea.descender': inUnits((s) => -s.hheaDescender),
+  'sTypoDescender where fsSelection bit 7 is set and hhea.descender otherwise': inUnits((s) =>
     s.useTypoMetrics === true ? -s.typoDescender : -s.hheaDescender,
+  ),
 };
 
 /** Which `BaseScript` a reading looks the coordinate up in. */
@@ -287,14 +336,15 @@ const LOOKUPS: Record<string, (s: FontSpec, script: Script) => Baselines | undef
     s.base?.DFLT ?? s.base?.hani ?? s.base?.kana ?? s.base?.latn,
 };
 
-/** Font units below the alphabetic baseline, positive downwards. */
-type Reading = (s: FontSpec, script: Script) => number;
+/** Pixels below the alphabetic baseline at `px`, positive downwards. */
+type Reading = (s: FontSpec, script: Script, px: number) => number;
 
 const IDEOGRAPHIC_READINGS: Record<string, Reading> = {
-  'the face box descent': boxDescent,
-  'OS/2.usWinDescent': (s) => s.winDescent,
-  'OS/2.sTypoDescender': (s) => -s.typoDescender,
-  'hhea.descender': (s) => -s.hheaDescender,
+  'the face box descent': (s, _script, px) => boxDescent(s, px),
+  'the face box descent, rounded as the box is': (s, _script, px) => roundedBoxDescent(s, px),
+  'OS/2.usWinDescent': (s, _script, px) => toPx(s.winDescent, s, px),
+  'OS/2.sTypoDescender': (s, _script, px) => toPx(-s.typoDescender, s, px),
+  'hhea.descender': (s, _script, px) => toPx(-s.hheaDescender, s, px),
   'zero, the alphabetic baseline': () => 0,
 };
 
@@ -308,9 +358,10 @@ for (const [where, lookup] of Object.entries(LOOKUPS)) {
       IDEOGRAPHIC_READINGS[`the BASE ${tag} coordinate of ${where}, else ${otherwise}`] = (
         s,
         script,
+        px,
       ) => {
         const coordinate = lookup(s, script)?.[tag];
-        return coordinate === undefined ? fallback(s) : -coordinate;
+        return coordinate === undefined ? fallback(s, px) : toPx(-coordinate, s, px);
       };
     }
   }
@@ -321,10 +372,12 @@ for (const [where, lookup] of Object.entries(LOOKUPS)) {
 // two engines can agree on such a face at all.
 IDEOGRAPHIC_READINGS[
   'the BASE ideo coordinate of the DFLT script where it falls inside the em, else the face box descent'
-] = (s) => {
+] = (s, _script, px) => {
   const coordinate = s.base?.DFLT?.ideo;
   const units = coordinate === undefined ? undefined : -coordinate;
-  return units === undefined || units <= 0 || units >= s.unitsPerEm ? boxDescent(s) : units;
+  return units === undefined || units <= 0 || units >= s.unitsPerEm
+    ? boxDescent(s, px)
+    : toPx(units, s, px);
 };
 
 interface Observation {
@@ -385,7 +438,7 @@ const ideographicScores: Scored[] = Object.entries(IDEOGRAPHIC_READINGS).map(([m
   let worst = 0;
   for (const at of observations) {
     const spec = specOf(at.id);
-    const predicted = (read(spec, at.script) * at.px) / spec.unitsPerEm;
+    const predicted = read(spec, at.script, at.px);
     const off = Math.abs(predicted - at.measured);
     if (off < 1e-9) fits += 1;
     else worst = Math.max(worst, off);
@@ -465,8 +518,11 @@ const answers = {
   faceBox: {
     $comment:
       'The ascent and descent a browser reports for a face. Every real font sets hhea and usWin ' +
-      'to the same numbers, so only a font built to disagree can say which was read.',
-    answer: boxAnswer.model,
+      'to the same numbers, so only a font built to disagree can say which was read; and every ' +
+      'probe on a 1000 em lands on a whole pixel, so only one that does not can say how the ' +
+      'browser rounds it.',
+    answer: boxAnswer.table,
+    rounding: boxAnswer.rounding,
     scores: boxScores,
   },
   kerning: {

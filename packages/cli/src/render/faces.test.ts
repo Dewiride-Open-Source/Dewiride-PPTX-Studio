@@ -162,6 +162,16 @@ describe('the last resort, where no named face is on the machine', () => {
     expect(library.resolve('Nothing Like It At All', false, false)?.drawn).toBe('Zzz Only Face');
   });
 
+  it('never draws in a face whose name cannot be written into the markup', () => {
+    // A quote sorts before every letter, so a face called `"aa Broken` would be
+    // the machine-wide last resort exactly where `font-family` cannot carry it.
+    const library = libraryOf({ 'a.ttf': '"aa Broken', 'b.ttf': 'Zzz Probe' });
+    expect(library.indexed).toHaveLength(2);
+    const found = library.resolve('Nothing Like It At All', false, false);
+    expect(found?.drawn).toBe('Zzz Probe');
+    expect(library.resolve('"aa Broken', false, false)?.drawn).toBe('Zzz Probe');
+  });
+
   it('reports nothing only when the library is empty', () => {
     const empty = indexFonts({
       extra: [mkdtempSync(join(tmpdir(), 'pptx-studio-none-'))],

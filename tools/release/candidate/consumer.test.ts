@@ -9,10 +9,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  exampleRanges,
   fileSpec,
   packedFrom,
   provenanceFailures,
   scratchManifest,
+  staleRanges,
   type Lockfile,
   type LockEntry,
   type Packed,
@@ -214,5 +216,51 @@ describe('provenance', () => {
       },
     });
     expect(provenanceFailures(withDeps, PACKED, '@pptx-studio/', integrityOf)).toEqual([]);
+  });
+});
+
+describe('the example manifest', () => {
+  const SCOPE = '@pptx-studio/';
+  const written = { '@pptx-studio/xml': '^0.1.0', '@pptx-studio/cli': '^0.2.0', next: '16.3.4' };
+
+  it('passes when every range is the caret of the version this run packed', () => {
+    expect(staleRanges(written, PACKED, SCOPE)).toEqual([]);
+  });
+
+  it('refuses a caret the packed version has grown past, which can never resolve to it', () => {
+    const stale = staleRanges({ ...written, '@pptx-studio/cli': '^0.1.0' }, PACKED, SCOPE);
+    expect(stale).toHaveLength(1);
+    expect(stale[0]).toContain('^0.1.0');
+    expect(stale[0]).toContain('0.2.0');
+  });
+
+  it('asks for exactly what pack writes, so a caret one patch behind is stale too', () => {
+    // `^0.1.0` would still resolve to 0.1.1; the manifest is written by the
+    // release and a hand-edited range is the thing being caught.
+    const behind = [{ ...PACKED[0]!, version: '0.1.1' }, PACKED[1]!];
+    expect(staleRanges(written, behind, SCOPE)).toEqual([
+      '@pptx-studio/xml: has ^0.1.0, packed 0.1.1',
+    ]);
+  });
+
+  it('refuses a range on a package this run did not pack', () => {
+    const stale = staleRanges({ ...written, '@pptx-studio/model': '^1.0.0' }, PACKED, SCOPE);
+    expect(stale).toEqual(['@pptx-studio/model: ^1.0.0, not a package this run packed']);
+  });
+
+  it('ignores everything outside the scope', () => {
+    expect(staleRanges({ ...written, next: '15.0.0' }, PACKED, SCOPE)).toEqual([]);
+    expect(exampleRanges({ ...written, next: '15.0.0' }, PACKED, SCOPE)).toEqual({
+      ...written,
+      next: '15.0.0',
+    });
+  });
+
+  it('writes the caret of each packed version and keeps the order it was given', () => {
+    const behind = [{ ...PACKED[0]!, version: '0.1.1' }, PACKED[1]!];
+    const ranges = exampleRanges(written, behind, SCOPE);
+    expect(Object.keys(ranges)).toEqual(['@pptx-studio/xml', '@pptx-studio/cli', 'next']);
+    expect(ranges['@pptx-studio/xml']).toBe('^0.1.1');
+    expect(staleRanges(ranges, behind, SCOPE)).toEqual([]);
   });
 });

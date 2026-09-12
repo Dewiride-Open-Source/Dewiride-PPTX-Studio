@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { FACE_BOX_PX } from '@pptx-studio/text';
+
 import { indexFonts, systemFontDirectories, type FontLibrary } from './faces.js';
 import { createFontMeasurer } from './measure.js';
 import { FIXTURE, bytesOf, readFaces } from './sfnt.test.js';
@@ -88,10 +90,10 @@ describe('the font library', () => {
 
 describe('measuring against what Chromium reported', () => {
   /**
-   * The whole point of the experiment: 432 widths, and the measurer has to
+   * The whole point of the experiment: 504 widths, and the measurer has to
    * reproduce every one of them from the font tables alone.
    */
-  it('reproduces all 432 widths exactly', () => {
+  it('reproduces all 504 widths exactly', () => {
     const measurer = createFontMeasurer(library).measurer;
     let compared = 0;
     for (const row of FIXTURE.browser.rows) {
@@ -106,7 +108,7 @@ describe('measuring against what Chromium reported', () => {
         }
       }
     }
-    expect(compared).toBe(432);
+    expect(compared).toBe(504);
   });
 
   it('quantises only non-negative advances, so trunc and floor are one rule', () => {
@@ -131,7 +133,7 @@ describe('measuring against what Chromium reported', () => {
 
   it('would not reproduce them with exact float arithmetic', () => {
     // The plausible implementation - sum advance x size / upem in doubles - and
-    // the fixture says it fits 150 of 432. If this ever stops disagreeing, the
+    // the fixture says it fits 198 of 504. If this ever stops disagreeing, the
     // test above has stopped being evidence of anything.
     const font = FIXTURE.fonts.find((f) => f.id === 'plain')!;
     const naive = (text: string, px: number): number =>
@@ -174,6 +176,12 @@ describe('measuring against what Chromium reported', () => {
 });
 
 describe('the face box probe', () => {
+  it('reads the box at the size the browser probe does', () => {
+    // The rounding is a property of that size, so a fixture measured at another
+    // would have to be re-measured before it could say anything about it.
+    expect(FIXTURE.browser.boxPx).toBe(FACE_BOX_PX);
+  });
+
   it('reports the browser fractions for every probe', () => {
     const { faceBox } = createFontMeasurer(library);
     const scale = FIXTURE.browser.boxPx;
@@ -183,6 +191,61 @@ describe('the face box probe', () => {
       expect(box.ascent * scale, `${row.id} ascent`).toBeCloseTo(row.box.ascent, 9);
       expect(box.descent * scale, `${row.id} descent`).toBeCloseTo(row.box.descent, 9);
     }
+  });
+
+  /** The pixels a probe's own tables put the box at, before the browser rounds. */
+  const exactBoxOf = (id: string): { ascent: number; descent: number } => {
+    const { spec } = FIXTURE.fonts.find((f) => f.id === id)!;
+    const scale = FIXTURE.browser.boxPx / spec.unitsPerEm;
+    return spec.useTypoMetrics === true
+      ? { ascent: spec.typoAscender * scale, descent: -spec.typoDescender * scale }
+      : { ascent: spec.winAscent * scale, descent: spec.winDescent * scale };
+  };
+
+  it('rounds to the pixel the browser reported, on the probes whose tables do not land on one', () => {
+    expect(FIXTURE.faceBox.rounding).toBe('round half up');
+    const { faceBox } = createFontMeasurer(library);
+    const fractional: string[] = [];
+    for (const row of FIXTURE.browser.rows) {
+      const exact = exactBoxOf(row.id);
+      for (const side of ['ascent', 'descent'] as const) {
+        if (Number.isInteger(exact[side])) continue;
+        fractional.push(`${row.id}:${side}`);
+        expect(Number.isInteger(row.box[side]), `${row.id} ${side}`).toBe(true);
+        expect(row.box[side], `${row.id} ${side}`).not.toBe(exact[side]);
+        const family = FIXTURE.fonts.find((f) => f.id === row.id)!.family;
+        expect(faceBox.box(family)[side] * FIXTURE.browser.boxPx, `${row.id} ${side}`).toBe(
+          row.box[side],
+        );
+      }
+    }
+    // Two probes carry a fractional box and nothing else here can say how it rounds.
+    expect(fractional).toEqual(['split-2048:ascent', 'split-2048:descent', 'split-2000:ascent']);
+  });
+
+  it('rounds a half up, not to even', () => {
+    const exact = exactBoxOf('split-2000');
+    const row = FIXTURE.browser.rows.find((r) => r.id === 'split-2000')!;
+    expect(exact.ascent - Math.floor(exact.ascent)).toBe(0.5);
+    expect(Math.floor(exact.ascent) % 2).toBe(0);
+    expect(row.box.ascent).toBe(Math.floor(exact.ascent + 0.5));
+    expect(row.box.ascent).not.toBe(Math.floor(exact.ascent));
+  });
+
+  it('takes the pixel above on a fraction over the half, so it is not floor', () => {
+    const exact = exactBoxOf('split-2048');
+    const row = FIXTURE.browser.rows.find((r) => r.id === 'split-2048')!;
+    expect(exact.ascent - Math.floor(exact.ascent)).toBeGreaterThan(0.5);
+    expect(row.box.ascent).toBe(Math.ceil(exact.ascent));
+    expect(row.box.ascent).not.toBe(Math.floor(exact.ascent));
+  });
+
+  it('takes the pixel below on a fraction under the half, so it is not ceil', () => {
+    const exact = exactBoxOf('split-2048');
+    const row = FIXTURE.browser.rows.find((r) => r.id === 'split-2048')!;
+    expect(exact.descent - Math.floor(exact.descent)).toBeLessThan(0.5);
+    expect(row.box.descent).toBe(Math.floor(exact.descent));
+    expect(row.box.descent).not.toBe(Math.ceil(exact.descent));
   });
 
   /** What `packages/text/src/lines/baseline.ts` makes of one browser reading. */
@@ -234,9 +297,23 @@ describe('the face box probe', () => {
 
   it('falls back to the descent for a face whose BASE says nothing about ideo', () => {
     const { faceBox } = createFontMeasurer(library);
-    for (const id of ['split', 'base-no-dflt', 'base-no-ideo']) {
+    for (const id of ['split', 'base-no-dflt', 'base-no-ideo', 'split-2048', 'split-2000']) {
       const box = faceBox.box(FIXTURE.fonts.find((f) => f.id === id)!.family);
       expect(box.ideographic, id).toBe(box.descent);
+    }
+  });
+
+  it('falls back to the descent as the browser rounded it, not as the table wrote it', () => {
+    expect(FIXTURE.ideographic.answer).toBe(
+      'the BASE ideo coordinate of the DFLT script, else the face box descent, rounded as the box is',
+    );
+    const exact = exactBoxOf('split-2048');
+    const row = FIXTURE.browser.rows.find((r) => r.id === 'split-2048')!;
+    for (const px of FIXTURE.browser.baselineSizes) {
+      const measured = -row.baselines[String(px)]!.ideographic;
+      const unrounded = (exact.descent * px) / FIXTURE.browser.boxPx;
+      expect(Number.isInteger(unrounded), `${String(px)}px`).toBe(false);
+      expect(measured, `${String(px)}px`).toBe(Math.floor(unrounded + 0.5));
     }
   });
 
@@ -290,6 +367,34 @@ describe('what it says it did', () => {
     expect(used[0]?.asked).toBe('Nothing At All');
     expect(used[0]?.substituted).toBe(true);
     expect(used[0]?.drawn).toBe(LAST_RESORT);
+  });
+
+  it('answers the CSS family from the face it measured with, and resolves it once', () => {
+    let calls = 0;
+    const counting: FontLibrary = {
+      ...library,
+      resolve: (family, bold, italic) => {
+        calls += 1;
+        return library.resolve(family, bold, italic);
+      },
+    };
+    const fonts = createFontMeasurer(counting);
+    const font = { family: 'Nothing At All', sz: 1800, bold: true };
+    fonts.measurer.measure('A', font);
+    expect(fonts.cssFamilyFor(font)).toBe(
+      `"${LAST_RESORT}", "Nothing At All", "Calibri", "Carlito", sans-serif`,
+    );
+    // The same weight and style as the measurement, so it is the cache and not
+    // a second lookup that could have chosen another face.
+    expect(calls).toBe(1);
+  });
+
+  it('leads with the asked family and still ends where PowerPoint would when the face is present', () => {
+    const fonts = createFontMeasurer(library);
+    const plain = FIXTURE.fonts.find((f) => f.id === 'plain')!.family;
+    expect(fonts.cssFamilyFor({ family: plain, sz: 1800 })).toBe(
+      `"${plain}", "Calibri", "Carlito", sans-serif`,
+    );
   });
 
   it('measures and boxes a substituted typeface with the one face it chose', () => {

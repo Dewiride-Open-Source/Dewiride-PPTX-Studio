@@ -66,7 +66,7 @@ function render(records: readonly Record[]): string {
     '',
     'One record per sub-phase: what was decided, what was measured to decide it, which alternatives',
     'the measurement ruled out, and what is still open. Records are grouped by phase so the directory',
-    'stays navigable at ninety-six of them, and this index is the ordered log that grouping would',
+    'stays navigable past a hundred of them, and this index is the ordered log that grouping would',
     'otherwise cost.',
     '',
     'Numbers are permanent. A record is never renumbered and never edited to say something it did not',

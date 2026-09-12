@@ -1,7 +1,7 @@
 /**
  * Experiment T14 - the font-table reader against Chromium, on faces nobody built.
  *
- * T13 asks with seven fonts built to disagree with themselves, which says
+ * T13 asks with fourteen fonts built to disagree with themselves, which says
  * nothing about class-based GPOS kerning, GSUB ligatures or an `hmtx` table
  * with thousands of entries. These samples ask with whatever faces a machine
  * carries. ADR 0042, open questions 2 and 3.
@@ -206,7 +206,7 @@ const FREETYPE_BOX = 'hhea, or sTypo when fsSelection bit 7 is set';
  * Which table the browser read the face box out of, as rival readings.
  *
  * A reading that needs a table this face has no bytes for answers `undefined`
- * and is scored over the faces that carry it. T13 settled DirectWrite at 24/24
+ * and is scored over the faces that carry it. T13 settled DirectWrite at 28/28
  * and T14 settled FreeType at 79/79, on different tables. ADR 0045.
  */
 export const BOX_READINGS: Readonly<
@@ -226,29 +226,19 @@ export const BOX_READINGS: Readonly<
 /**
  * The reading `metricsOf` implements here, which no rival may fit more faces than.
  *
- * DirectWrite and FreeType read the box out of different tables, so which
- * reading is the shipped one is a property of the runner. ADR 0045.
+ * DirectWrite and FreeType read different tables, so the shipped reading is a
+ * property of the runner; macOS takes DirectWrite's by assumption, and a run
+ * there scores that assumption. ADR 0045, ADR 0052.
  */
 export function shippedBoxFor(platform: string): string {
   return platform === 'linux' ? FREETYPE_BOX : DIRECTWRITE_BOX;
 }
 
-/**
- * The four readings of the face box, recorded rather than gated.
- *
- * A browser reporting the box as a whole pixel can be reproduced by `round`
- * whatever the reader answers, so the table scores that rounding and ADR 0043
- * open question 2 stays open.
- */
-export const BOX_VARIANTS = ['exact', 'round', 'floor', 'ceil'] as const;
-
-export type BoxVariant = (typeof BOX_VARIANTS)[number];
-
-export function applyBoxVariant(variant: BoxVariant, value: number): number {
-  if (variant === 'exact') return value;
-  if (variant === 'round') return Math.round(value);
-  if (variant === 'floor') return Math.floor(value);
-  return Math.ceil(value);
+/** The rasteriser a runner reads fonts through, as the summary should name it. */
+export function rasteriserOf(platform: string): string {
+  if (platform === 'linux') return 'FreeType';
+  if (platform === 'win32') return 'DirectWrite';
+  return `${platform === 'darwin' ? 'CoreText' : platform}, scored against the DirectWrite reading it is assumed to share (ADR 0045)`;
 }
 
 /** Every character any sample uses, for picking one the face certainly has. */

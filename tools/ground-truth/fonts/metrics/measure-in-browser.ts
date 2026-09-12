@@ -10,7 +10,7 @@
  * every family name is one that exists nowhere. ADR 0042.
  */
 
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import { chromium } from 'playwright';
@@ -67,6 +67,7 @@ interface Baselines {
 const dir = process.argv[2];
 if (dir === undefined) throw new Error('usage: measure-in-browser.ts <work-dir>');
 const work = resolve(dir);
+mkdirSync(work, { recursive: true });
 
 const fonts = probeFonts();
 const job: Job = {

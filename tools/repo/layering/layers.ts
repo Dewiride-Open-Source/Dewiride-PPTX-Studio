@@ -27,7 +27,7 @@ export interface PackageSpec {
    * level and again in eslint.config.mjs at the import level.
    */
   readonly runtime: Runtime;
-  /** One line, for the violation message and for docs generation later. */
+  /** One line, for a reader of this table. */
   readonly role: string;
 }
 
@@ -111,7 +111,7 @@ export const PACKAGES: Readonly<Record<string, PackageSpec>> = {
   cli: {
     layer: 6,
     runtime: 'node',
-    role: 'inspect, roundtrip, render, validate, fidelity, bisect',
+    role: 'inspect, validate, roundtrip, render, bisect',
   },
 } as const;
 

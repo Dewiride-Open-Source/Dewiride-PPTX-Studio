@@ -2,7 +2,7 @@
  * Prove the tarballs this commit would publish, before publishing them.
  *
  * ```
- * node tools/release/candidate.ts <work-dir>
+ * node tools/release/candidate/candidate.ts <work-dir>
  * ```
  *
  * Packs every publishable package, installs the tarballs into a scratch project
@@ -15,11 +15,12 @@ import { createHash } from 'node:crypto';
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { repoPath } from '../repo/root.ts';
+import { repoPath } from '../../repo/root.ts';
 import {
   packedFrom,
   provenanceFailures,
   scratchManifest,
+  staleRanges,
   type Lockfile,
   type Packed,
 } from './consumer.ts';
@@ -81,6 +82,17 @@ const example = JSON.parse(
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
 };
+// `pnpm version-packages` writes these ranges; one it did not write is a
+// manifest that no longer says what it was proved against.
+const stale = staleRanges(example.dependencies, packed, SCOPE);
+if (stale.length > 0) {
+  throw new Error(
+    'examples/nextjs-studio/package.json does not name the versions this commit would publish:\n' +
+      `  ${stale.join('\n  ')}\n` +
+      'node tools/release/candidate/example.ts writes them',
+  );
+}
+
 const offScope = Object.fromEntries(
   Object.entries(example.dependencies).filter(([name]) => !name.startsWith(SCOPE)),
 );

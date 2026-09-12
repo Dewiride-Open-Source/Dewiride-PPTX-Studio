@@ -112,6 +112,54 @@ export function scratchManifest(
   };
 }
 
+/** A package by name and version, which is all a range needs to know. */
+export interface Versioned {
+  readonly name: string;
+  readonly version: string;
+}
+
+/**
+ * The example's ranges as `pnpm pack` writes them for `workspace:^`: the
+ * caret of each candidate, so the committed manifest names what the release
+ * proved. Everything outside the scope is left as written.
+ */
+export function exampleRanges(
+  dependencies: Readonly<Record<string, string>>,
+  packed: readonly Versioned[],
+  scope: string,
+): Readonly<Record<string, string>> {
+  const versions = new Map(packed.map((entry) => [entry.name, entry.version]));
+  const out: Record<string, string> = {};
+  for (const [name, range] of Object.entries(dependencies)) {
+    const version = versions.get(name);
+    out[name] = name.startsWith(scope) && version !== undefined ? `^${version}` : range;
+  }
+  return out;
+}
+
+/**
+ * Every in-scope range that is not the caret of the version this run packed.
+ *
+ * A caret one patch behind still resolves, so a satisfies check would pass it;
+ * the rule is the exact string, because the manifest is written by the release
+ * and a hand-edit is the thing being caught.
+ */
+export function staleRanges(
+  dependencies: Readonly<Record<string, string>>,
+  packed: readonly Versioned[],
+  scope: string,
+): readonly string[] {
+  const versions = new Map(packed.map((entry) => [entry.name, entry.version]));
+  const stale: string[] = [];
+  for (const [name, range] of Object.entries(dependencies)) {
+    if (!name.startsWith(scope)) continue;
+    const version = versions.get(name);
+    if (version === undefined) stale.push(`${name}: ${range}, not a package this run packed`);
+    else if (range !== `^${version}`) stale.push(`${name}: has ${range}, packed ${version}`);
+  }
+  return stale;
+}
+
 /** One `package-lock.json` entry, of the fields provenance is read from. */
 export interface LockEntry {
   readonly name?: string;

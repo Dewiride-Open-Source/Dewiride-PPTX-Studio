@@ -25,7 +25,7 @@ interface Baselines {
 
 interface Fixture {
   readonly chromium: string;
-  readonly faceBox: { readonly answer: string };
+  readonly faceBox: { readonly answer: string; readonly rounding: string };
   readonly kerning: {
     readonly answer: string;
     readonly scores: readonly {
@@ -166,18 +166,33 @@ describe('cmap and hmtx', () => {
 
 describe('the face box', () => {
   /** The reading the fixture settled: usWin, unless fsSelection bit 7 is set. */
-  it('agrees with what Chromium reported for every probe', () => {
-    const { boxPx } = FIXTURE.browser;
-    for (const row of FIXTURE.browser.rows) {
-      const font = FIXTURE.fonts.find((f) => f.id === row.id)!;
-      const face = readFaces(bytesOf(row.id), row.id)[0]!;
-      const scale = boxPx / face.metrics.unitsPerEm;
-      expect(face.metrics.ascent * scale, `${row.id} ascent`).toBeCloseTo(row.box.ascent, 9);
-      expect(face.metrics.descent * scale, `${row.id} descent`).toBeCloseTo(row.box.descent, 9);
-      expect(face.metrics.source, row.id).toBe(
-        font.spec.useTypoMetrics === true ? 'sTypo' : 'usWin',
+  it('reads the pair the fixture named, on every probe', () => {
+    expect(FIXTURE.faceBox.answer).toBe('usWin, or sTypo when fsSelection bit 7 is set');
+    for (const font of FIXTURE.fonts) {
+      const { spec } = font;
+      const face = readFaces(bytesOf(font.id), font.id)[0]!;
+      const typo = spec.useTypoMetrics === true;
+      expect(face.metrics.ascent, `${font.id} ascent`).toBe(
+        typo ? spec.typoAscender : spec.winAscent,
       );
+      expect(face.metrics.descent, `${font.id} descent`).toBe(
+        typo ? -spec.typoDescender : spec.winDescent,
+      );
+      expect(face.metrics.source, font.id).toBe(typo ? 'sTypo' : 'usWin');
     }
+  });
+
+  it('answers in font units, unrounded, so the measurer can round at the size the browser reads', () => {
+    // 1902 on a 2048 em is 928.7109375 px at the probe size, and the browser
+    // said 929; the rounding belongs to the probe, not to the table reader.
+    const { spec } = FIXTURE.fonts.find((f) => f.id === 'split-2048')!;
+    const row = FIXTURE.browser.rows.find((r) => r.id === 'split-2048')!;
+    const face = readFaces(bytesOf('split-2048'), 'split-2048')[0]!;
+    const scale = FIXTURE.browser.boxPx / spec.unitsPerEm;
+    expect(face.metrics.ascent).toBe(spec.winAscent);
+    expect(Number.isInteger(face.metrics.ascent * scale)).toBe(false);
+    expect(face.metrics.ascent * scale).not.toBe(row.box.ascent);
+    expect(Number.isInteger(row.box.ascent)).toBe(true);
   });
 
   it('is not hhea through DirectWrite, which is the reading everybody writes first', () => {
@@ -396,7 +411,7 @@ describe('the ideographic baseline', () => {
 
   it('is the BASE ideo coordinate of the DFLT script for every probe that has one', () => {
     expect(FIXTURE.ideographic.answer).toBe(
-      'the BASE ideo coordinate of the DFLT script, else the face box descent',
+      'the BASE ideo coordinate of the DFLT script, else the face box descent, rounded as the box is',
     );
     for (const font of FIXTURE.fonts) {
       const face = readFaces(bytesOf(font.id), font.id)[0]!;

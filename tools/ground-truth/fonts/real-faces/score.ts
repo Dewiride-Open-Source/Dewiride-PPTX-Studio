@@ -11,20 +11,19 @@ import {
   ADVANCE_QUANTUM,
   BOX_READINGS,
   BOX_TOLERANCE,
-  BOX_VARIANTS,
   EXACT_PX,
   READINGS,
   SHIPPED,
   UNKERNED,
-  applyBoxVariant,
   glyphsOf,
+  rasteriserOf,
   shippedBoxFor,
   widthTolerance,
   type BoxCandidates,
   type BoxPair,
-  type BoxVariant,
   type Reading,
 } from './probes.ts';
+import { BOX_ROUNDINGS, type BoxRounding } from '../../lib/box-rounding.ts';
 
 /* -------------------------------------------------------------------------- */
 /* the measurement                                                            */
@@ -369,10 +368,12 @@ function scoreScripts(run: Run): ScriptScore[] {
 }
 
 /** The reader's box under one rounding, against the whole pixel the browser reported. */
-function fitsBox(variant: BoxVariant, face: RunFace, boxPx: number): boolean {
+function fitsBox(round: BoxRounding, face: RunFace, boxPx: number): boolean {
   const scale = boxPx / face.unitsPerEm;
-  const ascent = applyBoxVariant(variant, face.box.reader.ascent * scale);
-  const descent = applyBoxVariant(variant, face.box.reader.descent * scale);
+  const { ascent, descent } = round({
+    ascent: face.box.reader.ascent * scale,
+    descent: face.box.reader.descent * scale,
+  });
   return (
     Math.abs(ascent - face.box.browser.ascent) < EXACT_PX &&
     Math.abs(descent - face.box.browser.descent) < EXACT_PX
@@ -532,9 +533,9 @@ export function score(run: Run): Verdict {
     }
   }
 
-  const variants: BoxScore[] = BOX_VARIANTS.map((variant) => ({
-    name: variant,
-    fits: run.faces.filter((face) => fitsBox(variant, face, run.boxPx)).length,
+  const variants: BoxScore[] = Object.entries(BOX_ROUNDINGS).map(([name, round]) => ({
+    name,
+    fits: run.faces.filter((face) => fitsBox(round, face, run.boxPx)).length,
     of: run.faces.length,
   }));
   let agreed = 0;
@@ -726,7 +727,7 @@ export function reportMarkdown(run: Run, verdict: Verdict): string {
     ),
   );
   parts.push(
-    `This runner reads the box through ${run.image.platform === 'linux' ? 'FreeType' : 'DirectWrite'}, ` +
+    `This runner reads the box through ${rasteriserOf(run.image.platform)}, ` +
       `so **${shippedBoxFor(run.image.platform)}** is the shipped reading here; the other ` +
       'rasteriser reads a different table and is scored by T13. ADR 0045.',
   );
@@ -744,9 +745,10 @@ export function reportMarkdown(run: Run, verdict: Verdict): string {
     ),
   );
   parts.push(
-    'That table scores the browser, not the reader: a whole-pixel box can only be reproduced ' +
-      'by `round`, whatever the reader answers, so ADR 0043 open question 2 - which rounding ' +
-      'the face box takes - stays open until a browser reports it fractionally.',
+    'That table scores the browser, not the reader: a box that lands on a whole pixel is ' +
+      'reproduced by every rounding, so only the faces whose tables put it off one - a 2000 em ' +
+      'on the half, a 2048 em elsewhere - separate the rows. T13 settled round half up on ' +
+      'DirectWrite, 28 of 28. ADR 0052.',
   );
 
   parts.push('### What the missing features cost');

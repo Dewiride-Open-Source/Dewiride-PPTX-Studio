@@ -2,7 +2,7 @@
 
 One record per sub-phase: what was decided, what was measured to decide it, which alternatives
 the measurement ruled out, and what is still open. Records are grouped by phase so the directory
-stays navigable at ninety-six of them, and this index is the ordered log that grouping would
+stays navigable past a hundred of them, and this index is the ordered log that grouping would
 otherwise cost.
 
 Numbers are permanent. A record is never renumbered and never edited to say something it did not
@@ -58,26 +58,28 @@ date.
 
 ## Phase 3 — text
 
-| #                                                                     | decision                                                             |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| [0027](phase-3-text/0027-the-text-cascade.md)                         | The text cascade                                                     |
-| [0028](phase-3-text/0028-measurement-and-the-line-model.md)           | Measurement and the line model                                       |
-| [0029](phase-3-text/0029-line-breaking.md)                            | Line breaking                                                        |
-| [0030](phase-3-text/0030-autofit.md)                                  | Autofit                                                              |
-| [0031](phase-3-text/0031-bullets-fields-and-script-runs.md)           | Bullets, fields and script runs                                      |
-| [0032](phase-3-text/0032-anchors-insets-and-vertical-text.md)         | Anchors, insets and vertical text                                    |
-| [0033](phase-3-text/0033-font-substitution-and-the-guard.md)          | Font substitution and the guard                                      |
-| [0034](phase-3-text/0034-text-in-both-renderers.md)                   | Text in both renderers                                               |
-| [0035](phase-3-text/0035-the-fidelity-harness.md)                     | The fidelity harness                                                 |
-| [0039](phase-3-text/0039-upright-glyphs-in-vertical-text.md)          | Upright glyphs in vertical text, and the insets that never turned    |
-| [0040](phase-3-text/0040-the-wordart-column.md)                       | The WordArt column, and the lines that stacked the wrong way         |
-| [0041](phase-3-text/0041-what-the-harness-was-not-gating.md)          | What the harness was not gating, and where the difference is         |
-| [0042](phase-3-text/0042-rendering-without-a-browser.md)              | Rendering without a browser, and the first release                   |
-| [0043](phase-3-text/0043-what-3-10-left-open.md)                      | What 3.10 left open, and what installing it found                    |
-| [0044](phase-3-text/0044-what-the-runners-own-fonts-said.md)          | What the runner's own fonts said                                     |
-| [0045](phase-3-text/0045-the-face-box-belongs-to-the-rasteriser.md)   | The face box belongs to the rasteriser                               |
-| [0046](phase-3-text/0046-nothing-gated-the-thing-being-published.md)  | Nothing gated the thing being published                              |
-| [0047](phase-3-text/0047-ten-packages-were-never-attested.md)         | Ten packages were never attested                                     |
-| [0048](phase-3-text/0048-every-package-proves-it-can-publish.md)      | Every package proves it can publish, before any of them do           |
-| [0049](phase-3-text/0049-the-right-to-publish-cannot-be-monitored.md) | The right to publish can only be asked by the workflow that holds it |
-| [0050](phase-3-text/0050-what-the-release-actually-published.md)      | What the release actually published                                  |
+| #                                                                                 | decision                                                             |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [0027](phase-3-text/0027-the-text-cascade.md)                                     | The text cascade                                                     |
+| [0028](phase-3-text/0028-measurement-and-the-line-model.md)                       | Measurement and the line model                                       |
+| [0029](phase-3-text/0029-line-breaking.md)                                        | Line breaking                                                        |
+| [0030](phase-3-text/0030-autofit.md)                                              | Autofit                                                              |
+| [0031](phase-3-text/0031-bullets-fields-and-script-runs.md)                       | Bullets, fields and script runs                                      |
+| [0032](phase-3-text/0032-anchors-insets-and-vertical-text.md)                     | Anchors, insets and vertical text                                    |
+| [0033](phase-3-text/0033-font-substitution-and-the-guard.md)                      | Font substitution and the guard                                      |
+| [0034](phase-3-text/0034-text-in-both-renderers.md)                               | Text in both renderers                                               |
+| [0035](phase-3-text/0035-the-fidelity-harness.md)                                 | The fidelity harness                                                 |
+| [0039](phase-3-text/0039-upright-glyphs-in-vertical-text.md)                      | Upright glyphs in vertical text, and the insets that never turned    |
+| [0040](phase-3-text/0040-the-wordart-column.md)                                   | The WordArt column, and the lines that stacked the wrong way         |
+| [0041](phase-3-text/0041-what-the-harness-was-not-gating.md)                      | What the harness was not gating, and where the difference is         |
+| [0042](phase-3-text/0042-rendering-without-a-browser.md)                          | Rendering without a browser, and the first release                   |
+| [0043](phase-3-text/0043-what-3-10-left-open.md)                                  | What 3.10 left open, and what installing it found                    |
+| [0044](phase-3-text/0044-what-the-runners-own-fonts-said.md)                      | What the runner's own fonts said                                     |
+| [0045](phase-3-text/0045-the-face-box-belongs-to-the-rasteriser.md)               | The face box belongs to the rasteriser                               |
+| [0046](phase-3-text/0046-nothing-gated-the-thing-being-published.md)              | Nothing gated the thing being published                              |
+| [0047](phase-3-text/0047-ten-packages-were-never-attested.md)                     | Ten packages were never attested                                     |
+| [0048](phase-3-text/0048-every-package-proves-it-can-publish.md)                  | Every package proves it can publish, before any of them do           |
+| [0049](phase-3-text/0049-the-right-to-publish-cannot-be-monitored.md)             | The right to publish can only be asked by the workflow that holds it |
+| [0050](phase-3-text/0050-what-the-release-actually-published.md)                  | What the release actually published                                  |
+| [0051](phase-3-text/0051-the-tree-lagged-the-registry.md)                         | The tree lagged the registry                                         |
+| [0052](phase-3-text/0052-the-box-rounds-half-up-and-the-markup-names-its-face.md) | The box rounds half up, and the markup names its face                |

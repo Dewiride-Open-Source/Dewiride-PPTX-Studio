@@ -229,7 +229,7 @@ jobs:
       - run: pnpm build
 
       - name: Pack the candidates, install them, and consume them
-        run: node tools/release/candidate.ts "$RUNNER_TEMP/candidate"
+        run: node tools/release/candidate/candidate.ts "$RUNNER_TEMP/candidate"
 
   # Phase 1's whole claim, on its own, in about a minute.
   #
@@ -312,12 +312,18 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # The measurement scores the built reader, which is what an `npm install`
-      # gets, so there has to be a `dist`.
+      # gets, so there has to be a `dist`, and it has to be this commit's:
+      # `--force` because a replayed cache scores the previous reader. ADR 0052.
       - name: Build the CLI
-        run: pnpm turbo run build --filter=@pptx-studio/cli...
+        run: pnpm turbo run build --filter=@pptx-studio/cli... --force
 
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
+
+      # A runner's own faces agree with themselves; T13's probes do not, so the
+      # three tables are separated by 100 px on this rasteriser too.
+      - name: Build the probe fonts
+        run: node tools/ground-truth/fonts/metrics/build-fonts.ts "$RUNNER_TEMP/probe-fonts"
 
       # `--font-dir` is required and there is no system fallback, so a directory
       # that moves fails here rather than quietly measuring nothing.
@@ -325,6 +331,7 @@ jobs:
         run: >
           node tools/ground-truth/fonts/real-faces/measure-in-browser.ts
           "$RUNNER_TEMP/real-faces" --font-dir /usr/share/fonts
+          --font-dir "$RUNNER_TEMP/probe-fonts"
 
       - name: Score
         run: >
@@ -339,4 +346,115 @@ jobs:
         with:
           name: font-agreement
           path: ${{ runner.temp }}/real-faces
+          if-no-files-found: warn
+
+  # CoreText is measured by nobody, so this scores the DirectWrite reading the
+  # reader assumes there. Dispatch only and gating nothing until its first
+  # reading is on the record; expected red on `advance-quantum`. ADR 0052.
+  real-faces-macos:
+    name: the font reader against Chromium, on real faces, on macOS
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the CLI
+        run: pnpm turbo run build --filter=@pptx-studio/cli... --force
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build the probe fonts
+        run: node tools/ground-truth/fonts/metrics/build-fonts.ts "$RUNNER_TEMP/probe-fonts"
+
+      # /System/Library/Fonts reaches Supplemental on its own; naming both
+      # would index every face there twice and skip it as a collection.
+      - name: Measure
+        run: >
+          node tools/ground-truth/fonts/real-faces/measure-in-browser.ts
+          "$RUNNER_TEMP/real-faces" --font-dir /System/Library/Fonts
+          --font-dir /Library/Fonts --font-dir "$RUNNER_TEMP/probe-fonts"
+
+      - name: Score
+        run: >
+          node tools/ground-truth/fonts/real-faces/analyse.ts
+          "$RUNNER_TEMP/real-faces" --summary "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: font-agreement-macos
+          path: ${{ runner.temp }}/real-faces
+          if-no-files-found: warn
+
+  # T13 is what every reader test re-derives, taken on one Windows 11 machine.
+  # This re-takes it on a Windows runner and requires the fixture it writes to
+  # be the committed one; the only free variable is DirectWrite. ADR 0052.
+  probe-fonts:
+    name: the font reader against Chromium, on the probe fonts
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the CLI
+        run: pnpm turbo run build --filter=@pptx-studio/cli... --force
+
+      - name: Install Chromium
+        run: pnpm exec playwright install chromium
+
+      - name: Measure
+        run: node tools/ground-truth/fonts/metrics/measure-in-browser.ts "$RUNNER_TEMP/probe-fonts"
+
+      - name: Score, into the committed fixture's path
+        run: >
+          node tools/ground-truth/fonts/metrics/analyse.ts "$RUNNER_TEMP/probe-fonts"
+          --fixture corpus/ground-truth/font-metrics.json
+
+      # The committed fixture is Prettier-formatted, so the comparison is too.
+      - name: The fixture this runner would commit is the one that is committed
+        run: |
+          pnpm exec prettier --write corpus/ground-truth/font-metrics.json
+          git diff --exit-code -- corpus/ground-truth/font-metrics.json
+
+      - name: Run the suite that re-derives the reader from it
+        run: pnpm exec vitest run --project cli
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: font-metrics-windows
+          path: ${{ runner.temp }}/probe-fonts
           if-no-files-found: warn

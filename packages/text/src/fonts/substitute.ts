@@ -79,16 +79,18 @@ export function substituteFor(family: string): Substitute | undefined {
 /**
  * The CSS family list a run is set in.
  *
- * The requested face first, so a machine that has it wins; then the substitute;
- * then what PowerPoint would have used, so a face nobody has lands where the
- * deck's author saw it rather than on the browser's own default.
+ * `drawn` leads where the caller knows which face measured the run; a browser
+ * does not, so it defaults to the face asked for. Then the substitute, then what
+ * PowerPoint would have used, so a face nobody has lands where the author saw it.
  */
-export function fontStack(family: string): string {
+export function fontStack(family: string, drawn: string = family): string {
   const substitute = substituteFor(family);
-  const families = [family];
+  const families: string[] = [];
   const add = (name: string): void => {
     if (!families.includes(name)) families.push(name);
   };
+  add(drawn);
+  add(family);
   if (substitute !== undefined) add(substitute.use);
   for (const name of LAST_RESORT_FAMILIES) add(name);
   return [...families.map(cssFamily), LAST_RESORT_GENERIC].join(', ');

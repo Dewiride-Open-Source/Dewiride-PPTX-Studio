@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
-import { repoPath } from '../repo/root.ts';
+import { repoPath } from '../../repo/root.ts';
 import { bootstrapInstructions, newcomers, publishableIn } from './bootstrap.ts';
 
 const MANIFESTS = [

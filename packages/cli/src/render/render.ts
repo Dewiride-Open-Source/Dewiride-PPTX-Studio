@@ -141,6 +141,7 @@ export function renderDeck(bytes: Uint8Array, options: RenderDeckOptions = {}): 
               defaultTextStyle: document.defaultTextStyle,
               measurer: fonts.measurer,
               faceBox: fonts.faceBox,
+              cssFamilyFor: fonts.cssFamilyFor,
             },
     }),
   }));

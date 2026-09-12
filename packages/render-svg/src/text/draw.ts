@@ -14,6 +14,7 @@ import {
   hasFaceRules,
   type FaceBoxProbe,
   type FaceRules,
+  type RunFont,
   type TextMeasurer,
 } from '@pptx-studio/text';
 import type { ListStyle } from '@pptx-studio/model';
@@ -23,7 +24,7 @@ import { EMU_PER_POINT } from '../transform.js';
 import type { Placed } from '../layout.js';
 
 import { textNodes } from './emit.js';
-import { layoutText, type TextBlock } from './layout.js';
+import { askedFamily, layoutText, type TextBlock } from './layout.js';
 import { resolveText } from './resolve.js';
 
 /** How a caller supplies the three things text drawing cannot invent. */
@@ -41,6 +42,14 @@ export interface TextOptions {
    * diagnostic passes `faceRules` itself and handles the throw.
    */
   readonly rulesFor?: ((typeface: string) => FaceRules) | undefined;
+  /**
+   * The CSS `font-family` a run is drawn in.
+   *
+   * Defaults to the run's own family, quoted, which is right where the caller
+   * measures through that same name; a caller that measured in another face
+   * names it here so the markup says what was drawn.
+   */
+  readonly cssFamilyFor?: ((font: RunFont) => string) | undefined;
 }
 
 /** Arial's rules for anything unmeasured, which is what a renderer wants. */
@@ -54,6 +63,7 @@ export interface TextEngine {
   readonly measurer: TextMeasurer;
   readonly faceBox: FaceBoxProbe;
   readonly rulesFor: (typeface: string) => FaceRules;
+  readonly cssFamilyFor: (font: RunFont) => string;
 }
 
 /**
@@ -78,6 +88,7 @@ export function createTextEngine(options: TextOptions = {}): TextEngine {
       return faceBox;
     },
     rulesFor: options.rulesFor ?? approximateRules,
+    cssFamilyFor: options.cssFamilyFor ?? askedFamily,
   };
 }
 
@@ -94,6 +105,7 @@ export function textBlockOf(placed: Placed, engine: TextEngine): TextBlock | nul
     measurer: engine.measurer,
     faceBox: engine.faceBox,
     rulesFor: engine.rulesFor,
+    cssFamilyFor: engine.cssFamilyFor,
   });
 }
 

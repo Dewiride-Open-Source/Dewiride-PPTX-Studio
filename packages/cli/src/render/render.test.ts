@@ -157,7 +157,6 @@ describe('drawing a deck', () => {
     expect(result.fonts.length).toBeGreaterThan(0);
     for (const font of result.fonts) expect(FAMILIES).toContain(font.drawn);
   });
-
   it('embeds a picture rather than linking one, so the file stands alone', () => {
     const result = renderDeck(deck('a03-fills.pptx'), options());
     const svg = result.slides.map((slide) => slide.svg).join('');
@@ -181,6 +180,58 @@ describe('drawing a deck', () => {
       0,
     );
     expect(new Set(ids.flatMap((set) => [...set])).size).toBe(total);
+  });
+});
+
+/** Every `font-family` in the markup, each as the families it lists in order. */
+function stacksIn(svg: string): readonly (readonly string[])[] {
+  return [...svg.matchAll(/font-family="([^"]*)"/g)].map((match) =>
+    (match[1] ?? '').split(', ').map((name) => name.replace(/^&quot;|&quot;$/g, '')),
+  );
+}
+
+describe('what font-family says', () => {
+  it('names the face the run was measured in first, and the face the deck asked for second', () => {
+    // One face that no deck names, so every run is a substitution and the
+    // markup has to say so - the case ADR 0044 left open.
+    const standIn = mkdtempSync(join(tmpdir(), 'pptx-studio-stand-in-'));
+    writeFileSync(join(standIn, 'zzz.ttf'), buildFont({ familyName: 'Zzz Stand In' }).bytes);
+    const result = renderDeck(deck('a07-text-cascade.pptx'), {
+      fontDirs: [standIn],
+      systemFonts: false,
+    });
+    const stacks = result.slides.flatMap((slide) => stacksIn(slide.svg));
+    expect(stacks.length, 'no text was drawn, so this proves nothing').toBeGreaterThan(0);
+    expect(result.fonts.map((font) => font.asked)).toEqual(['Calibri', 'Calibri Light']);
+    for (const font of result.fonts) {
+      expect(font.substituted, font.asked).toBe(true);
+      expect(font.drawn, font.asked).toBe('Zzz Stand In');
+    }
+    for (const stack of stacks) {
+      expect(stack[0]).toBe('Zzz Stand In');
+      expect(['Calibri', 'Calibri Light']).toContain(stack[1]);
+      expect(stack).toContain('Calibri');
+      expect(stack.at(-1)).toBe('sans-serif');
+      expect(new Set(stack).size, stack.join(', ')).toBe(stack.length);
+    }
+    expect(new Set(stacks.map((stack) => stack[1]))).toEqual(new Set(['Calibri', 'Calibri Light']));
+  });
+
+  it('leads with the face the deck asked for when the machine has it, and with the stand-in when not', () => {
+    const result = renderDeck(deck('a07-text-cascade.pptx'), drawing());
+    const stacks = result.slides.flatMap((slide) => stacksIn(slide.svg));
+    // Calibri is a probe face here; Calibri Light is not, and its stand-in
+    // chain ends on Calibri through the last-resort list rather than a stranger.
+    const present = result.fonts.find((font) => font.asked === 'Calibri');
+    const stoodIn = result.fonts.find((font) => font.asked === 'Calibri Light');
+    expect(present?.substituted).toBe(false);
+    expect(stoodIn?.substituted).toBe(true);
+    expect(stoodIn?.drawn).toBe('Calibri');
+    expect(stacks.some((stack) => stack[0] === 'Calibri' && stack[1] === 'Carlito')).toBe(true);
+    expect(stacks.some((stack) => stack[0] === 'Calibri' && stack[1] === 'Calibri Light')).toBe(
+      true,
+    );
+    expect(stacks.every((stack) => stack[0] === 'Calibri')).toBe(true);
   });
 });
 

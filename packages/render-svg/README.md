@@ -165,9 +165,6 @@ returns the placed tree on its own, for a caller that wants to hit-test or draw 
 
 ## What it does not do yet
 
-- **Text.** A `p:txBody` is not read, so a text box renders as its outline and nothing else. That is
-  sub-phase 3.8, and it is deliberate: measure-equals-render needs the whole text engine, and half of
-  one is worse than none.
 - **`a:blipFill`** paints nothing; `p:graphicFrame` draws nothing. Phases 4 and 9.
 - **A compound stroke** draws as a single rail. The five forms are rails at signed offsets from the
   geometry and SVG cannot offset a path; `compoundRails` in `paint` has the measured table for when a
@@ -196,3 +193,10 @@ and CSS cannot place a strikethrough at all.
 
 `corpus/ground-truth/text-rendering.json`, and
 [ADR 0034](../../docs/adr/phase-3-text/0034-text-in-both-renderers.md).
+
+Each run's `font-family` is whatever `TextOptions.cssFamilyFor` answers for it, and by default the
+run's own family, quoted: this renderer measures and draws through one name, so the two agree by
+construction. A caller that measures elsewhere passes a hook that names the face it measured in
+first — `@pptx-studio/cli` does, out of font tables — so its markup says what was drawn rather than
+only what was asked for.
+[ADR 0052](../../docs/adr/phase-3-text/0052-the-box-rounds-half-up-and-the-markup-names-its-face.md).

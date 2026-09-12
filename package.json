@@ -35,7 +35,7 @@
     "pkg:qa": "turbo run pkg:qa",
     "check": "pnpm structure && pnpm layering && pnpm legal && pnpm references && pnpm corpus && pnpm format:check && pnpm build && pnpm lint && pnpm typecheck && pnpm roundtrip && pnpm fidelity && pnpm gate2 && pnpm pkg:qa && pnpm test",
     "changeset": "changeset",
-    "version-packages": "changeset version && pnpm install --lockfile-only",
+    "version-packages": "changeset version && node tools/release/candidate/example.ts && pnpm install --lockfile-only",
     "browsers": "playwright install chromium",
     "fidelity": "node tools/fidelity/fidelity.ts",
     "legal": "node tools/repo/check-legal.ts"

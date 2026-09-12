@@ -224,11 +224,13 @@ the same document, and there is no external reference of any kind to resolve.
 face's own `cmap`, `hmtx`, `GPOS` and `OS/2` tables instead. That is a second
 measurement engine, and the risk of a second engine is that it quietly disagrees
 with the first. Experiment T13 settled the arithmetic rather than assuming it:
-twelve fonts built so their tables disagree on purpose, 432 widths measured in
-Chromium, and the reader reproduces **all 432 exactly**. It also settled where
+fourteen fonts built so their tables disagree on purpose, 504 widths measured in
+Chromium, and the reader reproduces **all 504 exactly**. It also settled where
 an upright East Asian glyph sits: on the `BASE` table's `ideo` coordinate for
-the `DFLT` script, and on the face box descent only where there is none. The
-rules it found are
+the `DFLT` script, and on the face box descent only where there is none — and
+that the box itself is reported in whole pixels, each side rounded half up at
+the size it is read, which two probes on a 2048 and a 2000 em are the only ones
+able to show. The rules it found are
 in [`corpus/ground-truth/font-metrics.json`](../../corpus/ground-truth/font-metrics.json)
 and the reasoning is in
 [ADR 0042](../../docs/adr/phase-3-text/0042-rendering-without-a-browser.md).
@@ -237,10 +239,21 @@ and the reasoning is in
 belonging to the platform it runs on. Chromium reports a face's ascent and
 descent from `OS/2.usWinAscent`/`usWinDescent` through DirectWrite and from
 `hhea.ascender`/`descender` through FreeType, with `fsSelection` bit 7 moving
-both onto `sTypo`. Neither reading fits both: T13's probes score 12/12 and 7/12
+both onto `sTypo`. Neither reading fits both: T13's probes score 14/14 and 7/14
 on Windows where 79 real faces score 76/79 and 79/79 on Linux, missing by up to
 100 px on a 1000 px em. See
 [ADR 0045](../../docs/adr/phase-3-text/0045-the-face-box-belongs-to-the-rasteriser.md).
+
+That reading is measured on Windows and on Linux and assumed on macOS: CoreText
+is neither rasteriser, and the reader takes the DirectWrite answer there until
+the same experiment has run on a macOS machine. Either way a slide is laid out
+for the machine that renders it. Line breaks, line origins and word spacing are
+written into the SVG with that machine's advances, and a viewer flows each
+line's glyphs with its own, so a deck rendered on a Linux server and opened on a
+Windows desktop differs by whatever the two rasterisers disagree by — a rounding
+per glyph on the same face, and the whole difference between two faces where
+the viewer picks another from the list. Opened on the machine that made it, the
+file draws exactly what was measured.
 
 Fonts are found in this platform's own directories, plus any `--font-dir` you
 name, which are searched first so you can override a face without installing
@@ -264,6 +277,21 @@ substitution, under the name the deck asked for. **`CLI_NO_FACE` is thrown only
 when no font was found at all** — an empty library is nothing to draw with,
 which is a different thing from an unusual typeface. A code point no indexed
 face can draw is reported too.
+
+**The markup names the face that measured it.** Every run's `font-family` is a
+list, not a name: the face this machine drew the run in, then the face the deck
+asked for, then the substitution table's entry, then Calibri and Carlito, then
+`sans-serif`. `Calibri Light` drawn in Carlito comes out as
+`"Carlito", "Calibri Light", "Calibri", sans-serif`; a face the machine has
+leads its own list, so on a machine holding the deck's fonts the markup reads as
+the deck does. The order is the point. Line breaks and line origins are written
+into the SVG with the first face's advances, so a viewer that has it draws
+exactly what was measured; one that has only the face the deck named draws the
+author's face on positions computed for a stand-in, which is right where the two
+are metric-compatible and approximate where they are not; and one that has
+neither lands where PowerPoint would have rather than on the browser's own
+default. `--json` pairs each `asked` with its `drawn`: the drawn face leads that
+run's list, and the asked one follows it wherever the two differ.
 
 | flag                |                                                                     |
 | ------------------- | ------------------------------------------------------------------- |
