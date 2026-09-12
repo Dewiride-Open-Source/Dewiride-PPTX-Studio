@@ -1,0 +1,93 @@
+import { describe, expect, it } from 'vitest';
+
+import { slidesView } from './view.js';
+
+/**
+ * The slides view against the committed corpus, over Vitest's own server: the one
+ * place a package test cannot go, because browser mode has no filesystem.
+ */
+
+const MINIMAL = '/corpus/decks/a01-minimal.pptx';
+const FILLS = '/corpus/decks/a03-fills.pptx';
+
+async function bytesOf(path: string): Promise<ArrayBuffer> {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error(`could not fetch ${path}: ${String(response.status)}`);
+  return response.arrayBuffer();
+}
+
+function host(): HTMLElement {
+  const node = document.createElement('div');
+  node.style.width = '1000px';
+  document.body.append(node);
+  return node;
+}
+
+describe('slidesView', () => {
+  it('paints the first slide, then every thumbnail, and says how long each took', async () => {
+    const view = slidesView(() => bytesOf(FILLS));
+    host().append(view.root);
+    const opened = await view.ready;
+    expect(opened.slides).toBe(3);
+    expect(opened.failed).toEqual([]);
+    expect(opened.timings.firstStageMs).toBeGreaterThan(0);
+    expect(opened.timings.stripMs).toBeGreaterThanOrEqual(opened.timings.firstStageMs);
+    expect(view.root.querySelectorAll('.thumb-svg > svg')).toHaveLength(3);
+    // A thumbnail is exactly the oracle's smallest export.
+    const thumb = view.root.querySelector('.thumb-svg > svg');
+    expect(thumb?.getAttribute('width')).toBe('120');
+    expect(thumb?.getAttribute('height')).toBe('68');
+    view.dispose();
+  });
+
+  it('mounts the stage again at a new zoom, and not at all for the zoom it shows', async () => {
+    const view = slidesView(() => bytesOf(MINIMAL));
+    host().append(view.root);
+    await view.ready;
+    const first = await view.show(0, 1);
+    expect(first.width).toBe(960);
+    const before = view.root.querySelector('.stage > svg');
+    const again = await view.show(0, 1);
+    expect(again.mountMs).toBe(0);
+    expect(view.root.querySelector('.stage > svg')).toBe(before);
+    const doubled = await view.show(0, 2);
+    expect(doubled.width).toBe(1920);
+    expect(doubled.mountMs).toBeGreaterThan(0);
+    const after = view.root.querySelector('.stage > svg');
+    expect(after).not.toBe(before);
+    expect(after?.getAttribute('width')).toBe('1920');
+    view.dispose();
+  });
+
+  it('draws a picture fill, which the page could not before it had a media resolver', async () => {
+    const view = slidesView(() => bytesOf(FILLS));
+    host().append(view.root);
+    await view.ready;
+    await view.show(1, 1);
+    expect(view.stageSvg()).toContain('data:image/png;base64');
+    view.dispose();
+  });
+
+  it('serialises the stage and reports its shapes and its page box', async () => {
+    const view = slidesView(() => bytesOf(MINIMAL));
+    host().append(view.root);
+    await view.ready;
+    await view.show(0, 0.25);
+    expect(view.stageSvg().startsWith('<svg')).toBe(true);
+    expect(view.stageShapes().length).toBeGreaterThan(0);
+    const box = view.stageBox();
+    expect(box.width).toBe(240);
+    expect(box.height).toBe(135);
+    expect(view.thumbBox(0).width).toBe(120);
+    expect(view.thumbSvg(0)).toContain('viewBox');
+    view.dispose();
+  });
+
+  it('stops drawing the strip when disposed', async () => {
+    const view = slidesView(() => bytesOf(FILLS));
+    host().append(view.root);
+    view.dispose();
+    await expect(view.ready).rejects.toThrow();
+    expect(view.root.querySelectorAll('.thumb-svg > svg')).toHaveLength(0);
+  });
+});

@@ -1,8 +1,12 @@
 import { humanBytes, type PackageCensus } from '@pptx-studio/census';
 import { StudioWorker, type CensusResult, type ExportResult } from './client.js';
 import type { EditKind } from './export.js';
+import { el } from './element.js';
 import type { WorkerEnvironment } from './protocol.js';
-import { slidesView } from './slides.js';
+import type { PageBox, ShapeFrame } from './slides/stage.js';
+import type { ShowTimings } from './slides/timings.js';
+import { slidesView, type DeckOpened, type SlidesView } from './slides/view.js';
+import type { ZoomChoice } from './slides/zoom.js';
 
 /**
  * Gate 0: drop a `.pptx` on the page and get a live explorer of its internals.
@@ -21,17 +25,6 @@ import { slidesView } from './slides.js';
  */
 
 const worker = new StudioWorker();
-
-function el<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className?: string,
-  text?: string,
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className !== undefined) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
 
 function requireElement(id: string): HTMLElement {
   const node = document.getElementById(id);
@@ -337,6 +330,9 @@ interface Source {
 
 let source: Source | null = null;
 
+/** The slides view of the deck on the page, which the next deck replaces. */
+let view: SlidesView | null = null;
+
 /** The content types PowerPoint will accept under each extension. */
 const MIME: Readonly<Record<string, string>> = {
   pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -545,9 +541,11 @@ function render(result: CensusResult): void {
   if (problems !== null) output.append(problems);
   // The slides go first, because a picture of the deck is what anyone who
   // dropped one came for. Everything below it is the package, not the deck.
+  view?.dispose();
+  view = null;
   if (source !== null) {
-    const read = source.read;
-    output.append(section('Slides', slidesView(read)));
+    view = slidesView(source.read);
+    output.append(section('Slides', view.root));
   }
   output.append(
     renderExport(),
@@ -645,12 +643,25 @@ function wire(): void {
     });
 }
 
-/** The hook `tools/bench` drives. Same code path as a dropped file. */
+/** The hook `tools/bench`, `tools/gate1` and `tools/gate3` drive. Same code paths as the page's own. */
 interface StudioAutomation {
   readonly censusFromUrl: (url: string, repeat?: number) => Promise<CensusResult>;
   readonly environment: () => Promise<WorkerEnvironment>;
   /** Inspect a deck, then export it - the same path the two buttons take. */
   readonly exportFromUrl: (url: string, edit?: EditKind) => Promise<ExportResult>;
+  /** Inspect a deck and draw it: resolves once the first slide is painted and every thumbnail drawn. */
+  readonly openFromUrl: (url: string) => Promise<DeckOpened>;
+  readonly show: (index: number, zoom: ZoomChoice) => Promise<ShowTimings>;
+  readonly stageSvg: () => string;
+  readonly thumbSvg: (index: number) => string;
+  readonly stageShapes: () => readonly ShapeFrame[];
+  readonly stageBox: () => PageBox;
+  readonly thumbBox: (index: number) => PageBox;
+}
+
+function opened(): SlidesView {
+  if (view === null) throw new Error('no deck is open');
+  return view;
 }
 
 (globalThis as unknown as { pptxStudio: StudioAutomation }).pptxStudio = {
@@ -660,6 +671,16 @@ interface StudioAutomation {
     await inspectUrl(url);
     return save(edit);
   },
+  openFromUrl: async (url) => {
+    await inspectUrl(url);
+    return opened().ready;
+  },
+  show: (index, zoom) => opened().show(index, zoom),
+  stageSvg: () => opened().stageSvg(),
+  thumbSvg: (index) => opened().thumbSvg(index),
+  stageShapes: () => opened().stageShapes(),
+  stageBox: () => opened().stageBox(),
+  thumbBox: (index) => opened().thumbBox(index),
 };
 
 wire();

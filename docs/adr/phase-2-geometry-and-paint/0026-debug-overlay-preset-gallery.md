@@ -4,7 +4,7 @@
 `render-dom` and records one correction to a claim made in 2.10's own ADR.
 
 Code: `packages/render-svg/src/overlay.ts`, `packages/render-dom/src/overlay.ts`,
-`apps/studio/src/{gallery.ts, slides.ts}`, `apps/studio/gallery.html`.
+`apps/studio/src/gallery.ts`, `apps/studio/src/slides/` (since 3.11), `apps/studio/gallery.html`.
 
 ---
 

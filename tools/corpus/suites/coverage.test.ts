@@ -18,7 +18,7 @@ import type { UncoveredFeature } from '../manifest/schema.ts';
  * the rule that enforces it. A gate that passes tells you nobody broke the
  * invariant; it does not tell you the corpus covers forty-six of forty-seven
  * keys, that the one it misses is blocked on a download nobody approved, or
- * that fourteen of the forty-six rest on a single deck each. Those are the
+ * that twelve of the forty-six rest on a single deck each. Those are the
  * facts a reader wants, and a fact nobody wrote down is a fact that changes
  * without anybody noticing.
  */
@@ -98,15 +98,11 @@ describe('what C-COV says', () => {
     expect(gap.why).toContain('no public specification');
   });
 
-  it('rests thirteen of the forty-six on a single deck each', () => {
+  it('rests twelve of the forty-six on a single deck each', () => {
     // Not a violation and not a target: a probe corpus is built one feature at
     // a time, so most features have exactly one probe. It is here because
     // "46 of 47" reads like breadth and this is the shape underneath it - and
     // because it is the list to check first when a deck is about to be deleted.
-    //
-    // Fourteen until Gate 1. `a43-kitchen-sink` is the corpus's second deck
-    // with a `vbaProject.bin` in it, so `macros` came off this list - which is
-    // most of what a second probe for a feature is worth.
     const alone = [...COVERED]
       .filter(([, decks]) => decks.length === 1)
       .map(([key, decks]) => key + ' <- ' + decks[0]!)
@@ -115,7 +111,6 @@ describe('what C-COV says', () => {
     expect(alone).toEqual([
       'audio <- a24-media',
       'chartEx <- a22-chartex',
-      'connector <- a06-lines',
       'contentPart <- a27-ink',
       'decorative <- a19-decorative',
       'groupFill <- a03-fills',
