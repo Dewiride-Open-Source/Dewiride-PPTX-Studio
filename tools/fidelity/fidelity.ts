@@ -227,6 +227,7 @@ if (record) {
         tool: 'tools/fidelity/fidelity.ts',
         args: args.bootstrap ? ['--record', '--bootstrap'] : ['--record'],
       },
+      addedIn: '3.9',
     },
   ]);
 }

@@ -56,7 +56,7 @@
         "tool": "tools/ground-truth/paint/blips/analyse.ts",
         "args": ["<dir>"]
       },
-      "addedIn": "3.9"
+      "addedIn": "2.12"
     },
     {
       "id": "bullets",

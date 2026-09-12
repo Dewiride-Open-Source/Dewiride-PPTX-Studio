@@ -21,6 +21,8 @@ export interface FixtureEntry {
   readonly tags: readonly string[];
   readonly description: string;
   readonly recipe: { tool: string; args: readonly string[] };
+  /** The sub-phase that first wrote this fixture. */
+  readonly addedIn: string;
 }
 
 const MANIFEST = repoPath('corpus/ground-truth/manifest.json');
@@ -68,7 +70,7 @@ export function claimFixtures(entries: readonly FixtureEntry[], sweepPrefix?: st
       tags: [...entry.tags],
       description: entry.description,
       recipe: { tool: entry.recipe.tool, args: [...entry.recipe.args] },
-      addedIn: '3.9',
+      addedIn: entry.addedIn,
     };
   });
 

@@ -261,6 +261,7 @@ claimFixtures(
         tool: 'tools/ground-truth/render/fidelity/analyse.ts',
         args: ['<dir>', '--capture'],
       },
+      addedIn: '3.9',
     })),
     {
       id: 'fidelity-oracle',
@@ -274,6 +275,7 @@ claimFixtures(
         tool: 'tools/ground-truth/render/fidelity/analyse.ts',
         args: ['<dir>', '--capture'],
       },
+      addedIn: '3.9',
     },
   ],
   FIXTURE_PREFIX + 'grids/',

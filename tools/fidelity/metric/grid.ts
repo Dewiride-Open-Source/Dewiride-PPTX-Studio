@@ -45,6 +45,59 @@ export function encodeGrid(grid: Grid): Uint8Array {
 /** `PXFS`: one deck's slides in one file, so the manifest has one entry per deck. */
 const SET_MAGIC = 0x50584653;
 
+/** A set counts its slides in one byte. */
+export const MAX_SET_SLIDES = 255;
+
+/** The bytes one set may reach, under the corpus's 512 KiB per-file cap with room for its frames. */
+export const GRID_SET_BYTES = 480 * 1024;
+
+/** The bytes one grid adds to a set: its frame, its name and its planes. */
+export function gridSetBytes(key: string, grid: Grid): number {
+  const chroma = chromaDims(grid.width, grid.height);
+  return (
+    5 +
+    new TextEncoder().encode(key).length +
+    HEADER_BYTES +
+    grid.width * grid.height +
+    2 * chroma.width * chroma.height
+  );
+}
+
+/**
+ * A deck's grids in as many sets as the budget needs, in slide order.
+ *
+ * A hundred 16:9 slides are 1.2 MiB, over the per-file cap; forty are not. Sharding by bytes
+ * rather than by count keeps an A4 portrait deck, whose grids are two and a half times larger,
+ * under the same cap.
+ */
+export function shardGridSets(
+  grids: readonly { key: string; grid: Grid }[],
+  budgetBytes = GRID_SET_BYTES,
+): { key: string; grid: Grid }[][] {
+  const shards: { key: string; grid: Grid }[][] = [];
+  let current: { key: string; grid: Grid }[] = [];
+  let bytes = 6;
+  for (const entry of grids) {
+    const size = gridSetBytes(entry.key, entry.grid);
+    if (size + 6 > budgetBytes) {
+      throw new FidelityError(
+        'FID_GRID_MALFORMED',
+        `${entry.key} alone is ${String(size)} bytes, over the ${String(budgetBytes)} a set may hold`,
+        entry.key,
+      );
+    }
+    if (current.length > 0 && (bytes + size > budgetBytes || current.length === MAX_SET_SLIDES)) {
+      shards.push(current);
+      current = [];
+      bytes = 6;
+    }
+    current.push(entry);
+    bytes += size;
+  }
+  if (current.length > 0) shards.push(current);
+  return shards;
+}
+
 /**
  * Every grid of one deck, keyed by slide.
  *
@@ -54,6 +107,13 @@ const SET_MAGIC = 0x50584653;
  * already organised in.
  */
 export function encodeGridSet(grids: readonly { key: string; grid: Grid }[]): Uint8Array {
+  if (grids.length > MAX_SET_SLIDES) {
+    throw new FidelityError(
+      'FID_GRID_MALFORMED',
+      `${String(grids.length)} slides in one set, and a set counts to ${String(MAX_SET_SLIDES)}`,
+      String(grids.length),
+    );
+  }
   const parts: Uint8Array[] = [];
   const header = new Uint8Array(6);
   new DataView(header.buffer).setUint32(0, SET_MAGIC, false);

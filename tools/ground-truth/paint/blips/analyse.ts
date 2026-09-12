@@ -760,6 +760,7 @@ claimFixtures([
       'a:clrChange matches exactly. Where the arithmetic rounds is not separable and both ' +
       'readings are scored.',
     recipe: { tool: 'tools/ground-truth/paint/blips/analyse.ts', args: ['<dir>'] },
+    addedIn: '2.12',
   },
 ]);
 console.log(
