@@ -1377,7 +1377,7 @@
       "license": "CC0-1.0",
       "source": "self-authored",
       "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
-      "sha256": "94c3ebc25a2d3c31c287b902343415b71a5ebd7bfc297fe130c3b6baa5940e0d",
+      "sha256": "c991a940920ca0f0d1f33fc2aca3118a1e477e8d2b823980cd56c7c224a3d4cd",
       "bytes": 55505,
       "tags": ["fidelity", "baseline", "render"],
       "description": "The digest of our own raster for every slide on win32-x64, and the font environment it was recorded in. This is the gate: a slide that rasterises differently here has changed, and no tolerance is involved in saying so.",

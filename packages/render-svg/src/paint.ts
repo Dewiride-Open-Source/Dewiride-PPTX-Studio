@@ -34,7 +34,7 @@ import {
 import { blipPaint, type MediaResolver } from './image/blip.js';
 import { dataUri, imageSize } from './image/header.js';
 import { element, num, type AttributeValue, type SvgElement } from './node.js';
-import type { Box } from './transform.js';
+import { EMU_PER_POINT, type Box } from './transform.js';
 
 export type Attrs = Record<string, AttributeValue>;
 
@@ -355,37 +355,36 @@ export function strokeAttributes(
 /* effects                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const PRIMITIVE_TAG = {
-  gaussian: 'feGaussianBlur',
-  offset: 'feOffset',
-  flood: 'feFlood',
-  composite: 'feComposite',
-  merge: 'feMerge',
-  morphology: 'feMorphology',
-  matrix: 'feTransform',
-} as const;
+/**
+ * A filter is written in points, not EMU: Chromium rasterises a rotated filter at the
+ * resolution of its user space, and 12700 units to the point is seconds a shape (ADR 0054).
+ */
+const FILTER_UNIT = EMU_PER_POINT;
+const INTO_FILTER_SPACE = `scale(${num(FILTER_UNIT)})`;
+const OUT_OF_FILTER_SPACE = `scale(${String(1 / FILTER_UNIT)})`;
 
 /**
- * The `filter` attribute for one shape's effects, or `null` for none.
+ * A shape's children under its effects, or the children as they were for none.
  *
- * `paint` builds the graph and this writes it out. One primitive has no SVG
- * counterpart: an outer shadow's full transform - scale, skew and offset
- * together - is a `matrix`, and SVG filters have no affine primitive. It is
- * emitted as an `feOffset` of the matrix's translation, which is exact for the
- * shadows that only offset and is the visible part of the rest.
+ * One primitive has no SVG counterpart: an outer shadow's full transform - scale, skew
+ * and offset together - is a `matrix`, and SVG filters have no affine primitive. It is
+ * emitted as an `feOffset` of the matrix's translation, which is exact for the shadows
+ * that only offset and is the visible part of the rest.
  */
-export function effectFilterAttribute(
+export function withEffects(
+  children: readonly SvgElement[],
   effects: readonly Effect[],
   ctx: ColorContext,
   box: Box,
   defs: Defs,
-): Attrs {
-  if (effects.length === 0) return {};
+): readonly SvgElement[] {
+  if (effects.length === 0) return children;
   const graph = effectFilter(effects, { x: 0, y: 0, w: box.cx, h: box.cy }, (color) => {
     const rgba = resolveColor(color, ctx);
     return { css: css(rgba), alpha: rgba.a };
   });
-  if (graph.primitives.length === 0) return {};
+  if (graph.primitives.length === 0) return children;
+  const pt = (emu: number): number => emu / FILTER_UNIT;
 
   const nodes = graph.primitives.map((primitive) => {
     switch (primitive.op) {
@@ -393,14 +392,14 @@ export function effectFilterAttribute(
         return element('feGaussianBlur', {
           in: primitive.in,
           result: primitive.result,
-          stdDeviation: primitive.stdDeviation,
+          stdDeviation: pt(primitive.stdDeviation),
         });
       case 'offset':
         return element('feOffset', {
           in: primitive.in,
           result: primitive.result,
-          dx: primitive.dx,
-          dy: primitive.dy,
+          dx: pt(primitive.dx),
+          dy: pt(primitive.dy),
         });
       case 'flood':
         return element('feFlood', {
@@ -426,15 +425,15 @@ export function effectFilterAttribute(
           in: primitive.in,
           result: primitive.result,
           operator: primitive.operator,
-          radius: primitive.radius,
+          radius: pt(primitive.radius),
         });
       case 'matrix':
       default:
         return element('feOffset', {
           in: primitive.in,
           result: primitive.result,
-          dx: primitive.matrix[4],
-          dy: primitive.matrix[5],
+          dx: pt(primitive.matrix[4]),
+          dy: pt(primitive.matrix[5]),
         });
     }
   });
@@ -450,15 +449,17 @@ export function effectFilterAttribute(
       {
         id,
         filterUnits: 'userSpaceOnUse',
-        x: -left,
-        y: -top,
-        width: box.cx + left + graph.margin.right,
-        height: box.cy + top + graph.margin.bottom,
+        x: pt(-left),
+        y: pt(-top),
+        width: pt(box.cx + left + graph.margin.right),
+        height: pt(box.cy + top + graph.margin.bottom),
       },
       nodes,
     ),
   );
-  return { filter: `url(#${id})` };
+  return [
+    element('g', { transform: INTO_FILTER_SPACE, filter: `url(#${id})` }, [
+      element('g', { transform: OUT_OF_FILTER_SPACE }, children),
+    ]),
+  ];
 }
-
-export { PRIMITIVE_TAG };

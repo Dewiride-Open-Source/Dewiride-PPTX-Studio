@@ -27,13 +27,7 @@
 import type { ResolvedPath } from '@pptx-studio/geometry';
 import { resolveLine } from '@pptx-studio/paint';
 
-import {
-  type Defs,
-  effectFilterAttribute,
-  fillAttributes,
-  strokeAttributes,
-  type Attrs,
-} from './paint.js';
+import { type Defs, fillAttributes, strokeAttributes, withEffects, type Attrs } from './paint.js';
 import { element, num, type SvgElement, type SvgNode } from './node.js';
 import type { Placed } from './layout.js';
 import { shapeTextNodes, type TextEngine } from './text/draw.js';
@@ -160,7 +154,8 @@ export function shapeNodes(
   });
 
   const transform = frameTransform(placed.frame);
-  const filter = effectFilterAttribute(
+  const body = withEffects(
+    children,
     placed.appearance.effects ?? [],
     placed.colorContext,
     box,
@@ -168,11 +163,7 @@ export function shapeNodes(
   );
 
   return [
-    element(
-      'g',
-      { ...identity(placed), ...(transform === '' ? {} : { transform }), ...filter },
-      children,
-    ),
+    element('g', { ...identity(placed), ...(transform === '' ? {} : { transform }) }, body),
     ...glyphs,
   ];
 }

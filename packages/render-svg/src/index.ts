@@ -87,7 +87,7 @@ export {
 
 export {
   Defs,
-  effectFilterAttribute,
+  withEffects,
   fillAttributes,
   strokeAttributes,
   type Attrs,

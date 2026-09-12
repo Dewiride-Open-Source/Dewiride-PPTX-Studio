@@ -15,7 +15,7 @@
  */
 
 import { parseSheet, parseTheme, type Sheet, type Shape, type Xfrm } from '@pptx-studio/model';
-import type { BlipEffect, Color } from '@pptx-studio/paint';
+import { effectFilter, type BlipEffect, type Color } from '@pptx-studio/paint';
 import { parseXmlString } from '@pptx-studio/xml';
 import { describe, expect, it } from 'vitest';
 
@@ -27,7 +27,7 @@ import { layoutSheet, layoutSlide, inheritedSheets, flatten, type Placed } from 
 import { RenderError } from './errors.js';
 import { blipPaint } from './image/blip.js';
 import { Defs } from './paint.js';
-import { serializeSvg } from './node.js';
+import { num, serializeSvg } from './node.js';
 import { renderSlide, slideNode } from './slide.js';
 import {
   UNIT_CHILD_SPACE,
@@ -1263,5 +1263,89 @@ describe('the blip colour effects, evaluated', () => {
     const ones = table.split(' ').flatMap((value, at) => (value === '1' ? [at] : []));
     // 0xF1 is 241; rounding a 0..1 channel instead lands on 0 or 1.
     expect(ones).toStrictEqual([0xf1]);
+  });
+});
+
+/**
+ * A shape's effects are a filter in points. Chromium rasterises a rotated filter at the
+ * resolution of its user space: the same glow written in EMU took nine seconds a shape on
+ * a 120-pixel thumbnail and thirty milliseconds in points (ADR 0054).
+ */
+describe('effects, in point space', () => {
+  const GLOW_EMU = 76200;
+  const GLOW =
+    `<a:effectLst><a:glow rad="${String(GLOW_EMU)}"><a:srgbClr val="4472C4"><a:alpha val="40000"/>` +
+    '</a:srgbClr></a:glow></a:effectLst>';
+  const RECT = { x: 4572000, y: 2286000, cx: 3048000, cy: 2286000 };
+
+  function glowed(rot: number): string {
+    return renderSlide(
+      buildChain({ shapes: [sp({ rect: RECT, rot, fill: SOLID('4472C4'), line: GLOW })] }).slide,
+      SIZE,
+      { idPrefix: 't' },
+    );
+  }
+
+  it('writes the filter in points, inside a scale pair around the paths', () => {
+    const markup = glowed(15);
+    // The dilate is what `paint` asked for, 12700 times smaller: 76200 EMU is 6 pt.
+    const graph = effectFilter(
+      [{ kind: 'glow', rad: GLOW_EMU, color: { space: 'srgb', hex: '4472C4', transforms: [] } }],
+      { x: 0, y: 0, w: RECT.cx, h: RECT.cy },
+      () => ({ css: '#4472C4', alpha: 0.4 }),
+    );
+    const dilate = graph.primitives.find((p) => p.op === 'morphology');
+    if (dilate?.op !== 'morphology') throw new Error('no dilate');
+    expect(dilate.radius).toBeLessThan(GLOW_EMU);
+    expect(markup).toContain(`operator="dilate" radius="${num(dilate.radius / 12700)}"`);
+    expect(markup).toContain(
+      `<filter id="t-1" filterUnits="userSpaceOnUse" x="${num(-graph.margin.left / 12700)}"`,
+    );
+    const region = /<filter [^>]*width="([0-9.]+)"/.exec(markup);
+    expect(Number(region?.[1])).toBeCloseTo(
+      (RECT.cx + graph.margin.left + graph.margin.right) / 12700,
+      3,
+    );
+    const into = /transform="scale\(([0-9.]+)\)" filter="url\(#t-1\)"/.exec(markup);
+    const outOf = /<g transform="scale\(([0-9.e-]+)\)"><path /.exec(markup);
+    expect(into?.[1]).toBe('12700');
+    expect(Number(into?.[1]) * Number(outOf?.[1])).toBeCloseTo(1, 12);
+  });
+
+  it('leaves a shape without effects alone', () => {
+    const markup = renderSlide(
+      buildChain({ shapes: [sp({ rect: RECT, rot: 15, fill: SOLID('4472C4') })] }).slide,
+      SIZE,
+      { idPrefix: 't' },
+    );
+    expect(markup).not.toContain('<filter');
+    expect(markup).not.toContain('scale(12700)');
+  });
+
+  it('draws the glow beside the shape, and the shape where it was', async () => {
+    const width = 960;
+    const height = 540;
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([glowed(15)], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, height);
+    const started = performance.now();
+    context.drawImage(image, 0, 0, width, height);
+    const pixel = (x: number, y: number): number[] => [...context.getImageData(x, y, 1, 1).data];
+    URL.revokeObjectURL(href);
+    // The centre is the fill; three points above the turned top edge is glow; the corner is not.
+    const centre = pixel(480, 270);
+    expect(Math.abs((centre[0] ?? 0) - 0x44) + Math.abs((centre[2] ?? 0) - 0xc4)).toBeLessThan(4);
+    const above = pixel(480, 174);
+    expect(above[2]).toBeGreaterThan((above[0] ?? 0) + 20);
+    expect(pixel(2, 2).slice(0, 3)).toEqual([255, 255, 255]);
+    expect(performance.now() - started).toBeLessThan(3000);
   });
 });

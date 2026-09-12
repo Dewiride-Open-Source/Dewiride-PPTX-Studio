@@ -209,15 +209,21 @@ console.log(
     `(oracle noise floor ${String(report.noiseFloorBp)} bp)`,
 );
 
-if (gaps.vanished.length > 0) {
+if (record) {
+  const rewritten = [...changed.map((slide) => slide.key), ...gaps.unrecorded, ...gaps.vanished];
+  console.log(
+    `fidelity: recorded ${expectedPath}` +
+      (rewritten.length === 0
+        ? ''
+        : `, moving ${String(rewritten.length)}: ${rewritten.join(', ')}`),
+  );
+} else if (gaps.vanished.length > 0) {
   throw new FidelityError(
     'FID_RENDER_CHANGED',
     `${String(gaps.vanished.length)} recorded slide(s) are no longer drawn: ` +
       gaps.vanished.join(', '),
   );
-}
-
-if (changed.length > 0) {
+} else if (changed.length > 0) {
   throw new FidelityError(
     'FID_RENDER_CHANGED',
     `${String(changed.length)} slide(s) rasterise differently than recorded: ` +
