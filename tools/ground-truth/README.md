@@ -385,7 +385,7 @@ fonts/                   -> packages/text/src/fonts, packages/fonts, packages/cl
   format/                A   - what PowerPoint writes into ppt/fonts/*.fntdata
   embedding/             B   - whether PowerPoint renders an EOT we built
   substitution/          T7  - 159 probes: which face a run is actually drawn in
-  metrics/               T13 - 652 probes: the box and its rounding, kerning, widths, the baseline
+  metrics/               T13 - 698 probes: the box and its rounding, kerning, widths, the baseline
   real-faces/            T14 - the same reader, on faces nobody built for it
 
 fixtures.test.ts         the committed answers, as assertions CI can run
@@ -451,10 +451,11 @@ browser disagreement whole.
 The only experiment here that never opens PowerPoint. `pptx-studio render` measures text in Node,
 where there is no canvas, so it reads the face's own tables instead — and every one of those reads
 has more than one plausible source. **No real font can say which is right**, because a real font's
-`hhea`, `usWin` and `sTypo` metrics are the same numbers. So the probes are fourteen fonts built to
+`hhea`, `usWin` and `sTypo` metrics are the same numbers. So the probes are fifteen fonts built to
 disagree with themselves on purpose, loaded into Chromium as data URIs under family names that exist
-nowhere. Twelve are on a 1000 em; the last two are on a 2048 and a 2000 em, so that the box lands
-off the pixel and the browser has to say how it rounds.
+nowhere. Twelve are on a 1000 em; the last three are on a 2048, a 2000 and a 2560 em, so that the
+box lands off the pixel and the browser has to say how it rounds. Each carries a one-instruction
+font program, so FreeType hints it natively rather than autohinting its advances.
 
 ```bash
 node tools/ground-truth/fonts/metrics/measure-in-browser.ts <dir>
@@ -467,20 +468,21 @@ Four answers, each with every rival scored:
 
 - The font bounding box is **`OS/2.usWinAscent`/`usWinDescent`**, and **`sTypoAscender`/`sTypoDescender`
   when `fsSelection` bit 7 is set**, each side **rounded half up to a whole pixel** at the size it is
-  read — 28/28, where reading `usWin` alone scores 26, `sTypo` alone 14, and `hhea`, which is the
-  first thing anyone reaches for, scores 12. Only the 2048 and 2000 em probes separate the
-  roundings: the exact fraction scores 25, ceil and half-to-even 27, floor and Blink's Linux
-  borrow-from-the-ascent 26.
+  read — 30/30, where reading `usWin` alone scores 28, `sTypo` alone 14, and `hhea`, which is the
+  first thing anyone reaches for, scores 12. Only the 2048, 2000 and 2560 em probes separate the
+  roundings: the exact fraction scores 25, ceil 29, half up on the em ratio held as 16.16 fixed
+  point 28 (which is CoreText's rounding, and not DirectWrite's or FreeType's), as does the ratio
+  held in single precision, half-to-even 27, floor 26 and Blink's Linux borrow-from-the-ascent 28.
 - Pair kerning comes from **GPOS when the font has a `kern` feature, and the legacy `kern` table
-  otherwise** — 84/84. The font that carries both, saying −200 in one and −100 in the other, is the
-  only probe that can separate them: preferring the legacy table scores 78.
+  otherwise** — 90/90. The font that carries both, saying −200 in one and −100 in the other, is the
+  only probe that can separate them: preferring the legacy table scores 84.
 - A width is **each glyph advance truncated to 1/65536 px, plus each kern adjustment rounded to the
-  same step** — 504/504, against 198 for exact float arithmetic and 494 for truncating both. The
-  advance is linear in size to within 1.04e-4 px on these unhinted probes; a real face on Linux is
-  rounded per glyph instead, which is T14's finding.
+  same step** — 540/540, against 234 for exact float arithmetic and 530 for truncating both. The
+  advance is linear in size to within 1.04e-4 px on these probes under DirectWrite; a face on
+  Linux is rounded per glyph instead, which is T14's finding.
 - The ideographic baseline is **the `BASE` table's `ideo` coordinate for the `DFLT` script, and the
-  face box descent as the browser rounded it where the font names none** — 36/36, against 34 for
-  the unrounded descent and 28 for the rounded descent alone. Chromium reads `DFLT` and no other
+  face box descent as the browser rounded it where the font names none** — 38/38, against 34 for
+  the unrounded descent and 30 for the rounded descent alone. Chromium reads `DFLT` and no other
   script, does not fall through to one when `DFLT` is absent, and hands back a coordinate outside
   the em unchanged.
 
@@ -497,13 +499,15 @@ seven scripts at six sizes, against every face in the directories named on the c
 
 ```bash
 pnpm exec turbo run build --filter=@pptx-studio/cli... --force   # the reader it scores
-node tools/ground-truth/fonts/metrics/build-fonts.ts <probes>      # T13's fourteen, as files
+node tools/ground-truth/fonts/metrics/build-fonts.ts <probes>      # T13's fifteen, as files
 node tools/ground-truth/fonts/real-faces/measure-in-browser.ts <dir> --font-dir <fonts> --font-dir <probes>
 node tools/ground-truth/fonts/real-faces/analyse.ts <dir> --summary <dir>/summary.md
 ```
 
 The probe directory is what makes the face-box table decidable on a runner whose own faces agree
-with themselves: `split` separates the three tables by 100 px under any rasteriser.
+with themselves: `split` separates the three tables by 100 px under any rasteriser, `split-usetypo`
+is the one face on `macos-latest` that can show CoreText ignoring `fsSelection` bit 7, and
+`split-2560` puts `hhea` on the half so the rounding is asked of the rasterisers that read it.
 
 Nothing here is committed as a fixture. A digest over whatever fonts a runner happens to carry would
 be red the week the image changes its font package, so the answer is a job artifact and the number

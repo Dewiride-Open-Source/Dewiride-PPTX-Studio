@@ -224,13 +224,13 @@ the same document, and there is no external reference of any kind to resolve.
 face's own `cmap`, `hmtx`, `GPOS` and `OS/2` tables instead. That is a second
 measurement engine, and the risk of a second engine is that it quietly disagrees
 with the first. Experiment T13 settled the arithmetic rather than assuming it:
-fourteen fonts built so their tables disagree on purpose, 504 widths measured in
-Chromium, and the reader reproduces **all 504 exactly**. It also settled where
+fifteen fonts built so their tables disagree on purpose, 540 widths measured in
+Chromium, and the reader reproduces **all 540 exactly**. It also settled where
 an upright East Asian glyph sits: on the `BASE` table's `ideo` coordinate for
 the `DFLT` script, and on the face box descent only where there is none — and
 that the box itself is reported in whole pixels, each side rounded half up at
-the size it is read, which two probes on a 2048 and a 2000 em are the only ones
-able to show. The rules it found are
+the size it is read, which three probes on a 2048, a 2000 and a 2560 em are the
+only ones able to show. The rules it found are
 in [`corpus/ground-truth/font-metrics.json`](../../corpus/ground-truth/font-metrics.json)
 and the reasoning is in
 [ADR 0042](../../docs/adr/phase-3-text/0042-rendering-without-a-browser.md).
@@ -239,15 +239,17 @@ and the reasoning is in
 belonging to the platform it runs on. Chromium reports a face's ascent and
 descent from `OS/2.usWinAscent`/`usWinDescent` through DirectWrite and from
 `hhea.ascender`/`descender` through FreeType, with `fsSelection` bit 7 moving
-both onto `sTypo`. Neither reading fits both: T13's probes score 14/14 and 7/14
-on Windows where 79 real faces score 76/79 and 79/79 on Linux, missing by up to
-100 px on a 1000 px em. See
-[ADR 0045](../../docs/adr/phase-3-text/0045-the-face-box-belongs-to-the-rasteriser.md).
+both onto `sTypo`; through CoreText it reports `hhea` whatever bit 7 says. No
+one reading fits two of them: T13's probes score 15/15, 7/15 and 6/15 on
+Windows, where 94 faces score 94/94 on Linux and 248 score 248/248 on macOS,
+the rivals missing by up to 100 px on a 1000 px em. CoreText also holds the em
+ratio as 16.16 fixed point before it rounds, which moves a box that sits exactly
+on the half; DirectWrite and FreeType do not. See
+[ADR 0045](../../docs/adr/phase-3-text/0045-the-face-box-belongs-to-the-rasteriser.md)
+and [ADR 0053](../../docs/adr/phase-3-text/0053-what-linux-and-macos-said.md).
 
-That reading is measured on Windows and on Linux and assumed on macOS: CoreText
-is neither rasteriser, and the reader takes the DirectWrite answer there until
-the same experiment has run on a macOS machine. Either way a slide is laid out
-for the machine that renders it. Line breaks, line origins and word spacing are
+Each reading is measured on its own runner, so a slide is laid out for the
+machine that renders it. Line breaks, line origins and word spacing are
 written into the SVG with that machine's advances, and a viewer flows each
 line's glyphs with its own, so a deck rendered on a Linux server and opened on a
 Windows desktop differs by whatever the two rasterisers disagree by — a rounding

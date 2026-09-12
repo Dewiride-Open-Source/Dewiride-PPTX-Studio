@@ -10,6 +10,12 @@
 /** `A`..`H` and space, which is every glyph any probe string here needs. */
 const LETTERS = 'ABCDEFGH';
 
+/**
+ * `PUSHB[0] 0; POP`: a font program, so FreeType hints natively instead of
+ * autohinting the advances (`FT_Load_Glyph`, ftobjs.c).
+ */
+const FONT_PROGRAM = new Uint8Array([0xb0, 0x00, 0x21]);
+
 export interface Glyph {
   readonly advance: number;
   /** A filled rectangle in font units, or `undefined` for a blank glyph. */
@@ -534,7 +540,7 @@ export function buildFont(overrides: Partial<FontSpec> = {}): BuiltFont {
 
   const maxp = new Writer();
   maxp.u32(0x00010000).u16(list.length);
-  maxp.u16(4).u16(1).u16(0).u16(0).u16(2).u16(0).u16(0).u16(0).u16(0).u16(0);
+  maxp.u16(4).u16(1).u16(0).u16(0).u16(2).u16(0).u16(0).u16(0).u16(0).u16(1); // ..maxStackElements
   maxp.u16(0).u16(0).u16(0).u16(0);
 
   const os2 = new Writer();
@@ -561,6 +567,7 @@ export function buildFont(overrides: Partial<FontSpec> = {}): BuiltFont {
   const tables: { tag: string; bytes: Uint8Array }[] = [
     { tag: 'OS/2', bytes: os2.done() },
     { tag: 'cmap', bytes: cmapTable(spec) },
+    { tag: 'fpgm', bytes: FONT_PROGRAM },
     { tag: 'glyf', bytes: glyf },
     { tag: 'head', bytes: head.done() },
     { tag: 'hhea', bytes: hhea.done() },

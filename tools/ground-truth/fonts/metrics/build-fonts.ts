@@ -6,7 +6,7 @@
  * ```
  *
  * T14 measures the faces a runner has, and a runner's own faces agree with
- * themselves; `--font-dir` pointed here adds fourteen that do not, so a run on
+ * themselves; `--font-dir` pointed here adds fifteen that do not, so a run on
  * any rasteriser separates the three tables by 100 px on `split`. ADR 0052.
  */
 

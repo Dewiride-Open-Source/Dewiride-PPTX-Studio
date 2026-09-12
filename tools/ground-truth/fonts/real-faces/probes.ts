@@ -1,7 +1,7 @@
 /**
  * Experiment T14 - the font-table reader against Chromium, on faces nobody built.
  *
- * T13 asks with fourteen fonts built to disagree with themselves, which says
+ * T13 asks with fifteen fonts built to disagree with themselves, which says
  * nothing about class-based GPOS kerning, GSUB ligatures or an `hmtx` table
  * with thousands of entries. These samples ask with whatever faces a machine
  * carries. ADR 0042, open questions 2 and 3.
@@ -201,18 +201,19 @@ export interface BoxCandidates {
 
 const DIRECTWRITE_BOX = 'usWin, or sTypo when fsSelection bit 7 is set';
 const FREETYPE_BOX = 'hhea, or sTypo when fsSelection bit 7 is set';
+const CORETEXT_BOX = 'hhea.ascender/descender';
 
 /**
  * Which table the browser read the face box out of, as rival readings.
  *
  * A reading that needs a table this face has no bytes for answers `undefined`
- * and is scored over the faces that carry it. T13 settled DirectWrite at 28/28
- * and T14 settled FreeType at 79/79, on different tables. ADR 0045.
+ * and is scored over the faces that carry it. T13 settled DirectWrite at 30/30;
+ * T14 settled FreeType at 94/94 and CoreText at 248/248. ADR 0045, ADR 0053.
  */
 export const BOX_READINGS: Readonly<
   Record<string, (candidates: BoxCandidates) => BoxPair | undefined>
 > = {
-  'hhea.ascender/descender': (c) => c.hhea,
+  [CORETEXT_BOX]: (c) => c.hhea,
   'OS/2.usWinAscent/usWinDescent': (c) => c.usWin ?? undefined,
   'OS/2.sTypoAscender/sTypoDescender': (c) => c.sTypo ?? undefined,
   [DIRECTWRITE_BOX]: (c) => {
@@ -226,19 +227,21 @@ export const BOX_READINGS: Readonly<
 /**
  * The reading `metricsOf` implements here, which no rival may fit more faces than.
  *
- * DirectWrite and FreeType read different tables, so the shipped reading is a
- * property of the runner; macOS takes DirectWrite's by assumption, and a run
- * there scores that assumption. ADR 0045, ADR 0052.
+ * Each rasteriser reads its own table, so the shipped reading is a property of
+ * the runner. ADR 0045, ADR 0053.
  */
 export function shippedBoxFor(platform: string): string {
-  return platform === 'linux' ? FREETYPE_BOX : DIRECTWRITE_BOX;
+  if (platform === 'linux') return FREETYPE_BOX;
+  if (platform === 'darwin') return CORETEXT_BOX;
+  return DIRECTWRITE_BOX;
 }
 
 /** The rasteriser a runner reads fonts through, as the summary should name it. */
 export function rasteriserOf(platform: string): string {
   if (platform === 'linux') return 'FreeType';
+  if (platform === 'darwin') return 'CoreText';
   if (platform === 'win32') return 'DirectWrite';
-  return `${platform === 'darwin' ? 'CoreText' : platform}, scored against the DirectWrite reading it is assumed to share (ADR 0045)`;
+  return `${platform}, scored against the DirectWrite reading (ADR 0045)`;
 }
 
 /** Every character any sample uses, for picking one the face certainly has. */

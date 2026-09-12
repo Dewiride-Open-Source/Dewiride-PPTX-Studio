@@ -16,7 +16,7 @@ import { join, resolve } from 'node:path';
 // The built package, not its source: `tools/` is run by Node directly and the
 // sources carry `.js` specifiers. Run `pnpm build` first.
 import { facesIn } from '../../../../packages/cli/dist/index.js';
-import { BOX_ROUNDINGS, boxRoundingNamed, type BoxPx } from '../../lib/box-rounding.ts';
+import { BOX_ROUNDINGS, boxRoundingNamed } from '../../lib/box-rounding.ts';
 import { buildFont, type Baselines, type FontSpec, type KernPair } from '../../lib/truetype.ts';
 import { PROBES, STRINGS, SIZES, BOX_PX, BASELINE_SIZES, probeFonts } from './probes.ts';
 
@@ -114,18 +114,8 @@ interface BoxScored extends Scored {
   readonly missed: readonly string[];
 }
 
-/** A table's pair at `px`, before any rounding. */
-function boxAt(
-  read: (typeof BOX_READINGS)[keyof typeof BOX_READINGS],
-  s: FontSpec,
-  px: number,
-): BoxPx {
-  const want = read(s);
-  return { ascent: (want.ascent * px) / s.unitsPerEm, descent: (want.descent * px) / s.unitsPerEm };
-}
-
-// Table and rounding are scored as one model: twelve 1000 em probes tie every
-// rounding, and only the two fractional probes separate them.
+// Table and rounding are scored as one model: the 1000 em probes tie every
+// rounding, and only the three fractional probes separate them.
 const boxScores: BoxScored[] = Object.entries(BOX_READINGS).flatMap(([table, read]) =>
   Object.entries(BOX_ROUNDINGS).map(([rounding, round]): BoxScored => {
     let fits = 0;
@@ -134,7 +124,7 @@ const boxScores: BoxScored[] = Object.entries(BOX_READINGS).flatMap(([table, rea
     const missed: string[] = [];
     for (const probe of PROBES) {
       const { spec } = buildFont(probe.spec);
-      const want = round(boxAt(read, spec, BOX_PX));
+      const want = round(read(spec), spec.unitsPerEm, BOX_PX);
       const got = rowOf(probe.id).box;
       for (const [side, predicted, measured] of [
         ['ascent', want.ascent, got.ascent],
@@ -308,11 +298,7 @@ const inUnits =
 const boxDescent = inUnits((s) => boxOf(s).descent);
 
 /** The descent of the box as the browser reported it, whole pixels included. */
-const roundedBoxDescent: Fallback = (s, px) => {
-  const box = boxOf(s);
-  return boxRounding({ ascent: toPx(box.ascent, s, px), descent: toPx(box.descent, s, px) })
-    .descent;
-};
+const roundedBoxDescent: Fallback = (s, px) => boxRounding(boxOf(s), s.unitsPerEm, px).descent;
 
 const FALLBACKS: Record<string, Fallback> = {
   'the face box descent': boxDescent,

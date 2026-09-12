@@ -83,3 +83,4 @@ date.
 | [0050](phase-3-text/0050-what-the-release-actually-published.md)                  | What the release actually published                                  |
 | [0051](phase-3-text/0051-the-tree-lagged-the-registry.md)                         | The tree lagged the registry                                         |
 | [0052](phase-3-text/0052-the-box-rounds-half-up-and-the-markup-names-its-face.md) | The box rounds half up, and the markup names its face                |
+| [0053](phase-3-text/0053-what-linux-and-macos-said.md)                            | What Linux and macOS said                                            |

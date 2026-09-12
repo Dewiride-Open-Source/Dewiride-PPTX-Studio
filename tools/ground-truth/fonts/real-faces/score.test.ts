@@ -204,6 +204,8 @@ describe('the T14 gate, green', () => {
       variants: [
         { name: 'exact', fits: 0, of: 1 },
         { name: 'round half up', fits: 1, of: 1 },
+        { name: 'round half up, the em ratio in single precision', fits: 1, of: 1 },
+        { name: 'round half up, the em ratio in 16.16 fixed point', fits: 1, of: 1 },
         { name: 'round half to even', fits: 1, of: 1 },
         { name: 'floor', fits: 0, of: 1 },
         { name: 'ceil', fits: 0, of: 1 },
@@ -214,6 +216,22 @@ describe('the T14 gate, green', () => {
         },
       ],
     });
+  });
+
+  it('separates 16.16 fixed point from single precision and from half up on one box', () => {
+    // split-2560 through CoreText: 2464/2560 is 962.5 and 544/2560 is 212.5,
+    // and macos-latest reported 962/212. ADR 0053.
+    const face = faceWith(
+      [gatedRow('latin-short', 16, 100, 100)],
+      { ascent: 2464, descent: 544 },
+      { ascent: 962, descent: 212 },
+    );
+    const run = runWith([{ ...face, unitsPerEm: 2560 }]);
+    const fits = Object.fromEntries(score(run).faceBox.variants.map((v) => [v.name, v.fits]));
+    expect(fits['round half up, the em ratio in 16.16 fixed point']).toBe(1);
+    expect(fits['round half up, the em ratio in single precision']).toBe(0);
+    expect(fits['round half up']).toBe(0);
+    expect(fits['round half to even']).toBe(1);
   });
 
   it('scores every reading of the box, and separates none on a face that agrees with itself', () => {
@@ -267,17 +285,17 @@ describe('the T14 gate, green', () => {
     expect(byName.get('hhea, or sTypo when fsSelection bit 7 is set')).toMatchObject({ fits: 1 });
   });
 
-  it('scores macOS against the DirectWrite reading, which is what ships there', () => {
-    // Nothing has measured CoreText, so the run scores the assumption the reader
-    // makes and `face-box-rival` names the table if the assumption is wrong.
-    expect(shippedBoxFor('darwin')).toBe(shippedBoxFor('win32'));
+  it('scores macOS against hhea alone, which is what CoreText read through bit 7', () => {
+    // 248/248 on macos-latest against 247/248 for FreeType's composite, the one
+    // face apart being the probe built with bit 7 set. ADR 0053.
+    expect(shippedBoxFor('darwin')).toBe('hhea.ascender/descender');
     expect(shippedBoxFor('darwin')).not.toBe(shippedBoxFor('linux'));
-    expect(rasteriserOf('darwin')).toContain('CoreText');
-    expect(rasteriserOf('darwin')).toContain('assumed');
+    expect(shippedBoxFor('darwin')).not.toBe(shippedBoxFor('win32'));
+    expect(rasteriserOf('darwin')).toBe('CoreText');
     expect(rasteriserOf('linux')).toBe('FreeType');
     expect(rasteriserOf('win32')).toBe('DirectWrite');
     const darwin = { ...GREEN, image: { ...GREEN.image, platform: 'darwin' } };
-    expect(reportMarkdown(darwin, score(darwin))).toContain('assumed to share');
+    expect(reportMarkdown(darwin, score(darwin))).toContain('through CoreText');
   });
 
   it('fits the box that sits exactly on one rounding, which is inclusive', () => {
