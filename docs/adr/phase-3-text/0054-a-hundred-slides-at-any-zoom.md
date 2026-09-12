@@ -190,6 +190,12 @@ antialiasing decision shows. Slide 88 is a bar diagram whose labels PowerPoint d
 that size and ours keeps legible. The stage columns climb with width because the cell grows with
 it, as ADR 0022 predicted for anything that scales.
 
+The Linux runner said the same thing 15–27 bp lower, which is Carlito standing in for Calibri
+(CI run 34717006014, HeadlessChrome 151): 9928 / 9861 / 9933 / 9936 by zoom and 9708 for the strip,
+the same three worst slides, `pnpm fidelity` at 9826 over the corpus; the page parsed a46 in 105 ms,
+painted the first slide at 190 ms and the strip at 480 ms, in 14 MB of heap. Both platforms hold the
+gate and both baselines are committed.
+
 Two facts the gate established about the page that the plan had assumed. First, an inline `<svg>`
 root is **not** pixel-snapped by Blink: `getBoundingClientRect()` put the stage at y = 817.1875, and
 a Playwright clip is viewport-relative unless `fullPage`, and then only as wide as the viewport. The
