@@ -1352,6 +1352,24 @@
       "addedIn": "3.9"
     },
     {
+      "id": "fidelity-expected-linux-x64",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/expected.linux-x64.json",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "a63c61ec724d36b7376987805eb51f897a4472355bbf31b898a71bc040599bb0",
+      "bytes": 55495,
+      "tags": ["fidelity", "baseline", "render"],
+      "description": "The digest of our own raster for every slide on linux-x64, and the font environment it was recorded in. This is the gate: a slide that rasterises differently here has changed, and no tolerance is involved in saying so.",
+      "recipe": {
+        "tool": "tools/fidelity/fidelity.ts",
+        "args": ["--record", "--bootstrap"]
+      },
+      "addedIn": "3.9"
+    },
+    {
       "id": "fidelity-expected-win32-x64",
       "kind": "fixture",
       "storage": "committed",
@@ -1494,6 +1512,24 @@
         "args": ["<dir>"]
       },
       "addedIn": "3.6"
+    },
+    {
+      "id": "gate3-expected-linux-x64",
+      "kind": "fixture",
+      "storage": "committed",
+      "path": "render/fidelity/zoom/expected.linux-x64.json",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
+      "sha256": "2f099cba7415bfdf6437d01539cc9d022fb3a88eb1165a576f39d25694892cc0",
+      "bytes": 110115,
+      "tags": ["fidelity", "baseline", "render", "zoom", "gate3"],
+      "description": "The digest of the studio page's own raster of every a46-hundred-slides slide at every zoom on linux-x64, and the font environment it was recorded in. This is Gate 3's regression lock: a slide that rasterises differently here at any zoom has changed, with no tolerance.",
+      "recipe": {
+        "tool": "tools/gate3/run-gate3.ts",
+        "args": ["--record", "--bootstrap"]
+      },
+      "addedIn": "3.11"
     },
     {
       "id": "gate3-expected-win32-x64",
