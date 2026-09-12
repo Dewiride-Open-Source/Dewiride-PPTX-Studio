@@ -112,7 +112,9 @@ ideographic 38/38. CI: run 34688374783 on `main` at 55f3073 — `probe-fonts` gr
 Windows run, `candidate` green on its first, `real-faces` red on the autohinter; 34689472607 and
 34690905750 on this branch green everywhere, the second with `split-2560`; 34689472437 and
 34690903205 the two macOS dispatches, red on `advance-quantum` and `width` as predicted and green
-on the box on the second.
+on the box on the second; 34691755869 the dispatch with the fixed-point rule shipped, where T14's
+own table reads 16.16 at 248/248, the float 247, half up 246, and Linux half up 94/94 with 16.16
+at 93.
 
 | mutant                                         | killed by                                                          |
 | ---------------------------------------------- | ------------------------------------------------------------------ |
