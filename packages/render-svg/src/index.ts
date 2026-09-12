@@ -140,6 +140,9 @@ export {
   type SlideSize,
 } from './slide.js';
 
+/** The smallest device scale a slide is drawn at: what `fitZoom` floors to and the band clip reaches for. */
+export { MIN_PX_PER_PT } from '@pptx-studio/paint';
+
 export {
   ANGLE_UNITS_PER_DEGREE,
   EMU_PER_POINT,

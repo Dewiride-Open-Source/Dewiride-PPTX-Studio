@@ -25,13 +25,13 @@
  */
 
 import type { ResolvedPath } from '@pptx-studio/geometry';
-import { resolveLine } from '@pptx-studio/paint';
+import { MIN_PX_PER_PT, resolveLine } from '@pptx-studio/paint';
 
 import { type Defs, fillAttributes, strokeAttributes, withEffects, type Attrs } from './paint.js';
 import { element, num, type SvgElement, type SvgNode } from './node.js';
 import type { Placed } from './layout.js';
 import { shapeTextNodes, type TextEngine } from './text/draw.js';
-import { frameTransform, type Box } from './transform.js';
+import { EMU_PER_POINT, frameTransform, type Box } from './transform.js';
 
 /** Identifying attributes, so a caller can hit-test and a human can read a diff. */
 function identity(placed: Placed): Attrs {
@@ -59,14 +59,19 @@ function drawablePaths(placed: Placed): readonly ResolvedPath[] {
   return placed.geometry?.paths.filter((path) => path.finite && path.d !== '') ?? [];
 }
 
+/** The widest one device pixel a stroke is ever rounded up to, in EMU. */
+const DEVICE_PIXEL_REACH = EMU_PER_POINT / MIN_PX_PER_PT;
+
 /**
  * A rectangle that contains the shape and every band drawn outside it.
  *
  * Paired with the shape's own paths under `clip-rule="evenodd"`, it clips to
- * everything outside the outline, which is where a picture's border lives.
+ * everything outside the outline, which is where a picture's border lives. Its
+ * reach is twice the nominal width plus a device pixel at the smallest scale, so
+ * the markup is the same at every zoom and Skia's clip stays small (ADR 0054).
  */
-function outside(box: Box, width: number): string {
-  const margin = width * 2;
+function outside(box: Box, nominalWidth: number): string {
+  const margin = 2 * (nominalWidth + DEVICE_PIXEL_REACH);
   const left = num(-margin);
   const top = num(-margin);
   const right = num(box.cx + margin);
@@ -125,7 +130,7 @@ export function shapeNodes(
         ? paths.map((path) => element('path', { d: path.d }))
         : [
             element('path', {
-              d: `${outside(box, stroke.drawnWidth)} ${paths.map((path) => path.d).join(' ')}`,
+              d: `${outside(box, stroke.line.width)} ${paths.map((path) => path.d).join(' ')}`,
               'clip-rule': 'evenodd',
             }),
           ];

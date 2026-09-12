@@ -177,6 +177,7 @@ export {
   dashArray,
   dashSegments,
   deviceStrokeWidth,
+  MIN_PX_PER_PT,
   markerGeometry,
   markerOvershoot,
   resolveLine,

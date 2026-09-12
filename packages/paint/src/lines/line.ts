@@ -290,6 +290,9 @@ export function markerOvershoot(end: LineEnd | null, strokeWidth: number): numbe
   return geometry.length - geometry.refX;
 }
 
+/** The smallest device scale a stroke is rounded for: a twentieth of a pixel to the point, 5 % zoom. */
+export const MIN_PX_PER_PT = 0.05;
+
 /**
  * The width a stroke is drawn at, in EMU, at `pxPerPt` device pixels to the point.
  *
@@ -297,8 +300,11 @@ export function markerOvershoot(end: LineEnd | null, strokeWidth: number): numbe
  * one, and a zero width as one pixel, at every export width from 120 to 3840 (F2, `zoom.json`).
  */
 export function deviceStrokeWidth(widthEmu: number, pxPerPt: number): number {
-  if (!(pxPerPt > 0)) {
-    throw new PaintError('LINE_DEVICE_SCALE', `${String(pxPerPt)} device pixels to the point`);
+  if (!(pxPerPt >= MIN_PX_PER_PT)) {
+    throw new PaintError(
+      'LINE_DEVICE_SCALE',
+      `${String(pxPerPt)} device pixels to the point, under the ${String(MIN_PX_PER_PT)} strokes are rounded for`,
+    );
   }
   const px = widthEmu <= 0 ? 1 : Math.max(1, Math.round((widthEmu / EMU_PER_POINT) * pxPerPt));
   return (px / pxPerPt) * EMU_PER_POINT;

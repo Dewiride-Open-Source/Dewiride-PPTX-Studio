@@ -995,7 +995,7 @@ describe('strokes at a named width, re-derived from F2', () => {
     expect(zoom.findings.thin).toBe('T4');
   });
 
-  it('clips a picture border at the drawn width, not the nominal one', () => {
+  it('draws a picture border at the drawn width, under a band clip the zoom never moves', () => {
     const id = nextId++;
     const pic =
       `<p:pic><p:nvPicPr><p:cNvPr id="${String(id)}" name="picture"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>` +
@@ -1003,12 +1003,19 @@ describe('strokes at a named width, re-derived from F2', () => {
       '<p:spPr><a:xfrm><a:off x="1270000" y="1270000"/><a:ext cx="3810000" cy="1270000"/></a:xfrm>' +
       `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${ln('3175')}</p:spPr></p:pic>`;
     const { slide } = buildChain({ shapes: [pic] });
-    const markup = renderSlide(slide, SIZE, { idPrefix: 'p', width: 960 });
-    // A quarter point is one pixel at 960, doubled for the one-sided band, and the clip that
-    // keeps the outer half reaches two drawn widths out, not two nominal ones.
-    expect(markup).toContain('stroke-width="25400"');
-    expect(markup).toContain('M-25400 -25400H3835400V1295400H-25400Z');
-    expect(markup).not.toContain('M-6350 -6350');
+    const at960 = renderSlide(slide, SIZE, { idPrefix: 'p', width: 960 });
+    const at240 = renderSlide(slide, SIZE, { idPrefix: 'p', width: 240 });
+    // A quarter point is one pixel at 960 and four points at 240, doubled for the one-sided band.
+    expect(at960).toContain('stroke-width="25400"');
+    expect(at240).toContain('stroke-width="101600"');
+    // The clip keeping the outer half reaches the same constant distance at both.
+    const clipOf = (markup: string): string =>
+      /<clipPath[^>]*><path d="(M[^ ]+ [^H]+H[^V]+V[^H]+H[^Z]+Z)/.exec(markup)?.[1] ?? '';
+    expect(clipOf(at960)).toBe(clipOf(at240));
+    // Twice a quarter point plus the twenty-point pixel of the 5 % floor: 40.5 pt out.
+    expect(clipOf(at960).startsWith(`M-${String(40.5 * 12700)} -${String(40.5 * 12700)}H`)).toBe(
+      true,
+    );
     expect(zoom.findings.border).toBe('T4');
   });
 

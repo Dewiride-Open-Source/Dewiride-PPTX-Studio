@@ -3,7 +3,7 @@
  * the width the fidelity harness scores at, and PowerPoint's own 75 %.
  */
 
-import type { SlideSize } from '@pptx-studio/render-svg';
+import { MIN_PX_PER_PT, type SlideSize } from '@pptx-studio/render-svg';
 
 const EMU_PER_POINT = 12700;
 
@@ -26,9 +26,9 @@ export function stageSizeAt(zoom: number, size: SlideSize): { width: number; hei
   return { width, height: Math.round((width * size.cy) / size.cx) };
 }
 
-/** The zoom that fits the slide's width into `viewportWidthPx`, never under a twentieth. */
+/** The zoom that fits the slide's width into `viewportWidthPx`, never under the renderer's floor. */
 export function fitZoom(viewportWidthPx: number, size: SlideSize): number {
-  return Math.max(0.05, viewportWidthPx / (size.cx / EMU_PER_POINT));
+  return Math.max(MIN_PX_PER_PT, viewportWidthPx / (size.cx / EMU_PER_POINT));
 }
 
 /** EMU per CSS pixel at a stage width, which is what keeps the overlay's chrome one pixel. */

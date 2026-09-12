@@ -397,9 +397,12 @@ describe('the width at another export width, re-derived from F2', () => {
     expect(zoom.findings.dashOnHairline).toBe('D1');
   });
 
-  it('refuses a device scale that is not positive', () => {
+  it('refuses a device scale under the floor strokes are rounded for', () => {
     expect(() => deviceStrokeWidth(12700, 0)).toThrow(PaintError);
     expect(() => deviceStrokeWidth(12700, Number.NaN)).toThrow(PaintError);
+    expect(() => deviceStrokeWidth(12700, 0.04)).toThrow(PaintError);
+    // At the floor a hairline is twenty points, the widest one device pixel ever is.
+    expect(deviceStrokeWidth(0, 0.05)).toBe(20 * 12700);
   });
 });
 

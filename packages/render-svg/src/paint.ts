@@ -288,8 +288,6 @@ export interface StrokePaint {
   readonly attrs: Attrs;
   readonly band: StrokeBand;
   readonly line: ResolvedLine;
-  /** The single rail's width as drawn, in EMU; a hairline with no device scale is 0. */
-  readonly drawnWidth: number;
 }
 
 /**
@@ -348,7 +346,7 @@ export function strokeAttributes(
     if (paint['fill-opacity'] !== undefined) attrs['stroke-opacity'] = paint['fill-opacity'];
   }
 
-  return { attrs, band, line, drawnWidth };
+  return { attrs, band, line };
 }
 
 /* -------------------------------------------------------------------------- */
