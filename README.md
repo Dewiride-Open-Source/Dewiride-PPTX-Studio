@@ -104,7 +104,8 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | Text in both renderers                               | ✅ 3.8         |
 | The fidelity harness, and the Linux baseline         | ✅ 3.9         |
 | First npm release: `render-svg` and `cli render`     | ✅ 3.10        |
-| A 100-slide deck at any zoom, entirely client-side   | ⬜ Gate 3      |
+| A hundred slides at any zoom, through the page       | ✅ 3.11        |
+| A 100-slide deck at any zoom, entirely client-side   | ✅ Gate 3      |
 | Tables and SmartArt                                  | ⬜ Phase 4     |
 | Select, move, resize, rotate                         | ⬜ Phase 5     |
 | Text editing                                         | ⬜ Phase 6     |
@@ -244,12 +245,12 @@ Requires Node ≥ 24.11 and pnpm ≥ 11.
 pnpm install
 pnpm browsers        # one-off: Chromium for the core test suite
 pnpm check           # structure, layering, legal, references, corpus, format, build,
-                     #   lint, typecheck, round trip, fidelity, Gate 2, package QA, test
+                     #   lint, typecheck, round trip, fidelity, Gate 2, Gate 3, package QA, test
 ```
 
 Individual steps: `pnpm structure`, `pnpm layering`, `pnpm legal`, `pnpm references`,
 `pnpm corpus`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm roundtrip`, `pnpm fidelity`,
-`pnpm gate2`, `pnpm pkg:qa`, `pnpm test`.
+`pnpm gate2`, `pnpm gate3`, `pnpm pkg:qa`, `pnpm test`.
 
 To look inside a deck:
 

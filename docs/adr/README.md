@@ -84,3 +84,4 @@ date.
 | [0051](phase-3-text/0051-the-tree-lagged-the-registry.md)                         | The tree lagged the registry                                         |
 | [0052](phase-3-text/0052-the-box-rounds-half-up-and-the-markup-names-its-face.md) | The box rounds half up, and the markup names its face                |
 | [0053](phase-3-text/0053-what-linux-and-macos-said.md)                            | What Linux and macOS said                                            |
+| [0054](phase-3-text/0054-a-hundred-slides-at-any-zoom.md)                         | A hundred slides, at any zoom                                        |
