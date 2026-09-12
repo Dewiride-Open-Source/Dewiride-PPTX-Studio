@@ -14,7 +14,7 @@
  * gated, on a digest, with no tolerance to loosen. ADR 0035.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { fidelityProbes, slideKey } from '../ground-truth/render/fidelity/probes.ts';
@@ -23,9 +23,8 @@ import { repoPath } from '../repo/root.ts';
 import { blameOf } from './blame.ts';
 import { FidelityError } from './errors.ts';
 import { claimFixtures } from './fixtures.ts';
-import { decodeGridSet } from './metric/grid.ts';
-import type { Grid } from './metric/reduce.ts';
 import { differenceOf, scoreOf } from './metric/score.ts';
+import { openOracle } from './oracle.ts';
 import { openHarness, servedUrl } from './raster/browser.ts';
 import {
   assertSameEnvironment,
@@ -59,13 +58,7 @@ const ENV_ID = currentEnvId();
 const args = parseRecordArgs(process.argv.slice(2));
 const record = args.record;
 
-interface Oracle {
-  readonly noiseFloor: { worstMeanBpDrop: number; worstMaxD: number };
-  readonly records: readonly { key: string }[];
-}
-
-const oracle = JSON.parse(readFileSync(join(FIXTURES, 'oracle.json'), 'utf8')) as Oracle;
-const oracleKeys = new Set(oracle.records.map((row) => row.key));
+const oracle = openOracle(FIXTURES);
 
 /* ------------------------------------------ the baseline, and leave to write it */
 
@@ -92,7 +85,7 @@ const unsupported: { key: string; reason: string }[] = [];
 for (const probe of fidelityProbes()) {
   for (let slide = 1; slide <= probe.slides; slide++) {
     const key = slideKey(probe.id, slide);
-    if (!oracleKeys.has(key)) {
+    if (!oracle.keys.has(key)) {
       throw new FidelityError('FID_ORACLE_MISSING', `no committed oracle grid for ${key}`, key);
     }
     try {
@@ -135,24 +128,10 @@ if (expected !== null) {
 
 /* ------------------------------------------------------------- the scoring */
 
-const oracleGrids = new Map<string, ReturnType<typeof decodeGridSet>>();
-function oracleGridFor(deck: string, key: string): Grid {
-  let set = oracleGrids.get(deck);
-  if (set === undefined) {
-    const file = `${deck}.ppt.grids`;
-    set = decodeGridSet(new Uint8Array(readFileSync(join(FIXTURES, 'grids', file))), file);
-    oracleGrids.set(deck, set);
-  }
-  const grid = set.get(key);
-  if (grid === undefined)
-    throw new FidelityError('FID_ORACLE_MISSING', `no oracle grid for ${key}`, key);
-  return grid;
-}
-
 const results: SlideResult[] = [];
 for (const [key, raster] of rendered) {
   const deck = key.slice(0, key.lastIndexOf('-'));
-  const difference = differenceOf(raster.grid, oracleGridFor(deck, key));
+  const difference = differenceOf(raster.grid, oracle.gridFor(key));
   const score = scoreOf(difference);
   const was = expected?.slides[key];
   results.push({
@@ -178,8 +157,8 @@ const changed = results.filter((slide) => slide.changed);
 const report: RunReport = {
   envId: ENV_ID,
   slides: results,
-  noiseFloorBp: oracle.noiseFloor.worstMeanBpDrop,
-  noiseFloorMaxD: oracle.noiseFloor.worstMaxD,
+  noiseFloorBp: oracle.oracle.noiseFloor.worstMeanBpDrop,
+  noiseFloorMaxD: oracle.oracle.noiseFloor.worstMaxD,
   substituted: environment.faces.filter((face) => !face.available).map((face) => face.family),
 };
 

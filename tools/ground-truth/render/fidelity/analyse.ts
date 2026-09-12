@@ -213,7 +213,9 @@ function writeSets(
     const which = shards.length === 1 ? 'every slide' : `slides ${first} to ${last}`;
     const at = width === RASTER_WIDTH ? '' : ` at ${String(width)} pixels wide`;
     files.push({
-      id: `fidelity-${stem}${shards.length === 1 ? '' : `-${String(index + 1)}`}`,
+      id:
+        `fidelity-${deck}${width === RASTER_WIDTH ? '' : `-${String(width)}`}` +
+        (shards.length === 1 ? '' : `-${String(index + 1)}`),
       path,
       tags: ['fidelity', 'oracle', 'render', ...(width === RASTER_WIDTH ? [] : ['zoom'])],
       description:

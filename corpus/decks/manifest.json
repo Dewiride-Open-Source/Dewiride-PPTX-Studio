@@ -1241,6 +1241,39 @@
         "args": ["--out", "corpus/decks", "--id", "a45-backgrounds"]
       },
       "addedIn": "2.14"
+    },
+    {
+      "id": "a46-hundred-slides",
+      "kind": "deck",
+      "storage": "committed",
+      "path": "a46-hundred-slides.pptx",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "producer": "tools/corpus/gen",
+      "sha256": "9d9c7d1366454224f4c968b21ec894bfee82d06c9391ce83cb2b052395e28730",
+      "bytes": 164143,
+      "slides": 100,
+      "zipEntries": 222,
+      "format": "pptx",
+      "features": {
+        "shape": 803,
+        "placeholder": 108,
+        "presetGeom": 746,
+        "gradientFill": 182,
+        "patternFill": 35,
+        "picture": 12,
+        "group": 13,
+        "connector": 39,
+        "field": 90,
+        "shadow": 13,
+        "glow": 13
+      },
+      "description": "A hundred slides of nine kinds - cover, agenda, eight section headers, bullets, two-column text, picture and caption, shape grids, quotes, bar diagrams and a closing - from one fixed schedule and a seeded generator, the size a deck has after a quarter of writing. Gate 3 asks whether the viewer, the harness and the oracle scale to it and whether every slide is faithful at every zoom; no three-slide probe can ask either. The first Tier A deck past ten slides and the first deflated for scale rather than to probe compression.",
+      "recipe": {
+        "tool": "tools/corpus/tiers/a-generated/build-probes.ts",
+        "args": ["--out", "corpus/decks", "--id", "a46-hundred-slides"]
+      },
+      "addedIn": "3.11"
     }
   ]
 }

@@ -72,7 +72,7 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | Schema order, Markup Compatibility, invertible edits | ✅ 0.6         |
 | Ground truth: embedded fonts, colour transforms      | ✅ 0.7         |
 | Feature census, `cli inspect`, the Worker boundary   | ✅ 0.8         |
-| The corpus: 54 licensed decks, three producers       | ✅ 1.1         |
+| The corpus: 55 licensed decks, three producers       | ✅ 1.1         |
 | The repair firewall: 29 rules, `cli validate`        | ✅ 1.2         |
 | Writer: dirty-part export, media GC, prepare hooks   | ✅ 1.3         |
 | The round-trip oracle and `cli roundtrip`            | ✅ 1.4         |
@@ -215,10 +215,10 @@ way that answer is worth anything.
 
 ## The round-trip badge
 
-The badge at the top says **54/54 decks**, and it means something narrow and checkable: every
+The badge at the top says **55/55 decks**, and it means something narrow and checkable: every
 licensed deck in [`corpus/`](./corpus) is read, written back out, and compared against the original
-— 1516 parts in all, 901 as canonical XML, 569 as relationship graphs with the ids treated as
-opaque labels, and 46 by SHA-256.
+— 1737 parts in all, 1013 as canonical XML, 676 as relationship graphs with the ids treated as
+opaque labels, and 48 by SHA-256.
 
 **It is not a byte comparison and must not become one.** Entry order, deflate level, timestamps and
 attribute order all differ legitimately between two archives holding one document; nine of the
@@ -233,7 +233,7 @@ hand.
 The number is committed to [`.github/badges/roundtrip.json`](./.github/badges/roundtrip.json)
 rather than published from a workflow run, because it is a fact about the contents of this
 repository and nothing about a run decides it. `pnpm roundtrip` recomputes it and fails if the two
-disagree, so the badge cannot claim 54/54 unless the last run to touch it measured 54/54 — and no
+disagree, so the badge cannot claim 55/55 unless the last run to touch it measured 55/55 — and no
 workflow here needs write access to anything.
 
 ## Development
