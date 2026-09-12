@@ -211,11 +211,13 @@ export async function drawSlide(input: {
  * here that anything outside the repository could reach.
  */
 export async function injectHarness(page: Page): Promise<void> {
-  await page.addScriptTag({
-    content:
-      `globalThis.reduce = ${reduceRgba.toString()};
-` + `globalThis.drawSlide = ${drawSlide.toString()};`,
-  });
+  await injectReduce(page);
+  await page.addScriptTag({ content: `globalThis.drawSlide = ${drawSlide.toString()};` });
+}
+
+/** The reduction alone, for a page that draws by itself and is only asked to score. */
+export async function injectReduce(page: Page): Promise<void> {
+  await page.addScriptTag({ content: `globalThis.reduce = ${reduceRgba.toString()};` });
 }
 
 export interface SlideRaster {
