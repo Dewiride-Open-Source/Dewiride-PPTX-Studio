@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import lines from '../../../../corpus/ground-truth/lines.json' with { type: 'json' };
+import snap from '../../../../corpus/ground-truth/snap.json' with { type: 'json' };
 import zoom from '../../../../corpus/ground-truth/zoom.json' with { type: 'json' };
 import { PaintError } from '../errors.js';
 import { COMPOUND_RUNS } from './compound-table.js';
@@ -14,6 +15,7 @@ import {
   compoundRails,
   dashArray,
   dashSegments,
+  devicePen,
   deviceStrokeWidth,
   markerGeometry,
   markerPen,
@@ -445,6 +447,107 @@ describe('the width at another export width, re-derived from F2', () => {
     expect(() => deviceStrokeWidth(12700, 0.04)).toThrow(PaintError);
     // At the floor a hairline is twenty points, the widest one device pixel ever is.
     expect(deviceStrokeWidth(0, 0.05)).toBe(20 * 12700);
+  });
+});
+
+interface SnapMeasure {
+  readonly from: number;
+  readonly cover: readonly number[];
+}
+
+/** Every scored case of one F3 family: the probe's centre and width in device pixels, and what the export inked. */
+function snapCases(family: string): {
+  id: string;
+  scale: number;
+  centrePx: number;
+  widthPx: number;
+  seen: SnapMeasure;
+}[] {
+  const out: { id: string; scale: number; centrePx: number; widthPx: number; seen: SnapMeasure }[] =
+    [];
+  const measured = snap.measured as Record<string, Record<string, SnapMeasure>>;
+  for (const probe of snap.probes) {
+    if (probe.family !== family) continue;
+    for (const width of snap.widths) {
+      if (width < snap.snapFrom) continue;
+      const seen = measured[probe.id]?.[String(width)];
+      if (seen === undefined) continue;
+      const scale = width / snap.slide.w;
+      out.push({
+        id: probe.id,
+        scale,
+        centrePx: probe.centrePt * scale,
+        widthPx: (probe.widthPt ?? 0) * scale,
+        seen,
+      });
+    }
+  }
+  return out;
+}
+
+describe('the pen on the device grid, re-derived from F3', () => {
+  const penOf = (widthPx: number, scale: number): { px: number; shiftPx: number } => {
+    const pen = devicePen((widthPx / scale) * EMU_PER_POINT, scale);
+    return {
+      px: (pen.width / EMU_PER_POINT) * scale,
+      shiftPx: (pen.shift / EMU_PER_POINT) * scale,
+    };
+  };
+  /** The rows the export inked to at least half, as `[first, last]`. */
+  const inkedRows = (seen: SnapMeasure): [number, number] => {
+    const rows = seen.cover.map((v, i) => [seen.from + i, v] as const).filter(([, v]) => v >= 0.5);
+    return [rows[0]![0], rows[rows.length - 1]![0]];
+  };
+
+  it('puts an odd pen on pixel centres and an even one on the grid, 336 of 336 axis-aligned strokes', () => {
+    const cases = snapCases('stroke');
+    expect(cases).toHaveLength(336);
+    for (const c of cases) {
+      const { px, shiftPx } = penOf(c.widthPx, c.scale);
+      expect(Number.isInteger(px), c.id).toBe(true);
+      expect(shiftPx, c.id).toBe(px % 2 === 1 ? 0.5 : 0);
+      // The band the rule predicts, and the rows the export inked: the same rows.
+      const centre = Math.floor(c.centrePx + 0.5) + shiftPx;
+      const top = Math.round(centre - px / 2);
+      if (c.widthPx - Math.floor(c.widthPx) === 0.5 && c.scale === 1.25) continue;
+      expect(inkedRows(c.seen), `${c.id}@${String(c.scale)}`).toEqual([top, top + px - 1]);
+    }
+    expect(snap.findings.stroke).toBe('SP');
+  });
+
+  it('rounds an exact half pixel up, as the 960 export does and the 1200 export does not', () => {
+    // 2.5, 4.5 and 6.5 points at one pixel to the point: three, five and seven pixels, crisp.
+    expect(penOf(2.5, 1).px).toBe(3);
+    expect(penOf(4.5, 1).px).toBe(5);
+    expect(penOf(6.5, 1).px).toBe(7);
+    for (const c of snapCases('tie').filter((k) => k.scale === 1)) {
+      const [first, last] = inkedRows(c.seen);
+      expect(last - first + 1, c.id).toBe(penOf(c.widthPx, c.scale).px);
+    }
+    // At 1200 the same half went down and the pen straddled: 2.5 pixels drew as two, half a
+    // row each side. The renderer rounds up there too, and the ADR carries the half pixel.
+    const straddled = snapCases('tie').filter(
+      (k) => k.scale === 1.25 && k.widthPx - Math.floor(k.widthPx) === 0.5,
+    );
+    expect(straddled).toHaveLength(10);
+    for (const c of straddled) {
+      expect(
+        c.seen.cover.filter((v) => v > 0.4 && v < 0.6),
+        c.id,
+      ).toHaveLength(2);
+      expect(penOf(c.widthPx, c.scale).px).toBe(Math.ceil(c.widthPx));
+    }
+  });
+
+  it('shifts a hairline and a one-pixel pen alike, and nothing at all with no device', () => {
+    expect(penOf(0, 1)).toEqual({ px: 1, shiftPx: 0.5 });
+    expect(penOf(0.25, 1)).toEqual({ px: 1, shiftPx: 0.5 });
+    expect(penOf(2, 2)).toEqual({ px: 2, shiftPx: 0 });
+    expect(penOf(3, 2)).toEqual({ px: 3, shiftPx: 0.5 });
+    expect(devicePen(12700, 1)).toEqual({ width: 12700, shift: 6350 });
+    expect(devicePen(12700, 4)).toEqual({ width: 12700, shift: 0 });
+    expect(devicePen(12700, 0.25).shift).toBe(2 * 12700);
+    expect(() => devicePen(12700, 0.04)).toThrow(PaintError);
   });
 });
 

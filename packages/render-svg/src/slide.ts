@@ -43,6 +43,8 @@ export interface RenderOptions {
   /**
    * `width` and `height` attributes, in CSS pixels. Omitted when absent. A width also names the
    * device scale strokes are rounded to whole pixels at; without one they keep their true width.
+   * A height names a pixel box the slide is stretched into, as the export stretches into its own
+   * whole-pixel box (F2's frame, `zoom.json`); without one the height follows the slide.
    */
   readonly width?: number;
   readonly height?: number;
@@ -159,8 +161,8 @@ export function slideNode(sheet: Sheet, size: SlideSize, options: RenderOptions 
         viewBox: `0 0 ${String(size.cx)} ${String(size.cy)}`,
         ...(options.width === undefined ? {} : { width: options.width }),
         ...(options.height === undefined ? {} : { height: options.height }),
-        // Slides are a fixed aspect and nothing about them stretches.
-        preserveAspectRatio: 'xMidYMid meet',
+        // A named box is filled to the pixel, as the export fills its own; otherwise the aspect holds.
+        preserveAspectRatio: options.height === undefined ? 'xMidYMid meet' : 'none',
       },
       children,
     ),

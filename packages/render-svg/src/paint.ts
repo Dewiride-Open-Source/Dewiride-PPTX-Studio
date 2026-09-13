@@ -20,7 +20,7 @@ import {
   pathGeometry,
   resolveColor,
   resolvePattern,
-  deviceStrokeWidth,
+  devicePen,
   markerGeometry,
   markerPen,
   svgStops,
@@ -292,6 +292,8 @@ export interface StrokePaint {
   readonly attrs: Attrs;
   readonly band: StrokeBand;
   readonly line: ResolvedLine;
+  /** Half a device pixel in EMU for an odd pen at a named scale, else zero (F3, `snap.json`). */
+  readonly shift: number;
 }
 
 /**
@@ -316,8 +318,8 @@ export function strokeAttributes(
   // At a named device scale the export's whole-pixel widths; otherwise the true width, and a
   // hairline as one screen pixel that no transform scales (F2, `zoom.json`).
   const hairline = line.width === 0;
-  const drawnWidth =
-    defs.pxPerPt === null ? line.width : deviceStrokeWidth(line.width, defs.pxPerPt);
+  const pen = defs.pxPerPt === null ? null : devicePen(line.width, defs.pxPerPt);
+  const drawnWidth = pen === null ? line.width : pen.width;
   const svg = svgStroke(line, drawnWidth);
   const attrs: Attrs = {
     'stroke-linecap': svg['stroke-linecap'],
@@ -350,7 +352,7 @@ export function strokeAttributes(
     if (paint['fill-opacity'] !== undefined) attrs['stroke-opacity'] = paint['fill-opacity'];
   }
 
-  return { attrs, band, line };
+  return { attrs, band, line, shift: pen === null ? 0 : pen.shift };
 }
 
 /* -------------------------------------------------------------------------- */

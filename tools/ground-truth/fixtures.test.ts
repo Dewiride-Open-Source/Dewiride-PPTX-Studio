@@ -552,3 +552,230 @@ describe('experiment F2 - what the export does at another width', () => {
     expect(zoom.findings.exportCeiling).toBeNull();
   });
 });
+
+interface SnapScore {
+  readonly model: string;
+  readonly fits: number;
+  readonly of: number;
+}
+interface SnapProbe {
+  readonly id: string;
+  readonly family: string;
+  readonly shape: 'band' | 'from' | 'to';
+  readonly centrePt: number;
+  readonly widthPt?: number;
+  readonly edge?: string;
+  readonly read: { readonly axis: 'x' | 'y'; readonly at: number; readonly half: number };
+  readonly line?: { readonly from: number; readonly to: number; readonly t: number };
+}
+interface SnapMeasure {
+  readonly from: number;
+  readonly cover: readonly number[];
+  readonly partial: number;
+}
+interface SnapFixture {
+  readonly widths: readonly number[];
+  readonly snapFrom: number;
+  readonly tolerance: number;
+  readonly cases: number;
+  readonly excluded: readonly string[];
+  readonly findings: Readonly<Record<string, unknown>> & {
+    readonly partialRows: Readonly<Record<string, number>>;
+  };
+  readonly candidates: Readonly<Record<string, readonly SnapScore[]>>;
+  readonly probes: readonly SnapProbe[];
+  readonly measured: Readonly<Record<string, Readonly<Record<string, SnapMeasure>>>>;
+}
+
+describe('experiment F3 - where the export puts an edge on the device grid', () => {
+  const snap = readJson<SnapFixture>('snap.json');
+  const halfUp = (v: number): number => Math.floor(v + 0.5);
+  /** The pen in whole pixels, never under one; a half went up at 960 and down at 1200. */
+  const pen = (w: number, scale: number): number =>
+    Math.max(1, w - Math.floor(w) === 0.5 && scale === 1.25 ? Math.floor(w) : halfUp(w));
+  /** An odd pen sits on pixel centres: the rounded coordinate, half a pixel on. */
+  const snapped = (v: number, w: number): number =>
+    halfUp(v) + (Math.max(1, halfUp(w)) % 2 === 1 ? 0.5 : 0);
+  const coverOf = (top: number, bottom: number, from: number, to: number): number[] => {
+    const out: number[] = [];
+    for (let r = from; r <= to; r++) {
+      out.push(Math.min(1, Math.max(0, Math.min(bottom, r + 1) - Math.max(top, r))));
+    }
+    return out;
+  };
+  interface Case {
+    readonly probe: SnapProbe;
+    readonly width: number;
+    readonly scale: number;
+    readonly from: number;
+    readonly to: number;
+    readonly c: number;
+    readonly w: number;
+    readonly seen: number[];
+  }
+  const cases = (family: string): Case[] =>
+    snap.probes
+      .filter((probe) => probe.family === family)
+      .flatMap((probe) =>
+        snap.widths
+          .filter((width) => width >= snap.snapFrom)
+          .map((width) => {
+            const scale = width / 960;
+            const from = Math.round((probe.read.at - probe.read.half) * scale);
+            const to = Math.round((probe.read.at + probe.read.half) * scale);
+            const measure = snap.measured[probe.id]![String(width)]!;
+            const seen = new Array<number>(to - from + 1).fill(0);
+            measure.cover.forEach((v, i) => {
+              seen[measure.from - from + i] = v;
+            });
+            return {
+              probe,
+              width,
+              scale,
+              from,
+              to,
+              c: probe.centrePt * scale,
+              w: (probe.widthPt ?? 0) * scale,
+              seen,
+            };
+          }),
+      );
+  const worst = (a: readonly number[], b: readonly number[]): number =>
+    Math.max(...a.map((v, i) => Math.abs(v - (b[i] ?? 0))));
+  const fits = (all: readonly Case[], predict: (c: Case) => [number, number]): number =>
+    all.filter((k) => {
+      const [top, bottom] = predict(k);
+      return worst(k.seen, coverOf(top, bottom, k.from, k.to)) <= snap.tolerance;
+    }).length;
+  const band = (k: Case): [number, number] => {
+    const n = pen(k.w, k.scale);
+    const centre = snapped(k.c, k.w);
+    return [centre - n / 2, centre + n / 2];
+  };
+  const edge = (k: Case, at: number): [number, number] =>
+    k.probe.shape === 'from' ? [at, Infinity] : [-Infinity, at];
+
+  it('names one perfect reading per family, and every rival misses', () => {
+    expect(snap.cases).toBe(1498);
+    expect(snap.excluded).toHaveLength(0);
+    for (const [family, scores] of Object.entries(snap.candidates)) {
+      const perfect = scores.filter((score) => score.fits === score.of);
+      expect(perfect, family).toHaveLength(1);
+      expect(scores.length, family).toBeGreaterThan(1);
+    }
+  });
+
+  it('snaps every axis-aligned stroke: the centre rounds half up and an odd pen sits on pixel centres, 732 of 732', () => {
+    const all = ['stroke', 'outline', 'triangle', 'rotated', 'tie'].flatMap(cases);
+    expect(all).toHaveLength(732);
+    expect(fits(all, band)).toBe(732);
+    // The reading anyone writes first - the true width, antialiased where it lies - is what a
+    // browser draws, and it misses three cases in four.
+    expect(fits(all, (k) => [k.c - k.w / 2, k.c + k.w / 2])).toBeLessThan(all.length / 4);
+    // Rounding the pen's top edge without moving its centre misses every odd pen past the half.
+    const topRounded = fits(all, (k) => {
+      const n = Math.max(1, halfUp(k.w));
+      return [halfUp(k.c - n / 2), halfUp(k.c - n / 2) + n];
+    });
+    expect(topRounded).toBeLessThan(all.length);
+    expect(snap.findings.partialRows['stroke']).toBe(16);
+  });
+
+  it('rounds an exact half pixel of width up at 960 and down at 1200, 24 of 24', () => {
+    const ties = cases('tie').filter((k) => k.w - Math.floor(k.w) === 0.5);
+    expect(ties.filter((k) => k.width === 960)).toHaveLength(12);
+    expect(ties.filter((k) => k.width === 1200)).toHaveLength(10);
+    expect(ties.filter((k) => k.width === 240)).toHaveLength(2);
+    expect(fits(ties, band)).toBe(24);
+    // Neither rounding on its own fits both exports: half up misses 1200, half to even 960.
+    const always = (round: (w: number) => number): number =>
+      fits(ties, (k) => {
+        const n = Math.max(1, round(k.w));
+        const centre = snapped(k.c, k.w);
+        return [centre - n / 2, centre + n / 2];
+      });
+    expect(always(halfUp)).toBe(14);
+    const halfEven = (v: number): number =>
+      v - Math.floor(v) === 0.5
+        ? Math.floor(v) % 2 === 0
+          ? Math.floor(v)
+          : Math.floor(v) + 1
+        : halfUp(v);
+    expect(always(halfEven)).toBeLessThan(24);
+    expect(snap.candidates['tie']!.find((s) => s.model === 'SE2')?.fits).toBe(120);
+  });
+
+  it('rounds a fill edge and a picture edge half up, 192 of 192', () => {
+    const fills = cases('fill').concat(cases('picture'));
+    expect(fills).toHaveLength(192);
+    expect(fits(fills, (k) => edge(k, halfUp(k.c)))).toBe(192);
+    expect(fits(fills, (k) => edge(k, k.c))).toBeLessThan(192);
+    expect(fits(fills, (k) => edge(k, Math.floor(k.c)))).toBeLessThan(192);
+  });
+
+  it('takes a flat end onto its pen, and a one-pixel pen a quarter pixel past it, 144 of 144', () => {
+    const ends = cases('end');
+    expect(ends).toHaveLength(144);
+    expect(
+      fits(ends, (k) => {
+        const reach = pen(k.w, k.scale) === 1 ? (k.probe.shape === 'from' ? -0.25 : 0.25) : 0;
+        return edge(k, snapped(k.c, k.w) + reach);
+      }),
+    ).toBe(144);
+    expect(fits(ends, (k) => edge(k, halfUp(k.c)))).toBeLessThan(144);
+    expect(fits(ends, (k) => edge(k, snapped(k.c, k.w)))).toBeLessThan(144);
+  });
+
+  it('keeps a picture border half its true width outside the rounded frame edge, 48 of 48', () => {
+    const borders = cases('border');
+    expect(borders).toHaveLength(48);
+    expect(
+      fits(borders, (k) => {
+        const n = pen(k.w, k.scale);
+        const centre = halfUp(k.c) - k.w / 2;
+        return [centre - n / 2, centre + n / 2];
+      }),
+    ).toBe(48);
+    // F2's O4 read this border at one width; a pen wholly outside the rounded edge misses 16.
+    expect(fits(borders, (k) => [halfUp(k.c) - pen(k.w, k.scale), halfUp(k.c)])).toBe(32);
+  });
+
+  it('snaps a slanted line at its endpoints and antialiases between them, 24 of 24', () => {
+    const slants = cases('slant');
+    expect(slants).toHaveLength(24);
+    expect(
+      fits(slants, (k) => {
+        const line = k.probe.line!;
+        const from = snapped(line.from * k.scale, k.w);
+        const to = snapped(line.to * k.scale, k.w);
+        const centre = from + (to - from) * line.t;
+        const n = pen(k.w, k.scale);
+        return [centre - n / 2, centre + n / 2];
+      }),
+    ).toBe(24);
+    expect(fits(slants, band)).toBeLessThan(24);
+  });
+
+  it('draws a curved outline where the stroke rule puts it, a quarter pixel down at the top', () => {
+    const bias = (k: Case): number => (k.probe.read.axis === 'y' ? 0.25 : 0.125);
+    const ellipses = cases('ellipse');
+    expect(ellipses).toHaveLength(72);
+    expect(
+      fits(ellipses, (k) => {
+        const [top, bottom] = band(k);
+        return k.probe.edge === 'bottom' ? [top, bottom] : [top + bias(k), bottom + bias(k)];
+      }),
+    ).toBe(72);
+    expect(fits(ellipses, band)).toBe(35);
+    const rounded = cases('roundRect');
+    expect(rounded).toHaveLength(72);
+    expect(
+      fits(rounded, (k) => {
+        const [top, bottom] = band(k);
+        return pen(k.w, k.scale) > 1 ? [top + bias(k), bottom] : [top, bottom];
+      }),
+    ).toBe(72);
+    expect(snap.findings['ellipse']).toBe('SQ');
+    expect(snap.findings['roundRect']).toBe('SN');
+  });
+});

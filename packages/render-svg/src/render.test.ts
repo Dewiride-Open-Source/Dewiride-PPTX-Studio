@@ -21,6 +21,7 @@ import { describe, expect, it } from 'vitest';
 
 import fixture from '../../../corpus/ground-truth/transforms.json' with { type: 'json' };
 import pictures from '../../../corpus/ground-truth/pictures.json' with { type: 'json' };
+import snap from '../../../corpus/ground-truth/snap.json' with { type: 'json' };
 import zoom from '../../../corpus/ground-truth/zoom.json' with { type: 'json' };
 
 import { layoutSheet, layoutSlide, inheritedSheets, flatten, type Placed } from './layout.js';
@@ -1275,6 +1276,270 @@ describe('line ends, re-derived from C4 and F2', () => {
     // And it sits on the line, at y = 100 pt, not beside it.
     expect(Math.abs(reference.centre - 100)).toBeLessThanOrEqual(1);
     expect(Math.abs(small.centre - 25)).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('the device grid, re-derived from F3', () => {
+  const BLACK = '<a:solidFill><a:srgbClr val="000000"/></a:solidFill>';
+  const ln = (pt: number): string => `<a:ln w="${String(Math.round(pt * 12700))}">${BLACK}</a:ln>`;
+  const PT = 12700;
+  // A rectangle a quarter point past the grid on both axes, so nothing about it is a pixel edge.
+  const RECT = { x: 100.25 * PT, y: 60.25 * PT, cx: 160 * PT, cy: 100 * PT };
+  const at = (markup: string, width: number | undefined, extra = {}): string =>
+    renderSlide(buildChain({ shapes: [markup] }).slide, SIZE, {
+      idPrefix: 'g',
+      ...(width === undefined ? {} : { width }),
+      ...extra,
+    });
+  const pathTags = (markup: string): string[] => markup.match(/<path\b[^>]*>/g) ?? [];
+  const crisp = (tag: string): boolean => tag.includes('shape-rendering="crispEdges"');
+  const shift = (tag: string): string | null =>
+    /transform="translate\(([^)]*)\)"/.exec(tag)?.[1] ?? null;
+
+  it('draws an axis-aligned outline crisp, an odd pen half a device pixel on and an even pen where it lies', () => {
+    const one = pathTags(at(sp({ rect: RECT, line: ln(1) }), 960));
+    expect(one).toHaveLength(1);
+    expect(crisp(one[0]!)).toBe(true);
+    expect(shift(one[0]!)).toBe('6350 6350');
+    // Two pixels at 960: even, no shift. Three at 1.5 pt and 1920: odd, half of 1/2 pt.
+    expect(shift(pathTags(at(sp({ rect: RECT, line: ln(2) }), 960))[0]!)).toBeNull();
+    expect(shift(pathTags(at(sp({ rect: RECT, line: ln(1.5) }), 1920))[0]!)).toBe('3175 3175');
+    // A hairline is one pixel, so it moves too; at 240 that half pixel is two points.
+    expect(shift(pathTags(at(sp({ rect: RECT, line: ln(0) }), 240))[0]!)).toBe('25400 25400');
+    // The 2x display doubles the pen: what was odd is even.
+    expect(
+      shift(pathTags(at(sp({ rect: RECT, line: ln(1) }), 960, { devicePixelRatio: 2 }))[0]!),
+    ).toBeNull();
+    expect(snap.findings.stroke).toBe('SP');
+  });
+
+  it('draws a fill crisp with no shift, and a curve or a turned edge antialiased where it lies', () => {
+    const fill = pathTags(at(sp({ rect: RECT, fill: BLACK }), 960))[0]!;
+    expect(crisp(fill)).toBe(true);
+    expect(shift(fill)).toBeNull();
+    for (const turned of [
+      sp({ rect: RECT, line: ln(1), prst: 'ellipse' }),
+      sp({ rect: RECT, line: ln(1), prst: 'roundRect' }),
+      sp({ rect: RECT, line: ln(1), rot: 30 }),
+      sp({ rect: RECT, line: ln(1), prst: 'triangle' }),
+      sp({ rect: RECT, fill: BLACK, prst: 'ellipse' }),
+    ]) {
+      const tags = pathTags(at(turned, 960));
+      expect(tags.length).toBeGreaterThan(0);
+      for (const tag of tags) {
+        expect(crisp(tag), tag).toBe(false);
+        expect(shift(tag), tag).toBeNull();
+      }
+    }
+    expect(snap.findings.fill).toBe('ER');
+    expect(snap.findings.ellipse).toBe('SQ');
+  });
+
+  it('turns the half pixel with the shape, so it is still down and right on the slide', () => {
+    const turned = (rot: number, flipH = false, flipV = false): string | null =>
+      shift(pathTags(at(sp({ rect: RECT, line: ln(1), rot, flipH, flipV }), 960))[0]!);
+    expect(turned(90)).toBe('6350 -6350');
+    expect(turned(180)).toBe('-6350 -6350');
+    expect(turned(270)).toBe('-6350 6350');
+    expect(turned(0, true)).toBe('-6350 6350');
+    expect(turned(0, false, true)).toBe('6350 -6350');
+    expect(turned(90, true)).toBe('-6350 -6350');
+    // A quarter turn keeps every edge on an axis, and the export snaps it: 24 of 24.
+    expect(crisp(pathTags(at(sp({ rect: RECT, line: ln(1), rot: 90 }), 960))[0]!)).toBe(true);
+    expect(snap.findings.rotated).toBe('SP');
+  });
+
+  it('snaps a rectilinear custom geometry and not one with a diagonal', () => {
+    const pt = (x: number, y: number): string =>
+      `<a:pt x="${String(x * PT)}" y="${String(y * PT)}"/>`;
+    const custom = (points: readonly [number, number][]): string =>
+      sp({
+        rect: RECT,
+        line: ln(1),
+        noGeom: true,
+      }).replace(
+        '</a:xfrm>',
+        `</a:xfrm><a:custGeom><a:avLst/><a:gdLst/><a:ahLst/><a:cxnLst/><a:rect l="0" t="0" r="r" b="b"/>` +
+          `<a:pathLst><a:path w="${String(160 * PT)}" h="${String(100 * PT)}"><a:moveTo>${pt(...points[0]!)}</a:moveTo>` +
+          points
+            .slice(1)
+            .map(([x, y]) => `<a:lnTo>${pt(x, y)}</a:lnTo>`)
+            .join('') +
+          '<a:close/></a:path></a:pathLst></a:custGeom>',
+      );
+    const ell = custom([
+      [0, 0],
+      [160, 0],
+      [160, 40],
+      [80, 40],
+      [80, 100],
+      [0, 100],
+    ]);
+    expect(crisp(pathTags(at(ell, 960))[0]!)).toBe(true);
+    const chevron = custom([
+      [0, 0],
+      [160, 0],
+      [120, 50],
+      [160, 100],
+      [0, 100],
+    ]);
+    expect(crisp(pathTags(at(chevron, 960))[0]!)).toBe(false);
+  });
+
+  it('keeps a clipped band antialiased under its antialiased clip, and snaps the picture under it', () => {
+    const id = nextId++;
+    const pic =
+      `<p:pic><p:nvPicPr><p:cNvPr id="${String(id)}" name="picture"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>` +
+      '<p:blipFill><a:blip r:embed="rId9"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
+      `<p:spPr><a:xfrm><a:off x="${String(RECT.x)}" y="${String(RECT.y)}"/><a:ext cx="${String(RECT.cx)}" cy="${String(RECT.cy)}"/></a:xfrm>` +
+      `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${ln(1)}</p:spPr></p:pic>`;
+    const tags = pathTags(at(pic, 960)).filter((tag) => !tag.includes('clipPath'));
+    const fill = tags.find((tag) => tag.includes('stroke="none"'))!;
+    const band = tags.find((tag) => tag.includes('clip-path="url('))!;
+    expect(crisp(fill)).toBe(true);
+    expect(crisp(band)).toBe(false);
+    expect(shift(band)).toBeNull();
+    expect(snap.findings.picture).toBe('ER');
+    expect(snap.findings.border).toBe('BT');
+  });
+
+  it('snaps nothing when no width names a device', () => {
+    for (const tag of pathTags(at(sp({ rect: RECT, line: ln(1), fill: BLACK }), undefined))) {
+      expect(crisp(tag)).toBe(false);
+      expect(shift(tag)).toBeNull();
+    }
+  });
+
+  it('stretches into a named box as the export does, and keeps the aspect with only a width', () => {
+    expect(at(sp({ rect: RECT, fill: BLACK }), 960, { height: 541 })).toContain(
+      'preserveAspectRatio="none"',
+    );
+    expect(at(sp({ rect: RECT, fill: BLACK }), 960)).toContain(
+      'preserveAspectRatio="xMidYMid meet"',
+    );
+    expect(zoom.findings.frameStretched).toBe(true);
+  });
+
+  /** The rows of one column band across a horizontal edge, as this browser draws the markup. */
+  async function rowsAcross(
+    markup: string,
+    width: number,
+    height: number,
+    columns: [number, number],
+    rows: [number, number],
+  ): Promise<number[]> {
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+    URL.revokeObjectURL(href);
+    const data = context.getImageData(0, 0, width, height).data;
+    const out: number[] = [];
+    for (let y = rows[0]; y <= rows[1]; y++) {
+      let ink = 0;
+      for (let x = columns[0]; x <= columns[1]; x++) {
+        const px = (y * width + x) * 4;
+        ink += 1 - Math.min(data[px]!, data[px + 1]!, data[px + 2]!) / 255;
+      }
+      out.push(ink / (columns[1] - columns[0] + 1));
+    }
+    return out;
+  }
+
+  interface SnapProbe {
+    readonly id: string;
+    readonly family: string;
+    readonly centrePt: number;
+    readonly widthPt?: number;
+    readonly read: { readonly axis: 'x' | 'y'; readonly at: number; readonly half: number };
+  }
+
+  /** F3's own probe slide: every horizontal stroke, at the coordinates the export was asked for. */
+  function strokeSlide(): { sheet: Sheet; probes: SnapProbe[] } {
+    const probes = (snap.probes as SnapProbe[]).filter(
+      (probe) => probe.family === 'stroke' && probe.read.axis === 'y',
+    );
+    const shapes = probes.map((probe) =>
+      sp({
+        rect: { x: 120 * PT, y: Math.round(probe.centrePt * PT), cx: 600 * PT, cy: 0 },
+        prst: 'line',
+        line: ln(probe.widthPt ?? 0),
+        name: probe.id,
+      }),
+    );
+    return { sheet: buildChain({ shapes }).slide, probes };
+  }
+
+  it('inks the rows PowerPoint inked, on every horizontal stroke probe at 960 and at 1920', async () => {
+    const { sheet, probes } = strokeSlide();
+    const measured = snap.measured as Record<
+      string,
+      Record<string, { from: number; cover: number[] }>
+    >;
+    let compared = 0;
+    let worst = 0;
+    for (const width of [960, 1920]) {
+      const scale = width / 960;
+      const height = (width * 9) / 16;
+      const markup = renderSlide(sheet, SIZE, { idPrefix: 'f', width, height });
+      for (const probe of probes) {
+        const from = Math.round((probe.read.at - probe.read.half) * scale);
+        const to = Math.round((probe.read.at + probe.read.half) * scale);
+        const ours = await rowsAcross(
+          markup,
+          width,
+          height,
+          [Math.round(200 * scale), Math.round(640 * scale)],
+          [from, to],
+        );
+        const seen = measured[probe.id]![String(width)]!;
+        const theirs = new Array<number>(to - from + 1).fill(0);
+        seen.cover.forEach((v, i) => {
+          theirs[seen.from - from + i] = v;
+        });
+        const error = Math.max(...ours.map((v, i) => Math.abs(v - theirs[i]!)));
+        worst = Math.max(worst, error);
+        expect(error, `${probe.id}@${String(width)}`).toBeLessThanOrEqual(snap.tolerance);
+        compared += 1;
+      }
+    }
+    expect(compared).toBe(56);
+    expect(worst).toBeLessThanOrEqual(snap.tolerance);
+  });
+
+  it('would not, drawn antialiased where it lies: the same probes straddle two rows', async () => {
+    // The markup with the snap taken out of it - what every earlier version drew.
+    const { sheet, probes } = strokeSlide();
+    const markup = renderSlide(sheet, SIZE, { idPrefix: 'u', width: 960, height: 540 }).replace(
+      /<path\b[^>]*shape-rendering="crispEdges"[^>]*>/g,
+      (path) => path.replace(/ shape-rendering="crispEdges"| transform="translate\([^)]*\)"/g, ''),
+    );
+    const measured = snap.measured as Record<
+      string,
+      Record<string, { from: number; cover: number[] }>
+    >;
+    let misses = 0;
+    for (const probe of probes) {
+      const from = Math.round(probe.read.at - probe.read.half);
+      const to = Math.round(probe.read.at + probe.read.half);
+      const ours = await rowsAcross(markup, 960, 540, [200, 640], [from, to]);
+      const seen = measured[probe.id]!['960']!;
+      const theirs = new Array<number>(to - from + 1).fill(0);
+      seen.cover.forEach((v, i) => {
+        theirs[seen.from - from + i] = v;
+      });
+      if (Math.max(...ours.map((v, i) => Math.abs(v - theirs[i]!))) > snap.tolerance) misses += 1;
+    }
+    // Every odd pen, and every even pen off the grid: 25 of 28.
+    expect(misses).toBe(25);
   });
 });
 

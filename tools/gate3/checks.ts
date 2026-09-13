@@ -56,12 +56,16 @@ export function maskRootSize(svg: string): string {
 
 /**
  * The SVG with what a zoom is allowed to change taken out: the root's size, the values of the
- * two attributes the stroke rule rounds to device pixels, and the numbers of a line end, which
- * is drawn from that pen (F2's M8) - its outline's commands stay. Everything else must be identical.
+ * two attributes the stroke rule rounds to device pixels, the half-pixel translate a crisp path
+ * carries when its pen is odd (F3's SP), and the numbers of a line end, which is drawn from that
+ * pen (F2's M8) - its outline's commands stay. Everything else must be identical.
  */
 export function maskZoom(svg: string): string {
   return maskRootSize(svg)
     .replace(/ (stroke-width|stroke-dasharray)="[^"]*"/g, ' $1="*"')
+    .replace(/<path\b[^>]*shape-rendering="crispEdges"[^>]*>/g, (path) =>
+      path.replace(/ transform="translate\([^"]*\)"/, ''),
+    )
     .replace(/<marker\b[^>]*>[\s\S]*?<\/marker>/g, (marker) =>
       marker
         .replace(/ (markerWidth|markerHeight|refX|refY|stroke-width)="[^"]*"/g, ' $1="*"')
