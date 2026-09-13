@@ -4,6 +4,7 @@
 [![round trip](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FDewiride-Open-Source%2FDewiride-PPTX-Studio%2Fmain%2F.github%2Fbadges%2Froundtrip.json)](#the-round-trip-badge)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](./LICENSE)
 [![npm](https://img.shields.io/npm/v/@pptx-studio/render-svg)](https://www.npmjs.com/package/@pptx-studio/render-svg)
+[![website](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/actions/workflows/website.yml/badge.svg)](https://dewiride-open-source.github.io/Dewiride-PPTX-Studio/)
 
 **A PowerPoint renderer and layout-aware editor that runs entirely in the browser.**
 
@@ -105,6 +106,7 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | The fidelity harness, and the Linux baseline         | ✅ 3.9         |
 | First npm release: `render-svg` and `cli render`     | ✅ 3.10        |
 | A hundred slides at any zoom, through the page       | ✅ 3.11        |
+| The public website, from npm, on GitHub Pages        | ✅ 3.12        |
 | A 100-slide deck at any zoom, entirely client-side   | ✅ Gate 3      |
 | Tables and SmartArt                                  | ⬜ Phase 4     |
 | Select, move, resize, rotate                         | ⬜ Phase 5     |
