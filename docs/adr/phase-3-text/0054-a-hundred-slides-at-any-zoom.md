@@ -483,6 +483,16 @@ gate ADR 0053 built working as designed; the second, run 34746098190, published
 commit to `main`. The canary was green before the release (run 34745835364) and, dispatched once
 the registry served the new CLI rather than 38 seconds after the publish, green after it (run 34746231070) with no issue opened.
 
+Pull request #33 merged on CI run 34754633226 (main's run 34754916075 green on the merge
+`be85847`); release run 34755115512 published `@pptx-studio/paint` 0.4.0,
+`@pptx-studio/render-svg` 0.5.0, `@pptx-studio/render-dom` 0.3.1, `@pptx-studio/cli` 0.3.3 and
+`@pptx-studio/model` 0.1.4 for the dependency, version commit `7a09f71`. The canary was green
+before it (run 34754940327). After it I waited for the registry to serve the new `render-dom`
+and `cli` and dispatched; the registry was still serving `model` 0.1.3, the consumer install
+asked for `^0.1.4`, and run 34755263913 went red and opened issue #34 — the lag the last
+paragraph describes, on a package I had not waited for. Once every package resolved, run
+34755351825 was green and closed the issue.
+
 ## Deviations from the plan
 
 - **Zoom is a mount, not `resize()`.** The plan named `MountedSlide.resize()` and said a
