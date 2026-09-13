@@ -16,6 +16,8 @@ import {
   dashSegments,
   deviceStrokeWidth,
   markerGeometry,
+  markerPen,
+  MIN_MARKER_PEN,
   markerOvershoot,
   resolveLine,
   svgStroke,
@@ -311,10 +313,6 @@ describe('width and alignment', () => {
 });
 
 /* -------------------------------------------------------------------------- */
-/* the compound strokes                                                       */
-/* -------------------------------------------------------------------------- */
-
-/* -------------------------------------------------------------------------- */
 /* the width at another export width (F2)                                     */
 /* -------------------------------------------------------------------------- */
 
@@ -322,6 +320,8 @@ describe('width and alignment', () => {
 interface ZoomMeasure {
   readonly inkPx?: number;
   readonly periodPx?: number | null;
+  readonly coverage?: number;
+  readonly boxH?: number;
 }
 
 /** Every F2 case of a family: the probe, its device scale, and what PowerPoint drew. */
@@ -395,6 +395,48 @@ describe('the width at another export width, re-derived from F2', () => {
       expect(Math.abs(periodPx - (c.seen.periodPx ?? 0))).toBeLessThanOrEqual(zoom.tolerancePx);
     }
     expect(zoom.findings.dashOnHairline).toBe('D1');
+  });
+
+  it('draws a dashed hairline solid at every width, 21 of 21', () => {
+    const cases = zoomCases('dash').filter((c) => c.widthPt === 0);
+    expect(cases).toHaveLength(21);
+    for (const c of cases) {
+      expect(c.seen.periodPx).toBeNull();
+      // The 120-px export is resampled; from 240 up the line covers every column.
+      if (c.scale >= 0.25) expect(c.seen.coverage).toBe(1);
+    }
+    expect(zoom.findings.dashOnHairline).toBe('D1');
+  });
+
+  it('sizes a line end from a two-point pen at or under two points, else the drawn stroke, 49 of 49', () => {
+    const cases = zoomCases('marker');
+    expect(cases).toHaveLength(49);
+    // The probes' heads are lg: five pens across, read as the ink height at the back.
+    const headPx = (widthPt: number, scale: number): number =>
+      (5 * markerPen(widthPt * EMU_PER_POINT, scale) * scale) / EMU_PER_POINT;
+    for (const c of cases) {
+      expect(Math.abs((c.seen.boxH ?? 0) - headPx(c.widthPt, c.scale))).toBeLessThanOrEqual(
+        zoom.boxTolerancePx,
+      );
+    }
+    expect(zoom.findings.markerOnHairline).toBe('M8');
+    // Below two points the pen is two points, not rounded: 12.5 px at 1.25 px/pt, where a
+    // whole-pixel pen says 15 and the export drew 12.
+    expect(headPx(0, 1.25)).toBe(12.5);
+    expect(5 * Math.round(2 * 1.25)).toBe(15);
+    // And never under a device pixel: five pixels at 240 wide, where two points is half of one.
+    expect(headPx(0, 0.25)).toBe(5);
+    // Above two points it is the drawn stroke: 2.5 pt at 960 wide is three pixels, so fifteen.
+    expect(headPx(2.5, 1)).toBe(15);
+    // No device names no rounding: two points, or the width.
+    expect(markerPen(0, null)).toBe(MIN_MARKER_PEN);
+    expect(markerPen(3 * EMU_PER_POINT, null)).toBe(3 * EMU_PER_POINT);
+  });
+
+  it('refutes the seven marker readings that scale from the nominal or the drawn width alone', () => {
+    const losers = zoom.candidates.marker.filter((score) => score.model !== 'M8');
+    expect(losers).toHaveLength(7);
+    for (const score of losers) expect(score.fits).toBeLessThan(score.of);
   });
 
   it('refuses a device scale under the floor strokes are rounded for', () => {

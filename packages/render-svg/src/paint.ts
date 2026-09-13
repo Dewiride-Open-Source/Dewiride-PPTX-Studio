@@ -21,12 +21,16 @@ import {
   resolveColor,
   resolvePattern,
   deviceStrokeWidth,
+  markerGeometry,
+  markerPen,
   svgStops,
   svgStroke,
   toHexColor,
   type ColorContext,
   type Effect,
   type Fill,
+  type LineEnd,
+  type MarkerGeometry,
   type ResolvedLine,
   type Rgba,
 } from '@pptx-studio/paint';
@@ -347,6 +351,97 @@ export function strokeAttributes(
   }
 
   return { attrs, band, line };
+}
+
+/* -------------------------------------------------------------------------- */
+/* line ends                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/** The marker table's unit outline scaled to `length` by `width`, its axis moved to y = width / 2. */
+function markerPath(geometry: MarkerGeometry): string {
+  const x = (value: string): string => num(Number(value) * geometry.length);
+  const y = (value: string): string => num(Number(value) * geometry.width + geometry.width / 2);
+  return geometry.path
+    .split(/\s+/)
+    .map((token) => {
+      const command = token[0] ?? '';
+      const rest = token.slice(1);
+      if (command === 'M' || command === 'L') {
+        const [px = '0', py = '0'] = rest.split(',');
+        return `${command}${x(px)},${y(py)}`;
+      }
+      if (command === 'A') {
+        const [rx = '0', ry = '0'] = rest.split(',');
+        return `A${num(Number(rx) * geometry.length)},${num(Number(ry) * geometry.width)}`;
+      }
+      if (command === 'Z') return 'Z';
+      // An arc's flags, then its end point, arrive as separate tokens.
+      const [px, py] = token.split(',');
+      return py === undefined ? token : `${x(px ?? '0')},${y(py)}`;
+    })
+    .join(' ');
+}
+
+/** One `<marker>`: the head at its pen, painted as the stroke is, oriented along the path. */
+function markerNode(
+  id: string,
+  geometry: MarkerGeometry,
+  pen: number,
+  stroke: Attrs,
+  atStart: boolean,
+): SvgElement {
+  const paint: Attrs = { stroke: 'none', fill: 'none' };
+  if (geometry.filled) {
+    paint['fill'] = stroke['stroke'] ?? 'none';
+    if (stroke['stroke-opacity'] !== undefined) paint['fill-opacity'] = stroke['stroke-opacity'];
+  } else {
+    // An open arrow is a stroked V, drawn with the pen (ADR 0023).
+    paint['stroke'] = stroke['stroke'] ?? 'none';
+    paint['stroke-width'] = pen;
+    paint['stroke-linejoin'] = stroke['stroke-linejoin'] ?? null;
+    paint['stroke-miterlimit'] = stroke['stroke-miterlimit'] ?? null;
+    if (stroke['stroke-opacity'] !== undefined) paint['stroke-opacity'] = stroke['stroke-opacity'];
+  }
+  return element(
+    'marker',
+    {
+      id,
+      markerUnits: 'userSpaceOnUse',
+      markerWidth: geometry.length,
+      markerHeight: geometry.width,
+      refX: geometry.refX,
+      refY: geometry.width / 2,
+      orient: atStart ? 'auto-start-reverse' : 'auto',
+      overflow: 'visible',
+    },
+    [element('path', { d: markerPath(geometry), ...paint })],
+  );
+}
+
+/**
+ * `marker-start` and `marker-end` for the open ends a stroked path has, sized from the pen F2
+ * measured: two points at or under two, else the drawn stroke (M8, ADR 0054).
+ */
+export function lineEndAttributes(
+  stroke: StrokePaint,
+  open: { readonly start: boolean; readonly end: boolean },
+  defs: Defs,
+): Attrs {
+  const attrs: Attrs = {};
+  const pen = markerPen(stroke.line.width, defs.pxPerPt);
+  const ends: [boolean, LineEnd | null, 'marker-start' | 'marker-end'][] = [
+    [open.start, stroke.line.headEnd, 'marker-start'],
+    [open.end, stroke.line.tailEnd, 'marker-end'],
+  ];
+  for (const [isOpen, end, attribute] of ends) {
+    if (!isOpen) continue;
+    const geometry = markerGeometry(end, pen);
+    if (geometry === null) continue;
+    const id = defs.id();
+    defs.add(markerNode(id, geometry, pen, stroke.attrs, attribute === 'marker-start'));
+    attrs[attribute] = `url(#${id})`;
+  }
+  return attrs;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -180,6 +180,8 @@ export {
   MIN_PX_PER_PT,
   markerGeometry,
   markerOvershoot,
+  markerPen,
+  MIN_MARKER_PEN,
   resolveLine,
   svgStroke,
   type Line,

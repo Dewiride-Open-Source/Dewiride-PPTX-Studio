@@ -1091,6 +1091,125 @@ describe('strokes at a named width, re-derived from F2', () => {
   });
 });
 
+describe('line ends, re-derived from C4 and F2', () => {
+  const BLACK = '<a:solidFill><a:srgbClr val="000000"/></a:solidFill>';
+  const LINE_RECT = { x: 1270000, y: 1270000, cx: 5080000, cy: 0 };
+  const ended = (w: string, ends: string, prst = 'line'): Sheet =>
+    buildChain({
+      shapes: [
+        sp({ rect: LINE_RECT, prst, line: `<a:ln w="${w}">${BLACK}${ends}</a:ln>`, name: 'probe' }),
+      ],
+    }).slide;
+  const TAIL = '<a:tailEnd type="triangle" w="lg" len="lg"/>';
+  const markerOf = (markup: string): string => /<marker [^>]*>/.exec(markup)?.[0] ?? '';
+  const attr = (tag: string, name: string): string =>
+    new RegExp(` ${name}="([^"]*)"`).exec(tag)?.[1] ?? '';
+
+  it('draws a tail end at the end of an open path and a head end at its start, oriented outward', () => {
+    const both = renderSlide(
+      ended('12700', '<a:headEnd type="oval" w="med" len="med"/>' + TAIL),
+      SIZE,
+      { idPrefix: 'e', width: 960 },
+    );
+    expect(both).toContain('marker-start="url(#e-1)"');
+    expect(both).toContain('marker-end="url(#e-2)"');
+    const [head, tail] = [...both.matchAll(/<marker [^>]*>/g)].map((m) => m[0]);
+    expect(attr(head ?? '', 'orient')).toBe('auto-start-reverse');
+    expect(attr(tail ?? '', 'orient')).toBe('auto');
+    expect(attr(head ?? '', 'markerUnits')).toBe('userSpaceOnUse');
+  });
+
+  it('sizes a head from a two-point pen on a one-point line: lg is five pens, so ten points', () => {
+    const tag = markerOf(renderSlide(ended('12700', TAIL), SIZE, { idPrefix: 'e', width: 960 }));
+    expect(attr(tag, 'markerWidth')).toBe(String(10 * 12700));
+    expect(attr(tag, 'markerHeight')).toBe(String(10 * 12700));
+    // A triangle's tip sits on the endpoint: the reference point is the whole length in.
+    expect(attr(tag, 'refX')).toBe(String(10 * 12700));
+    expect(attr(tag, 'refY')).toBe(String(5 * 12700));
+    // Above two points the pen is the drawn stroke: 2.5 pt is three pixels at 960, so fifteen.
+    const thick = markerOf(renderSlide(ended('31750', TAIL), SIZE, { idPrefix: 'e', width: 960 }));
+    expect(attr(thick, 'markerWidth')).toBe(String(15 * 12700));
+    // No width names no device: the pen is two points, or the width above it.
+    const bare = markerOf(renderSlide(ended('31750', TAIL), SIZE, { idPrefix: 'e' }));
+    expect(attr(bare, 'markerWidth')).toBe(String(12.5 * 12700));
+    expect(zoom.findings.markerOnHairline).toBe('M8');
+  });
+
+  it('centres a diamond and an oval on the endpoint, and strokes an open arrow with the pen', () => {
+    const oval = markerOf(
+      renderSlide(ended('12700', '<a:tailEnd type="oval" w="lg" len="lg"/>'), SIZE, {
+        idPrefix: 'e',
+        width: 960,
+      }),
+    );
+    expect(attr(oval, 'refX')).toBe(String(5 * 12700));
+    const arrow = renderSlide(ended('12700', '<a:tailEnd type="arrow" w="lg" len="lg"/>'), SIZE, {
+      idPrefix: 'e',
+      width: 960,
+    });
+    const v = /<marker [^>]*><path [^>]*>/.exec(arrow)?.[0] ?? '';
+    expect(v).toContain('fill="none"');
+    expect(v).toContain(`stroke-width="${String(2 * 12700)}"`);
+    expect(v).not.toContain('Z"');
+  });
+
+  it('draws no end on a closed path, and none where the file names none', () => {
+    const closed = renderSlide(ended('12700', TAIL, 'rect'), SIZE, { idPrefix: 'e', width: 960 });
+    expect(closed).not.toContain('<marker');
+    expect(closed).not.toContain('marker-end');
+    const none = renderSlide(ended('12700', '<a:tailEnd type="none"/>'), SIZE, {
+      idPrefix: 'e',
+      width: 960,
+    });
+    expect(none).not.toContain('<marker');
+  });
+
+  /** Rows inked at the widest column of a large triangle head whose tip is at 500 pt, 100 pt. */
+  async function headHeight(markup: string, width: number): Promise<number> {
+    const height = (width * 9) / 16;
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+    URL.revokeObjectURL(href);
+    const data = context.getImageData(0, 0, width, height).data;
+    const scale = width / 960;
+    let widest = 0;
+    for (let x = Math.round(480 * scale); x <= Math.round(500 * scale); x++) {
+      let rows = 0;
+      for (let y = Math.round(84 * scale); y <= Math.round(116 * scale); y++) {
+        const at = (y * width + x) * 4;
+        if (1 - Math.min(data[at]!, data[at + 1]!, data[at + 2]!) / 255 >= 0.5) rows += 1;
+      }
+      widest = Math.max(widest, rows);
+    }
+    return widest;
+  }
+
+  it('inks a ten-point head at 960 and a five-pixel one at 240, as PowerPoint did', async () => {
+    const slide = ended('0', TAIL);
+    const at = (width: number): Promise<number> =>
+      headHeight(
+        renderSlide(slide, SIZE, { idPrefix: 'r', width, height: (width * 9) / 16 }),
+        width,
+      );
+    const [small, reference] = await Promise.all([at(240), at(960)]);
+    const seen = zoom.measured['marker-0'];
+    expect(Math.abs(reference - seen['960'].boxH)).toBeLessThanOrEqual(zoom.boxTolerancePx);
+    expect(Math.abs(small - seen['240'].boxH)).toBeLessThanOrEqual(zoom.boxTolerancePx);
+    // A head that scaled with the line would be a quarter the size at 240; the pen's floor holds it.
+    expect(small).toBeGreaterThan(reference / 4);
+  });
+});
+
 describe('the outline band, re-derived', () => {
   const WIDTH = 152400;
   const LINE = `<a:ln w="${String(WIDTH)}"><a:solidFill><a:srgbClr val="FF00FF"/></a:solidFill></a:ln>`;
