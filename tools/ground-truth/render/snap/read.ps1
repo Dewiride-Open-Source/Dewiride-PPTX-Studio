@@ -1,4 +1,4 @@
-# Experiment F3, step 2 - ask PowerPoint to draw the deck at seven widths.
+# Experiment F3, step 2 - ask PowerPoint to draw the deck at twelve widths.
 #
 #   powershell -File tools/ground-truth/render/snap/read.ps1 -Dir <work-dir>
 #
