@@ -345,7 +345,9 @@ The Linux runner said the same thing 15–27 bp lower, which is Carlito standing
 (CI run 34717006014, HeadlessChrome 151): 9928 / 9861 / 9933 / 9936 by zoom and 9708 for the strip,
 the same three worst slides, `pnpm fidelity` at 9826 over the corpus; the page parsed a46 in 105 ms,
 painted the first slide at 190 ms and the strip at 480 ms, in 14 MB of heap. Both platforms hold the
-gate and both baselines are committed.
+gate and both baselines are committed. With the grid rule the runner re-recorded both (CI run
+34754279761): 9930 / 9881 / 9935 / 9936 by zoom and 9736 for the strip, 9935 on the 2x display,
+`pnpm fidelity` at 9829 — the 25 % column and the strip up 20 and 28 bp, as on win32.
 
 **The 2x display**, measured. After the zooms the gate switches the page to a device pixel ratio of
 2 over CDP without telling it, asks for every slide at 100 % again, and reads the strip the page
