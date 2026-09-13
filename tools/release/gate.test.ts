@@ -158,6 +158,46 @@ describe('the canary has an owner', () => {
   });
 });
 
+const website = workflow('website.yml');
+
+describe('the website', () => {
+  it('is never required by the release and never a job in CI', () => {
+    for (const name of jobNames(website)) {
+      expect(required).not.toContain(name);
+      expect(jobNames(ci)).not.toContain(name);
+    }
+  });
+
+  it('follows a release rather than being run by one', () => {
+    // A push made with GITHUB_TOKEN starts no workflow, so `push` never sees
+    // the version commit; `workflow_run` does and widens nothing. ADR 0055.
+    expect(website.on?.['workflow_run']).toMatchObject({
+      workflows: ['Release'],
+      types: ['completed'],
+    });
+    expect(JSON.stringify(release)).not.toContain('website.yml');
+    expect(release.jobs['release']?.permissions?.['actions']).toBe('read');
+  });
+
+  it('holds the right to deploy where nothing from the registry runs', () => {
+    const building = website.jobs['build'];
+    const deploying = website.jobs['deploy'];
+    expect(runsATool(building), 'the install detector no longer sees the install').toBe(true);
+    expect(building?.permissions).toBeUndefined();
+    expect(deploying?.permissions).toEqual({ pages: 'write', 'id-token': 'write' });
+    expect(runsATool(deploying)).toBe(false);
+    expect((deploying?.steps ?? []).some((s) => /actions\/checkout/.test(s.uses ?? ''))).toBe(
+      false,
+    );
+    expect(website.permissions).toEqual({ contents: 'read' });
+  });
+
+  it('cannot publish, and never asks whether it may', () => {
+    expect(JSON.stringify(website)).not.toContain('publishers.ts');
+    expect(JSON.stringify(website)).not.toContain('NODE_AUTH_TOKEN');
+  });
+});
+
 const releaseSteps = release.jobs['release']?.steps ?? [];
 const ranBy = (steps: readonly Step[], pattern: RegExp): number =>
   steps.findIndex((step) => pattern.test(step.run ?? ''));

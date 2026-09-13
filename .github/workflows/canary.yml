@@ -80,7 +80,11 @@ jobs:
 
       - name: Typecheck
         working-directory: website
-        run: npx tsc --noEmit
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: website
+        run: npm run lint
 
       # Renders every shipped deck through the published packages and asserts
       # the slide count, the SVG shape and a clean round trip.
