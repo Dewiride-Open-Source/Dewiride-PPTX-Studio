@@ -29,8 +29,9 @@ pnpm browsers     # one-off; downloads the Chromium the core suite runs in
 pnpm check        # everything CI runs
 ```
 
-`pnpm check` is `layering → format:check → lint → typecheck → build → test`. Run it before opening a
-pull request; CI runs the same thing and will not tell you anything new.
+`pnpm check` is structure, layering, legal, references, corpus, format, build, lint, typecheck,
+round trip, fidelity, Gate 2, Gate 3, package QA and the tests, in that order. Run it before opening
+a pull request; CI runs the same thing and will not tell you anything new.
 
 Tests and typechecking read package **source**, not `dist`, so you never need to build first.
 
@@ -68,7 +69,7 @@ pnpm changeset
 ```
 
 Pick the packages, pick the bump, and write the entry for someone reading the changelog rather than
-for someone reading the diff. Changes confined to `tools/`, `docs/` or CI do not need one.
+for someone reading the diff. Changes confined to `tools/`, `docs/`, `website/` or CI do not need one.
 
 ## Releases
 

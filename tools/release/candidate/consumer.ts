@@ -67,7 +67,7 @@ export interface ScratchManifest {
   readonly version: string;
   readonly private: true;
   readonly type: 'module';
-  /** The consumer's own, so the gate runs the commands the example declares. */
+  /** The consumer's own, so the gate runs the commands the website declares. */
   readonly scripts: Readonly<Record<string, string>>;
   readonly dependencies: Readonly<Record<string, string>>;
   readonly overrides: Readonly<Record<string, string>>;
@@ -119,11 +119,11 @@ export interface Versioned {
 }
 
 /**
- * The example's ranges as `pnpm pack` writes them for `workspace:^`: the
+ * The website's ranges as `pnpm pack` writes them for `workspace:^`: the
  * caret of each candidate, so the committed manifest names what the release
  * proved. Everything outside the scope is left as written.
  */
-export function exampleRanges(
+export function websiteRanges(
   dependencies: Readonly<Record<string, string>>,
   packed: readonly Versioned[],
   scope: string,

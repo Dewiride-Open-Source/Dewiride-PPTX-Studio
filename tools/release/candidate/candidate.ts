@@ -30,6 +30,10 @@ const SCOPE = '@pptx-studio/';
 /** Where a registry lookup for our own scope has to fail loudly rather than resolve. */
 const NOWHERE = 'http://127.0.0.1:1/';
 
+/** What a local install or build leaves in `website/`; the scratch copy makes its own. */
+const GENERATED =
+  /node_modules|package-lock\.json|[\\/](?:\.next|out|public[\\/]rendered|src[\\/]reference[\\/]generated)(?=[\\/]|$)/;
+
 const work = process.argv[2];
 if (work === undefined) throw new Error('usage: candidate.ts <work-dir>');
 const workDir = resolve(work);
@@ -66,41 +70,39 @@ const packed = pack(tarballs);
 console.log(`packed ${String(packed.length)} candidate(s):`);
 for (const entry of packed) console.log(`  ${entry.name}@${entry.version}`);
 
-// The example is the consumer: one app, one smoke test, and the only thing that
-// changes between this gate and the published canary is where the packages came
-// from. Copied out so the working tree keeps its registry ranges.
+// The website is the consumer: one app, one smoke test, and the only thing that
+// changes between this gate, the canary and the deploy is where the packages
+// came from. Copied out so the working tree keeps its registry ranges.
 const consumer = join(workDir, 'consumer');
-cpSync(repoPath('examples/nextjs-studio'), consumer, {
+cpSync(repoPath('website'), consumer, {
   recursive: true,
-  filter: (from) => !/node_modules|[\\/]\.next/.test(from),
+  filter: (from) => !GENERATED.test(from),
 });
 
-const example = JSON.parse(
-  readFileSync(repoPath('examples/nextjs-studio/package.json'), 'utf8'),
-) as {
+const website = JSON.parse(readFileSync(repoPath('website/package.json'), 'utf8')) as {
   scripts: Record<string, string>;
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
 };
 // `pnpm version-packages` writes these ranges; one it did not write is a
 // manifest that no longer says what it was proved against.
-const stale = staleRanges(example.dependencies, packed, SCOPE);
+const stale = staleRanges(website.dependencies, packed, SCOPE);
 if (stale.length > 0) {
   throw new Error(
-    'examples/nextjs-studio/package.json does not name the versions this commit would publish:\n' +
+    'website/package.json does not name the versions this commit would publish:\n' +
       `  ${stale.join('\n  ')}\n` +
-      'node tools/release/candidate/example.ts writes them',
+      'node tools/release/candidate/website.ts writes them',
   );
 }
 
 const offScope = Object.fromEntries(
-  Object.entries(example.dependencies).filter(([name]) => !name.startsWith(SCOPE)),
+  Object.entries(website.dependencies).filter(([name]) => !name.startsWith(SCOPE)),
 );
 
 const manifest = scratchManifest(
   packed,
-  { ...offScope, ...example.devDependencies },
-  example.scripts,
+  { ...offScope, ...website.devDependencies },
+  website.scripts,
 );
 writeFileSync(join(consumer, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 

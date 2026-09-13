@@ -26,3 +26,23 @@ updates:
         patterns: ['vitest', '@vitest/*', 'playwright', '@playwright/*']
       build:
         patterns: ['tsdown', 'turbo', 'typescript', 'publint', '@arethetypeswrong/*']
+
+  # The website is npm, not pnpm, and outside the workspace, so the root entry
+  # does not reach it. `@pptx-studio/*` is excluded: those ranges are written by
+  # the release, and the candidate gate refuses any other hand.
+  - package-ecosystem: npm
+    directory: '/website'
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: 'chore(website)'
+    ignore:
+      - dependency-name: '@pptx-studio/*'
+    groups:
+      framework:
+        patterns: ['next', 'react', 'react-dom', '@types/react', '@types/react-dom']
+      docs:
+        patterns: ['fumadocs-*', '@types/mdx']
+      styling:
+        patterns: ['tailwindcss', '@tailwindcss/*', '@fontsource*']

@@ -110,7 +110,7 @@ describe('the canary', () => {
   });
 
   it('is not a job in CI, where the release gate would read it', () => {
-    expect(jobNames(ci)).not.toContain('the example, installed from npm');
+    for (const name of jobNames(canary)) expect(jobNames(ci)).not.toContain(name);
   });
 });
 

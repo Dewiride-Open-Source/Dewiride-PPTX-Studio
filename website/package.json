@@ -1,14 +1,13 @@
 {
-  "name": "nextjs-studio-example",
+  "name": "pptx-studio-website",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "A Next.js app built on the published @pptx-studio packages, one tool per package.",
+  "description": "The public site for @pptx-studio: documentation and a live demo of every published package, installed from npm.",
   "license": "Apache-2.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
     "typecheck": "tsc --noEmit",
     "smoke": "node smoke.mjs"
   },

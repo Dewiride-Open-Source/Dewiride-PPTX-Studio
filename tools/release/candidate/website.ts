@@ -1,11 +1,11 @@
 /**
- * Point the example at the versions this tree holds, as a release would publish them.
+ * Point the website at the versions this tree holds, as a release would publish them.
  *
  * ```
- * node tools/release/candidate/example.ts
+ * node tools/release/candidate/website.ts
  * ```
  *
- * A caret below 1.0 never reaches the next minor, and the example's source is
+ * A caret below 1.0 never reaches the next minor, and the website's source is
  * written against the tree. Run by `pnpm version-packages` after `changeset
  * version`; the candidate gate refuses a manifest this did not write. ADR 0051.
  */
@@ -13,10 +13,10 @@
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 
 import { repoPath } from '../../repo/root.ts';
-import { exampleRanges, type Versioned } from './consumer.ts';
+import { websiteRanges, type Versioned } from './consumer.ts';
 
 const SCOPE = '@pptx-studio/';
-const MANIFEST = repoPath('examples/nextjs-studio/package.json');
+const MANIFEST = repoPath('website/package.json');
 
 interface Manifest {
   readonly name: string;
@@ -31,16 +31,16 @@ const published: Versioned[] = readdirSync(repoPath('packages'))
   .filter((manifest) => manifest.private !== true)
   .map(({ name, version }) => ({ name, version }));
 
-const example = JSON.parse(readFileSync(MANIFEST, 'utf8')) as {
+const website = JSON.parse(readFileSync(MANIFEST, 'utf8')) as {
   dependencies: Record<string, string>;
 } & Record<string, unknown>;
-const dependencies = exampleRanges(example.dependencies, published, SCOPE);
+const dependencies = websiteRanges(website.dependencies, published, SCOPE);
 
 const changed = Object.entries(dependencies).filter(
-  ([name, range]) => example.dependencies[name] !== range,
+  ([name, range]) => website.dependencies[name] !== range,
 );
-writeFileSync(MANIFEST, `${JSON.stringify({ ...example, dependencies }, null, 2)}\n`);
+writeFileSync(MANIFEST, `${JSON.stringify({ ...website, dependencies }, null, 2)}\n`);
 for (const [name, range] of changed) {
-  console.log(`${name}: ${String(example.dependencies[name])} -> ${range}`);
+  console.log(`${name}: ${String(website.dependencies[name])} -> ${range}`);
 }
-console.log(`${String(changed.length)} range(s) rewritten in examples/nextjs-studio/package.json`);
+console.log(`${String(changed.length)} range(s) rewritten in website/package.json`);

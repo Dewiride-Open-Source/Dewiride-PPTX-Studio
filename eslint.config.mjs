@@ -72,7 +72,7 @@ export default tseslint.config(
       'tmp/**',
       // Installed from the registry rather than linked, so this config's
       // type-aware rules cannot resolve its imports. It lints itself.
-      'examples/**',
+      'website/**',
     ],
   },
 

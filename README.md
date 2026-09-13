@@ -131,8 +131,7 @@ packages/
   cli/     the Node entry point — inspect, validate, roundtrip, bisect, render
 apps/
   studio/  drop a .pptx on a page; the parse Worker boundary lives here
-examples/
-  nextjs-studio/ a Next.js app on the published packages, one tool per package
+website/         the public site: docs and a live demo of every package, installed from npm
 tools/
   repo/          the rules about the repo: structure, links, layering, legal, the plan table
   release/       the candidate gate on this commit's tarballs, and what npm is asked
@@ -269,25 +268,22 @@ recipe, deterministically. See [`tools/bench/README.md`](./tools/bench/README.md
 `pnpm test` and `pnpm typecheck` read package **source**, not `dist`, so neither needs a build
 first. Publishing reads `dist`.
 
-## The example
+## The website
 
-[`examples/nextjs-studio`](./examples/nextjs-studio) is a Next.js app with one tool per published
-package: the deck drawn and editable, the inheritance chain with its provenance, the package and
-its relationship graph, byte-identical re-emission shown live, the census in a Web Worker, the 29
-validator rules, a round trip you can download and open in PowerPoint, the 187 presets with
-draggable handles, the colour transforms, the text engine, and server-side thumbnails with no
-LibreOffice.
+[dewiride-open-source.github.io/Dewiride-PPTX-Studio](https://dewiride-open-source.github.io/Dewiride-PPTX-Studio/)
+is built from [`website/`](./website): the documentation for every published package and a live
+demo of each, running entirely in the tab on the sample decks or on a `.pptx` you drop on it.
 
 It sits **outside** `pnpm-workspace.yaml` on purpose and installs `@pptx-studio/*` from the public
 registry with npm. Nothing else in this repository does: everything here resolves through the pnpm
-link farm, so nothing else can tell whether a published tarball actually works. The release gate
-installs this commit's own tarballs into a copy of it, and the daily canary installs it without a
-lockfile with every `@pptx-studio/*` range pointed at `latest`; the ranges committed here are the
-caret of each workspace version, written by `pnpm version-packages` and refused by the gate when
-they are not.
+link farm, so nothing else can tell whether a published tarball actually works. Three things build
+it: the release gate, against this commit's own tarballs; the daily canary, against `latest` with
+no lockfile; and `website.yml`, against the ranges committed here, after every release — so the
+site is what the last release proved and never ahead of it. The ranges are the caret of each
+workspace version, written by `pnpm version-packages` and refused by the gate when they are not.
 
 ```sh
-cd examples/nextjs-studio
+cd website
 npm install
 npm run dev
 ```

@@ -219,7 +219,7 @@ jobs:
   #
   # This packs the candidates, installs them into a scratch consumer with the
   # scope pointed at a dead registry, refuses any resolution that did not come
-  # from one of this run's tarballs, and then runs the example against them.
+  # from one of this run's tarballs, and then runs the website against them.
   # Hermetic: it depends on the commit and never on what is already published,
   # which is what lets the release gate require it. ADR 0046.
   candidate:
@@ -299,10 +299,10 @@ jobs:
   # entries. This scores the shipped reader against `measureText` on the faces
   # this image carries, and prices the missing shaper on the same faces.
   #
-  # Its own job rather than a step in `check`, for the reason `example` is its
-  # own job: the font directories are a property of this image and are named on
-  # the command line, so `pnpm check` on a laptop cannot run it - there the
-  # system font directory is not ours to index. It reaches no registry.
+  # Its own job rather than a step in `check`: the font directories are a
+  # property of this image and are named on the command line, so `pnpm check`
+  # on a laptop cannot run it - there the system font directory is not ours to
+  # index. It reaches no registry.
   #
   # No font package is installed. What is measured has to be what the image
   # carries, or the number is a property of an apt line rather than of the

@@ -1,9 +1,9 @@
-# nextjs-studio
+# website
 
 A Next.js app built on the **published** `@pptx-studio/*` packages — one tool per package.
 
 ```sh
-cd examples/nextjs-studio
+cd website
 npm install
 npm run dev      # http://localhost:3000
 ```
