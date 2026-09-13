@@ -2,7 +2,7 @@
 
 Date: 2026-09-13
 Status: **accepted** — Gate 3 holds: 100 slides × 5 widths and a 2x display through the page,
-offline; 28/28 mutants killed in the first pass and 18/18 in the second
+offline; 28/28 mutants killed in the first pass and 23/23 in the second
 
 **Sub-phase 3.11.** Gate 3 asks for "a 100-slide deck rendered faithfully at any zoom, entirely
 client-side". None of its four claims was true or checkable when this began: the largest committed
@@ -313,12 +313,14 @@ this repository to go through the page end to end, and it needed nothing fixed.
 - **The way it will fail.** The page in Chromium against PowerPoint's own pixels at five widths,
   offline; and a page that resizes instead of re-mounting on zoom is caught at the first slide
   (`FID_SVG_INTRINSIC_SIZE`: the stage was still at the fit size).
-- **Mutants, 18/18 killed in the second pass.** The marker pen 3/3 (a one-point floor, no device
-  floor, the nominal width above two points); the line ends 5/5 (every path open, the head not
-  reversed, every head centred, head and tail swapped, the head beside the line); the ratio 3/3
-  (ignored by the renderer, ignored by the stage's re-show, the watcher listening once); the strip
-  2/2 (drawn before the frame, a cancel that does nothing); the by-deck rollup, `mergeOracle`, and
-  the gate's masks and its ratio clause 5/5.
+- **Mutants, 23/23 killed in the second pass.** The marker pen 3/3 (a one-point floor, no device
+  floor, the nominal width above two points); the line ends 7/7 (every path open, the head not
+  reversed, every head centred, head and tail swapped, the head beside the line, a gradient head
+  keeping the server's url, the arrow's vertex on the endpoint); the ratio 4/4 (ignored by the
+  renderer, ignored by the stage's re-show, the watcher listening once, the floor dropped); the
+  strip 3/3 (drawn before the frame, waiting one frame, a cancel that does nothing); the by-deck
+  rollup, `mergeOracle`, and the gate's masks and its ratio clause 6/6. The report's per-slide
+  table has no test and its column fix was checked by reading the report.
 - **Mutants, 28/28 killed.** F2's renderer rule 9/9 (among them width ≤ 0 → null, no
   `vector-effect`, a 0.75-pt minimum, the minimum on every width, `ceil` for `round`, the dash
   array from width 0, the marker from width 0, `w·s` unconditionally); the device floor 1/1
