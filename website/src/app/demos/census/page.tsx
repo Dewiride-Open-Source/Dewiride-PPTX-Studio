@@ -35,7 +35,7 @@ export default function CensusPage() {
     setFailed(null);
     setProgress(null);
 
-    const worker = new Worker(new URL('../../census/worker.ts', import.meta.url), {
+    const worker = new Worker(new URL('../../../census/worker.ts', import.meta.url), {
       type: 'module',
     });
     worker.addEventListener('message', (event: MessageEvent<CensusResponse>) => {

@@ -10,9 +10,9 @@ export function Nav() {
   return (
     <nav className="flex flex-col gap-0.5 p-3">
       <Link
-        href="/"
+        href="/demos"
         className={`rounded px-3 py-2 text-sm ${
-          here === '/' ? 'bg-ink-700 text-ink-100' : 'text-ink-300 hover:bg-ink-800'
+          here === '/demos' ? 'bg-ink-700 text-ink-100' : 'text-ink-300 hover:bg-ink-800'
         }`}
       >
         Overview

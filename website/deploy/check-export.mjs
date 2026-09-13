@@ -65,19 +65,30 @@ try {
 
   // The Worker: a chunk emitted by the bundler, fetched under the base path,
   // that loads the census package and answers.
-  await page.goto(at('/census/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
+  await page.goto(at('/demos/census/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
   await page.getByText('namespaces', { exact: true }).waitFor({ timeout: TIMEOUT });
-  ok('/census/ reached the Worker and got a census back');
+  ok('/demos/census/ reached the Worker and got a census back');
 
   // A deck fetched through publicUrl, drawn by the string renderer.
-  await page.goto(at('/slides/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
+  await page.goto(at('/demos/render-svg/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
   await page.locator('[data-shape]').first().waitFor({ timeout: TIMEOUT });
-  ok('/slides/ fetched a sample deck and drew a shape');
+  ok('/demos/render-svg/ fetched a sample deck and drew a shape');
 
   // The CLI's output, rendered ahead of time.
-  await page.goto(at('/thumbnails/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
+  await page.goto(at('/demos/cli/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
   await page.locator('img[src*="/rendered/"]').first().waitFor({ timeout: TIMEOUT });
-  ok('/thumbnails/ shows a slide the CLI rendered at build time');
+  ok('/demos/cli/ shows a slide the CLI rendered at build time');
+
+  // The docs shell, and the search index it exported.
+  await page.goto(at('/docs/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
+  await page.locator('aside, nav').first().waitFor({ timeout: TIMEOUT });
+  const index = await page.request.get(at('/search.json'));
+  if (index.status() === 200) ok('/search.json is served');
+  else fail(`/search.json answered ${String(index.status())}`);
+  await page.keyboard.press('Control+k');
+  await page.getByPlaceholder('Search').fill('started');
+  await page.locator('[role="dialog"] button[aria-selected]').first().waitFor({ timeout: TIMEOUT });
+  ok('/docs/ has a sidebar, and the search dialog finds a page');
 
   const missing = await page.request.get(at('/no-such-page/'));
   if (missing.status() === 404 && (await missing.text()).includes('<html'))

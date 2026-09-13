@@ -1,4 +1,9 @@
 @import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+@import '@fontsource-variable/ibm-plex-sans';
+@import '@fontsource/ibm-plex-mono';
+@import '@fontsource/ibm-plex-mono/500.css';
 
 /*
  * The palette is the renderer's own debug-overlay palette, from
@@ -26,17 +31,8 @@
   --color-widened: #d98a2b;
   --color-good: #2fa869;
 
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
-}
-
-html {
-  color-scheme: dark;
-}
-
-body {
-  background: var(--color-ink-900);
-  color: var(--color-ink-100);
+  --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
 /* The slide stage is a lit surface inside dark chrome, the way every deck tool does it. */

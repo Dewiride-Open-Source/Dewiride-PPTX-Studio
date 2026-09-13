@@ -1,3 +1,4 @@
+import { createMDX } from 'fumadocs-mdx/next';
 import type { NextConfig } from 'next';
 
 // '' locally, in the candidate gate and in the canary; the deploy sets the
@@ -20,4 +21,4 @@ const config: NextConfig = {
   agentRules: false,
 };
 
-export default config;
+export default createMDX()(config);
