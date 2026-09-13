@@ -13,10 +13,12 @@ import { FidelityError } from '../fidelity/errors.ts';
 import {
   cellAt,
   classifyRequest,
+  DISPLAY_RATIO,
   GATE_SLIDES,
   gateHolds,
   integerClip,
   invarianceOf,
+  maskRootSize,
   maskZoom,
   renameIdPrefix,
   requestVerdict,
@@ -84,6 +86,25 @@ describe('the zoom mask', () => {
 
   it('refuses anything that is not an <svg> root', () => {
     expect(() => maskZoom('<div/>')).toThrow(FidelityError);
+    expect(() => maskRootSize('<div/>')).toThrow(FidelityError);
+  });
+});
+
+describe('the display ratio', () => {
+  it('is two, the ratio whose 100 % has the device pixels of 200 %', () => {
+    expect(DISPLAY_RATIO).toBe(2);
+    expect(widthAt(1) * DISPLAY_RATIO).toBe(widthAt(2));
+  });
+
+  it('masks the root size alone, so a stroke rounded to the wrong pixels still shows', () => {
+    const bare = maskRootSize(SVG);
+    expect(bare).not.toContain('width="960"');
+    expect(bare).toContain('stroke-width="12700"');
+    expect(bare).toContain('<rect width="200" height="100"');
+    const atTwo = SVG.replace('width="960" height="540"', 'width="1920" height="1080"');
+    expect(maskRootSize(atTwo)).toBe(bare);
+    const wrongPixels = SVG.replace('stroke-width="12700"', 'stroke-width="6350"');
+    expect(maskRootSize(wrongPixels)).not.toBe(bare);
   });
 });
 
@@ -171,6 +192,7 @@ describe('the verdict', () => {
     vanished: 0,
     offenders: 0,
     afterOffline: 0,
+    ratio: 0,
   };
 
   it('holds with a hundred slides and every count at zero', () => {

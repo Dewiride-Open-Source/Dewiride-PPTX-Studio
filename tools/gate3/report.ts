@@ -79,6 +79,13 @@ function pct(zoom: number): string {
   return `${String(zoom * 100)} %`;
 }
 
+/** A column's name: its zoom, and the display when it is the 2x pass. */
+export function columnLabel(column: ZoomColumn, ratio: number): string {
+  return column.surface === 'ratio'
+    ? `${pct(column.zoom)} on a ${String(ratio)}x display`
+    : pct(column.zoom);
+}
+
 function gatedList(run: Gate3Run): string {
   const facts: [string, boolean][] = [
     [`${String(run.slides)} slides, of the hundred the gate asks for`, run.slides >= 100],
@@ -89,6 +96,10 @@ function gatedList(run: Gate3Run): string {
     [
       `${String(run.breaks.length)} zooms whose SVG differs from 100 % beyond stroke-width and stroke-dasharray`,
       run.breaks.length === 0,
+    ],
+    [
+      `${String(run.ratio.breaks.length)} disagreements on a ${String(run.ratio.ratio)}x display, whose 100 % must be the 200 % markup and raster and whose strip the 25 % markup`,
+      run.ratio.breaks.length === 0,
     ],
     [`${String(run.pageErrors.length)} page or console errors`, run.pageErrors.length === 0],
     [
@@ -122,7 +133,7 @@ function columnTable(run: Gate3Run): string {
   const rows = run.zooms
     .map(
       (column) =>
-        `<tr><td>${escapeHtml(pct(column.zoom))} (${column.surface})</td><td class="n">${String(column.width)}</td>` +
+        `<tr><td>${escapeHtml(columnLabel(column, run.ratio.ratio))} (${column.surface})</td><td class="n">${String(column.width)}</td>` +
         `<td class="n">${String(column.cell)}</td><td class="n">${String(column.slides.length)}</td>` +
         `<td class="n">${run.mode === 'gate' ? String(column.meanBp) : '&mdash;'}</td>` +
         `<td class="n">${mean(column.slides.map((s) => s.mountMs))}</td>` +
@@ -167,15 +178,17 @@ function slideRows(run: Gate3Run): string {
     )
     .join('');
   return (
-    `<table><thead><tr><th>slide</th>${run.zooms.map((c) => `<th class="n">${escapeHtml(pct(c.zoom))}</th>`).join('')}</tr></thead>` +
+    `<table><thead><tr><th>slide</th>${run.zooms.map((c) => `<th class="n">${escapeHtml(columnLabel(c, run.ratio.ratio))}</th>`).join('')}</tr></thead>` +
     `<tbody>${rows}</tbody></table>`
   );
 }
 
-function worstCards(column: ZoomColumn, out: string): string {
+function worstCards(column: ZoomColumn, ratio: number, out: string): string {
   return column.worst
     .map((worst) => {
-      const stem = `${worst.key}@${String(column.width)}`;
+      const stem =
+        `${worst.key}@${String(column.width)}` +
+        (column.surface === 'ratio' ? `@${String(ratio)}x` : '');
       writeFileSync(join(out, `${stem}.ours.png`), worst.oursPng);
       writeFileSync(join(out, `${stem}.ppt.svg`), worst.theirsSvg);
       writeFileSync(join(out, `${stem}.diff.svg`), worst.heatSvg);
@@ -193,7 +206,7 @@ function worstCards(column: ZoomColumn, out: string): string {
               )
               .join('<br>')}</code>`;
       return `<section class="slide">
-  <header><h4>${escapeHtml(worst.key)} at ${escapeHtml(pct(column.zoom))}</h4></header>
+  <header><h4>${escapeHtml(worst.key)} at ${escapeHtml(columnLabel(column, ratio))}</h4></header>
   <div class="panes">
     <div class="pane"><h5>PowerPoint &mdash; export at ${String(column.width)} px, as a grid</h5>
       <img src="${escapeHtml(stem)}.ppt.svg" alt="PowerPoint's rendering of ${escapeHtml(worst.key)}"></div>
@@ -226,6 +239,9 @@ export function writeGate3Report(run: Gate3Run, out: string): string {
     ...run.breaks.map(
       (brk) => `${brk.key} differs at ${pct(brk.zoom)} beyond what the stroke rule owns`,
     ),
+    ...run.ratio.breaks.map(
+      (brk) => `${brk.key} on a ${String(run.ratio.ratio)}x display: ${brk.what} is not the zoom's`,
+    ),
     ...run.pageErrors.map((error) => `page error: ${error}`),
     ...run.requests.other.map((url) => `request the gate does not recognise: ${url}`),
     ...run.requests.afterOffline.map((url) => `request after going offline: ${url}`),
@@ -254,6 +270,7 @@ ${gatedList(run)}
 <p class="sub">Read in ${t.readMs.toFixed(0)} ms, parsed in ${t.parseMs.toFixed(0)} ms, first slide painted at
 ${t.firstStageMs.toFixed(0)} ms, every thumbnail at ${t.stripMs.toFixed(0)} ms with ${t.stripCpuMs.toFixed(0)} ms on the
 thread${t.heapBytes === null ? '' : `, ${(t.heapBytes / 1048576).toFixed(0)} MB of JS heap after the strip`}.
+On a ${String(run.ratio.ratio)}x display, unannounced: the stage in ${run.ratio.stageMs.toFixed(0)} ms and the redrawn strip in ${run.ratio.stripMs.toFixed(0)} ms.
 Requests: ${String(run.requests.total)} in all, ${String(run.requests.static)} for the page, ${String(run.requests.deck)} for the deck.</p>
 ${columnTable(run)}
 ${
@@ -265,7 +282,7 @@ ${slideRows(run)}
 <h2>The worst three at each zoom</h2>
 <p class="sub">Left is PowerPoint, middle is the page, right is where they differ.</p>
 ${legend()}
-${run.zooms.map((column) => `<h3>${escapeHtml(pct(column.zoom))} &mdash; ${String(column.width)} px wide</h3>${worstCards(column, out)}`).join('\n')}`
+${run.zooms.map((column) => `<h3>${escapeHtml(columnLabel(column, run.ratio.ratio))} &mdash; ${String(column.width)} px wide</h3>${worstCards(column, run.ratio.ratio, out)}`).join('\n')}`
     : ''
 }
 </main></body></html>

@@ -4,9 +4,9 @@
  * The gate's wording is "a 100-slide deck rendered faithfully at any zoom, entirely
  * client-side". Written out: the deck has a hundred slides and every one draws at every zoom
  * the page offers; the SVG at any zoom is the SVG at 100 % apart from what the stroke rule owns
- * (F2, ADR 0054); nothing leaves the page once the deck is in hand; and our own raster of every
- * slide at every zoom is the one recorded. The scores against PowerPoint are reported beside
- * all that and gate nothing, for the reason ADR 0035 gives.
+ * (F2, ADR 0054); a 2x display at 100 % is 200 % to the byte; nothing leaves the page once the
+ * deck is in hand; and our own raster of every slide at every zoom is the one recorded. The
+ * scores against PowerPoint are reported beside all that and gate nothing (ADR 0035).
  */
 
 import { FidelityError } from '../fidelity/errors.ts';
@@ -44,17 +44,30 @@ export function zoomKey(slideKey: string, width: number): string {
   return `${slideKey}@${String(width)}`;
 }
 
+/** The SVG without the root's `width` and `height`: all a display's ratio may change. */
+export function maskRootSize(svg: string): string {
+  if (!svg.startsWith('<svg')) {
+    throw new FidelityError('FID_SVG_INTRINSIC_SIZE', 'not an <svg> root', svg.slice(0, 40));
+  }
+  const end = svg.indexOf('>');
+  return svg.slice(0, end).replace(/ (?:width|height)="[^"]*"/g, '') + svg.slice(end);
+}
+
 /**
  * The SVG with what a zoom is allowed to change taken out: the root's size, and the values of
  * the two attributes the stroke rule rounds to device pixels. Everything else must be identical.
  */
 export function maskZoom(svg: string): string {
-  if (!svg.startsWith('<svg')) {
-    throw new FidelityError('FID_SVG_INTRINSIC_SIZE', 'not an <svg> root', svg.slice(0, 40));
-  }
-  const end = svg.indexOf('>');
-  const root = svg.slice(0, end).replace(/ (?:width|height)="[^"]*"/g, '');
-  return root + svg.slice(end).replace(/ (stroke-width|stroke-dasharray)="[^"]*"/g, ' $1="*"');
+  return maskRootSize(svg).replace(/ (stroke-width|stroke-dasharray)="[^"]*"/g, ' $1="*"');
+}
+
+/** The display ratio the gate switches the page to, unannounced, once the zooms are done. */
+export const DISPLAY_RATIO = 2;
+
+/** Where a 2x display's markup must be the zoom's with the same device pixels, and was not. */
+export interface RatioBreak {
+  readonly key: string;
+  readonly what: 'stage svg' | 'strip svg';
 }
 
 /** Every `<from>-<n>` id, reference or `url(#…)` renamed to `<to>-<n>`; `thumb3` never touches `thumb30`. */
@@ -142,6 +155,8 @@ export interface GateFacts {
   readonly vanished: number;
   readonly offenders: number;
   readonly afterOffline: number;
+  /** Disagreements between the 2x display and the zoom with the same device pixels. */
+  readonly ratio: number;
 }
 
 export function gateHolds(facts: GateFacts): boolean {
@@ -153,7 +168,8 @@ export function gateHolds(facts: GateFacts): boolean {
     facts.changed === 0 &&
     facts.vanished === 0 &&
     facts.offenders === 0 &&
-    facts.afterOffline === 0
+    facts.afterOffline === 0 &&
+    facts.ratio === 0
   );
 }
 
