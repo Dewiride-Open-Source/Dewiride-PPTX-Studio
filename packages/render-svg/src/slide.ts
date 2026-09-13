@@ -40,13 +40,9 @@ export interface RenderOptions {
    * Defaults to something unique per call.
    */
   readonly idPrefix?: string;
-  /**
-   * `width` and `height` attributes, in CSS pixels. Omitted when absent. A width also names the
-   * device scale strokes are rounded to whole pixels at; without one they keep their true width.
-   * A height names a pixel box the slide is stretched into, as the export stretches into its own
-   * whole-pixel box (F2's frame, `zoom.json`); without one the height follows the slide.
-   */
+  /** The `width` attribute in CSS pixels, which also names the device scale strokes round to. */
   readonly width?: number;
+  /** The `height` attribute in CSS pixels: a box the slide is stretched into, as the export is (F2). */
   readonly height?: number;
   /** Device pixels per CSS pixel, so a 2x display rounds strokes to its own pixels. Default 1. */
   readonly devicePixelRatio?: number;

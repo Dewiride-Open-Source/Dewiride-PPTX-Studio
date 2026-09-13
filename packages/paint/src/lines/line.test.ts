@@ -499,9 +499,10 @@ describe('the pen on the device grid, re-derived from F3', () => {
     return [rows[0]![0], rows[rows.length - 1]![0]];
   };
 
-  it('puts an odd pen on pixel centres and an even one on the grid, 336 of 336 axis-aligned strokes', () => {
+  it('puts an odd pen on pixel centres and an even one on the grid, 328 of 336 strokes and the 8 it departs from', () => {
     const cases = snapCases('stroke');
     expect(cases).toHaveLength(336);
+    let departed = 0;
     for (const c of cases) {
       const { px, shiftPx } = penOf(c.widthPx, c.scale);
       expect(Number.isInteger(px), c.id).toBe(true);
@@ -509,14 +510,20 @@ describe('the pen on the device grid, re-derived from F3', () => {
       // The band the rule predicts, and the rows the export inked: the same rows.
       const centre = Math.floor(c.centrePx + 0.5) + shiftPx;
       const top = Math.round(centre - px / 2);
-      if (c.widthPx - Math.floor(c.widthPx) === 0.5 && c.scale === 1.25) continue;
+      if (c.widthPx - Math.floor(c.widthPx) === 0.5 && c.scale === 1.25) {
+        departed += 1;
+        continue;
+      }
       expect(inkedRows(c.seen), `${c.id}@${String(c.scale)}`).toEqual([top, top + px - 1]);
     }
+    // The 2-pt probes at 1200: an exact half the export rounded down, held by the next test.
+    expect(departed).toBe(8);
     expect(snap.findings.stroke).toBe('SP');
   });
 
-  it('rounds an exact half pixel up, as the 960 export does and the 1200 export does not', () => {
-    // 2.5, 4.5 and 6.5 points at one pixel to the point: three, five and seven pixels, crisp.
+  it('rounds an exact half pixel up, as the 480 and 960 exports do and the 1200 export does not', () => {
+    // 1.5 to 6.5 points at one pixel to the point: two to seven pixels, crisp.
+    expect(penOf(1.5, 1).px).toBe(2);
     expect(penOf(2.5, 1).px).toBe(3);
     expect(penOf(4.5, 1).px).toBe(5);
     expect(penOf(6.5, 1).px).toBe(7);
@@ -524,8 +531,14 @@ describe('the pen on the device grid, re-derived from F3', () => {
       const [first, last] = inkedRows(c.seen);
       expect(last - first + 1, c.id).toBe(penOf(c.widthPx, c.scale).px);
     }
-    // At 1200 the same half went down and the pen straddled: 2.5 pixels drew as two, half a
-    // row each side. The renderer rounds up there too, and the ADR carries the half pixel.
+    // The 3-pt strokes at 480 are a pixel and a half, and drew two.
+    const atHalfScale = snapCases('stroke').filter((k) => k.scale === 0.5 && k.widthPx === 1.5);
+    expect(atHalfScale).toHaveLength(8);
+    for (const c of atHalfScale) {
+      const [first, last] = inkedRows(c.seen);
+      expect(last - first + 1, c.id).toBe(2);
+    }
+    // At 1200 the same half went down and drew astride the pixel centre (ADR 0054, open question 3).
     const straddled = snapCases('tie').filter(
       (k) => k.scale === 1.25 && k.widthPx - Math.floor(k.widthPx) === 0.5,
     );
@@ -539,7 +552,7 @@ describe('the pen on the device grid, re-derived from F3', () => {
     }
   });
 
-  it('shifts a hairline and a one-pixel pen alike, and nothing at all with no device', () => {
+  it('shifts a hairline and a one-pixel pen alike, and refuses a scale under the floor', () => {
     expect(penOf(0, 1)).toEqual({ px: 1, shiftPx: 0.5 });
     expect(penOf(0.25, 1)).toEqual({ px: 1, shiftPx: 0.5 });
     expect(penOf(2, 2)).toEqual({ px: 2, shiftPx: 0 });

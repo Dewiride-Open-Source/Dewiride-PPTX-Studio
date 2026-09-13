@@ -1,10 +1,10 @@
 /**
  * Experiment F3 - where PowerPoint's export puts a whole-pixel edge on the device grid.
  *
- * Seven slides exported at seven widths: strokes, fills, outlines, pictures, line ends and the
- * shapes that are not axis-aligned, each at four sub-pixel offsets. Every model predicts the
- * coverage profile across one edge, and `assertSeparable` refuses a pair no case can tell apart.
- * No `author.ps1`: nothing needs PowerPoint to author.
+ * Eight slides exported at seven widths: strokes, fills, outlines, pictures, line ends, half-pixel
+ * pens and the shapes that are not axis-aligned, at up to four sub-pixel offsets. Every model
+ * predicts the coverage profile across one edge, and `assertSeparable` refuses a pair no case
+ * could tell apart. No `author.ps1`: nothing needs PowerPoint to author.
  */
 
 import { ln, LINE_GEOM, RECT_GEOM } from '../../paint/lines/probes.ts';
@@ -18,7 +18,7 @@ export const SNAP_FROM = 240;
 /** Agreement between the two exports, and between a model and a case, as coverage of one row. */
 export const TOLERANCE = 0.15;
 
-/** How far apart two models' profiles must be somewhere for a case to decide between them. */
+/** The least two models' profiles may differ by somewhere: a case on one then misses the other. */
 export const SEPARABLE_BY = 0.2;
 
 /** The slide, in points. */
@@ -37,7 +37,7 @@ export const TIE_WIDTHS_PT: readonly number[] = [
   1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 1.2, 2, 2.8, 3.6, 4.4,
 ];
 
-/** The pens whose flat ends are read: one, two and four points cover both parities at every width. */
+/** The pens whose flat ends are read: both parities at 480 and 960, odd pens at 240 and 1200. */
 export const END_WIDTHS_PT: readonly number[] = [1, 2, 4];
 
 export type Family =
@@ -436,7 +436,7 @@ export function snapProbes(): Probe[] {
             id: `${name}-left`,
             question: 'the left of the same ellipse',
             markup: '',
-            // Half a point: the side of a 200-by-80 ellipse bends away twice as fast as its top.
+            // Half a point along: the side of a 200-by-80 ellipse bends away far faster than its top.
             read: { axis: 'x', at: x, half: HALF_WINDOW, along0: top + 39.5, along1: top + 40.5 },
             centrePt: x,
             edge: 'left',
@@ -684,7 +684,7 @@ export const halfEven = (v: number): number => {
   return floor % 2 === 0 ? floor : floor + 1;
 };
 
-/** The export's pen: whole pixels, never under one (F2, T4). */
+/** F2's pen, whole pixels rounded half up and never under one: what decides the parity. */
 export const pen = (w: number): number => Math.max(1, halfUp(w));
 
 /** The export scale at which an exact half pixel of width rounded down; at 960 it rounded up. */

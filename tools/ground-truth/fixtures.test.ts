@@ -655,12 +655,20 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
   const edge = (k: Case, at: number): [number, number] =>
     k.probe.shape === 'from' ? [at, Infinity] : [-Infinity, at];
 
+  /** A losing model's score in the fixture, summed over the families named. */
+  const scored = (model: string, ...families: string[]): number =>
+    families.reduce(
+      (sum, family) => sum + (snap.candidates[family]!.find((s) => s.model === model)?.fits ?? 0),
+      0,
+    );
+
   it('names one perfect reading per family, and every rival misses', () => {
     expect(snap.cases).toBe(1498);
     expect(snap.excluded).toHaveLength(0);
     for (const [family, scores] of Object.entries(snap.candidates)) {
       const perfect = scores.filter((score) => score.fits === score.of);
       expect(perfect, family).toHaveLength(1);
+      expect(snap.findings[family], family).toBe(perfect[0]!.model);
       expect(scores.length, family).toBeGreaterThan(1);
     }
   });
@@ -677,14 +685,21 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
       const n = Math.max(1, halfUp(k.w));
       return [halfUp(k.c - n / 2), halfUp(k.c - n / 2) + n];
     });
-    expect(topRounded).toBeLessThan(all.length);
-    expect(snap.findings.partialRows['stroke']).toBe(16);
+    expect(topRounded).toBe(scored('SR', 'stroke', 'outline', 'triangle', 'rotated', 'tie'));
+    // The rows the export left partial: two for each 2.5-pixel pen at 1200, and nothing else.
+    const partial = cases('stroke').reduce(
+      (sum, k) => sum + k.seen.filter((v) => v > 0.1 && v < 0.9).length,
+      0,
+    );
+    expect(partial).toBe(16);
+    expect(snap.findings.partialRows['stroke']).toBe(partial);
   });
 
   it('rounds an exact half pixel of width up at 960 and down at 1200, 24 of 24', () => {
     const ties = cases('tie').filter((k) => k.w - Math.floor(k.w) === 0.5);
     expect(ties.filter((k) => k.width === 960)).toHaveLength(12);
     expect(ties.filter((k) => k.width === 1200)).toHaveLength(10);
+    // The 2-pt probe at 240 is half a pixel wide, which is one pixel under either rounding.
     expect(ties.filter((k) => k.width === 240)).toHaveLength(2);
     expect(fits(ties, band)).toBe(24);
     // Neither rounding on its own fits both exports: half up misses 1200, half to even 960.
@@ -694,14 +709,14 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
         const centre = snapped(k.c, k.w);
         return [centre - n / 2, centre + n / 2];
       });
-    expect(always(halfUp)).toBe(14);
+    expect(always(halfUp)).toBe(12 + 2);
     const halfEven = (v: number): number =>
       v - Math.floor(v) === 0.5
         ? Math.floor(v) % 2 === 0
           ? Math.floor(v)
           : Math.floor(v) + 1
         : halfUp(v);
-    expect(always(halfEven)).toBeLessThan(24);
+    expect(always(halfEven)).toBe(10 + 2);
     expect(snap.candidates['tie']!.find((s) => s.model === 'SE2')?.fits).toBe(120);
   });
 
@@ -709,8 +724,8 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
     const fills = cases('fill').concat(cases('picture'));
     expect(fills).toHaveLength(192);
     expect(fits(fills, (k) => edge(k, halfUp(k.c)))).toBe(192);
-    expect(fits(fills, (k) => edge(k, k.c))).toBeLessThan(192);
-    expect(fits(fills, (k) => edge(k, Math.floor(k.c)))).toBeLessThan(192);
+    expect(fits(fills, (k) => edge(k, k.c))).toBe(scored('E0', 'fill', 'picture'));
+    expect(fits(fills, (k) => edge(k, Math.floor(k.c)))).toBe(scored('EF', 'fill', 'picture'));
   });
 
   it('takes a flat end onto its pen, and a one-pixel pen a quarter pixel past it, 144 of 144', () => {
@@ -722,8 +737,8 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
         return edge(k, snapped(k.c, k.w) + reach);
       }),
     ).toBe(144);
-    expect(fits(ends, (k) => edge(k, halfUp(k.c)))).toBeLessThan(144);
-    expect(fits(ends, (k) => edge(k, snapped(k.c, k.w)))).toBeLessThan(144);
+    expect(fits(ends, (k) => edge(k, halfUp(k.c)))).toBe(scored('ER', 'end'));
+    expect(fits(ends, (k) => edge(k, snapped(k.c, k.w)))).toBe(scored('EP', 'end'));
   });
 
   it('keeps a picture border half its true width outside the rounded frame edge, 48 of 48', () => {
@@ -753,7 +768,7 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
         return [centre - n / 2, centre + n / 2];
       }),
     ).toBe(24);
-    expect(fits(slants, band)).toBeLessThan(24);
+    expect(fits(slants, band)).toBe(scored('SP', 'slant'));
   });
 
   it('draws a curved outline where the stroke rule puts it, a quarter pixel down at the top', () => {
@@ -766,7 +781,7 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
         return k.probe.edge === 'bottom' ? [top, bottom] : [top + bias(k), bottom + bias(k)];
       }),
     ).toBe(72);
-    expect(fits(ellipses, band)).toBe(35);
+    expect(fits(ellipses, band)).toBe(scored('SP', 'ellipse'));
     const rounded = cases('roundRect');
     expect(rounded).toHaveLength(72);
     expect(
@@ -775,6 +790,7 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
         return pen(k.w, k.scale) > 1 ? [top + bias(k), bottom] : [top, bottom];
       }),
     ).toBe(72);
+    expect(fits(rounded, band)).toBe(scored('SP', 'roundRect'));
     expect(snap.findings['ellipse']).toBe('SQ');
     expect(snap.findings['roundRect']).toBe('SN');
   });

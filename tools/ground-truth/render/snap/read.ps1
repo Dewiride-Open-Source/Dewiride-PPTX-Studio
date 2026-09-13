@@ -2,27 +2,10 @@
 #
 #   powershell -File tools/ground-truth/render/snap/read.ps1 -Dir <work-dir>
 #
-# Reads `snap-inputs.json`, opens the deck and exports every slide at every
-# width, twice, as BMP - C4's format, so the analysis needs no decoder.
-#
-# ## Every export is made twice
-#
-# PowerPoint does not rasterise a slide identically twice (F1 measured 29 of
-# 255), so each slide is exported to two files and the analysis decides on the
-# decoded pixels whether a probe's two readings agree before it trusts either.
-#
-# ## A width PowerPoint refuses is a finding, not a crash
-#
-# `Slide.Export` is asked for 120 to 3840 pixels wide. An error at any width is
-# recorded for that width and the run goes on, so a size ceiling is measured
-# rather than guessed around.
-#
-# `Open2007` with `OpenAndRepair:=msoFalse`, for the reason every other read.ps1
-# gives: `Open` silently repairs, and a silently repaired deck is not the deck
-# whose bytes were built.
-#
-# Read-only. Nothing is written back to the deck. Attaches to a running
-# PowerPoint if there is one and never quits one it did not start.
+# Reads `snap-inputs.json` and exports every slide at every width, twice, as BMP:
+# twice because PowerPoint does not rasterise identically twice (F1), and a width
+# it refuses is recorded, not thrown. `Open2007` with `OpenAndRepair:=msoFalse`,
+# since `Open` repairs silently. Read-only; never quits a PowerPoint it did not start.
 
 param(
     [Parameter(Mandatory = $true)][string]$Dir

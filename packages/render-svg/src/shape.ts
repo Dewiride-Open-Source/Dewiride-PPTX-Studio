@@ -222,7 +222,9 @@ export function shapeNodes(
       return [element('path', { d: path.d, ...fillAttrs, stroke: 'none', ...crisp })];
     }
     const ends = lineEndAttributes(stroke, openEnds(path.segments), defs);
-    if (clip === null) {
+    // A snapped fill and its pen are two paths at every zoom, since only an odd pen moves.
+    const split = snapped && fillAttrs['fill'] !== 'none';
+    if (clip === null && !split) {
       return [
         element('path', {
           d: path.d,
@@ -234,11 +236,19 @@ export function shapeNodes(
         }),
       ];
     }
-    // A clipped band is its own path: clipping the fill with it would keep only the band. The
-    // clip is antialiased whatever the band asks, so the band stays antialiased with it.
+    // The fill is its own path where a clip would otherwise keep only the band (ADR 0054).
     return [
       element('path', { d: path.d, ...fillAttrs, stroke: 'none', ...crisp }),
-      element('path', { d: path.d, fill: 'none', ...stroke.attrs, ...ends, 'clip-path': clip }),
+      clip === null
+        ? element('path', {
+            d: path.d,
+            fill: 'none',
+            ...stroke.attrs,
+            ...ends,
+            ...crisp,
+            ...shifted,
+          })
+        : element('path', { d: path.d, fill: 'none', ...stroke.attrs, ...ends, 'clip-path': clip }),
     ];
   });
 

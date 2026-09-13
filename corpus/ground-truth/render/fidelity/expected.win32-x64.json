@@ -78,16 +78,16 @@
       "svgSha256": "e20e7774138c1b9ff21c7bbaf3612c41a3fcd2a8af59cc005fcb329b0f15a236"
     },
     "a03-fills-01": {
-      "rasterSha256": "bb8e76c90c51bfa9b73248e05b0a9d7cbe1b6f22fa2cee3b4f747df87ab16061",
-      "svgSha256": "396733e80efdab37e02bbfa520690af852f8c8f3937c303b664cb28c1ee44fe6"
+      "rasterSha256": "2bcfe47df1596cee0d7316314184a40314afd84a8d73a1a66d35b6168be91409",
+      "svgSha256": "bf430bc89d08a54de0415beaf892e03587eb4693f4113bad06f8740e0a08074e"
     },
     "a03-fills-02": {
-      "rasterSha256": "ab8055425f6bcacca21d824c7bcb83017d5970b6159fac863d576aeca071b116",
-      "svgSha256": "2dff25ec110dd645d7c30a54a810859ce071958e3d56f8d4b03efe6162fe6e58"
+      "rasterSha256": "a25a7367508b69f763ea584ef45c2c936f6b410b64f3902b90c464ddb657d487",
+      "svgSha256": "a9326bf51a07e3a0dce381900a2538f69e8f310ca5c9b1d1807df675f93cbefe"
     },
     "a03-fills-03": {
-      "rasterSha256": "f28644515c2a45bb776cbd0a87a5215dd7153a978cb6965cc1f0e83cc606b10b",
-      "svgSha256": "30c6e72c59dc28a1bfea2162279dc3b6fb600cd5e8ef1814d474adb639f415aa"
+      "rasterSha256": "b5a81b63852815452a86256e1f1c7188c100bd4b8f67cc3d76690f90a75743fe",
+      "svgSha256": "7cff68b5d2806aa8dfdaad21f2a94ab088e1a8264f73200577b62810d7c92da0"
     },
     "a04-effects-01": {
       "rasterSha256": "41104bdba8de55f8545d89d9a28277181e41cccd8b00011512e3e4984e1b3d55",
@@ -111,7 +111,7 @@
     },
     "a05-geometry-03": {
       "rasterSha256": "4c8436fd551c1aa329ac0d1e6d41c28c5cf8e95fd7278eb2d00377a3dee862f4",
-      "svgSha256": "1f701919f214b415c218221bea803c1de8d2891c8cd675104cc92bd88f1ba504"
+      "svgSha256": "455cc8f164a5432505e3c0124ae33b16b6edab4461edf14abc716f368977b5b9"
     },
     "a06-lines-01": {
       "rasterSha256": "dc78a2e3f59b2ffa2f435c73f30b6c182c1c3cdddd49b75badc63246142a1066",
@@ -143,7 +143,7 @@
     },
     "a08-bullets-03": {
       "rasterSha256": "617bf6501a27edca6721a428d58aa17d6fe1a579d2e51c2542c6f1d70f93ba20",
-      "svgSha256": "975d4bf32601298cf2a809c1262ea98be58db10f3183a5bd996d5d8434ab0614"
+      "svgSha256": "42aca7ce928a70646a447dad28a4421987b96b0327c4fdce4ca2e1fa41e7cc56"
     },
     "a09-fields-01": {
       "rasterSha256": "3e6280af5d549f3130c8da52bca42ed7d36333575f24269f10a71eba9994bd07",
@@ -539,23 +539,23 @@
     },
     "a44-transforms-02": {
       "rasterSha256": "9d8a6bfc7cf5db5fef0d22b6b07cfba6cbe99e7a98975f1d748d78f391f03bb0",
-      "svgSha256": "a13de7d3ffbfc285026877f148d22fef9307c53543bf2525882bc5dd4e296b67"
+      "svgSha256": "db28c604367bab4f3d535e038da707c2383d910123ad7bb90a46575a5ef4aef3"
     },
     "a45-backgrounds-01": {
       "rasterSha256": "63080c717ce6dadbbfdf436cad8f145db374eb729e312b638f60d2822ac65039",
-      "svgSha256": "30765ff186b1f8072ad2e89d7bfcef7f3b29069f0f46c4380df2691aca17ad93"
+      "svgSha256": "ba0becd1752d12d5bf42b12bff87e78477f3511c72b8c308e20eaccb14dda36f"
     },
     "a45-backgrounds-02": {
       "rasterSha256": "a674a98c00a84c74a6826077203032fd9ab1a5fb0f8e831e8fcca959f4a3340e",
-      "svgSha256": "e96caf0e080cf45581cbe7ba8a336c5e00a94b262578cffdf9a2b92c40c1b1d1"
+      "svgSha256": "92e6a652284875bc5bd3aad1c2ba3480c6213dc1ebacbcdc2266bb3d188b8247"
     },
     "a45-backgrounds-03": {
       "rasterSha256": "793996020c36173ce53053a44fc2a8c24f077bd0d945bfec4b60a91bc7843ebf",
-      "svgSha256": "b78310097d3a28e896636d4d6d3e7f0d3dee81ab54638879a8341147e52fd509"
+      "svgSha256": "88ef5235959bcc79c69a69913ffd0873d5d6f73d679a2ee06a04de93340a4bfd"
     },
     "a45-backgrounds-04": {
       "rasterSha256": "d7c679453bdff7cc4a4d7210e37cedb4500e40e7d16941d08117e7f03525c873",
-      "svgSha256": "0c10c68332889fb012373c40c46cc58e7b284d6d07e1f222ced82b25a9c7215b"
+      "svgSha256": "2f6aa6a456b5d099cd39a8c924c6b45fb2b01312e26497024fbf6fb1484209b4"
     },
     "a46-hundred-slides-01": {
       "rasterSha256": "49124882e89d0de2e2083f8efa29a1cba54844015f5faf6b47c39163d289787c",
@@ -571,7 +571,7 @@
     },
     "a46-hundred-slides-04": {
       "rasterSha256": "c3648f63d344c2a9321b94f7226ec1fb8fbfc78c66980c6815055ad0d03304e5",
-      "svgSha256": "584453ca485bb149cecc3295f5c2ab56955064f23cbcf8df0cb7bce87f246276"
+      "svgSha256": "ff60f6f7b125d1b03b32d7c5e9d11bb1039a38701422f97a80261d95031ed714"
     },
     "a46-hundred-slides-05": {
       "rasterSha256": "660d569470fb62aa17651e3c2a6180a5efc3e0aaeb271a509c0ecc42c168eea1",
@@ -627,7 +627,7 @@
     },
     "a46-hundred-slides-17": {
       "rasterSha256": "ca2debaa886f0bbaa6820c81bcaf416cdaf60f822338ad3c5e2a908ee5761096",
-      "svgSha256": "6d44a6b3de513de1569261406506a7346884cd16c3a568d3dd9a96a5b9d748a1"
+      "svgSha256": "97942df658f0e2c98e493185cd70649557daea085ae8bedc40c56758d07770bf"
     },
     "a46-hundred-slides-18": {
       "rasterSha256": "3bf9a1be651340ec320fb87c3862d202ed9ac70fda95cc33dc210539ec545fd3",
@@ -655,7 +655,7 @@
     },
     "a46-hundred-slides-24": {
       "rasterSha256": "6240780af8ebf8bd3dc5811e79ed0aa8d0bb2ce8ca4c263d5684c6010427c515",
-      "svgSha256": "54dad5d9dd42a32293f917d98f0cd14b98f580f730bc852964909f67f2a9cf57"
+      "svgSha256": "fe6e36424de1b5eb9c8665c4bd9479a2a14c132cb31727da1cbe744876a54b7d"
     },
     "a46-hundred-slides-25": {
       "rasterSha256": "fc7b569c092e30ba409b82a628ad805c4cfb5485f371ec7ab868d7e386178da9",
@@ -679,7 +679,7 @@
     },
     "a46-hundred-slides-30": {
       "rasterSha256": "1721b999bc5e02c802ca933defead68fb250cdfe2c8c9b8c90c5002863b35569",
-      "svgSha256": "10d3a280bce218afa665cbb2a292e8861ec9a337c180abea02cc0c382e1dbe76"
+      "svgSha256": "1f93a80bb7573621cb8fa6491723e3eda201523d996f67914c246e564dfd7ac9"
     },
     "a46-hundred-slides-31": {
       "rasterSha256": "bb0e20de9d580c0ac7df2a7f44fd1d20e1b7624c6fb45cc95e980eb9a26a4055",
@@ -707,7 +707,7 @@
     },
     "a46-hundred-slides-37": {
       "rasterSha256": "7182da72c4c32fe7bff1291e7c5f78f0c583fbb6a83f0440e0a8a73f4014f0e9",
-      "svgSha256": "34b144e34689fcd65cb894794300fc45720b0eea4ce5defe457b16689101ea4c"
+      "svgSha256": "49334d439884d7f8e2b2c39d95a69b6254fb169a0d003581df14137570b51951"
     },
     "a46-hundred-slides-38": {
       "rasterSha256": "aa77becabcf38973bb637c79267887fc195e2a0ff27785434e4e7fb4be2fa355",
@@ -731,7 +731,7 @@
     },
     "a46-hundred-slides-43": {
       "rasterSha256": "9005ae88c00bce7e7b47f0dd789d6fbfccf151773be35e9317e2cb80264ad35e",
-      "svgSha256": "1be60fce096dd64891cd17d95f11a197c82833a36d56d4d610351a21aed2201e"
+      "svgSha256": "ee38ee9bb86b594fa0192997b09f9abd6efa7edeecebddfa11fe21044da370f5"
     },
     "a46-hundred-slides-44": {
       "rasterSha256": "5ebe2960970cabe2517c54ce29788c9e37e8b78ef925127b2f908891a98d4290",
@@ -759,7 +759,7 @@
     },
     "a46-hundred-slides-50": {
       "rasterSha256": "1bfe9013ea6a74a4d8938e088d0c836e5d4687ae9fc6ff8d6033d434ae2eede1",
-      "svgSha256": "c811da806b9f45ecfaf762dad39e014740b24d018419a4d66f6a14ed01ab1719"
+      "svgSha256": "c93d2112aba8b1236e73b3d51781e789057d54181b58689d1fbf506c18c5ab63"
     },
     "a46-hundred-slides-51": {
       "rasterSha256": "dfa09a9102d007c8588b44c414978329a607be64c6bf1790647ca52dfefcfd9f",
@@ -783,7 +783,7 @@
     },
     "a46-hundred-slides-56": {
       "rasterSha256": "3f78b9cf62d2ee3654cc994add5c6547d5b66bf8078c645b85f86890351b25e6",
-      "svgSha256": "a5a63866a9ad0e6fd6cefba50f1b273228644bf269721f8c4d5f30a1e89ac172"
+      "svgSha256": "66192d43db4f99097710280edcb23a5b5fb644ce1211d508a9494e417521e838"
     },
     "a46-hundred-slides-57": {
       "rasterSha256": "898145ca41bd4f7d2749e0a78cfdd7126a1065c01e86d67cdb75431931a42065",
@@ -835,7 +835,7 @@
     },
     "a46-hundred-slides-69": {
       "rasterSha256": "a0c66ab41050001e7a8ab276fee3802195a544ebbc8f561074c17fa673976efb",
-      "svgSha256": "f9ef7bc5613d0a9949757019d6b5e35fcfebb02218751e911a3a1eb7666f9775"
+      "svgSha256": "9b40f9faf581b71881b9836df9ab1bec6862a3032cfad514ac30390eeda547d7"
     },
     "a46-hundred-slides-70": {
       "rasterSha256": "91c122858236942ff0927326ef3c96d1581261f89d8e158bda46cf97d9b7a49a",
@@ -887,7 +887,7 @@
     },
     "a46-hundred-slides-82": {
       "rasterSha256": "ed1b7629ff12e5c64c56d0e27539449c56f9a463a4f3739e275c42c5aa2c6068",
-      "svgSha256": "47dafd90a08863a3a868a044ae92cdc959dcff67e1f1389e12765af6609cbf4e"
+      "svgSha256": "43a0669ce56323861e83f8ad1b68a8bc2b0f360c979f88c15e358c232699fb78"
     },
     "a46-hundred-slides-83": {
       "rasterSha256": "2ab76c6d4a1c81b096bc4970336f85220f10497b913c927166fa805b28b524aa",
@@ -911,7 +911,7 @@
     },
     "a46-hundred-slides-88": {
       "rasterSha256": "0b90a82cad6145ed22c6b93cb294ce044c87de7460d3651b1fa1c8e6fdc6b1dc",
-      "svgSha256": "a5c927e6ffb49fb2c830323c84e13a5836a5646810f3d047227f65e8666c3440"
+      "svgSha256": "c0b57fbd71a806c1cb37e50ea6dfef2ea85a411867d32c2bd9278f42ef8dbef7"
     },
     "a46-hundred-slides-89": {
       "rasterSha256": "a88586993d6f73f314e0993522eefcbc017b09885b7544307589cd62e8d98389",
@@ -939,7 +939,7 @@
     },
     "a46-hundred-slides-95": {
       "rasterSha256": "43a6ec03da4a3c9f77a7a9e1e7426a9f44b00690e3db0f3a5e2c5263f69c6c7d",
-      "svgSha256": "3bb1ebc5e4f932df0c07edba54af6dbabf2643574f05db3b40fca6836eebdb60"
+      "svgSha256": "789b35774efb0a3c46d8b27c5cb18657700c31d953b72ea9a0cbf4106a1c5d4f"
     },
     "a46-hundred-slides-96": {
       "rasterSha256": "d61783f98d66249872efe90fc0ccb8664725fa98ac69a15602f3fe17bd79b2ba",

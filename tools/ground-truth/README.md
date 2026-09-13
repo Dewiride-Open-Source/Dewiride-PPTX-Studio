@@ -291,17 +291,18 @@ one reading per family fits every case — which is how the marker family grew f
 eight and the width list grew by 1200. What it settled: a `w="0"` line is one device pixel at
 every width and every angle; a stroke is drawn at `round(w·s)` whole pixels, never under one; a
 dashed hairline is solid; a triangle head is a 10-pt vector head on any line of two points or less
-and five whole-pixel pens above it; a picture border stays outside its frame with the whole-pixel
-stroke snapped half up; the 6-pt pattern tile holds from 960 up but its coverage does not; and a
-16:9 slide asked for 120 by 68 is stretched, not letterboxed. ADR 0054.
+and five whole-pixel pens above it; a picture border stays outside its frame, and its one reading
+of where — the inner edge on the rounded frame edge — is the one-width view of what F3 below
+measured at four; the 6-pt pattern tile holds from 960 up but its coverage does not; and a 16:9
+slide asked for 120 by 68 is stretched, not letterboxed. ADR 0054.
 
 ### F3 — where an edge lands on the device grid _(added in 3.11)_
 
 F2 said a whole-pixel stroke is crisp from 240 px up, and one picture border said its edge snapped
 half up; neither said which coordinate snaps, which way, or what an odd pen does that an even one
 does not. F3 draws strokes, fills, outlines, pictures, line ends and the shapes that are not
-rectangles at four sub-pixel offsets, exports the eight slides at F2's seven widths twice, and
-reads the coverage profile across every edge. A model here predicts a profile, not a number, so an
+rectangles at up to four sub-pixel offsets, exports the eight slides at F2's seven widths twice,
+and reads the coverage profile across every edge. A model here predicts a profile, not a number, so an
 antialiased reading and a snapped one are scored on the same rows.
 
 ```bash
@@ -319,8 +320,8 @@ turned a quarter alike; a fill edge and a picture edge round half up; a flat lin
 pen; a picture border sits half its true width outside the rounded frame edge, antialiased; a
 slanted line is snapped at its endpoints and antialiased between them; a curve follows the same
 rule with a quarter-pixel bias the curve rasteriser adds. Two things it could not settle are in the
-file with their scores: a pen of an exact half pixel rounded up at 960 wide and down at 1200, and
-under 240 px nothing is crisp. ADR 0054.
+file with their scores: a pen of an exact half pixel rounded up at 480 and 960 wide and down at
+1200, and at 120 px the rows sit a quarter pixel off the rule the columns keep. ADR 0054.
 
 ### T5 — bullets, fields and script runs _(added in 3.5)_
 

@@ -30,6 +30,7 @@ import { blipPaint } from './image/blip.js';
 import { Defs } from './paint.js';
 import { num, serializeSvg } from './node.js';
 import { renderSlide, slideNode } from './slide.js';
+import { inverseFramePoint } from './transform.js';
 import {
   UNIT_CHILD_SPACE,
   childSpace,
@@ -1317,6 +1318,20 @@ describe('the device grid, re-derived from F3', () => {
     const fill = pathTags(at(sp({ rect: RECT, fill: BLACK }), 960))[0]!;
     expect(crisp(fill)).toBe(true);
     expect(shift(fill)).toBeNull();
+    // Under an odd pen the fill keeps its rows and the pen alone moves: two paths, not one.
+    const underOdd = pathTags(at(sp({ rect: RECT, fill: BLACK, line: ln(1) }), 960));
+    expect(underOdd).toHaveLength(2);
+    expect(underOdd[0]).toContain('fill="#000000"');
+    expect(crisp(underOdd[0]!)).toBe(true);
+    expect(shift(underOdd[0]!)).toBeNull();
+    expect(underOdd[1]).toContain('fill="none"');
+    expect(shift(underOdd[1]!)).toBe('6350 6350');
+    expect(underOdd[1]).toContain('stroke="#000000"');
+    // Under an even pen nothing moves, and the two paths stay two so a zoom changes no structure.
+    const underEven = pathTags(at(sp({ rect: RECT, fill: BLACK, line: ln(2) }), 960));
+    expect(underEven).toHaveLength(2);
+    expect(shift(underEven[1]!)).toBeNull();
+    expect(pathTags(at(sp({ rect: RECT, fill: BLACK, line: ln(2) }), undefined))).toHaveLength(1);
     for (const turned of [
       sp({ rect: RECT, line: ln(1), prst: 'ellipse' }),
       sp({ rect: RECT, line: ln(1), prst: 'roundRect' }),
@@ -1338,12 +1353,28 @@ describe('the device grid, re-derived from F3', () => {
   it('turns the half pixel with the shape, so it is still down and right on the slide', () => {
     const turned = (rot: number, flipH = false, flipV = false): string | null =>
       shift(pathTags(at(sp({ rect: RECT, line: ln(1), rot, flipH, flipV }), 960))[0]!);
+    // The local vector the frame's own inverse maps half a device pixel down and right onto.
+    const expected = (rot: number, flipH = false, flipV = false): string => {
+      const frame = { ...RECT, rot, flipH, flipV };
+      const origin = inverseFramePoint(frame, { x: 0, y: 0 });
+      const moved = inverseFramePoint(frame, { x: 6350, y: 6350 });
+      return `${num(Math.round(moved.x - origin.x))} ${num(Math.round(moved.y - origin.y))}`;
+    };
+    for (const [rot, flipH, flipV] of [
+      [0, false, false],
+      [90, false, false],
+      [180, false, false],
+      [270, false, false],
+      [0, true, false],
+      [0, false, true],
+      [90, true, false],
+      [270, true, true],
+    ] as const) {
+      expect(turned(rot, flipH, flipV), `${String(rot)} ${String(flipH)} ${String(flipV)}`).toBe(
+        expected(rot, flipH, flipV),
+      );
+    }
     expect(turned(90)).toBe('6350 -6350');
-    expect(turned(180)).toBe('-6350 -6350');
-    expect(turned(270)).toBe('-6350 6350');
-    expect(turned(0, true)).toBe('-6350 6350');
-    expect(turned(0, false, true)).toBe('6350 -6350');
-    expect(turned(90, true)).toBe('-6350 -6350');
     // A quarter turn keeps every edge on an axis, and the export snaps it: 24 of 24.
     expect(crisp(pathTags(at(sp({ rect: RECT, line: ln(1), rot: 90 }), 960))[0]!)).toBe(true);
     expect(snap.findings.rotated).toBe('SP');
@@ -1401,6 +1432,27 @@ describe('the device grid, re-derived from F3', () => {
     expect(shift(band)).toBeNull();
     expect(snap.findings.picture).toBe('ER');
     expect(snap.findings.border).toBe('BT');
+  });
+
+  it('clips a band antialiased whatever its clip path asks, which is why the band stays so', async () => {
+    // A crisp clip child at a quarter-pixel edge: the clipped fill's edge row is still partial.
+    const clipped = (rendering: string): string =>
+      '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">' +
+      '<defs><clipPath id="c" clipPathUnits="userSpaceOnUse">' +
+      `<path d="M0 20.25H100V100H0Z" shape-rendering="${rendering}"/></clipPath></defs>` +
+      '<rect x="10" y="0" width="80" height="60" fill="#000" clip-path="url(#c)" shape-rendering="crispEdges"/></svg>';
+    for (const rendering of ['crispEdges', 'auto']) {
+      const rows = await rowsAcross(clipped(rendering), 100, 100, [40, 60], [19, 22]);
+      expect(
+        rows.map((v) => Math.round(v * 100) / 100),
+        rendering,
+      ).toEqual([0, 0.75, 1, 1]);
+    }
+    // The same edge on a crisp rect with no clip is whole: the antialiasing is the clip's.
+    const bare =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">' +
+      '<rect x="10" y="20.25" width="80" height="40" fill="#000" shape-rendering="crispEdges"/></svg>';
+    expect(await rowsAcross(bare, 100, 100, [40, 60], [19, 22])).toEqual([0, 1, 1, 1]);
   });
 
   it('snaps nothing when no width names a device', () => {
@@ -1516,7 +1568,7 @@ describe('the device grid, re-derived from F3', () => {
   });
 
   it('would not, drawn antialiased where it lies: the same probes straddle two rows', async () => {
-    // The markup with the snap taken out of it - what every earlier version drew.
+    // The markup with the snap taken out of it: the device pen, antialiased where it lies.
     const { sheet, probes } = strokeSlide();
     const markup = renderSlide(sheet, SIZE, { idPrefix: 'u', width: 960, height: 540 }).replace(
       /<path\b[^>]*shape-rendering="crispEdges"[^>]*>/g,

@@ -84,7 +84,7 @@ function printRun(run: Gate3Run, file: string): void {
   }
   for (const gap of run.notDrawn) write(`  x ${gap.key}: ${gap.reason}`);
   for (const brk of run.breaks)
-    write(`  x ${brk.key} differs at ${pct(brk.zoom)} beyond what the stroke rule owns`);
+    write(`  x ${brk.key} differs at ${pct(brk.zoom)} beyond what the stroke and grid rules own`);
   const rasters = run.ratio.rasters;
   const worstRaster = [...rasters].sort((a, b) => a.meanBp - b.meanBp)[0];
   write(

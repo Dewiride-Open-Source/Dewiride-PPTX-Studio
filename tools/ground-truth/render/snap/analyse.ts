@@ -35,8 +35,9 @@ if (dirArg === undefined)
 const dir = dirArg;
 const capture = process.argv.includes('--capture');
 const fixtureAt = process.argv.indexOf('--fixture');
-const fixturePath =
-  fixtureAt === -1 ? repoPath('corpus/ground-truth/snap.json') : process.argv[fixtureAt + 1]!;
+const fixtureArg = fixtureAt === -1 ? undefined : process.argv[fixtureAt + 1];
+if (fixtureAt !== -1 && fixtureArg === undefined) throw new Error('--fixture needs a path');
+const fixturePath = fixtureArg ?? repoPath('corpus/ground-truth/snap.json');
 
 /** How many lines along an edge are averaged. */
 const SAMPLES_ALONG = 40;
