@@ -86,8 +86,10 @@ jobs:
         working-directory: website
         run: |
           deadline=$(( $(date +%s) + 300 ))
-          until npm install --no-audit --no-fund --prefer-online 2>&1 | tee "$RUNNER_TEMP/install.log"; do
-            grep -Eq 'ETARGET|E404' "$RUNNER_TEMP/install.log" || exit 1
+          log="$RUNNER_TEMP/install.log"
+          until npm install --no-audit --no-fund --prefer-online > "$log" 2>&1; do
+            cat "$log"
+            grep -Eq 'ETARGET|E404' "$log" || exit 1
             if [ "$(date +%s)" -ge "$deadline" ]; then
               echo "::error::a version the manifest names is still not installable after 5 minutes"
               exit 1
@@ -95,6 +97,7 @@ jobs:
             echo "not served yet, asking again in 20 s"
             sleep 20
           done
+          cat "$log"
 
       # Real directories, not symlinks - the canary's assertion, for its reason.
       - name: Assert nothing is linked

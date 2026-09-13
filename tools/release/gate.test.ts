@@ -6,7 +6,10 @@
  * that into a failed test, which is cheaper to read. ADR 0046.
  */
 
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { delimiter, join } from 'node:path';
 
 import { parse } from 'yaml';
 import { describe, expect, it } from 'vitest';
@@ -195,6 +198,46 @@ describe('the website', () => {
   it('cannot publish, and never asks whether it may', () => {
     expect(JSON.stringify(website)).not.toContain('publishers.ts');
     expect(JSON.stringify(website)).not.toContain('NODE_AUTH_TOKEN');
+  });
+
+  // The retry loop must read npm's exit code, not that of whatever it is
+  // piped through; a fake npm says which one the step is reading.
+  describe('the install step', () => {
+    const script = website.jobs['build']?.steps?.find((step) =>
+      /^npm install|until npm install/m.test(step.run ?? ''),
+    )?.run;
+
+    function runWith(npm: string): { status: number | null; output: string } {
+      const dir = mkdtempSync(join(tmpdir(), 'website-install-'));
+      writeFileSync(join(dir, 'npm'), `#!/usr/bin/env bash\n${npm}\n`, { mode: 0o755 });
+      mkdirSync(join(dir, 'temp'));
+      const result = spawnSync('bash', ['-e', '-c', script ?? 'exit 99'], {
+        cwd: dir,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          PATH: `${dir}${delimiter}${process.env['PATH'] ?? ''}`,
+          RUNNER_TEMP: join(dir, 'temp'),
+        },
+      });
+      rmSync(dir, { recursive: true, force: true });
+      return { status: result.status, output: `${result.stdout}${result.stderr}` };
+    }
+
+    it('exists', () => {
+      expect(script).toBeDefined();
+    });
+
+    it('passes when npm does', () => {
+      expect(runWith('echo "added 300 packages"; exit 0').status).toBe(0);
+    });
+
+    it('fails at once on an error that is not the registry lagging', () => {
+      const { status, output } = runWith('echo "npm error code ERESOLVE"; exit 1');
+      expect(status).not.toBe(0);
+      expect(output).toContain('ERESOLVE');
+      expect(output).not.toContain('asking again');
+    });
   });
 });
 

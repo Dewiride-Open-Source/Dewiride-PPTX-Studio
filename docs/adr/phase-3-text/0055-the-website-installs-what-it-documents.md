@@ -344,6 +344,15 @@ Not measured yet: Lighthouse, because it is not installed and installing it is a
 the registry wait after a release, because the first deploy ran on a push whose ranges the
 registry already served — the first `workflow_run` deploy is phase 4's first release.
 
+**What Dependabot found.** The new `website/` entry opened four pull requests within the hour;
+the one that bumps TypeScript to 7 fails `npm install` with `ERESOLVE` on a peer range, which is
+the red the design wants — and its run (34780499037) showed the install step reporting **success**
+on that failure. The retry loop piped npm through `tee` and, with no `pipefail`, read `tee`'s exit
+code; the step after it failed on a missing module instead. The loop now redirects npm to the log
+and reads npm's own status, and `gate.test.ts` runs the step's script under bash with a fake `npm`:
+one that exits 0 passes the step, one that prints `ERESOLVE` and exits 1 fails it at once with no
+retry. With the pipe put back, that test is red.
+
 ## Deviations from the plan
 
 - **Eleven sample decks, not twelve**: `a08-bullets`, above.
