@@ -94,7 +94,7 @@ function gatedList(run: Gate3Run): string {
       run.notDrawn.length === 0,
     ],
     [
-      `${String(run.breaks.length)} zooms whose SVG differs from 100 % beyond stroke-width, stroke-dasharray, a crisp path's half-pixel translate and a line end's numbers`,
+      `${String(run.breaks.length)} zooms whose SVG differs from 100 % beyond stroke-width, stroke-dasharray, a crisp path's half-pixel translate, a picture border's crispness and a line end's numbers`,
       run.breaks.length === 0,
     ],
     [

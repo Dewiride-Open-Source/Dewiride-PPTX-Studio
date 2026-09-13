@@ -300,10 +300,13 @@ slide asked for 120 by 68 is stretched, not letterboxed. ADR 0054.
 
 F2 said a whole-pixel stroke is crisp from 240 px up, and one picture border said its edge snapped
 half up; neither said which coordinate snaps, which way, or what an odd pen does that an even one
-does not. F3 draws strokes, fills, outlines, pictures, line ends and the shapes that are not
-rectangles at up to four sub-pixel offsets, exports the eight slides at F2's seven widths twice,
-and reads the coverage profile across every edge. A model here predicts a profile, not a number, so an
-antialiased reading and a snapped one are scored on the same rows.
+does not. F3 draws strokes, fills, outlines, pictures, inset strokes, line ends and the shapes
+that are not rectangles at up to four sub-pixel offsets, exports the ten slides twice at fourteen
+widths — F2's seven, and seven that are not all of a whole number of dots per inch, a whole-pixel
+height and an eighth of a pixel per point — and reads the coverage profile across every edge. A
+model here predicts a profile, not a number, so an antialiased reading and a snapped one are
+scored on the same rows; the rule is read from the six widths that are an eighth with a whole
+height, and every other width is scored against it.
 
 ```bash
 node tools/ground-truth/render/snap/build-deck.ts <dir>
@@ -313,15 +316,19 @@ npx prettier --write corpus/ground-truth/snap.json
 node tools/ground-truth/render/snap/write-tables.ts
 ```
 
-What it settled, 1498 cases with none excluded: an axis-aligned stroke's centre rounds half up to
+What it settled, 3388 cases with none excluded: an axis-aligned stroke's centre rounds half up to
 the grid and an odd pen then sits on pixel centres, half a pixel on, so the pen is crisp whatever
 the offset — on lines, rectangles, an L-shaped custom outline, a triangle's base and a rectangle
-turned a quarter alike; a fill edge and a picture edge round half up; a flat line end follows its
-pen; a picture border sits half its true width outside the rounded frame edge, antialiased; a
-slanted line is snapped at its endpoints and antialiased between them; a curve follows the same
-rule with a quarter-pixel bias the curve rasteriser adds. Two things it could not settle are in the
-file with their scores: a pen of an exact half pixel rounded up at 480 and 960 wide and down at
-1200, and at 120 px the rows sit a quarter pixel off the rule the columns keep. ADR 0054.
+turned a quarter alike; a pen of an exact half pixel rounds up at 240, 480, 960 and 1920 and down
+at 1200, and no integer-EMU width is a half at 3840; a fill edge and a picture edge round half up;
+a flat line end follows its pen; a picture border sits half its true width outside the rounded
+frame edge, antialiased; an `algn="in"` stroke is the pen a device pixel outside the rounded
+frame edge and the rest inside; a slanted line is snapped at its endpoints and antialiased between
+them; a curve follows the same rule with a quarter-pixel bias the curve rasteriser adds. Where the
+rule stops is in the file too: a whole number of dots per inch that is not an eighth rounds an
+exact half's width and parity apart (1040, 1120, 1200), a fractional height keeps the columns and
+moves the rows by the stretch in quarter-pixel steps (120, 1000, 1320), and a fractional dots per
+inch (1008, 1100, 1184) is a resampled render that snaps nothing. ADR 0054.
 
 ### T5 — bullets, fields and script runs _(added in 3.5)_
 

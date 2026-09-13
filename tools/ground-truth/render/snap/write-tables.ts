@@ -19,18 +19,29 @@ interface Score {
 interface Measure {
   readonly from: number;
   readonly cover: readonly number[];
-  readonly peak: number;
-  readonly partial: number;
+}
+
+interface AtWidth {
+  readonly height: number;
+  readonly dpi: number;
+  readonly eighth: boolean;
+  readonly wholeHeight: boolean;
+  readonly cases: number;
+  readonly rule: Readonly<Record<string, readonly [number, number]>>;
+  readonly ruleMisses: readonly string[];
+  readonly mappings: Readonly<Record<string, Readonly<Record<string, readonly [number, number]>>>>;
+  readonly partialRows: number;
+  readonly quarterRows: number;
 }
 
 interface Fixture {
   readonly powerpoint: string;
   readonly widths: readonly number[];
-  readonly snapFrom: number;
+  readonly gridWidths: readonly number[];
   readonly cases: number;
   readonly findings: Readonly<Record<string, unknown>>;
   readonly candidates: Readonly<Record<string, readonly Score[]>>;
-  readonly below: Readonly<Record<string, readonly Score[]>>;
+  readonly atWidth: Readonly<Record<string, AtWidth>>;
   readonly measured: Readonly<Record<string, Readonly<Record<string, Measure>>>>;
 }
 
@@ -43,7 +54,7 @@ const out = (line = ''): void => {
 };
 
 out(
-  `F3 against PowerPoint ${fixture.powerpoint}: ${String(fixture.cases)} cases at ${fixture.widths.join(', ')} px wide, scored from ${String(fixture.snapFrom)}.`,
+  `F3 against PowerPoint ${fixture.powerpoint}: ${String(fixture.cases)} cases at ${fixture.widths.join(', ')} px wide, the rule read at ${fixture.gridWidths.join(', ')}.`,
 );
 out();
 
@@ -100,17 +111,31 @@ profiles('The two-point stroke, and its 2.5-pixel pen at 1200', [
 ]);
 profiles('The fill edge', ['fill-0-top', 'fill-0_25-top', 'fill-0_5-top', 'fill-0_75-top']);
 profiles('The picture border', ['border-1-0', 'border-1-0_5', 'border-2-0', 'border-2-0_5']);
+profiles('The inset stroke', ['inset-1-0', 'inset-1-0_5', 'inset-2-0', 'inset-2-0_5']);
+profiles('The half pixels at 240 and 1920', ['tie-6-0', 'tie-10-0', 'tie-0_75-0', 'tie-1_25-0']);
 profiles('The ellipse, top and bottom', ['ellipse-1-0', 'ellipse-1-0-bottom']);
 profiles('The flat end of a one-point line', ['end-1-0-start', 'end-1-0-end']);
 
-out('### Under the scored width');
+out('### Every width against the rule');
 out();
-out('| family | model | fits |');
-out('| ------ | ----- | ---: |');
-for (const [family, scores] of Object.entries(fixture.below)) {
-  const best = [...scores].sort((a, b) => b.fits - a.fits)[0];
-  if (best !== undefined)
-    out(`| ${family} | ${best.model} | ${String(best.fits)}/${String(best.of)} |`);
+out(
+  '| width | dpi | height | eighth | rule fits | partial rows | of them quarters | misses | mappings |',
+);
+out(
+  '| ----: | --: | -----: | ------ | --------: | -----------: | ---------------: | ------ | -------- |',
+);
+for (const [width, at] of Object.entries(fixture.atWidth)) {
+  const fits = Object.values(at.rule).reduce((sum, [f]) => sum + f, 0);
+  const mappings = Object.entries(at.mappings)
+    .map(([name, byFamily]) => {
+      const f = Object.values(byFamily).reduce((sum, [x]) => sum + x, 0);
+      const of = Object.values(byFamily).reduce((sum, [, n]) => sum + n, 0);
+      return `${name} ${String(f)}/${String(of)}`;
+    })
+    .join(', ');
+  out(
+    `| ${width} | ${String(at.dpi)} | ${String(at.height)} | ${at.eighth ? 'yes' : 'no'} | ${String(fits)}/${String(at.cases)} | ${String(at.partialRows)} | ${String(at.quarterRows)} | ${at.ruleMisses.join(' ') || (fits === at.cases ? '' : 'many')} | ${mappings} |`,
+  );
 }
 out();
 

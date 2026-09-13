@@ -4,8 +4,8 @@
  * The gate's wording is "a 100-slide deck rendered faithfully at any zoom, entirely
  * client-side". Written out: the deck has a hundred slides and every one draws at every zoom
  * the page offers; the SVG at any zoom is the SVG at 100 % apart from what the stroke and grid
- * rules own - the two stroke attributes, a crisp path's half-pixel translate and a line end's
- * numbers (F2 and F3, ADR 0054); a 2x display's 100 % markup
+ * rules own - the two stroke attributes, a crisp path's half-pixel translate, a picture border's
+ * crispness and a line end's numbers (F2 and F3, ADR 0054); a 2x display's 100 % markup
  * is the 200 % markup to the byte; nothing leaves the page once the
  * deck is in hand; and our own raster of every slide at every zoom is the one recorded. The
  * scores against PowerPoint are reported beside all that and gate nothing (ADR 0035).
