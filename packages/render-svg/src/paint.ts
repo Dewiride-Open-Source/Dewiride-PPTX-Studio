@@ -357,9 +357,9 @@ export function strokeAttributes(
 /* line ends                                                                  */
 /* -------------------------------------------------------------------------- */
 
-/** The marker table's unit outline scaled to `length` by `width`, its axis moved to y = width / 2. */
-function markerPath(geometry: MarkerGeometry): string {
-  const x = (value: string): string => num(Number(value) * geometry.length);
+/** The marker table's unit outline scaled to `length` by `width`, its axis on y = width / 2, moved back `shift`. */
+function markerPath(geometry: MarkerGeometry, shift: number): string {
+  const x = (value: string): string => num(Number(value) * geometry.length - shift);
   const y = (value: string): string => num(Number(value) * geometry.width + geometry.width / 2);
   return geometry.path
     .split(/\s+/)
@@ -382,6 +382,12 @@ function markerPath(geometry: MarkerGeometry): string {
     .join(' ');
 }
 
+/** A paint server is in the line's user space, and a marker has its own: the head asks for the line's. */
+function markerPaint(stroke: Attrs): AttributeValue {
+  const paint = stroke['stroke'] ?? 'none';
+  return typeof paint === 'string' && paint.startsWith('url(') ? 'context-stroke' : paint;
+}
+
 /** One `<marker>`: the head at its pen, painted as the stroke is, oriented along the path. */
 function markerNode(
   id: string,
@@ -391,15 +397,17 @@ function markerNode(
   atStart: boolean,
 ): SvgElement {
   const paint: Attrs = { stroke: 'none', fill: 'none' };
+  let shift = 0;
   if (geometry.filled) {
-    paint['fill'] = stroke['stroke'] ?? 'none';
+    paint['fill'] = markerPaint(stroke);
     if (stroke['stroke-opacity'] !== undefined) paint['fill-opacity'] = stroke['stroke-opacity'];
   } else {
-    // An open arrow is a stroked V, drawn with the pen (ADR 0023).
-    paint['stroke'] = stroke['stroke'] ?? 'none';
+    // An open arrow is a V stroked with the pen, its vertex half a pen back so the round join's
+    // edge, not its centre, sits on the endpoint: C4 measured no overshoot (`lines.json`).
+    shift = pen / 2;
+    paint['stroke'] = markerPaint(stroke);
     paint['stroke-width'] = pen;
-    paint['stroke-linejoin'] = stroke['stroke-linejoin'] ?? null;
-    paint['stroke-miterlimit'] = stroke['stroke-miterlimit'] ?? null;
+    paint['stroke-linejoin'] = 'round';
     if (stroke['stroke-opacity'] !== undefined) paint['stroke-opacity'] = stroke['stroke-opacity'];
   }
   return element(
@@ -414,7 +422,7 @@ function markerNode(
       orient: atStart ? 'auto-start-reverse' : 'auto',
       overflow: 'visible',
     },
-    [element('path', { d: markerPath(geometry), ...paint })],
+    [element('path', { d: markerPath(geometry, shift), ...paint })],
   );
 }
 

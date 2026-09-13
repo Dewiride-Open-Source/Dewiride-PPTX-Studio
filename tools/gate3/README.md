@@ -57,9 +57,10 @@ exact; nothing inside an `<svg>` is touched, and a fractional box is refused rat
 - every raster is the one recorded in `corpus/ground-truth/render/fidelity/zoom/expected.<env>.json`,
   by SHA-256, under the same font lock `pnpm fidelity` uses.
 
-**Reported and never gated:** the scores against PowerPoint at each width, the 2x display's rasters
-against the 200 % rasters (Chromium's, not the page's: within a few levels and rarely identical),
-and every timing — parse, first slide, the strip, each mount, each screenshot. The two sides differ by a few levels everywhere,
+**Reported and never gated:** the scores against PowerPoint at each width; PowerPoint's own export at
+each width against its 960-px export, the calibration those scores are read against; the 2x
+display's rasters against the 200 % rasters (Chromium's, not the page's: within a few levels and
+rarely identical); and every timing — parse, first slide, the strip, each mount, each screenshot. The two sides differ by a few levels everywhere,
 so a pass/fail on the number would need a tolerance, and a tolerance is the thing that gets loosened
 ([ADR 0035](../../docs/adr/phase-3-text/0035-the-fidelity-harness.md)).
 

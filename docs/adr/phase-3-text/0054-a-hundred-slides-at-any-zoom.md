@@ -73,7 +73,7 @@ found is under "Line ends", below.
 
 **O4's half-up snap** is recorded and not implemented, and the record has to be read carefully.
 O4 fits 8/8 and O1 — wholly outside, unsnapped — 7/8, but the one case that separates them is
-`border-1pt` at 1200 px, where the inner edge sat half a pixel out. One case is an anecdote. What
+`border-1pt` at 1200 px, where the inner edge sat half a pixel inside the frame. One case is an anecdote. What
 makes it worth keeping is the company it has: every whole-pixel stroke in the thin family from 240
 px up has a profile peak of exactly 1.0 — one crisp row, or two, or five, never a stroke straddling
 two rows at half coverage — while a stroke centred on an integer device coordinate in our SVG
@@ -121,12 +121,19 @@ heads, and a 6-pixel head at 960 px is under one cell of the metric, so the scor
 `render-svg` now draws a head as an SVG `<marker>` in user units on the open ends of a stroked
 path — `marker-start` where the first subpath is open, `marker-end` where the last is; a closed
 rectangle with a `tailEnd` gets none — sized by `markerGeometry` from `markerPen`, painted as the
-stroke is, `orient="auto-start-reverse"` at the start so both tips point outward. The raster test
-reads the head's height at its back the way F2 read PowerPoint's: 10 rows at 960 px where the export
-drew 9, 5 at 240 where it drew 4, both inside the fixture's tolerance, centred on the line to a
-pixel. Because the pen is a device measurement, a marker's size and outline differ between zooms
-exactly as `stroke-width` does, and Gate 3's mask owns them the same way: a marker's
-`markerWidth`, `markerHeight`, `refX`, `refY` and outline may change with the zoom; its
+stroke is, `orient="auto-start-reverse"` at the start so both tips point outward. Two details the
+review of this pass caught. A paint server is in the line's user space and a marker has its own, so
+a gradient- or pattern-stroked line's head is painted with `context-stroke` rather than the
+server's `url(#…)`, which would have sampled the ramp from the marker's back corner. And the open
+arrow is a V stroked with the pen, so its vertex sits half a pen back with a round join: C4 measured
+the arrow's inked tip on the endpoint with no overshoot and its silhouette a pen longer and wider
+than nominal (`lines.json`), which is what a stroked V centred on the endpoint would fail by half a
+pen. The raster tests read the head's height at its back the way F2 read PowerPoint's — 10 rows at
+960 px where the export drew 9, 5 at 240 where it drew 4, both inside the fixture's tolerance,
+centred on the line to a pixel — and the column past an arrow's tip for ink, and find none. Because
+the pen is a device measurement, a marker's numbers differ between zooms exactly as `stroke-width`
+does, and Gate 3's mask owns them the same way: a marker's `markerWidth`, `markerHeight`, `refX`,
+`refY` and the numbers of its outline may change with the zoom; the outline's commands, its
 orientation, its paint and which end it is on may not.
 
 ## The deck, and the limits it found
@@ -226,7 +233,7 @@ all invariant, two requests for the deck and none after going offline, 500 raste
 | zoom          | px wide | mean bp | worst slide                 |
 | ------------- | ------: | ------: | --------------------------- |
 | 100 %         |     960 |    9954 | a46-hundred-slides-40, 9819 |
-| 25 %          |     240 |    9878 | a46-hundred-slides-24, 9655 |
+| 25 %          |     240 |    9878 | a46-hundred-slides-24, 9654 |
 | 200 %         |    1920 |    9960 | a46-hundred-slides-40, 9799 |
 | 400 %         |    3840 |    9964 | a46-hundred-slides-40, 9799 |
 | strip, 12.5 % |     120 |    9727 | a46-hundred-slides-88, 9184 |
@@ -251,15 +258,18 @@ not the page's, and they are not identical: 7 of 100 match the 200 % raster byte
 rest differ by up to 5 levels of 255 (mean 9999 bp against 200 %), which is how Skia treats a 2x
 device matrix against a 2x transform. Scored against PowerPoint's 1920-px export as a sixth column
 the 2x stage is 9960 bp, the 200 % column's own number, worst slide 40 at 9798. So the markup is
-gated and the raster reported. One mechanism worth writing down: Playwright re-applies the context's
-device metrics on every `page.screenshot`, which silently put the ratio back to 1 — the pass
-captures over the same CDP session it set the ratio on.
+gated and the raster reported. The strip is the half that proves the page noticed: nothing in the
+pass asks it to redraw, and a thumbnail it refuses on that redraw is counted as not drawn. One
+mechanism worth writing down: Playwright re-applies the context's device metrics on every
+`page.screenshot`, which silently put the ratio back to 1 — the pass captures over the same CDP
+session it set the ratio on.
 
-**PowerPoint against itself**, the self-check the plan asked for. Its own 120, 240, 1920 and
-3840-px exports of a46, reduced to the same grids and scored against its 960 export, agree at
-9742 / 9879 / 9977 / 9977 bp; the page's columns at those widths are 9727 / 9878 / 9960 / 9964. At
-25 % and in the strip the page is as far from PowerPoint's export at that width as PowerPoint's
-own 960 export is, which is the calibration the zoom columns needed.
+**PowerPoint against itself**, the self-check the plan asked for, is a column of `pnpm gate3` now
+(`oracleSelfBp`, "PowerPoint vs its 960" in the report). Its own 120, 240, 1920 and 3840-px exports
+of a46, reduced to the same grids and scored against its 960 export, agree at 9742 / 9879 / 9977 /
+9977 bp; the page's columns at those widths are 9727 / 9878 / 9960 / 9964. At 25 % and in the strip
+the page is within a point, and fifteen, of how far PowerPoint's own 960 export is from its export
+at that width, which is the calibration the zoom columns needed.
 
 Two facts the gate established about the page that the plan had assumed. First, an inline `<svg>`
 root is **not** pixel-snapped by Blink: `getBoundingClientRect()` put the stage at y = 817.1875, and
@@ -275,7 +285,7 @@ past ~600 pt changes how Skia antialiases the clip (−10 bp on every bordered p
 
 `pnpm fidelity` over 254 slides: corpus mean **9841 bp**, a46 mean 9955, minimum 9819; noise floor 4
 bp. The report's by-deck table puts the five lowest decks where the plan has not reached —
-a23-smartart 7255, b04-table 7653, b06-smartart 8571, a22-chartex 8800, a37-mce 8823. The request
+a23-smartart 7255, b04-table 7653, b06-smartart 8571, a22-chartex 8801, a37-mce 8823. The request
 log the gate keeps starts after the harness's own injections: the page's load and the harness's
 probe fetch are before it, the deck fetch and everything after are in it.
 
@@ -290,10 +300,11 @@ this repository to go through the page end to end, and it needed nothing fixed.
 
 ## Verification
 
-- **Tests from the fixture.** `line.test.ts` reproduces every F2 probe at every width — hairline,
-  thin, border and dash-quarter within 0.15 px, the 21 dashed-hairline rows solid, the 49 marker
-  rows within their 1-px tolerance through `markerPen` — and asserts each losing model misses at
-  least one; `render.test.ts` renders the hairline slide at 240 and 3840 through the `<img>` path
+- **Tests from the fixture.** `line.test.ts` reproduces every F2 stroke probe at every width —
+  hairline, thin, border and dash-quarter within 0.15 px, the 21 dashed-hairline rows solid, the 49
+  marker rows within their 1-px tolerance through `markerPen` — and asserts each losing hairline,
+  thin and marker model misses at least one; the text, gradient, pattern and border-edge rows are
+  held by `tools/ground-truth/fixtures.test.ts`; `render.test.ts` renders the hairline slide at 240 and 3840 through the `<img>` path
   and profiles it, and reads a triangle head's height and centre the same way; the text test
   rasterises a run at 960 and 3840 and holds its ink to 4× within F2's tolerance; the effect test
   derives the emitted radius from `paint`'s own graph and reads the glow's pixels; the band test
@@ -365,7 +376,14 @@ dispatched straight after a publish should expect one red run.
 - **The by-deck table** in the fidelity report and **`mergeOracle` as a pure, tested function**
   were planned and arrived with the second pass; the per-deck means the first version quoted were
   computed outside the harness.
-- **The strip's first chunk** ran before the stage, above.
+- **The strip's first chunk** ran before the stage, above; it now waits two frames, since one
+  frame's callback runs before that frame paints.
+- **A display ratio under the floor.** A thumbnail on a display at a third of a pixel per CSS
+  pixel would have asked the renderer for a twenty-fourth of a pixel to the point and been refused;
+  the page rounds at the floor's ratio when the display's is under it (`deviceRatioAt`).
+- **The review of this pass** — six read-only reviewers, one per dimension, a refuter per finding
+  — confirmed 42 findings and refuted 5. The two renderer defects and the report's overwritten
+  column are above; the rest were wording, and every one is fixed.
 - The plan's `findings.textLinearWithinPx` does not exist; the fixture's `textTolerance` is prose,
   and the test states the tolerance itself.
 
@@ -390,7 +408,8 @@ dispatched straight after a publish should expect one red run.
    measured apart and is nothing like the seconds a rotated filter cost, but whether the pathology
    returns at other ratios is not measured.
 6. **Line ends nobody measured.** A head on a freeform with several open subpaths, dashes running
-   under a head, a round cap poking past a triangle's tip on a thick line, a gradient-stroked line's
-   head: the renderer does the plain thing for each and no fixture says whether PowerPoint does.
+   under a head, a round cap poking past a triangle's tip on a thick line, the caps of an open
+   arrow's arms, and where along a gradient-stroked line its head samples the ramp: the renderer
+   does the plain thing for each and no fixture says whether PowerPoint does.
 7. **A second real deck.** One deck outside the corpus has been through the page. That is an
    anecdote, not a rule.

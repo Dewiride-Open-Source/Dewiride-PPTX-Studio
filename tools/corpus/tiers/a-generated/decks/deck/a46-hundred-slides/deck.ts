@@ -13,7 +13,7 @@ import { MEDIA_PARTS } from './media.ts';
 import { SLIDE_COUNT } from './schedule.ts';
 
 /**
- * A hundred slides of nine kinds from one deterministic schedule: Gate 3's deck.
+ * A hundred slides of ten kinds from one deterministic schedule: Gate 3's deck.
  *
  * Every other Tier A deck says one thing in three slides. This one is the size a deck has when a
  * person has been writing it for a quarter, and the only slide count that asks the viewer, the
@@ -93,7 +93,7 @@ export const a46HundredSlides: ProbeDeck = {
   id: 'a46-hundred-slides',
   title: 'PPTX Studio corpus: a46 hundred slides',
   description:
-    'A hundred slides of nine kinds - cover, agenda, eight section headers, bullets, two-column ' +
+    'A hundred slides of ten kinds - cover, agenda, eight section headers, bullets, two-column ' +
     'text, picture and caption, shape grids, quotes, bar diagrams and a closing - from one fixed ' +
     'schedule and a seeded generator, the size a deck has after a quarter of writing. Gate 3 asks ' +
     'whether the viewer, the harness and the oracle scale to it and whether every slide is faithful ' +

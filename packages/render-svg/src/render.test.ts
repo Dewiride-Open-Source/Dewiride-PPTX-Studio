@@ -1153,7 +1153,29 @@ describe('line ends, re-derived from C4 and F2', () => {
     const v = /<marker [^>]*><path [^>]*>/.exec(arrow)?.[0] ?? '';
     expect(v).toContain('fill="none"');
     expect(v).toContain(`stroke-width="${String(2 * 12700)}"`);
+    expect(v).toContain('stroke-linejoin="round"');
     expect(v).not.toContain('Z"');
+    // The V's vertex sits half a pen back, so the round join's edge is on the endpoint.
+    expect(v).toContain('d="M-12700,0 L114300,63500 L-12700,127000"');
+  });
+
+  it("asks a gradient-stroked line's head for the line's own paint, not the marker's space", () => {
+    const gradient =
+      '<a:gradFill><a:gsLst><a:gs pos="0"><a:srgbClr val="000000"/></a:gs>' +
+      '<a:gs pos="100000"><a:srgbClr val="FFFFFF"/></a:gs></a:gsLst><a:lin ang="0"/></a:gradFill>';
+    const slide = buildChain({
+      shapes: [
+        sp({
+          rect: LINE_RECT,
+          prst: 'line',
+          line: `<a:ln w="12700">${gradient}${TAIL}</a:ln>`,
+          name: 'probe',
+        }),
+      ],
+    }).slide;
+    const markup = renderSlide(slide, SIZE, { idPrefix: 'e', width: 960 });
+    expect(markup).toMatch(/<path [^>]*stroke="url\(#e-\d+\)"[^>]*marker-end=/);
+    expect(/<marker [^>]*><path [^>]*>/.exec(markup)?.[0]).toContain('fill="context-stroke"');
   });
 
   it('draws no end on a closed path, and none where the file names none', () => {
@@ -1203,6 +1225,39 @@ describe('line ends, re-derived from C4 and F2', () => {
     }
     return widest;
   }
+
+  it('ends an open arrow on the endpoint, with no ink past it', async () => {
+    const markup = renderSlide(ended('0', '<a:tailEnd type="arrow" w="lg" len="lg"/>'), SIZE, {
+      idPrefix: 'r',
+      width: 960,
+      height: 540,
+    });
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = 960;
+    canvas.height = 540;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, 960, 540);
+    context.drawImage(image, 0, 0, 960, 540);
+    URL.revokeObjectURL(href);
+    const data = context.getImageData(0, 0, 960, 540).data;
+    const inkAt = (x: number): number => {
+      let ink = 0;
+      for (let y = 84; y <= 116; y++) {
+        const at = (y * 960 + x) * 4;
+        ink += 1 - Math.min(data[at]!, data[at + 1]!, data[at + 2]!) / 255;
+      }
+      return ink;
+    };
+    // The tip is at x = 500 px: ink in the column before it, none in the column after.
+    expect(inkAt(498)).toBeGreaterThan(0.5);
+    expect(inkAt(501)).toBeLessThan(0.05);
+  });
 
   it('inks a ten-point head at 960 and a five-pixel one at 240, as PowerPoint did', async () => {
     const slide = ended('0', TAIL);

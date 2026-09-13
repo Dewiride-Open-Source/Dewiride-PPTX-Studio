@@ -18,7 +18,7 @@ import { el } from '../element.js';
 import type { Deck } from './deck.js';
 import { describe } from './inspector.js';
 import { nextFrame, type ShowTimings } from './timings.js';
-import { stageSizeAt, unitAt } from './zoom.js';
+import { deviceRatioAt, stageSizeAt, unitAt } from './zoom.js';
 
 /** A shape as drawn, in slide EMU, for a harness that scores the stage. */
 export interface ShapeFrame {
@@ -98,7 +98,7 @@ export function createStage(host: HTMLElement, inspector: HTMLElement, deck: Dec
   return {
     async show(index, zoom) {
       const { width, height } = stageSizeAt(zoom, deck.size);
-      const ratio = window.devicePixelRatio;
+      const ratio = deviceRatioAt(zoom, window.devicePixelRatio);
       if (shown !== null && shown.index === index && shown.zoom === zoom && shown.ratio === ratio) {
         return { mountMs: 0, width, height };
       }

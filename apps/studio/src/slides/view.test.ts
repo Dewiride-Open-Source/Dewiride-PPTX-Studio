@@ -4,6 +4,7 @@ import { el } from '../element.js';
 import { openDeck } from './deck.js';
 import { createStage } from './stage.js';
 import { createStrip } from './strip.js';
+import { nextFrame } from './timings.js';
 import { slidesView } from './view.js';
 
 /**
@@ -88,7 +89,7 @@ describe('slidesView', () => {
     view.dispose();
   });
 
-  it('draws the strip again on request, with fresh elements, and reports the latest draw', async () => {
+  it('draws the strip again on request and reports the latest draw', async () => {
     const view = slidesView(() => bytesOf(FILLS));
     host().append(view.root);
     await view.ready;
@@ -105,10 +106,12 @@ describe('slidesView', () => {
     view.dispose();
   });
 
-  it('mounts no thumbnail before the frame after it was asked, so the stage paints first', async () => {
+  it('mounts no thumbnail until the frame after the one the stage paints in', async () => {
     const deck = openDeck(new Uint8Array(await bytesOf(FILLS)));
     const host = el('div', 'strip');
     const strip = createStrip(host, deck, () => undefined);
+    expect(host.querySelectorAll('svg')).toHaveLength(0);
+    await nextFrame();
     expect(host.querySelectorAll('svg')).toHaveLength(0);
     await strip.done;
     expect(host.querySelectorAll('svg')).toHaveLength(3);

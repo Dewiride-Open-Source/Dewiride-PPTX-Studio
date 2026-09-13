@@ -68,7 +68,7 @@ function printRun(run: Gate3Run, file: string): void {
         ? ''
         : `, heap ${(run.timings.heapBytes / 1048576).toFixed(0)} MB`),
   );
-  write('  zoom      width  drawn  meanBp   mount ms  shot ms   worst');
+  write('  zoom      width  drawn  meanBp  ppt/960   mount ms  shot ms   worst');
   for (const column of run.zooms) {
     const drawn = column.slides.length;
     const mean = (values: readonly number[]): string =>
@@ -77,6 +77,7 @@ function printRun(run: Gate3Run, file: string): void {
     write(
       `  ${columnLabel(column, run.ratio.ratio).padStart(7)} ${String(column.width).padStart(6)} ${String(drawn).padStart(6)} ` +
         `${run.mode === 'gate' ? String(column.meanBp).padStart(7) : '      -'} ` +
+        `${column.oracleSelfBp === null ? '      -' : String(column.oracleSelfBp).padStart(7)} ` +
         `${mean(column.slides.map((s) => s.mountMs)).padStart(9)} ${mean(column.slides.map((s) => s.screenshotMs)).padStart(8)}   ` +
         (worst === undefined || run.mode !== 'gate' ? '-' : `${worst.key} ${String(worst.meanBp)}`),
     );
@@ -89,7 +90,7 @@ function printRun(run: Gate3Run, file: string): void {
   write(
     `  ${String(run.ratio.ratio)}x display: 100 % against 200 % and the strip against 25 %, ` +
       `${String(run.ratio.breaks.length)} markup disagreements; stage ${run.ratio.stageMs.toFixed(0)} ms, ` +
-      `strip ${run.ratio.stripMs.toFixed(0)} ms` +
+      `the page's own strip redraw ${run.ratio.stripCpuMs.toFixed(0)} ms on its thread` +
       (rasters.length === 0 || worstRaster === undefined
         ? ''
         : `; raster against 200 %: ${String(rasters.filter((r) => r.maxD === 0).length)}/${String(rasters.length)} identical, ` +

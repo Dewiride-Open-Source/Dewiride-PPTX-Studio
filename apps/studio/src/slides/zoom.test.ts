@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  deviceRatioAt,
   fitZoom,
   stageSizeAt,
   THUMB_ZOOM,
@@ -40,6 +41,14 @@ describe('zoom', () => {
 
   it('offers a quarter, one, two and four', () => {
     expect(ZOOMS).toEqual([0.25, 1, 2, 4]);
+  });
+
+  it("rounds strokes at the display's ratio, or at the floor when the zoom is under it", () => {
+    expect(deviceRatioAt(1, 1)).toBe(1);
+    expect(deviceRatioAt(THUMB_ZOOM, 2)).toBe(2);
+    // A thumbnail on a display at a third: an eighth of a third is under a twentieth, so the floor.
+    expect(deviceRatioAt(THUMB_ZOOM, 1 / 3)).toBe(0.4);
+    expect(deviceRatioAt(0.25, 0.1)).toBe(0.2);
   });
 
   it('watches the ratio the display has now, and the next one after it changes', () => {

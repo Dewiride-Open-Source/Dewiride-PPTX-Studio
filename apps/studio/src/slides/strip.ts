@@ -12,7 +12,7 @@ import { el } from '../element.js';
 import type { Deck } from './deck.js';
 import { pageBoxOf, type PageBox } from './stage.js';
 import { nextFrame } from './timings.js';
-import { stageSizeAt, THUMB_ZOOM } from './zoom.js';
+import { deviceRatioAt, stageSizeAt, THUMB_ZOOM } from './zoom.js';
 
 /** Main-thread time one frame's chunk may take before the loop yields. */
 const CHUNK_BUDGET_MS = 12;
@@ -70,9 +70,10 @@ export function createStrip(
   });
 
   async function draw(mine: number): Promise<StripDrawn> {
-    // The first chunk waits a frame, so the stage mounted beside this strip paints first.
+    // Two frames before the first chunk: the stage mounted beside this strip paints in the first.
     await nextFrame();
-    const ratio = window.devicePixelRatio;
+    await nextFrame();
+    const ratio = deviceRatioAt(THUMB_ZOOM, window.devicePixelRatio);
     const failed: string[] = [];
     let cpuMs = 0;
     let index = 0;

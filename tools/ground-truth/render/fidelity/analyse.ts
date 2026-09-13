@@ -362,7 +362,10 @@ claimFixtures(
         tool: 'tools/ground-truth/render/fidelity/analyse.ts',
         args: ['<dir>', '--capture'],
       },
-      sourceNote: ORACLE_SOURCE_NOTE,
+      sourceNote:
+        'written by tools/ground-truth/render/fidelity/analyse.ts as the index of the grid files ' +
+        'beside it: which file holds each slide at each width, and how far PowerPoint 365 disagreed ' +
+        'with its own second export of the same slide. It holds no pixels.',
       addedIn: '3.9',
     },
   ],

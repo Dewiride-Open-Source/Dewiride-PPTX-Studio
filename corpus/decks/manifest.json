@@ -1268,7 +1268,7 @@
         "shadow": 13,
         "glow": 13
       },
-      "description": "A hundred slides of nine kinds - cover, agenda, eight section headers, bullets, two-column text, picture and caption, shape grids, quotes, bar diagrams and a closing - from one fixed schedule and a seeded generator, the size a deck has after a quarter of writing. Gate 3 asks whether the viewer, the harness and the oracle scale to it and whether every slide is faithful at every zoom; no three-slide probe can ask either. The first Tier A deck past ten slides and the first deflated for scale rather than to probe compression.",
+      "description": "A hundred slides of ten kinds - cover, agenda, eight section headers, bullets, two-column text, picture and caption, shape grids, quotes, bar diagrams and a closing - from one fixed schedule and a seeded generator, the size a deck has after a quarter of writing. Gate 3 asks whether the viewer, the harness and the oracle scale to it and whether every slide is faithful at every zoom; no three-slide probe can ask either. The first Tier A deck past ten slides and the first deflated for scale rather than to probe compression.",
       "recipe": {
         "tool": "tools/corpus/tiers/a-generated/build-probes.ts",
         "args": ["--out", "corpus/decks", "--id", "a46-hundred-slides"]

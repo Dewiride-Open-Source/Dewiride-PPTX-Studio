@@ -4,8 +4,8 @@
  * The gate's wording is "a 100-slide deck rendered faithfully at any zoom, entirely
  * client-side". Written out: the deck has a hundred slides and every one draws at every zoom
  * the page offers; the SVG at any zoom is the SVG at 100 % apart from what the stroke rule owns -
- * the two stroke attributes and a line end's size (F2, ADR 0054); a 2x display at 100 % is 200 %
- * to the byte; nothing leaves the page once the
+ * the two stroke attributes and a line end's numbers (F2, ADR 0054); a 2x display's 100 % markup
+ * is the 200 % markup to the byte; nothing leaves the page once the
  * deck is in hand; and our own raster of every slide at every zoom is the one recorded. The
  * scores against PowerPoint are reported beside all that and gate nothing (ADR 0035).
  */
@@ -56,14 +56,16 @@ export function maskRootSize(svg: string): string {
 
 /**
  * The SVG with what a zoom is allowed to change taken out: the root's size, the values of the
- * two attributes the stroke rule rounds to device pixels, and the size and outline of a line
- * end, which is drawn from that pen (F2's M8). Everything else must be identical.
+ * two attributes the stroke rule rounds to device pixels, and the numbers of a line end, which
+ * is drawn from that pen (F2's M8) - its outline's commands stay. Everything else must be identical.
  */
 export function maskZoom(svg: string): string {
   return maskRootSize(svg)
     .replace(/ (stroke-width|stroke-dasharray)="[^"]*"/g, ' $1="*"')
     .replace(/<marker\b[^>]*>[\s\S]*?<\/marker>/g, (marker) =>
-      marker.replace(/ (markerWidth|markerHeight|refX|refY|d)="[^"]*"/g, ' $1="*"'),
+      marker
+        .replace(/ (markerWidth|markerHeight|refX|refY|stroke-width)="[^"]*"/g, ' $1="*"')
+        .replace(/ d="[^"]*"/g, (d) => d.replace(/-?[\d.]+/g, '*')),
     );
 }
 

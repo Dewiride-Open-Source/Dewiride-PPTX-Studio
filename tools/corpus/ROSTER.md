@@ -41,8 +41,9 @@ The result is a corpus that is well evidenced at one layer and thin at the other
 | the ZIP container        | **3**       | 24    | **17**         |
 | the XML inside the parts | **2**       | 36    | **12**         |
 
-Forty-four, and forty-three of them keep the tier's rule that a probe is about one thing.
-`a43-kitchen-sink` is the exception, added at Gate 1 and added deliberately: the gate does not ask
+Forty-five, and forty-three of them keep the tier's rule that a probe is about one thing.
+`a46-hundred-slides` is about scale rather than a feature, and `a43-kitchen-sink` is the other
+exception, added at Gate 1 and added deliberately: the gate does not ask
 whether five features survive a round trip — five decks here answer that — but whether they survive
 it **together**, which has failure modes none of the five can reach. Four `Default` content types
 from three feature families sharing one `[Content_Types].xml`; a macro-enabled main part beside four
@@ -124,7 +125,7 @@ is authoritative about is that stored values are applied verbatim in view mode.
 | `a18-slide-sizes`    | `screen4x3`, and a `p:notesSz` in a different aspect ratio from the slide                | —                                                                        |
 | `a19-decorative`     | `adec:decorative`, `@descr`, `@title`, `@hidden`, and `p:spTree` reading order           | `decorative`                                                             |
 | `a45-backgrounds`    | `p:bgRef` across the 1000 offset, an explicit `p:bgPr`, and a layout-supplied background | first `p:bgPr`                                                           |
-| `a46-hundred-slides` | a hundred slides of nine kinds from one deterministic schedule, Gate 3's deck            | first deck past ten slides; deflated for scale, not to probe compression |
+| `a46-hundred-slides` | a hundred slides of ten kinds from one deterministic schedule, Gate 3's deck             | first deck past ten slides; deflated for scale, not to probe compression |
 
 Four corrections came out of building these, and all four are measurements rather than opinions.
 

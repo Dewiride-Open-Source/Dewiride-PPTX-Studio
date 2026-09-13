@@ -37,6 +37,11 @@ export function unitAt(width: number, size: SlideSize): number {
   return size.cx / width;
 }
 
+/** The ratio the strokes are rounded at: the display's, or the floor's when the zoom is under it. */
+export function deviceRatioAt(zoom: number, ratio: number): number {
+  return Math.max(ratio, MIN_PX_PER_PT / zoom);
+}
+
 /** The part of `window` a display watcher needs. */
 export interface Screen {
   readonly devicePixelRatio: number;

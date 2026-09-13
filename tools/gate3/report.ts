@@ -94,11 +94,11 @@ function gatedList(run: Gate3Run): string {
       run.notDrawn.length === 0,
     ],
     [
-      `${String(run.breaks.length)} zooms whose SVG differs from 100 % beyond stroke-width and stroke-dasharray`,
+      `${String(run.breaks.length)} zooms whose SVG differs from 100 % beyond stroke-width, stroke-dasharray and a line end's numbers`,
       run.breaks.length === 0,
     ],
     [
-      `${String(run.ratio.breaks.length)} disagreements on a ${String(run.ratio.ratio)}x display, whose 100 % must be the 200 % markup and raster and whose strip the 25 % markup`,
+      `${String(run.ratio.breaks.length)} markup disagreements on a ${String(run.ratio.ratio)}x display, whose 100 % must be the 200 % markup and whose redrawn strip the 25 % markup`,
       run.ratio.breaks.length === 0,
     ],
     [`${String(run.pageErrors.length)} page or console errors`, run.pageErrors.length === 0],
@@ -136,13 +136,14 @@ function columnTable(run: Gate3Run): string {
         `<tr><td>${escapeHtml(columnLabel(column, run.ratio.ratio))} (${column.surface})</td><td class="n">${String(column.width)}</td>` +
         `<td class="n">${String(column.cell)}</td><td class="n">${String(column.slides.length)}</td>` +
         `<td class="n">${run.mode === 'gate' ? String(column.meanBp) : '&mdash;'}</td>` +
+        `<td class="n">${column.oracleSelfBp === null ? '&mdash;' : String(column.oracleSelfBp)}</td>` +
         `<td class="n">${mean(column.slides.map((s) => s.mountMs))}</td>` +
         `<td class="n">${mean(column.slides.map((s) => s.screenshotMs))}</td></tr>`,
     )
     .join('');
   return (
     '<table><thead><tr><th>zoom</th><th class="n">px wide</th><th class="n">cell</th><th class="n">drawn</th>' +
-    '<th class="n">mean bp</th><th class="n">mount ms</th><th class="n">screenshot ms</th></tr></thead>' +
+    '<th class="n">mean bp</th><th class="n">PowerPoint vs its 960</th><th class="n">mount ms</th><th class="n">screenshot ms</th></tr></thead>' +
     `<tbody>${rows}</tbody></table>`
   );
 }
@@ -153,14 +154,15 @@ function mean(values: readonly number[]): string {
 }
 
 function slideRows(run: Gate3Run): string {
+  // Keyed by column, not zoom: the 2x column is at 100 % too.
   const byKey = new Map<string, Map<number, ScoredSlide>>();
-  for (const column of run.zooms) {
+  run.zooms.forEach((column, at) => {
     for (const slide of column.slides) {
       const row = byKey.get(slide.key) ?? new Map<number, ScoredSlide>();
-      row.set(column.zoom, slide);
+      row.set(at, slide);
       byKey.set(slide.key, row);
     }
-  }
+  });
   const worstOf = (row: Map<number, ScoredSlide>): number =>
     Math.min(...[...row.values()].map((slide) => slide.meanBp));
   const rows = [...byKey]
@@ -169,8 +171,8 @@ function slideRows(run: Gate3Run): string {
       ([key, row]) =>
         `<tr><td><code>${escapeHtml(key)}</code></td>` +
         run.zooms
-          .map((column) => {
-            const slide = row.get(column.zoom);
+          .map((_column, at) => {
+            const slide = row.get(at);
             return `<td class="n">${slide === undefined ? '&mdash;' : `${String(slide.meanBp)} <code>${String(slide.maxD)}</code>`}</td>`;
           })
           .join('') +
@@ -270,7 +272,7 @@ ${gatedList(run)}
 <p class="sub">Read in ${t.readMs.toFixed(0)} ms, parsed in ${t.parseMs.toFixed(0)} ms, first slide painted at
 ${t.firstStageMs.toFixed(0)} ms, every thumbnail at ${t.stripMs.toFixed(0)} ms with ${t.stripCpuMs.toFixed(0)} ms on the
 thread${t.heapBytes === null ? '' : `, ${(t.heapBytes / 1048576).toFixed(0)} MB of JS heap after the strip`}.
-On a ${String(run.ratio.ratio)}x display, unannounced: the stage in ${run.ratio.stageMs.toFixed(0)} ms and the redrawn strip in ${run.ratio.stripMs.toFixed(0)} ms.
+On a ${String(run.ratio.ratio)}x display, unannounced: the stage in ${run.ratio.stageMs.toFixed(0)} ms, and the strip the page redrew by itself in ${run.ratio.stripCpuMs.toFixed(0)} ms on its thread.
 Requests: ${String(run.requests.total)} in all, ${String(run.requests.static)} for the page, ${String(run.requests.deck)} for the deck.</p>
 ${columnTable(run)}
 ${

@@ -87,12 +87,14 @@ describe('the zoom mask', () => {
   });
 
   it('lets a line end grow with the pen, and nothing else about it change', () => {
-    const wider = SVG.replace(/127000/g, '158750')
-      .replace('refY="63500"', 'refY="79375"')
-      .replace('L127000,63500', 'L158750,79375');
+    // The same head at a pen a quarter wider: every number scales, no command moves.
+    const wider = SVG.replace(/127000/g, '158750').replace(/63500/g, '79375');
     expect(maskZoom(wider)).toBe(maskZoom(SVG));
-    // A path outside a marker is not the pen's to change.
+    // A path outside a marker is not the pen's to change, and nor is the head's outline.
     expect(maskZoom(SVG.replace('M0 0H10V10H0Z', 'M0 0H11V10H0Z'))).not.toBe(maskZoom(SVG));
+    expect(maskZoom(SVG.replace('L0,127000 Z', 'L0,127000 L31750,63500 Z'))).not.toBe(
+      maskZoom(SVG),
+    );
     // Nor is the end's orientation, its paint, or which end it is on.
     expect(maskZoom(SVG.replace('orient="auto"', 'orient="auto-start-reverse"'))).not.toBe(
       maskZoom(SVG),

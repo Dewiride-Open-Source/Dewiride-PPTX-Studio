@@ -109,7 +109,10 @@ describe('mergeOracle', () => {
       { key: 'a02-y-01', meanBp: 9995, maxD: 20, cells: 3 },
     ],
     records: [row('a01-x', 1), row('a02-y', 1), row('a02-y', 2)],
-    zoom: [{ ...row('a02-y', 1, 'render/fidelity/zoom/a02-y.240.ppt.grids'), width: 240, cell: 2 }],
+    zoom: [
+      { ...row('a01-x', 1, 'render/fidelity/zoom/a01-x.240.ppt.grids'), width: 240, cell: 2 },
+      { ...row('a02-y', 1, 'render/fidelity/zoom/a02-y.240.ppt.grids'), width: 240, cell: 2 },
+    ],
   };
 
   it('replaces the captured decks and keeps every other row, jitter and zoomed grid as it was', () => {
@@ -126,7 +129,7 @@ describe('mergeOracle', () => {
     expect(merged.records[1]?.file).toBe('render/fidelity/grids/a02-y.1.ppt.grids');
     expect(merged.slides).toBe(2);
     // The recaptured deck's zoomed grids and old jitter go with it; the kept deck's stay.
-    expect(merged.zoom).toEqual([]);
+    expect(merged.zoom.map((z) => z.key)).toEqual(['a01-x-01']);
     expect(merged.jitter.map((j) => j.key)).toEqual(['a01-x-01', 'a02-y-01']);
     expect(merged.noiseFloor).toEqual({
       slidesAffected: 2,

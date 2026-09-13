@@ -1,6 +1,6 @@
 /**
- * Scores rolled up by deck: the grain a systematic defect shows at, since a hundred-slide deck
- * fills any worst-ten list on its own (ADR 0054).
+ * Scores rolled up by deck: the grain a systematic defect shows at, since one wrong rule moves
+ * every slide of a hundred a little and no worst-ten list says so (ADR 0054).
  */
 
 import { agreementBp, type SlideScore } from './score.ts';

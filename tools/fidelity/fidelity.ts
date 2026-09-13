@@ -194,7 +194,10 @@ if (record) {
         tool: 'tools/fidelity/fidelity.ts',
         args: args.bootstrap ? ['--record', '--bootstrap'] : ['--record'],
       },
-      sourceNote: baselineSourceNote('tools/fidelity/fidelity.ts', 'every corpus slide'),
+      sourceNote: baselineSourceNote(
+        'tools/fidelity/fidelity.ts',
+        'every corpus slide the oracle holds and the renderer drew',
+      ),
       addedIn: '3.9',
     },
   ]);
