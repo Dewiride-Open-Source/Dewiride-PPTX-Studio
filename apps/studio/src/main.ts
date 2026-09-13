@@ -5,6 +5,7 @@ import { el } from './element.js';
 import type { WorkerEnvironment } from './protocol.js';
 import type { PageBox, ShapeFrame } from './slides/stage.js';
 import type { ShowTimings } from './slides/timings.js';
+import type { StripDrawn } from './slides/strip.js';
 import { slidesView, type DeckOpened, type SlidesView } from './slides/view.js';
 import type { ZoomChoice } from './slides/zoom.js';
 
@@ -657,6 +658,7 @@ interface StudioAutomation {
   readonly stageShapes: () => readonly ShapeFrame[];
   readonly stageBox: () => PageBox;
   readonly thumbBox: (index: number) => PageBox;
+  readonly stripDone: () => Promise<StripDrawn>;
 }
 
 function opened(): SlidesView {
@@ -681,6 +683,7 @@ function opened(): SlidesView {
   stageShapes: () => opened().stageShapes(),
   stageBox: () => opened().stageBox(),
   thumbBox: (index) => opened().thumbBox(index),
+  stripDone: () => opened().stripDone(),
 };
 
 wire();

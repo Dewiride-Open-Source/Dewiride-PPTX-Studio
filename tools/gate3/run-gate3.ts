@@ -22,7 +22,7 @@ import { parseRecordArgs } from '../fidelity/record.ts';
 import { REPO_ROOT as ROOT } from '../repo/root.ts';
 
 import { runGate3, type Gate3Options, type Gate3Run } from './gate3.ts';
-import { writeGate3Report } from './report.ts';
+import { columnLabel, writeGate3Report } from './report.ts';
 
 const OUT = resolve(ROOT, 'fidelity/gate3');
 
@@ -68,15 +68,16 @@ function printRun(run: Gate3Run, file: string): void {
         ? ''
         : `, heap ${(run.timings.heapBytes / 1048576).toFixed(0)} MB`),
   );
-  write('  zoom      width  drawn  meanBp   mount ms  shot ms   worst');
+  write('  zoom      width  drawn  meanBp  ppt/960   mount ms  shot ms   worst');
   for (const column of run.zooms) {
     const drawn = column.slides.length;
     const mean = (values: readonly number[]): string =>
       values.length === 0 ? '-' : (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1);
     const worst = [...column.slides].sort((a, b) => a.meanBp - b.meanBp)[0];
     write(
-      `  ${pct(column.zoom)} ${String(column.width).padStart(6)} ${String(drawn).padStart(6)} ` +
+      `  ${columnLabel(column, run.ratio.ratio).padStart(7)} ${String(column.width).padStart(6)} ${String(drawn).padStart(6)} ` +
         `${run.mode === 'gate' ? String(column.meanBp).padStart(7) : '      -'} ` +
+        `${column.oracleSelfBp === null ? '      -' : String(column.oracleSelfBp).padStart(7)} ` +
         `${mean(column.slides.map((s) => s.mountMs)).padStart(9)} ${mean(column.slides.map((s) => s.screenshotMs)).padStart(8)}   ` +
         (worst === undefined || run.mode !== 'gate' ? '-' : `${worst.key} ${String(worst.meanBp)}`),
     );
@@ -84,6 +85,20 @@ function printRun(run: Gate3Run, file: string): void {
   for (const gap of run.notDrawn) write(`  x ${gap.key}: ${gap.reason}`);
   for (const brk of run.breaks)
     write(`  x ${brk.key} differs at ${pct(brk.zoom)} beyond what the stroke rule owns`);
+  const rasters = run.ratio.rasters;
+  const worstRaster = [...rasters].sort((a, b) => a.meanBp - b.meanBp)[0];
+  write(
+    `  ${String(run.ratio.ratio)}x display: 100 % against 200 % and the strip against 25 %, ` +
+      `${String(run.ratio.breaks.length)} markup disagreements; stage ${run.ratio.stageMs.toFixed(0)} ms, ` +
+      `the page's own strip redraw ${run.ratio.stripCpuMs.toFixed(0)} ms on its thread` +
+      (rasters.length === 0 || worstRaster === undefined
+        ? ''
+        : `; raster against 200 %: ${String(rasters.filter((r) => r.maxD === 0).length)}/${String(rasters.length)} identical, ` +
+          `mean ${String(Math.round(rasters.reduce((sum, r) => sum + r.meanBp, 0) / rasters.length))} bp, ` +
+          `worst ${worstRaster.key} ${String(worstRaster.meanBp)} bp / ${String(worstRaster.maxD)} levels`),
+  );
+  for (const brk of run.ratio.breaks)
+    write(`  x ${brk.key} on a ${String(run.ratio.ratio)}x display: ${brk.what} is not the zoom's`);
   for (const error of run.pageErrors) write(`  x page error: ${error}`);
   write(
     `  requests: ${String(run.requests.total)} (${String(run.requests.static)} static, ` +

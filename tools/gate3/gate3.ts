@@ -7,9 +7,11 @@
  * offline and every render, zoom and screenshot has to come from what the page already holds.
  *
  * Gated, with no tolerance in it: a hundred slides, every one drawn at every zoom, the SVG at
- * any zoom identical to 100 % apart from what the stroke rule owns, no page error, no request
- * the gate does not recognise and none at all once offline, and every raster the one recorded.
- * The scores against PowerPoint's own export at each width are reported and gate nothing.
+ * any zoom identical to 100 % apart from what the stroke rule owns, a 2x display's 100 % the
+ * 200 % markup to the byte, no page error, no request the gate does not recognise and none at
+ * all once offline, and every raster the one recorded. The scores against PowerPoint's own
+ * export at each width, PowerPoint's own agreement with itself across widths, and the 2x
+ * display's rasters against the 200 % rasters are reported and gate nothing.
  */
 
 import { createHash } from 'node:crypto';
@@ -21,7 +23,7 @@ import { chromium, type Page } from 'playwright';
 import { startServer } from '../bench/serve.ts';
 import { boxOf, regionShapes } from '../fidelity/blame.ts';
 import { FidelityError } from '../fidelity/errors.ts';
-import { claimFixtures } from '../fidelity/fixtures.ts';
+import { baselineSourceNote, claimFixtures } from '../fidelity/fixtures.ts';
 import { gridSvg, heatmapSvg } from '../fidelity/heatmap.ts';
 import type { Grid } from '../fidelity/metric/reduce.ts';
 import { differenceOf, regionsOf, scoreOf, type Region } from '../fidelity/metric/score.ts';
@@ -51,10 +53,12 @@ const EMU_PER_POINT = 12700;
 
 import {
   cellAt,
+  DISPLAY_RATIO,
   GATE_DECK_ID,
   gateHolds,
   integerClip,
   invarianceOf,
+  maskRootSize,
   maskZoom,
   renameIdPrefix,
   requestVerdict,
@@ -64,6 +68,7 @@ import {
   zoomKey,
   type Box,
   type LoggedRequest,
+  type RatioBreak,
   type RequestVerdict,
   type ZoomEntry,
 } from './checks.ts';
@@ -134,6 +139,11 @@ interface Shown {
   readonly height: number;
 }
 
+interface StripDrawn {
+  readonly failed: readonly string[];
+  readonly cpuMs: number;
+}
+
 interface ShapeFrame {
   readonly id: number;
   readonly name: string;
@@ -153,6 +163,7 @@ interface StudioHook {
   stageShapes(): readonly ShapeFrame[];
   stageBox(): Box;
   thumbBox(index: number): Box;
+  stripDone(): Promise<StripDrawn>;
 }
 
 /** A region, and the shapes its bounding box crosses. */
@@ -186,10 +197,12 @@ export interface ZoomColumn {
   readonly zoom: number;
   readonly width: number;
   readonly cell: number;
-  /** The stage, or the strip for the thumbnail zoom. */
-  readonly surface: 'stage' | 'strip';
+  /** The stage, the strip for the thumbnail zoom, or the stage on a 2x display. */
+  readonly surface: 'stage' | 'strip' | 'ratio';
   readonly slides: readonly ScoredSlide[];
   readonly meanBp: number;
+  /** PowerPoint's own export at this width against its 960-px export, mean; null at 960. */
+  readonly oracleSelfBp: number | null;
   readonly worst: readonly WorstSlide[];
 }
 
@@ -203,6 +216,20 @@ export interface Gate3Run {
   readonly notDrawn: readonly { readonly key: string; readonly reason: string }[];
   /** `(slide key, zoom)` pairs whose masked SVG is not the one at 100 %. */
   readonly breaks: readonly { readonly key: string; readonly zoom: number }[];
+  /** The 2x display pass: what it took, where its markup was not the zoom's, and how far its raster was. */
+  readonly ratio: {
+    readonly ratio: number;
+    readonly stageMs: number;
+    /** Thread time of the strip the page redrew on its own, as the page reported it. */
+    readonly stripCpuMs: number;
+    readonly breaks: readonly RatioBreak[];
+    /** Each slide's raster on the 2x display against its own at the matching zoom; reported, never gated. */
+    readonly rasters: readonly {
+      readonly key: string;
+      readonly meanBp: number;
+      readonly maxD: number;
+    }[];
+  };
   readonly pageErrors: readonly string[];
   readonly requests: RequestVerdict;
   readonly timings: DeckOpened['timings'];
@@ -238,6 +265,7 @@ function hook(page: Page): {
   stageShapes(): Promise<readonly ShapeFrame[]>;
   stageBox(): Promise<Box>;
   thumbBox(index: number): Promise<Box>;
+  stripDone(): Promise<StripDrawn>;
   stripPass(on: boolean): Promise<void>;
 } {
   return {
@@ -268,6 +296,8 @@ function hook(page: Page): {
         g.scrollTo(0, 0);
         return box;
       }, index),
+    stripDone: () =>
+      page.evaluate(() => (globalThis as unknown as PageGlobals).pptxStudio.stripDone()),
     stripPass: (on) =>
       page.evaluate((flag) => {
         (globalThis as unknown as PageGlobals).document.documentElement.classList.toggle(
@@ -375,22 +405,29 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
     const digests = new Map<string, { rasterSha256: string; svgSha256: string }>();
     const families = new Set<string>();
     const masked = new Map<number, ZoomEntry[]>();
+    // The markup at the two zooms a 2x display has to reproduce, root size aside, and the
+    // grid at the one whose raster it is compared with.
+    const exact = new Map<string, string>();
+    const twins = new Map<string, Grid>();
     const zooms: ZoomColumn[] = [];
+
+    /** Playwright's screenshot, which also puts the display ratio back to the context's. */
+    const shoot = async (clip: Box): Promise<Uint8Array> =>
+      new Uint8Array(await page.screenshot({ clip, animations: 'disabled', caret: 'hide' }));
 
     /** Screenshot the box, reduce it as PowerPoint's PNGs are reduced, and check it is what was drawn. */
     const raster = async (
       box: Box,
       what: string,
       geometry: Geometry,
+      capture: (clip: Box) => Promise<Uint8Array> = shoot,
     ): Promise<{ grid: Grid; rasterSha256: string; png: Uint8Array; ms: number }> => {
       const clip = integerClip(box, what);
       if (clip.x + clip.width > VIEWPORT.width || clip.y + clip.height > VIEWPORT.height) {
         throw new FidelityError('FID_RASTER_GEOMETRY', `${what} does not fit the viewport`, what);
       }
       const started = performance.now();
-      const png = new Uint8Array(
-        await page.screenshot({ clip, animations: 'disabled', caret: 'hide' }),
-      );
+      const png = await capture(clip);
       const ms = performance.now() - started;
       const ours = await oracleGrid(page, dataUrl(png), geometry);
       if (
@@ -405,13 +442,7 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
         );
       }
       if (args.record) {
-        const again = await oracleGrid(
-          page,
-          dataUrl(
-            new Uint8Array(await page.screenshot({ clip, animations: 'disabled', caret: 'hide' })),
-          ),
-          geometry,
-        );
+        const again = await oracleGrid(page, dataUrl(await capture(clip)), geometry);
         if (again.rasterSha256 !== ours.rasterSha256) {
           throw new FidelityError(
             'FID_RASTER_NONDETERMINISTIC',
@@ -421,6 +452,19 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
         }
       }
       return { grid: ours.grid, rasterSha256: ours.rasterSha256, png, ms };
+    };
+
+    /** PowerPoint's export at `width` against its own at 960, over the deck; the columns' calibration. */
+    const oracleSelf = (width: number): number | null => {
+      if (oracle === null || width === oracle.oracle.rasterWidth) return null;
+      let sum = 0;
+      let count = 0;
+      for (let index = 0; index < opened.slides; index++) {
+        const key = slideKey(deckId, index + 1);
+        sum += scoreOf(differenceOf(oracle.zoomGridFor(key, width), oracle.gridFor(key))).meanBp;
+        count += 1;
+      }
+      return count === 0 ? null : Math.round(sum / count);
     };
 
     /** Score one raster against PowerPoint's grid at that width; only the gate has one. */
@@ -507,6 +551,9 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
         const entries = masked.get(index) ?? [];
         entries.push({ zoom, masked: maskZoom(svg) });
         masked.set(index, entries);
+        if (zoom === DISPLAY_RATIO || zoom === STRIP_ZOOM * DISPLAY_RATIO) {
+          exact.set(zoomKey(key, width), maskRootSize(svg));
+        }
         if (zoom === 1) for (const family of familiesOf(svg)) families.add(family);
         if (measurement) {
           slides.push({
@@ -529,6 +576,7 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
         const drawn = await raster(await studio.stageBox(), what, geometry);
         const scored = score(key, width, drawn.grid, geometry, await studio.stageShapes());
         digests.set(what, { rasterSha256: drawn.rasterSha256, svgSha256: sha256(svg) });
+        if (zoom === DISPLAY_RATIO) twins.set(what, drawn.grid);
         slides.push({
           key,
           slide: index + 1,
@@ -554,7 +602,16 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
           ),
         });
       }
-      zooms.push({ zoom, width, cell, surface: 'stage', slides, meanBp: meanOf(slides), worst });
+      zooms.push({
+        zoom,
+        width,
+        cell,
+        surface: 'stage',
+        slides,
+        meanBp: meanOf(slides),
+        oracleSelfBp: measurement ? null : oracleSelf(width),
+        worst,
+      });
     }
 
     // The strip: the same slides at an eighth, drawn by the same page in another mount.
@@ -569,7 +626,12 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
         let svg: string;
         try {
           svg = await studio.thumbSvg(index);
-        } catch {
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          notDrawn.push({
+            key: `${key} thumbnail`,
+            reason: (message.split('\n')[0] ?? message).trim(),
+          });
           continue;
         }
         const entries = masked.get(index) ?? [];
@@ -633,10 +695,141 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
         surface: 'strip',
         slides,
         meanBp: meanOf(slides),
+        oracleSelfBp: measurement ? null : oracleSelf(width),
         worst,
       });
     }
     await studio.stripPass(false);
+
+    // A 2x display, unannounced: the page has to notice on its own. Its 100 % must then be the
+    // 200 % markup to the byte, and the strip it redraws by itself the 25 % markup; its rasters
+    // are Chromium's and are reported against the 200 % rasters.
+    const ratioBreaks: RatioBreak[] = [];
+    const ratioRasters: { key: string; meanBp: number; maxD: number }[] = [];
+    let ratioStageMs = 0;
+    let ratioStripCpuMs = 0;
+    {
+      const slides: ScoredSlide[] = [];
+      const worst: WorstSlide[] = [];
+      const cdp = await context.newCDPSession(page);
+      await cdp.send('Emulation.setDeviceMetricsOverride', {
+        width: VIEWPORT.width,
+        height: VIEWPORT.height,
+        deviceScaleFactor: DISPLAY_RATIO,
+        mobile: false,
+      });
+      // Captured over the same session: Playwright's own screenshot would undo the ratio.
+      const captureAtRatio = async (clip: Box): Promise<Uint8Array> => {
+        const { data } = await cdp.send('Page.captureScreenshot', {
+          format: 'png',
+          clip: { ...clip, scale: 1 },
+        });
+        return new Uint8Array(Buffer.from(data, 'base64'));
+      };
+      const stageWidth = widthAt(DISPLAY_RATIO, opened.size.cx / EMU_PER_POINT);
+      const started = performance.now();
+      for (let index = 0; index < opened.slides; index++) {
+        const key = slideKey(deckId, index + 1);
+        const what = zoomKey(key, stageWidth);
+        const twin = exact.get(what);
+        if (twin === undefined) continue;
+        let shown: Shown;
+        try {
+          shown = await studio.show(index, 1);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          notDrawn.push({
+            key: `${key} at 100 % on a ${String(DISPLAY_RATIO)}x display`,
+            reason: (message.split('\n')[0] ?? message).trim(),
+          });
+          continue;
+        }
+        const svg = await studio.stageSvg();
+        if (maskRootSize(svg) !== twin) ratioBreaks.push({ key, what: 'stage svg' });
+        const twinGrid = twins.get(what);
+        if (twinGrid === undefined) continue;
+        const cell = cellAt(stageWidth);
+        const geometry = geometryOf(opened.size.cx, opened.size.cy, { width: stageWidth, cell });
+        const drawn = await raster(
+          await studio.stageBox(),
+          `${what} on a ${String(DISPLAY_RATIO)}x display`,
+          geometry,
+          captureAtRatio,
+        );
+        const against = scoreOf(differenceOf(drawn.grid, twinGrid));
+        ratioRasters.push({ key, meanBp: against.meanBp, maxD: against.maxD });
+        const scored = score(key, stageWidth, drawn.grid, geometry, await studio.stageShapes());
+        slides.push({
+          key,
+          slide: index + 1,
+          meanBp: scored.meanBp,
+          maxD: scored.maxD,
+          hist: scored.hist,
+          regions: scored.regions,
+          rasterSha256: drawn.rasterSha256,
+          svgSha256: sha256(svg),
+          mountMs: shown.mountMs,
+          screenshotMs: drawn.ms,
+        });
+        keepWorst(worst, {
+          key,
+          meanBp: scored.meanBp,
+          oursPng: drawn.png,
+          theirsSvg: gridSvg(scored.theirs),
+          heatSvg: heatmapSvg(
+            scored.difference,
+            scored.theirs.width,
+            scored.theirs.height,
+            scored.theirs.cell,
+          ),
+        });
+      }
+      ratioStageMs = performance.now() - started;
+      if (!measurement) {
+        zooms.push({
+          zoom: 1,
+          width: stageWidth,
+          cell: cellAt(stageWidth),
+          surface: 'ratio',
+          slides,
+          meanBp: meanOf(slides),
+          oracleSelfBp: oracleSelf(stageWidth),
+          worst,
+        });
+      }
+
+      // The strip is the half that proves the page noticed: nothing here asked it to redraw.
+      const redrawn = await studio.stripDone();
+      ratioStripCpuMs = redrawn.cpuMs;
+      for (const entry of redrawn.failed) {
+        const colon = entry.indexOf(':');
+        notDrawn.push({
+          key: `${slideKey(deckId, Number(entry.slice(0, colon)))} thumbnail on a ${String(DISPLAY_RATIO)}x display`,
+          reason: entry.slice(colon + 1).trim(),
+        });
+      }
+      const stripWidth = widthAt(STRIP_ZOOM * DISPLAY_RATIO, opened.size.cx / EMU_PER_POINT);
+      for (let index = 0; index < opened.slides; index++) {
+        const key = slideKey(deckId, index + 1);
+        const twin = exact.get(zoomKey(key, stripWidth));
+        if (twin === undefined) continue;
+        let svg: string;
+        try {
+          svg = await studio.thumbSvg(index);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          notDrawn.push({
+            key: `${key} thumbnail on a ${String(DISPLAY_RATIO)}x display`,
+            reason: (message.split('\n')[0] ?? message).trim(),
+          });
+          continue;
+        }
+        const renamed = renameIdPrefix(svg, `thumb${String(index)}`, `slide${String(index)}`);
+        if (maskRootSize(renamed) !== twin) ratioBreaks.push({ key, what: 'strip svg' });
+      }
+      await cdp.send('Emulation.clearDeviceMetricsOverride');
+      await cdp.detach();
+    }
 
     for (const [index, entries] of masked) {
       for (const zoom of invarianceOf(entries))
@@ -682,6 +875,10 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
               tool: 'tools/gate3/run-gate3.ts',
               args: args.bootstrap ? ['--record', '--bootstrap'] : ['--record'],
             },
+            sourceNote: baselineSourceNote(
+              'tools/gate3/run-gate3.ts',
+              `every ${GATE_DECK_ID} slide at every zoom, through the studio page`,
+            ),
             addedIn: '3.11',
           },
         ]);
@@ -703,6 +900,7 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
         vanished: gated?.vanished.length ?? 0,
         offenders: requests.other.length,
         afterOffline: requests.afterOffline.length,
+        ratio: ratioBreaks.length,
       });
 
     return {
@@ -713,6 +911,13 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
       zooms,
       notDrawn,
       breaks,
+      ratio: {
+        ratio: DISPLAY_RATIO,
+        stageMs: ratioStageMs,
+        stripCpuMs: ratioStripCpuMs,
+        breaks: ratioBreaks,
+        rasters: ratioRasters,
+      },
       pageErrors,
       requests,
       timings: opened.timings,

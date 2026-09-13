@@ -193,6 +193,15 @@ describe('the roster as a whole', () => {
     expect(total).toBeLessThan(CAPS.total);
   });
 
+  it('is the count the manifest targets, which is every deck in the roster', () => {
+    const manifest = JSON.parse(readFileSync(join(CORPUS, 'manifest.json'), 'utf8')) as {
+      targetCount: number;
+      entries: readonly { id: string }[];
+    };
+    expect(manifest.targetCount).toBe(PROBE_DECKS.length);
+    expect(manifest.entries).toHaveLength(PROBE_DECKS.length);
+  });
+
   it('describes itself in the manifest voice', () => {
     for (const deck of PROBE_DECKS) {
       expect(deck.description.length, deck.id).toBeGreaterThan(80);

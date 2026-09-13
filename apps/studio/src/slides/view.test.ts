@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { el } from '../element.js';
+import { openDeck } from './deck.js';
+import { createStage } from './stage.js';
+import { createStrip } from './strip.js';
+import { nextFrame } from './timings.js';
 import { slidesView } from './view.js';
 
 /**
@@ -9,6 +14,7 @@ import { slidesView } from './view.js';
 
 const MINIMAL = '/corpus/decks/a01-minimal.pptx';
 const FILLS = '/corpus/decks/a03-fills.pptx';
+const LINES = '/corpus/decks/a06-lines.pptx';
 
 async function bytesOf(path: string): Promise<ArrayBuffer> {
   const response = await fetch(path);
@@ -59,7 +65,7 @@ describe('slidesView', () => {
     view.dispose();
   });
 
-  it('draws a picture fill, which the page could not before it had a media resolver', async () => {
+  it('draws a picture fill on the stage', async () => {
     const view = slidesView(() => bytesOf(FILLS));
     host().append(view.root);
     await view.ready;
@@ -81,6 +87,71 @@ describe('slidesView', () => {
     expect(view.thumbBox(0).width).toBe(120);
     expect(view.thumbSvg(0)).toContain('viewBox');
     view.dispose();
+  });
+
+  it('draws the strip again on request and reports the latest draw', async () => {
+    const view = slidesView(() => bytesOf(FILLS));
+    host().append(view.root);
+    await view.ready;
+    const before = [...view.root.querySelectorAll('.thumb-svg > svg')];
+    expect(before).toHaveLength(3);
+    const deck = openDeck(new Uint8Array(await bytesOf(FILLS)));
+    const strip = createStrip(el('div', 'strip'), deck, () => undefined);
+    await strip.done;
+    const first = strip.svg(0);
+    const again = await strip.redraw();
+    expect(again.failed).toEqual([]);
+    expect(await strip.done).toBe(again);
+    expect(strip.svg(0)).toBe(first);
+    view.dispose();
+  });
+
+  it('mounts no thumbnail until the frame after the one the stage paints in', async () => {
+    const deck = openDeck(new Uint8Array(await bytesOf(FILLS)));
+    const host = el('div', 'strip');
+    const strip = createStrip(host, deck, () => undefined);
+    expect(host.querySelectorAll('svg')).toHaveLength(0);
+    await nextFrame();
+    expect(host.querySelectorAll('svg')).toHaveLength(0);
+    await strip.done;
+    expect(host.querySelectorAll('svg')).toHaveLength(3);
+  });
+
+  it('stops a running draw when cancelled, and mounts nothing more', async () => {
+    const deck = openDeck(new Uint8Array(await bytesOf(FILLS)));
+    const host = el('div', 'strip');
+    const strip = createStrip(host, deck, () => undefined);
+    strip.cancel();
+    const drawn = await strip.done;
+    expect(drawn.failed).toEqual([]);
+    expect(host.querySelectorAll('svg')).toHaveLength(0);
+    // A redraw after a cancel is a fresh draw and completes.
+    await strip.redraw();
+    expect(host.querySelectorAll('svg')).toHaveLength(3);
+  });
+
+  it('mounts the stage again when the display ratio changes, at the same zoom', async () => {
+    // a06's second slide: 2.25-pt lines, two pixels at 1 px/pt and five at 2 px/pt.
+    const deck = openDeck(new Uint8Array(await bytesOf(LINES)));
+    const stageHost = el('div', 'stage');
+    const stage = createStage(stageHost, el('div', 'inspector'), deck);
+    const was = window.devicePixelRatio;
+    try {
+      await stage.show(1, 1);
+      const one = stage.svg();
+      expect((await stage.show(1, 1)).mountMs).toBe(0);
+      Object.defineProperty(window, 'devicePixelRatio', { value: was * 2, configurable: true });
+      expect((await stage.show(1, 1)).mountMs).toBeGreaterThan(0);
+      // The same slide at the same CSS size, with its strokes rounded to twice the pixels.
+      const widthOf = (svg: string): string =>
+        /<g data-shape.*?stroke-width="([^"]+)"/.exec(svg)?.[1] ?? '';
+      expect(widthOf(one)).toBe('25400');
+      expect(widthOf(stage.svg())).toBe('31750');
+      expect(stage.svg()).toContain('width="960"');
+    } finally {
+      Object.defineProperty(window, 'devicePixelRatio', { value: was, configurable: true });
+      stage.unmount();
+    }
   });
 
   it('stops drawing the strip when disposed', async () => {

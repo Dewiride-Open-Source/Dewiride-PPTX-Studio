@@ -29,7 +29,6 @@ declare const OffscreenCanvas: new (
 ) => { getContext(id: '2d'): OffscreenCtx2D | null };
 declare const navigator: { userAgent: string };
 
-/** One face, as this machine actually resolves it. */
 /** Which recorded lock and digest set this machine is compared against. */
 export function currentEnvId(): string {
   return `${process.platform}-${process.arch}`;
@@ -49,6 +48,7 @@ export function familiesOf(markup: string): readonly string[] {
   return [...families];
 }
 
+/** One face, as this machine actually resolves it. */
 export interface FaceProbe {
   readonly family: string;
   /** False means every generic showed through, so nothing of this face is here. */

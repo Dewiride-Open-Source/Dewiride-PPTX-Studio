@@ -21,6 +21,8 @@ export interface FixtureEntry {
   readonly tags: readonly string[];
   readonly description: string;
   readonly recipe: { tool: string; args: readonly string[] };
+  /** Where the bytes came from, legally: what was measured, of whose file, and how far reduced. */
+  readonly sourceNote: string;
   /** The sub-phase that first wrote this fixture. */
   readonly addedIn: string;
 }
@@ -28,7 +30,7 @@ export interface FixtureEntry {
 const MANIFEST = repoPath('corpus/ground-truth/manifest.json');
 
 /**
- * What a fidelity fixture is, legally.
+ * What the oracle is, legally.
  *
  * The decks are ours and CC0. What is committed is a measurement of how
  * PowerPoint drew them, reduced to 8x8-pixel cell means - a resolution that
@@ -36,11 +38,20 @@ const MANIFEST = repoPath('corpus/ground-truth/manifest.json');
  * sub-phase 0.7 committed measurements of Microsoft's fonts and never their
  * bytes. `LEGAL.md`, "Corpus licensing".
  */
-const SOURCE_NOTE =
+export const ORACLE_SOURCE_NOTE =
   'PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; ' +
   'tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. ' +
   'The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a ' +
   'resolution that retains no glyph outline and no image.';
+
+/** What a baseline is: our own rasters' digests, with nothing of PowerPoint's in it. */
+export function baselineSourceNote(tool: string, what: string): string {
+  return (
+    `${tool} rendered ${what} with this repository's own renderer in Chromium and recorded the ` +
+    'SHA-256 of each raster and the font environment it was drawn in. Nothing here was measured ' +
+    'from PowerPoint or any other party: it is a regression lock for the platform it names.'
+  );
+}
 
 /**
  * Add or replace entries, leaving every other entry alone.
@@ -64,7 +75,7 @@ export function claimFixtures(entries: readonly FixtureEntry[], sweepPrefix?: st
       path: entry.path,
       license: 'CC0-1.0',
       source: 'self-authored',
-      sourceNote: SOURCE_NOTE,
+      sourceNote: entry.sourceNote,
       sha256: createHash('sha256').update(bytes).digest('hex'),
       bytes: bytes.length,
       tags: [...entry.tags],

@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { fitZoom, stageSizeAt, THUMB_ZOOM, unitAt, ZOOMS } from './zoom.js';
+import {
+  deviceRatioAt,
+  fitZoom,
+  stageSizeAt,
+  THUMB_ZOOM,
+  unitAt,
+  watchDevicePixelRatio,
+  ZOOMS,
+  type Screen,
+} from './zoom.js';
 
 const WIDE = { cx: 12192000, cy: 6858000 };
 const FOUR_THREE = { cx: 9144000, cy: 6858000 };
@@ -32,6 +41,43 @@ describe('zoom', () => {
 
   it('offers a quarter, one, two and four', () => {
     expect(ZOOMS).toEqual([0.25, 1, 2, 4]);
+  });
+
+  it("rounds strokes at the display's ratio, or at the floor when the zoom is under it", () => {
+    expect(deviceRatioAt(1, 1)).toBe(1);
+    expect(deviceRatioAt(THUMB_ZOOM, 2)).toBe(2);
+    // A thumbnail on a display at a third: an eighth of a third is under a twentieth, so the floor.
+    expect(deviceRatioAt(THUMB_ZOOM, 1 / 3)).toBe(0.4);
+    expect(deviceRatioAt(0.25, 0.1)).toBe(0.2);
+  });
+
+  it('watches the ratio the display has now, and the next one after it changes', () => {
+    const queries: { query: string; fire: () => void }[] = [];
+    let ratio = 1;
+    const screen: Screen = {
+      get devicePixelRatio() {
+        return ratio;
+      },
+      matchMedia: (query) => ({
+        addEventListener: (_type, listener) => {
+          queries.push({ query, fire: listener });
+        },
+      }),
+    };
+    let changes = 0;
+    const stop = watchDevicePixelRatio(screen, () => {
+      changes += 1;
+    });
+    expect(queries.map((q) => q.query)).toEqual(['(resolution: 1dppx)']);
+    ratio = 2;
+    queries[0]!.fire();
+    expect(changes).toBe(1);
+    // The next query is for the ratio the display has now, or a second change would go unseen.
+    expect(queries.map((q) => q.query)).toEqual(['(resolution: 1dppx)', '(resolution: 2dppx)']);
+    stop();
+    queries[1]!.fire();
+    expect(changes).toBe(1);
+    expect(queries).toHaveLength(2);
   });
 
   it('refuses a zoom or a slide with no size', () => {

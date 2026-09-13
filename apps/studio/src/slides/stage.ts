@@ -18,7 +18,7 @@ import { el } from '../element.js';
 import type { Deck } from './deck.js';
 import { describe } from './inspector.js';
 import { nextFrame, type ShowTimings } from './timings.js';
-import { stageSizeAt, unitAt } from './zoom.js';
+import { deviceRatioAt, stageSizeAt, unitAt } from './zoom.js';
 
 /** A shape as drawn, in slide EMU, for a harness that scores the stage. */
 export interface ShapeFrame {
@@ -65,7 +65,7 @@ export function pageBoxOf(element: Element): PageBox {
 export function createStage(host: HTMLElement, inspector: HTMLElement, deck: Deck): Stage {
   host.dataset['role'] = 'stage';
   let mounted: MountedSlide | null = null;
-  let shown: { index: number; zoom: number } | null = null;
+  let shown: { index: number; zoom: number; ratio: number } | null = null;
   let overlay: MountedOverlay | null = null;
   let showOverlay = true;
   let selected: number | null = null;
@@ -98,7 +98,8 @@ export function createStage(host: HTMLElement, inspector: HTMLElement, deck: Dec
   return {
     async show(index, zoom) {
       const { width, height } = stageSizeAt(zoom, deck.size);
-      if (shown !== null && shown.index === index && shown.zoom === zoom) {
+      const ratio = deviceRatioAt(zoom, window.devicePixelRatio);
+      if (shown !== null && shown.index === index && shown.zoom === zoom && shown.ratio === ratio) {
         return { mountMs: 0, width, height };
       }
       const sheet = deck.slides[index];
@@ -114,6 +115,7 @@ export function createStage(host: HTMLElement, inspector: HTMLElement, deck: Dec
         mounted = mountSlide(host, sheet, deck.size, {
           width,
           height,
+          devicePixelRatio: ratio,
           idPrefix: `slide${String(index)}`,
           media: deck.media,
           text: deck.text,
@@ -124,7 +126,7 @@ export function createStage(host: HTMLElement, inspector: HTMLElement, deck: Dec
         );
         throw error;
       }
-      shown = { index, zoom };
+      shown = { index, zoom, ratio };
       const mountMs = performance.now() - started;
       drawOverlay();
       await nextFrame();

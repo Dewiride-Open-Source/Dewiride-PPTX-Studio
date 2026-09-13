@@ -16,7 +16,7 @@ export interface OpenTimings {
 }
 
 export interface ShowTimings {
-  /** The mount, zero when the stage already showed that slide at that zoom. */
+  /** The mount, zero when the stage already showed that slide at that zoom on this display. */
   readonly mountMs: number;
   readonly width: number;
   readonly height: number;

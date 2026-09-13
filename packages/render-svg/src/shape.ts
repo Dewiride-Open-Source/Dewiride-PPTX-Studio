@@ -24,10 +24,17 @@
  * writes minus thirty with a flip, and only a renderer that flips first has to.
  */
 
-import type { ResolvedPath } from '@pptx-studio/geometry';
+import type { PathSegment, ResolvedPath } from '@pptx-studio/geometry';
 import { MIN_PX_PER_PT, resolveLine } from '@pptx-studio/paint';
 
-import { type Defs, fillAttributes, strokeAttributes, withEffects, type Attrs } from './paint.js';
+import {
+  type Defs,
+  fillAttributes,
+  lineEndAttributes,
+  strokeAttributes,
+  withEffects,
+  type Attrs,
+} from './paint.js';
 import { element, num, type SvgElement, type SvgNode } from './node.js';
 import type { Placed } from './layout.js';
 import { shapeTextNodes, type TextEngine } from './text/draw.js';
@@ -57,6 +64,20 @@ function drawablePaths(placed: Placed): readonly ResolvedPath[] {
   // a `d` holding a NaN is not merely wrong - a browser drops the whole element
   // and says nothing. `geometry` already refuses to emit one; this drops it.
   return placed.geometry?.paths.filter((path) => path.finite && path.d !== '') ?? [];
+}
+
+/** Whether a path's first subpath and its last are open: where a line end can be drawn. */
+function openEnds(segments: readonly PathSegment[]): { start: boolean; end: boolean } {
+  let start = true;
+  for (const [at, segment] of segments.entries()) {
+    if (segment.kind === 'close') {
+      start = false;
+      break;
+    }
+    if (segment.kind === 'move' && at > 0) break;
+  }
+  const last = segments[segments.length - 1];
+  return { start, end: last !== undefined && last.kind !== 'close' };
 }
 
 /** The widest one device pixel a stroke is ever rounded up to, in EMU. */
@@ -142,19 +163,17 @@ export function shapeNodes(
   // saying it has no fill - `smileyFace`'s mouth against its face.
   const children: SvgElement[] = paths.flatMap((path) => {
     const fillAttrs = path.fill === 'none' ? { fill: 'none' } : fill;
-    if (clip === null || !path.stroke || stroke === null) {
-      return [
-        element('path', {
-          d: path.d,
-          ...fillAttrs,
-          ...(path.stroke && stroke !== null ? stroke.attrs : { stroke: 'none' }),
-        }),
-      ];
+    if (!path.stroke || stroke === null) {
+      return [element('path', { d: path.d, ...fillAttrs, stroke: 'none' })];
+    }
+    const ends = lineEndAttributes(stroke, openEnds(path.segments), defs);
+    if (clip === null) {
+      return [element('path', { d: path.d, ...fillAttrs, ...stroke.attrs, ...ends })];
     }
     // A clipped band is its own path: clipping the fill with it would keep only the band.
     return [
       element('path', { d: path.d, ...fillAttrs, stroke: 'none' }),
-      element('path', { d: path.d, fill: 'none', ...stroke.attrs, 'clip-path': clip }),
+      element('path', { d: path.d, fill: 'none', ...stroke.attrs, ...ends, 'clip-path': clip }),
     ];
   });
 

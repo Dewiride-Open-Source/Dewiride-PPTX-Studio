@@ -9,7 +9,7 @@
     "xml": "tools/corpus/gen",
     "container": "tools/ground-truth/lib/zip.ts"
   },
-  "targetCount": 42,
+  "targetCount": 45,
   "uncovered": [
     {
       "key": "model3d",
@@ -958,7 +958,7 @@
         "gradientFill": 2,
         "picture": 2
       },
-      "description": "The only corpus deck that deflates, and therefore the only one whose committed hash depends on which zlib built it - deliberately the deck that is about compression, so the dependency sits where it can be reasoned about. Mixed methods: four stored entries among deflated ones, one of them stored because it is noise and DEFLATE made it larger. The general-purpose flag bits PowerPoint writes (0x0006, the meaningless deflate-level hint, including on a stored entry where it means even less), bit 1 and bit 2 alone, and bit 11 - the UTF-8 name flag PowerPoint never sets - on an ASCII name where it is true and redundant at once. And Microsoft&apos;s 0xa220 growth hint at 520 bytes, the length measured from a PowerPoint package, plus 64 and 128 on two more entries, because it is padding in the local header that a reader computing the payload offset from the name length alone walks straight into.",
+      "description": "The corpus deck that deflates to probe compression, so its committed hash depends on which zlib built it - deliberately the deck that is about compression, so the dependency sits where it can be reasoned about; a46-hundred-slides deflates only for size. Mixed methods: four stored entries among deflated ones, one of them stored because it is noise and DEFLATE made it larger. The general-purpose flag bits PowerPoint writes (0x0006, the meaningless deflate-level hint, including on a stored entry where it means even less), bit 1 and bit 2 alone, and bit 11 - the UTF-8 name flag PowerPoint never sets - on an ASCII name where it is true and redundant at once. And Microsoft&apos;s 0xa220 growth hint at 520 bytes, the length measured from a PowerPoint package, plus 64 and 128 on two more entries, because it is padding in the local header that a reader computing the payload offset from the name length alone walks straight into.",
       "recipe": {
         "tool": "tools/corpus/tiers/a-generated/build-probes.ts",
         "args": ["--out", "corpus/decks", "--id", "a35-zip-shapes"]
@@ -1268,7 +1268,7 @@
         "shadow": 13,
         "glow": 13
       },
-      "description": "A hundred slides of nine kinds - cover, agenda, eight section headers, bullets, two-column text, picture and caption, shape grids, quotes, bar diagrams and a closing - from one fixed schedule and a seeded generator, the size a deck has after a quarter of writing. Gate 3 asks whether the viewer, the harness and the oracle scale to it and whether every slide is faithful at every zoom; no three-slide probe can ask either. The first Tier A deck past ten slides and the first deflated for scale rather than to probe compression.",
+      "description": "A hundred slides of ten kinds - cover, agenda, eight section headers, bullets, two-column text, picture and caption, shape grids, quotes, bar diagrams and a closing - from one fixed schedule and a seeded generator, the size a deck has after a quarter of writing. Gate 3 asks whether the viewer, the harness and the oracle scale to it and whether every slide is faithful at every zoom; no three-slide probe can ask either. The first Tier A deck past ten slides and the first deflated for scale rather than to probe compression.",
       "recipe": {
         "tool": "tools/corpus/tiers/a-generated/build-probes.ts",
         "args": ["--out", "corpus/decks", "--id", "a46-hundred-slides"]

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { FidelityError } from './errors.ts';
 import { encodeGridSet } from './metric/grid.ts';
 import type { Grid } from './metric/reduce.ts';
-import { openOracle } from './oracle.ts';
+import { mergeOracle, openOracle, type Oracle } from './oracle.ts';
 
 /** A one-cell grid whose luma is `value`, so two grids are told apart by one byte. */
 function grid(value: number, cell = 8): Grid {
@@ -88,5 +88,81 @@ describe('openOracle', () => {
 
   it('refuses a slide the index does not hold', () => {
     expect(() => openOracle(oracleDir()).gridFor('d-03')).toThrow(FidelityError);
+  });
+});
+
+describe('mergeOracle', () => {
+  const row = (deck: string, slide: number, file = `render/fidelity/grids/${deck}.ppt.grids`) => ({
+    key: `${deck}-${String(slide).padStart(2, '0')}`,
+    deck,
+    slide,
+    cells: 8160,
+    file,
+  });
+  const existing: Oracle = {
+    powerpoint: '16.0.1',
+    rasterWidth: 960,
+    slides: 3,
+    noiseFloor: { slidesAffected: 2, worstMeanBpDrop: 9, worstMaxD: 40, worstCells: 12 },
+    jitter: [
+      { key: 'a01-x-01', meanBp: 9991, maxD: 40, cells: 12 },
+      { key: 'a02-y-01', meanBp: 9995, maxD: 20, cells: 3 },
+    ],
+    records: [row('a01-x', 1), row('a02-y', 1), row('a02-y', 2)],
+    zoom: [
+      { ...row('a01-x', 1, 'render/fidelity/zoom/a01-x.240.ppt.grids'), width: 240, cell: 2 },
+      { ...row('a02-y', 1, 'render/fidelity/zoom/a02-y.240.ppt.grids'), width: 240, cell: 2 },
+    ],
+  };
+
+  it('replaces the captured decks and keeps every other row, jitter and zoomed grid as it was', () => {
+    const merged = mergeOracle(existing, {
+      powerpoint: '16.0.1',
+      rasterWidth: 960,
+      captured: new Set(['a02-y']),
+      records: [row('a02-y', 1, 'render/fidelity/grids/a02-y.1.ppt.grids')],
+      zoom: [],
+      jitter: [{ key: 'a02-y-01', meanBp: 9990, maxD: 50, cells: 30 }],
+    });
+    expect(merged.records.map((r) => r.key)).toEqual(['a01-x-01', 'a02-y-01']);
+    expect(merged.records[0]?.file).toBe('render/fidelity/grids/a01-x.ppt.grids');
+    expect(merged.records[1]?.file).toBe('render/fidelity/grids/a02-y.1.ppt.grids');
+    expect(merged.slides).toBe(2);
+    // The recaptured deck's zoomed grids and old jitter go with it; the kept deck's stay.
+    expect(merged.zoom.map((z) => z.key)).toEqual(['a01-x-01']);
+    expect(merged.jitter.map((j) => j.key)).toEqual(['a01-x-01', 'a02-y-01']);
+    expect(merged.noiseFloor).toEqual({
+      slidesAffected: 2,
+      worstMeanBpDrop: 10,
+      worstMaxD: 50,
+      worstCells: 30,
+    });
+  });
+
+  it('is the capture alone when there is nothing to merge into', () => {
+    const merged = mergeOracle(null, {
+      powerpoint: '16.0.2',
+      rasterWidth: 960,
+      captured: new Set(['a01-x']),
+      records: [row('a01-x', 1)],
+      zoom: [],
+      jitter: [],
+    });
+    expect(merged.powerpoint).toBe('16.0.2');
+    expect(merged.records).toHaveLength(1);
+    expect(merged.noiseFloor.slidesAffected).toBe(0);
+  });
+
+  it('refuses to put two PowerPoint builds in one oracle', () => {
+    expect(() =>
+      mergeOracle(existing, {
+        powerpoint: '16.0.2',
+        rasterWidth: 960,
+        captured: new Set(['a01-x']),
+        records: [],
+        zoom: [],
+        jitter: [],
+      }),
+    ).toThrow(FidelityError);
   });
 });

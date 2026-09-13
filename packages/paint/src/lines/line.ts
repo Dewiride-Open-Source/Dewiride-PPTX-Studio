@@ -310,6 +310,22 @@ export function deviceStrokeWidth(widthEmu: number, pxPerPt: number): number {
   return (px / pxPerPt) * EMU_PER_POINT;
 }
 
+/** The narrowest pen a line end is sized from: two points. */
+export const MIN_MARKER_PEN = 2 * EMU_PER_POINT;
+
+/**
+ * The width a line end is sized from, in EMU: two points at or under two, else the drawn
+ * stroke, and never under a device pixel at `pxPerPt` (F2's M8, `zoom.json`).
+ */
+export function markerPen(widthEmu: number, pxPerPt: number | null): number {
+  if (widthEmu > MIN_MARKER_PEN) {
+    return pxPerPt === null ? widthEmu : deviceStrokeWidth(widthEmu, pxPerPt);
+  }
+  return pxPerPt === null
+    ? MIN_MARKER_PEN
+    : Math.max(MIN_MARKER_PEN, deviceStrokeWidth(0, pxPerPt));
+}
+
 /** SVG stroke attributes for a single-rail stroke, in EMU. */
 export interface SvgStroke {
   readonly 'stroke-width': number;

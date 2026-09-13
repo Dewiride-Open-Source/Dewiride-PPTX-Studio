@@ -23,7 +23,12 @@ import { FidelityError } from '../../../fidelity/errors.ts';
 import { encodeGridSet, shardGridSets } from '../../../fidelity/metric/grid.ts';
 import { differenceOf, scoreOf } from '../../../fidelity/metric/score.ts';
 import type { Grid } from '../../../fidelity/metric/reduce.ts';
-import type { Oracle, OracleRecord, ZoomRecord } from '../../../fidelity/oracle.ts';
+import {
+  mergeOracle,
+  type Oracle,
+  type OracleRecord,
+  type ZoomRecord,
+} from '../../../fidelity/oracle.ts';
 import { openHarness } from '../../../fidelity/raster/browser.ts';
 import {
   CELL,
@@ -34,7 +39,12 @@ import {
 } from '../../../fidelity/raster/render.ts';
 import { REPO_ROOT, repoPath } from '../../../repo/root.ts';
 
-import { claimFixtures, FIXTURE_PREFIX, type FixtureEntry } from '../../../fidelity/fixtures.ts';
+import {
+  claimFixtures,
+  ORACLE_SOURCE_NOTE,
+  FIXTURE_PREFIX,
+  type FixtureEntry,
+} from '../../../fidelity/fixtures.ts';
 
 import { fidelityProbes, slideKey } from './probes.ts';
 
@@ -228,6 +238,7 @@ function writeSets(
         tool: 'tools/ground-truth/render/fidelity/analyse.ts',
         args: ['<dir>', '--capture', '--only', deck],
       },
+      sourceNote: ORACLE_SOURCE_NOTE,
       addedIn: addedIn(deck),
     });
     return path;
@@ -267,8 +278,8 @@ for (const deck of exported.decks) {
           slide.file,
         );
       }
-      // PowerPoint does not rasterise a slide identically twice - measured, 28 of
-      // 149 - so this records how far it disagrees with itself rather than
+      // PowerPoint does not rasterise a slide identically twice - measured, 29 of
+      // 255 - so this records how far it disagrees with itself rather than
       // asserting it does not. That disagreement is the noise floor of every
       // number scored against it, and a score is not reported without it.
       if (first.rasterSha256 !== second.rasterSha256 && width === RASTER_WIDTH) {
@@ -304,53 +315,18 @@ await harness.close();
 
 /* ----------------------------------------------------------------- the index */
 
-/** The decks a partial capture did not touch keep their rows; a row from before sharding is in its deck's one set. */
-function mergeOracle(existing: Oracle | null): Oracle {
-  if (existing !== null && existing.powerpoint !== exported.powerpoint) {
-    throw new FidelityError(
-      'FID_ORACLE_MISSING',
-      `the oracle was captured on PowerPoint ${existing.powerpoint} and this run on ` +
-        `${exported.powerpoint}; two builds are not one oracle`,
-    );
-  }
-  const kept = (row: { deck: string }): boolean => !captured.has(row.deck);
-  const keptKeys = new Set((existing?.records ?? []).filter(kept).map((row) => row.key));
-  const mergedRecords = [
-    ...(existing?.records ?? []).filter(kept).map((row) => ({
-      key: row.key,
-      deck: row.deck,
-      slide: row.slide,
-      cells: row.cells,
-      file: `${FIXTURE_PREFIX}grids/${row.deck}.ppt.grids`,
-    })),
-    ...records,
-  ];
-  const mergedJitter = [
-    ...(existing?.jitter ?? []).filter((row) => keptKeys.has(row.key)),
-    ...jitter,
-  ];
-  const mergedZoom = [...(existing?.zoom ?? []).filter(kept), ...zoom];
-  return {
-    powerpoint: exported.powerpoint,
-    rasterWidth: RASTER_WIDTH,
-    slides: mergedRecords.length,
-    noiseFloor: {
-      slidesAffected: mergedJitter.length,
-      worstMeanBpDrop: mergedJitter.reduce((worst, row) => Math.max(worst, 10000 - row.meanBp), 0),
-      worstMaxD: mergedJitter.reduce((worst, row) => Math.max(worst, row.maxD), 0),
-      worstCells: mergedJitter.reduce((worst, row) => Math.max(worst, row.cells), 0),
-    },
-    jitter: mergedJitter,
-    records: mergedRecords,
-    zoom: mergedZoom,
-  };
-}
-
 const existing =
   only === null
     ? null
     : (JSON.parse(readFileSync(join(FIXTURES, 'oracle.json'), 'utf8')) as Oracle);
-const oracle = mergeOracle(existing);
+const oracle = mergeOracle(existing, {
+  powerpoint: exported.powerpoint,
+  rasterWidth: RASTER_WIDTH,
+  captured,
+  records,
+  zoom,
+  jitter,
+});
 const totalBytes = [...new Set([...oracle.records, ...oracle.zoom].map((row) => row.file))].reduce(
   (sum, file) => sum + statSync(repoPath('corpus/ground-truth', file)).size,
   0,
@@ -386,6 +362,10 @@ claimFixtures(
         tool: 'tools/ground-truth/render/fidelity/analyse.ts',
         args: ['<dir>', '--capture'],
       },
+      sourceNote:
+        'written by tools/ground-truth/render/fidelity/analyse.ts as the index of the grid files ' +
+        'beside it: which file holds each slide at each width, and how far PowerPoint 365 disagreed ' +
+        'with its own second export of the same slide. It holds no pixels.',
       addedIn: '3.9',
     },
   ],

@@ -1,4 +1,4 @@
-# Experiment F2, step 2 - ask PowerPoint to draw the deck at six widths.
+# Experiment F2, step 2 - ask PowerPoint to draw the deck at seven widths.
 #
 #   powershell -File tools/ground-truth/render/zoom/read.ps1 -Dir <work-dir>
 #
@@ -8,7 +8,7 @@
 # ## Every export is made twice
 #
 # PowerPoint does not rasterise a slide identically twice (F1 measured 29 of
-# 155), so each slide is exported to two files and the analysis decides on the
+# 255), so each slide is exported to two files and the analysis decides on the
 # decoded pixels whether a probe's two readings agree before it trusts either.
 #
 # ## A width PowerPoint refuses is a finding, not a crash

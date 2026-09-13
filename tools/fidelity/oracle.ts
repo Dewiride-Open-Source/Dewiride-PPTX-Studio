@@ -42,6 +42,60 @@ export interface Oracle {
   readonly zoom: readonly ZoomRecord[];
 }
 
+/** How far PowerPoint disagreed with its own second export of one slide. */
+export interface JitterRow {
+  readonly key: string;
+  readonly meanBp: number;
+  readonly maxD: number;
+  readonly cells: number;
+}
+
+/** What one capture measured: the decks it exported, and their rows. */
+export interface OracleCapture {
+  readonly powerpoint: string;
+  readonly rasterWidth: number;
+  readonly captured: ReadonlySet<string>;
+  readonly records: readonly OracleRecord[];
+  readonly zoom: readonly ZoomRecord[];
+  readonly jitter: readonly JitterRow[];
+}
+
+/**
+ * The committed oracle with one capture's decks replaced: every other deck keeps its rows,
+ * and two PowerPoint builds are refused rather than averaged.
+ */
+export function mergeOracle(existing: Oracle | null, fresh: OracleCapture): Oracle {
+  if (existing !== null && existing.powerpoint !== fresh.powerpoint) {
+    throw new FidelityError(
+      'FID_ORACLE_MISSING',
+      `the oracle was captured on PowerPoint ${existing.powerpoint} and this run on ` +
+        `${fresh.powerpoint}; two builds are not one oracle`,
+    );
+  }
+  const kept = (row: { readonly deck: string }): boolean => !fresh.captured.has(row.deck);
+  const keptRecords = (existing?.records ?? []).filter(kept);
+  const keptKeys = new Set(keptRecords.map((row) => row.key));
+  const records = [...keptRecords, ...fresh.records];
+  const jitter = [
+    ...(existing?.jitter ?? []).filter((row) => keptKeys.has(row.key)),
+    ...fresh.jitter,
+  ];
+  return {
+    powerpoint: fresh.powerpoint,
+    rasterWidth: fresh.rasterWidth,
+    slides: records.length,
+    noiseFloor: {
+      slidesAffected: jitter.length,
+      worstMeanBpDrop: jitter.reduce((worst, row) => Math.max(worst, 10000 - row.meanBp), 0),
+      worstMaxD: jitter.reduce((worst, row) => Math.max(worst, row.maxD), 0),
+      worstCells: jitter.reduce((worst, row) => Math.max(worst, row.cells), 0),
+    },
+    jitter,
+    records,
+    zoom: [...(existing?.zoom ?? []).filter(kept), ...fresh.zoom],
+  };
+}
+
 export interface OpenedOracle {
   readonly oracle: Oracle;
   /** Every slide the oracle holds at 960 wide. */

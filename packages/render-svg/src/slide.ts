@@ -13,6 +13,7 @@
  */
 
 import type { MediaResolver } from './image/blip.js';
+import { RenderError } from './errors.js';
 import { colorContextOf, resolveBackground, type Sheet } from '@pptx-studio/model';
 
 import { layoutSheet, layoutSlide, type Placed } from './layout.js';
@@ -45,17 +46,12 @@ export interface RenderOptions {
    */
   readonly width?: number;
   readonly height?: number;
+  /** Device pixels per CSS pixel, so a 2x display rounds strokes to its own pixels. Default 1. */
+  readonly devicePixelRatio?: number;
   /** Leave off `xmlns`, for a fragment going into an existing SVG document. */
   readonly inline?: boolean;
   /** Draw the master's and layout's shapes beneath the sheet's own. Default true. */
   readonly inherited?: boolean;
-  /**
-   * How to draw text, or `false` to draw none.
-   *
-   * Text needs a measuring surface, so a caller with no `OffscreenCanvas` - a
-   * Node script, a test asserting geometry alone - turns it off rather than
-   * getting a throw from a package it did not know it was using.
-   */
   /**
    * How an image fill or picture reaches its bytes.
    *
@@ -63,7 +59,37 @@ export interface RenderOptions {
    * the layout part own rels, and only the caller knows which part it came from.
    */
   readonly media?: MediaResolver;
+  /**
+   * How to draw text, or `false` to draw none.
+   *
+   * Text needs a measuring surface, so a caller with no `OffscreenCanvas` - a
+   * Node script, a test asserting geometry alone - turns it off rather than
+   * getting a throw from a package it did not know it was using.
+   */
   readonly text?: TextOptions | false;
+}
+
+/** Device pixels to the point, or `null` when no width names a device. */
+function devicePxPerPt(options: RenderOptions, size: SlideSize): number | null {
+  const ratio = options.devicePixelRatio ?? 1;
+  if (!Number.isFinite(ratio) || ratio <= 0) {
+    throw new RenderError(
+      'RENDER_DEVICE_PIXEL_RATIO',
+      `a device pixel ratio of ${String(ratio)} is not a positive number`,
+      String(ratio),
+    );
+  }
+  if (options.width === undefined) {
+    if (options.devicePixelRatio !== undefined) {
+      throw new RenderError(
+        'RENDER_DEVICE_PIXEL_RATIO',
+        'a device pixel ratio without a width names no device',
+        String(ratio),
+      );
+    }
+    return null;
+  }
+  return (options.width * ratio) / (size.cx / EMU_PER_POINT);
 }
 
 let counter = 0;
@@ -108,7 +134,7 @@ export interface SlideRender {
  */
 export function slideNode(sheet: Sheet, size: SlideSize, options: RenderOptions = {}): SlideRender {
   // A named width names the device scale, and strokes are drawn as the export draws them at it.
-  const pxPerPt = options.width === undefined ? null : options.width / (size.cx / EMU_PER_POINT);
+  const pxPerPt = devicePxPerPt(options, size);
   const defs = new Defs(options.idPrefix ?? nextPrefix(), options.media, pxPerPt);
   const placed = options.inherited === false ? layoutSheet(sheet) : layoutSlide(sheet);
   const background = backgroundNode(sheet, size, defs);

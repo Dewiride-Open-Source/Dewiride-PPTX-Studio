@@ -995,6 +995,28 @@ describe('strokes at a named width, re-derived from F2', () => {
     expect(zoom.findings.thin).toBe('T4');
   });
 
+  it('rounds to the device pixels of a 2x display: the strokes of twice the width', () => {
+    const slide = lineSlide(ln('3175'));
+    const rootSize = /\swidth="\d+" height="\d+"/;
+    const doubled = renderSlide(slide, SIZE, {
+      idPrefix: 'r',
+      width: 960,
+      height: 540,
+      devicePixelRatio: 2,
+    });
+    const twice = renderSlide(slide, SIZE, { idPrefix: 'r', width: 1920, height: 1080 });
+    expect(strokeWidth(doubled)).toBe('6350');
+    expect(doubled.replace(rootSize, '')).toBe(twice.replace(rootSize, ''));
+    expect(doubled).toContain('width="960"');
+    // The ratio is a device: without one there is nothing for it to name.
+    expect(() => renderSlide(slide, SIZE, { idPrefix: 'r', devicePixelRatio: 2 })).toThrow(
+      RenderError,
+    );
+    expect(() =>
+      renderSlide(slide, SIZE, { idPrefix: 'r', width: 960, devicePixelRatio: 0 }),
+    ).toThrow(RenderError);
+  });
+
   it('draws a picture border at the drawn width, under a band clip the zoom never moves', () => {
     const id = nextId++;
     const pic =
@@ -1066,6 +1088,193 @@ describe('strokes at a named width, re-derived from F2', () => {
     expect(Math.abs(large - 1)).toBeLessThanOrEqual(zoom.tolerancePx);
     // A stroke that scaled with the slide would ink four times as much at 4x.
     expect(Math.abs(large - 4 * reference)).toBeGreaterThan(1);
+  });
+});
+
+describe('line ends, re-derived from C4 and F2', () => {
+  const BLACK = '<a:solidFill><a:srgbClr val="000000"/></a:solidFill>';
+  const LINE_RECT = { x: 1270000, y: 1270000, cx: 5080000, cy: 0 };
+  const ended = (w: string, ends: string, prst = 'line'): Sheet =>
+    buildChain({
+      shapes: [
+        sp({ rect: LINE_RECT, prst, line: `<a:ln w="${w}">${BLACK}${ends}</a:ln>`, name: 'probe' }),
+      ],
+    }).slide;
+  const TAIL = '<a:tailEnd type="triangle" w="lg" len="lg"/>';
+  const markerOf = (markup: string): string => /<marker [^>]*>/.exec(markup)?.[0] ?? '';
+  const attr = (tag: string, name: string): string =>
+    new RegExp(` ${name}="([^"]*)"`).exec(tag)?.[1] ?? '';
+
+  it('draws a tail end at the end of an open path and a head end at its start, oriented outward', () => {
+    const both = renderSlide(
+      ended('12700', '<a:headEnd type="oval" w="med" len="med"/>' + TAIL),
+      SIZE,
+      { idPrefix: 'e', width: 960 },
+    );
+    expect(both).toContain('marker-start="url(#e-1)"');
+    expect(both).toContain('marker-end="url(#e-2)"');
+    const [head, tail] = [...both.matchAll(/<marker [^>]*>/g)].map((m) => m[0]);
+    expect(attr(head ?? '', 'orient')).toBe('auto-start-reverse');
+    expect(attr(tail ?? '', 'orient')).toBe('auto');
+    expect(attr(head ?? '', 'markerUnits')).toBe('userSpaceOnUse');
+    // The head is the med oval, three pens; the tail the lg triangle, five.
+    expect(attr(head ?? '', 'markerWidth')).toBe(String(6 * 12700));
+    expect(attr(tail ?? '', 'markerWidth')).toBe(String(10 * 12700));
+  });
+
+  it('sizes a head from a two-point pen on a one-point line: lg is five pens, so ten points', () => {
+    const tag = markerOf(renderSlide(ended('12700', TAIL), SIZE, { idPrefix: 'e', width: 960 }));
+    expect(attr(tag, 'markerWidth')).toBe(String(10 * 12700));
+    expect(attr(tag, 'markerHeight')).toBe(String(10 * 12700));
+    // A triangle's tip sits on the endpoint: the reference point is the whole length in.
+    expect(attr(tag, 'refX')).toBe(String(10 * 12700));
+    expect(attr(tag, 'refY')).toBe(String(5 * 12700));
+    // Above two points the pen is the drawn stroke: 2.5 pt is three pixels at 960, so fifteen.
+    const thick = markerOf(renderSlide(ended('31750', TAIL), SIZE, { idPrefix: 'e', width: 960 }));
+    expect(attr(thick, 'markerWidth')).toBe(String(15 * 12700));
+    // No width names no device: the pen is two points, or the width above it.
+    const bare = markerOf(renderSlide(ended('31750', TAIL), SIZE, { idPrefix: 'e' }));
+    expect(attr(bare, 'markerWidth')).toBe(String(12.5 * 12700));
+    expect(zoom.findings.markerOnHairline).toBe('M8');
+  });
+
+  it('centres a diamond and an oval on the endpoint, and strokes an open arrow with the pen', () => {
+    const oval = markerOf(
+      renderSlide(ended('12700', '<a:tailEnd type="oval" w="lg" len="lg"/>'), SIZE, {
+        idPrefix: 'e',
+        width: 960,
+      }),
+    );
+    expect(attr(oval, 'refX')).toBe(String(5 * 12700));
+    const arrow = renderSlide(ended('12700', '<a:tailEnd type="arrow" w="lg" len="lg"/>'), SIZE, {
+      idPrefix: 'e',
+      width: 960,
+    });
+    const v = /<marker [^>]*><path [^>]*>/.exec(arrow)?.[0] ?? '';
+    expect(v).toContain('fill="none"');
+    expect(v).toContain(`stroke-width="${String(2 * 12700)}"`);
+    expect(v).toContain('stroke-linejoin="round"');
+    expect(v).not.toContain('Z"');
+    // The V's vertex sits half a pen back, so the round join's edge is on the endpoint.
+    expect(v).toContain('d="M-12700,0 L114300,63500 L-12700,127000"');
+  });
+
+  it("asks a gradient-stroked line's head for the line's own paint, not the marker's space", () => {
+    const gradient =
+      '<a:gradFill><a:gsLst><a:gs pos="0"><a:srgbClr val="000000"/></a:gs>' +
+      '<a:gs pos="100000"><a:srgbClr val="FFFFFF"/></a:gs></a:gsLst><a:lin ang="0"/></a:gradFill>';
+    const slide = buildChain({
+      shapes: [
+        sp({
+          rect: LINE_RECT,
+          prst: 'line',
+          line: `<a:ln w="12700">${gradient}${TAIL}</a:ln>`,
+          name: 'probe',
+        }),
+      ],
+    }).slide;
+    const markup = renderSlide(slide, SIZE, { idPrefix: 'e', width: 960 });
+    expect(markup).toMatch(/<path [^>]*stroke="url\(#e-\d+\)"[^>]*marker-end=/);
+    expect(/<marker [^>]*><path [^>]*>/.exec(markup)?.[0]).toContain('fill="context-stroke"');
+  });
+
+  it('draws no end on a closed path, and none where the file names none', () => {
+    const closed = renderSlide(ended('12700', TAIL, 'rect'), SIZE, { idPrefix: 'e', width: 960 });
+    expect(closed).not.toContain('<marker');
+    expect(closed).not.toContain('marker-end');
+    const none = renderSlide(ended('12700', '<a:tailEnd type="none"/>'), SIZE, {
+      idPrefix: 'e',
+      width: 960,
+    });
+    expect(none).not.toContain('<marker');
+  });
+
+  /** The inked rows at the widest column of a large triangle head whose tip is at 500 pt, 100 pt. */
+  async function headHeight(
+    markup: string,
+    width: number,
+  ): Promise<{ rows: number; centre: number }> {
+    const height = (width * 9) / 16;
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+    URL.revokeObjectURL(href);
+    const data = context.getImageData(0, 0, width, height).data;
+    const scale = width / 960;
+    let widest = { rows: 0, centre: 0 };
+    for (let x = Math.round(480 * scale); x <= Math.round(500 * scale); x++) {
+      let rows = 0;
+      let sum = 0;
+      for (let y = Math.round(84 * scale); y <= Math.round(116 * scale); y++) {
+        const at = (y * width + x) * 4;
+        if (1 - Math.min(data[at]!, data[at + 1]!, data[at + 2]!) / 255 >= 0.5) {
+          rows += 1;
+          sum += y + 0.5;
+        }
+      }
+      if (rows > widest.rows) widest = { rows, centre: sum / rows };
+    }
+    return widest;
+  }
+
+  it('ends an open arrow on the endpoint, with no ink past it', async () => {
+    const markup = renderSlide(ended('0', '<a:tailEnd type="arrow" w="lg" len="lg"/>'), SIZE, {
+      idPrefix: 'r',
+      width: 960,
+      height: 540,
+    });
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = 960;
+    canvas.height = 540;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, 960, 540);
+    context.drawImage(image, 0, 0, 960, 540);
+    URL.revokeObjectURL(href);
+    const data = context.getImageData(0, 0, 960, 540).data;
+    const inkAt = (x: number): number => {
+      let ink = 0;
+      for (let y = 84; y <= 116; y++) {
+        const at = (y * 960 + x) * 4;
+        ink += 1 - Math.min(data[at]!, data[at + 1]!, data[at + 2]!) / 255;
+      }
+      return ink;
+    };
+    // The tip is at x = 500 px: ink in the column before it, none in the column after.
+    expect(inkAt(498)).toBeGreaterThan(0.5);
+    expect(inkAt(501)).toBeLessThan(0.05);
+  });
+
+  it('inks a ten-point head at 960 and a five-pixel one at 240, as PowerPoint did', async () => {
+    const slide = ended('0', TAIL);
+    const at = (width: number): Promise<{ rows: number; centre: number }> =>
+      headHeight(
+        renderSlide(slide, SIZE, { idPrefix: 'r', width, height: (width * 9) / 16 }),
+        width,
+      );
+    const [small, reference] = await Promise.all([at(240), at(960)]);
+    const seen = zoom.measured['marker-0'];
+    expect(Math.abs(reference.rows - seen['960'].boxH)).toBeLessThanOrEqual(zoom.boxTolerancePx);
+    expect(Math.abs(small.rows - seen['240'].boxH)).toBeLessThanOrEqual(zoom.boxTolerancePx);
+    // A head that scaled with the line would be a quarter the size at 240; the pen's floor holds it.
+    expect(small.rows).toBeGreaterThan(reference.rows / 4);
+    // And it sits on the line, at y = 100 pt, not beside it.
+    expect(Math.abs(reference.centre - 100)).toBeLessThanOrEqual(1);
+    expect(Math.abs(small.centre - 25)).toBeLessThanOrEqual(1);
   });
 });
 

@@ -1,6 +1,7 @@
 /**
  * Zoom, as the page means it: CSS pixels per point, so 100 % draws a 13.333-inch slide 960 wide -
- * the width the fidelity harness scores at, and PowerPoint's own 75 %.
+ * the width the fidelity harness scores at, and PowerPoint's own 75 %. The device pixel ratio
+ * multiplies it for the strokes only: a 2x display at 100 % draws the strokes of 200 %.
  */
 
 import { MIN_PX_PER_PT, type SlideSize } from '@pptx-studio/render-svg';
@@ -34,4 +35,37 @@ export function fitZoom(viewportWidthPx: number, size: SlideSize): number {
 /** EMU per CSS pixel at a stage width, which is what keeps the overlay's chrome one pixel. */
 export function unitAt(width: number, size: SlideSize): number {
   return size.cx / width;
+}
+
+/** The ratio the strokes are rounded at: the display's, or the floor's when the zoom is under it. */
+export function deviceRatioAt(zoom: number, ratio: number): number {
+  return Math.max(ratio, MIN_PX_PER_PT / zoom);
+}
+
+/** The part of `window` a display watcher needs. */
+export interface Screen {
+  readonly devicePixelRatio: number;
+  matchMedia(query: string): {
+    addEventListener(type: 'change', listener: () => void, options: { once: true }): void;
+  };
+}
+
+/** Calls `onChange` each time the device pixel ratio changes, until the returned function is called. */
+export function watchDevicePixelRatio(screen: Screen, onChange: () => void): () => void {
+  let stopped = false;
+  const listen = (): void => {
+    screen.matchMedia(`(resolution: ${String(screen.devicePixelRatio)}dppx)`).addEventListener(
+      'change',
+      () => {
+        if (stopped) return;
+        onChange();
+        listen();
+      },
+      { once: true },
+    );
+  };
+  listen();
+  return () => {
+    stopped = true;
+  };
 }
