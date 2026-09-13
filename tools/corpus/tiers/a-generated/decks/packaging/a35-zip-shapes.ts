@@ -16,7 +16,7 @@ import type { ProbeDeck } from '../../markup/types.ts';
  * The archive, rather than the markup: mixed compression methods, the
  * general-purpose flag bits, and the growth hint.
  *
- * ## The one deck that deflates, and why the other forty-one do not
+ * ## The deck that deflates to probe compression, and why most do not
  *
  * ADR 0009 committed the bytes of every corpus deck rather than the recipes,
  * because a recipe's hash is the hash of a *build* - `node:zlib` and `fflate`
@@ -28,11 +28,11 @@ import type { ProbeDeck } from '../../markup/types.ts';
  * What that costs is real: no Tier A deck then exercises DEFLATE at all, and
  * the ZIP reader's decompression path - budgets, ratios, the running inflated
  * counter from sub-phase 0.2 - never sees a corpus fixture. This deck is the
- * exception, and making the exception the deck that is *about* compression
- * keeps the dependency somewhere it can be reasoned about. **`a35` is the one
- * deck whose committed hash can change on a toolchain upgrade with no source
- * change**, and the fix when that happens is to check that nothing but the
- * deflate streams moved and re-pin it.
+ * exception made on purpose, and making it the deck that is *about* compression
+ * keeps the dependency somewhere it can be reasoned about; `a46-hundred-slides`
+ * deflates too, for size. **Their committed hashes can change on a toolchain
+ * upgrade with no source change**, and the fix when that happens is to check
+ * that nothing but the deflate streams moved and re-pin them.
  *
  * ## What PowerPoint writes, measured
  *
@@ -151,9 +151,9 @@ export const a35ZipShapes: ProbeDeck = {
   id: 'a35-zip-shapes',
   title: 'PPTX Studio corpus: a35 zip shapes',
   description:
-    'The only corpus deck that deflates, and therefore the only one whose committed hash depends on ' +
-    'which zlib built it - deliberately the deck that is about compression, so the dependency sits ' +
-    'where it can be reasoned about. Mixed methods: four stored entries among deflated ones, one of ' +
+    'The corpus deck that deflates to probe compression, so its committed hash depends on which ' +
+    'zlib built it - deliberately the deck that is about compression, so the dependency sits ' +
+    'where it can be reasoned about; a46-hundred-slides deflates only for size. Mixed methods: four stored entries among deflated ones, one of ' +
     'them stored because it is noise and DEFLATE made it larger. The general-purpose flag bits ' +
     'PowerPoint writes (0x0006, the meaningless deflate-level hint, including on a stored entry ' +
     'where it means even less), bit 1 and bit 2 alone, and bit 11 - the UTF-8 name flag PowerPoint ' +

@@ -148,10 +148,8 @@ if (options.manifest) {
     // decks whose containers both came out of writeZip are one piece of
     // evidence about ZIP conventions whichever generator called it.
     serializers: { xml: 'tools/corpus/gen', container: 'tools/ground-truth/lib/zip.ts' },
-    // Forty-one, not the roster's original forty-two. `a28-model3d` is cut and
-    // `model3d` is declared below, which is the outcome ROSTER.md wrote down for
-    // the case where E4 is not run.
-    targetCount: 42,
+    // The roster less `a28-model3d`, whose hole `uncovered` declares.
+    targetCount: PROBE_DECKS.length,
     // C019, and the last of the four named rules. The array lives here because
     // Tier A is the tier that would have covered the key: the slot that is
     // missing is `a28-model3d`, and whoever builds it deletes this entry in the

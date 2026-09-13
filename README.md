@@ -143,7 +143,7 @@ tools/
   bench/         synthetic decks, and the browser benchmark that reads them
   corpus/        the corpus generators, its five rules, and the roster
 corpus/
-  decks/         42 synthetic probe decks, one feature each but the last
+  decks/         45 synthetic probe decks, one feature each but the last two
   authored/      9 decks PowerPoint wrote, so the corpus has a second producer
   written/       1 deck our own writer round-tripped
   reject/        17 packages PowerPoint refuses, one measured finding each

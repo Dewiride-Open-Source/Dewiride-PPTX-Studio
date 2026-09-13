@@ -101,8 +101,8 @@ export function shardGridSets(
 /**
  * Every grid of one deck, keyed by slide.
  *
- * A file per slide would be 149 files and 149 manifest entries for what is one
- * measurement per deck; a single file for the whole corpus would be 1.8 MiB and
+ * A file per slide would be 255 files and 255 manifest entries for what is one
+ * measurement per deck; a single file for the whole corpus would be 3 MiB and
  * over the corpus's own per-file cap. Per deck is the grain the corpus is
  * already organised in.
  */

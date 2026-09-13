@@ -8,9 +8,11 @@ import fixture from '../../../../corpus/ground-truth/text-rendering.json' with {
 import frames from '../../../../corpus/ground-truth/frames.json' with { type: 'json' };
 import columns from '../../../../corpus/ground-truth/wordart-columns.json' with { type: 'json' };
 import bullets from '../../../../corpus/ground-truth/bullets.json' with { type: 'json' };
+import zoom from '../../../../corpus/ground-truth/zoom.json' with { type: 'json' };
 import { layoutSheet, type Placed } from '../layout.js';
 import { RenderError } from '../errors.js';
 import { serializeSvg, type SvgElement, type SvgNode } from '../node.js';
+import { renderSlide } from '../slide.js';
 
 import type { FaceBox, RunFont } from '@pptx-studio/text';
 
@@ -807,6 +809,63 @@ function slideWithText(txBody: string, ph = ''): Sheet {
     theme: null,
   };
 }
+
+describe('text at another width, re-derived from F2', () => {
+  const SIZE = { cx: 12192000, cy: 6858000 };
+
+  /** The inked columns of a raster of the slide at `width`, as [first, last]. */
+  async function inkExtent(markup: string, width: number): Promise<[number, number]> {
+    const height = (width * 9) / 16;
+    const image = new Image();
+    const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
+    image.src = href;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) throw new Error('no 2d context');
+    context.fillStyle = '#FFFFFF';
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+    URL.revokeObjectURL(href);
+    const data = context.getImageData(0, 0, width, height).data;
+    let first = width;
+    let last = -1;
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        const at = (y * width + x) * 4;
+        if (Math.min(data[at]!, data[at + 1]!, data[at + 2]!) < 128) {
+          first = Math.min(first, x);
+          last = Math.max(last, x);
+          break;
+        }
+      }
+    }
+    return [first, last];
+  }
+
+  it('lays a run out once: its ink at 4x is four times its ink at 1x, within the F2 tolerance', async () => {
+    const slide = slideWithText(
+      '<p:txBody><a:bodyPr wrap="none"/><a:lstStyle/><a:p><a:r>' +
+        '<a:rPr lang="en-US" sz="1800"><a:latin typeface="Arial"/></a:rPr>' +
+        '<a:t>Hamburgefonstiv 0123</a:t></a:r></a:p></p:txBody>',
+    );
+    const at = (width: number): Promise<[number, number]> =>
+      inkExtent(
+        renderSlide(slide, SIZE, { idPrefix: 'z', width, height: (width * 9) / 16 }),
+        width,
+      );
+    const [[left1, right1], [left4, right4]] = await Promise.all([at(960), at(3840)]);
+    const extent1 = right1 - left1 + 1;
+    const extent4 = right4 - left4 + 1;
+    expect(extent1).toBeGreaterThan(100);
+    // F2: every run's extent is linear in the width within 1 px + 2 % (`textTolerance`).
+    expect(zoom.findings.textLinear).toBe(true);
+    expect(Math.abs(extent4 - 4 * extent1)).toBeLessThanOrEqual(1 + 0.02 * extent4);
+    expect(Math.abs(left4 - 4 * left1)).toBeLessThanOrEqual(1 + 0.02 * extent4);
+  });
+});
 
 describe('resolveText', () => {
   it('reads a run through the cascade and lands its colour', () => {

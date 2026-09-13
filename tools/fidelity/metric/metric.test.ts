@@ -21,8 +21,9 @@ import {
   gridSetBytes,
   shardGridSets,
 } from './grid.ts';
+import { byDeck } from './deck.ts';
 import { reduceRgba, type Grid } from './reduce.ts';
-import { differenceOf, regionsOf, scoreOf } from './score.ts';
+import { agreementBp, differenceOf, regionsOf, scoreOf, type SlideScore } from './score.ts';
 
 const CELL = 8;
 /** Four cells square, so the arithmetic has a denominator anyone can divide by. */
@@ -192,6 +193,36 @@ describe('the score', () => {
       cell: CELL,
     });
     expect(() => differenceOf(gridOf(raster(WHITE)), wide)).toThrow(FidelityError);
+  });
+});
+
+describe('the score by deck', () => {
+  const scored = (sumD: number, cells: number): SlideScore => ({
+    sumD,
+    cells,
+    meanBp: agreementBp(sumD, cells),
+    maxD: 0,
+    hist: [],
+  });
+
+  it("rolls slides up over their cells, names each deck's worst slide, and puts the worst deck first", () => {
+    const rows = byDeck([
+      { key: 'b-01', deck: 'b', score: scored(0, 100) },
+      { key: 'a-01', deck: 'a', score: scored(255, 100) },
+      { key: 'a-02', deck: 'a', score: scored(0, 300) },
+      { key: 'b-02', deck: 'b', score: scored(0, 100) },
+    ]);
+    expect(rows.map((row) => row.deck)).toEqual(['a', 'b']);
+    // Over the deck's 400 cells, not the mean of its two slides' means.
+    expect(rows[0]).toEqual({
+      deck: 'a',
+      slides: 2,
+      meanBp: scored(255, 400).meanBp,
+      worstKey: 'a-01',
+      worstBp: scored(255, 100).meanBp,
+    });
+    expect(rows[1]?.meanBp).toBe(10000);
+    expect(byDeck([])).toEqual([]);
   });
 });
 

@@ -2,13 +2,14 @@
  * What a run writes down: a machine-readable score and a table for a reviewer.
  *
  * The table leads with the worst slide and the count of slides that changed,
- * not with the corpus mean. A mean over 149 slides and 1.2 million cells cannot
+ * not with the corpus mean. A mean over 255 slides and two million cells cannot
  * move for a defect on one of them - all the text vanishing from a slide is
  * worth about three basis points - so putting the mean first would train
  * everyone to ignore the report. ADR 0035.
  */
 
 import type { Blame } from './blame.ts';
+import { byDeck } from './metric/deck.ts';
 import { agreementBp, type SlideScore } from './metric/score.ts';
 
 export interface SlideResult {
@@ -153,6 +154,21 @@ export function reportMarkdown(report: RunReport): string {
   }
 
   lines.push(
+    '### By deck',
+    '',
+    "Agreement over each deck's own cells, worst first: the grain a systematic defect shows at.",
+    '',
+    '| deck | slides | meanBp | worst slide |',
+    '| --- | ---: | ---: | --- |',
+  );
+  for (const row of byDeck(report.slides)) {
+    lines.push(
+      `| ${row.deck} | ${String(row.slides)} | ${String(row.meanBp)} | ${row.worstKey} at ${String(row.worstBp)} |`,
+    );
+  }
+
+  lines.push(
+    '',
     '### Furthest from PowerPoint',
     '',
     '| slide | meanBp | maxD | cells differing |',

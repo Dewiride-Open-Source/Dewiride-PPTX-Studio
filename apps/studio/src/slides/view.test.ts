@@ -62,7 +62,7 @@ describe('slidesView', () => {
     view.dispose();
   });
 
-  it('draws a picture fill, which the page could not before it had a media resolver', async () => {
+  it('draws a picture fill on the stage', async () => {
     const view = slidesView(() => bytesOf(FILLS));
     host().append(view.root);
     await view.ready;
@@ -101,6 +101,28 @@ describe('slidesView', () => {
     expect(await strip.done).toBe(again);
     expect(strip.svg(0)).toBe(first);
     view.dispose();
+  });
+
+  it('mounts no thumbnail before the frame after it was asked, so the stage paints first', async () => {
+    const deck = openDeck(new Uint8Array(await bytesOf(FILLS)));
+    const host = el('div', 'strip');
+    const strip = createStrip(host, deck, () => undefined);
+    expect(host.querySelectorAll('svg')).toHaveLength(0);
+    await strip.done;
+    expect(host.querySelectorAll('svg')).toHaveLength(3);
+  });
+
+  it('stops a running draw when cancelled, and mounts nothing more', async () => {
+    const deck = openDeck(new Uint8Array(await bytesOf(FILLS)));
+    const host = el('div', 'strip');
+    const strip = createStrip(host, deck, () => undefined);
+    strip.cancel();
+    const drawn = await strip.done;
+    expect(drawn.failed).toEqual([]);
+    expect(host.querySelectorAll('svg')).toHaveLength(0);
+    // A redraw after a cancel is a fresh draw and completes.
+    await strip.redraw();
+    expect(host.querySelectorAll('svg')).toHaveLength(3);
   });
 
   it('stops drawing the strip when disposed', async () => {

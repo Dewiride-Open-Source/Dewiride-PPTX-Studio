@@ -70,6 +70,8 @@ export function createStrip(
   });
 
   async function draw(mine: number): Promise<StripDrawn> {
+    // The first chunk waits a frame, so the stage mounted beside this strip paints first.
+    await nextFrame();
     const ratio = window.devicePixelRatio;
     const failed: string[] = [];
     let cpuMs = 0;

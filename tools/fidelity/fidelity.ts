@@ -22,7 +22,7 @@ import { repoPath } from '../repo/root.ts';
 
 import { blameOf } from './blame.ts';
 import { FidelityError } from './errors.ts';
-import { claimFixtures } from './fixtures.ts';
+import { baselineSourceNote, claimFixtures } from './fixtures.ts';
 import { differenceOf, scoreOf } from './metric/score.ts';
 import { openOracle } from './oracle.ts';
 import { openHarness, servedUrl } from './raster/browser.ts';
@@ -194,6 +194,7 @@ if (record) {
         tool: 'tools/fidelity/fidelity.ts',
         args: args.bootstrap ? ['--record', '--bootstrap'] : ['--record'],
       },
+      sourceNote: baselineSourceNote('tools/fidelity/fidelity.ts', 'every corpus slide'),
       addedIn: '3.9',
     },
   ]);

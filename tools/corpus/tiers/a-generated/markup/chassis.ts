@@ -42,10 +42,10 @@
  * kilobytes against a 512 KiB per-file cap.
  *
  * What that costs is real and is not left to be an accident: no Tier A deck
- * then exercises DEFLATE at all. `a35-zip-shapes` is the deck that does, on
- * purpose - mixed methods, the general-purpose flag bits, and the 520-byte
- * `0xa220` growth hint PowerPoint writes - and it is the only corpus deck whose
- * bytes depend on zlib.
+ * then exercises DEFLATE at all. Two decks deflate on purpose and their bytes
+ * depend on zlib: `a35-zip-shapes`, which is about compression - mixed methods,
+ * the general-purpose flag bits, the 520-byte `0xa220` growth hint PowerPoint
+ * writes - and `a46-hundred-slides`, which would not fit the per-file cap stored.
  */
 
 import { growthHint, writeZip, type ZipEntry } from '../../../../ground-truth/lib/zip.ts';

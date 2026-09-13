@@ -22,7 +22,7 @@ import { chromium, type Page } from 'playwright';
 import { startServer } from '../bench/serve.ts';
 import { boxOf, regionShapes } from '../fidelity/blame.ts';
 import { FidelityError } from '../fidelity/errors.ts';
-import { claimFixtures } from '../fidelity/fixtures.ts';
+import { baselineSourceNote, claimFixtures } from '../fidelity/fixtures.ts';
 import { gridSvg, heatmapSvg } from '../fidelity/heatmap.ts';
 import type { Grid } from '../fidelity/metric/reduce.ts';
 import { differenceOf, regionsOf, scoreOf, type Region } from '../fidelity/metric/score.ts';
@@ -829,6 +829,10 @@ export async function runGate3(options: Gate3Options): Promise<Gate3Run> {
               tool: 'tools/gate3/run-gate3.ts',
               args: args.bootstrap ? ['--record', '--bootstrap'] : ['--record'],
             },
+            sourceNote: baselineSourceNote(
+              'tools/gate3/run-gate3.ts',
+              `every ${GATE_DECK_ID} slide at every zoom, through the studio page`,
+            ),
             addedIn: '3.11',
           },
         ]);

@@ -315,12 +315,12 @@ it is why sub-phase 1.4 compares canonical XML and a relationship graph rather t
 | `a42-custom-size`  | a `p:sldSz` with no `@type`, at an extent no enumeration names                                       |
 | `a43-kitchen-sink` | charts, SmartArt, animations, OLE and macros **together** — the one deck that is not about one thing |
 
-`a35-zip-shapes` is the **only** corpus deck that deflates. Everything else is stored, so its bytes
-are a pure function of our own XML and `C-REGEN` does not depend on which zlib built it. Making the
-exception the deck that is _about_ compression keeps the dependency where it can be reasoned about.
-It is therefore also the one deck whose committed hash can change on a toolchain upgrade with no
-source change; the fix when that happens is to check that nothing but the deflate streams moved and
-re-pin it.
+`a35-zip-shapes` deflates to probe compression, and `a46-hundred-slides` deflates for size. Everything
+else is stored, so its bytes are a pure function of our own XML and `C-REGEN` does not depend on
+which zlib built it. Making the first exception the deck that is _about_ compression keeps the
+dependency where it can be reasoned about. Those two are the decks whose committed hash can change
+on a toolchain upgrade with no source change; the fix when that happens is to check that nothing but
+the deflate streams moved and re-pin them.
 
 `a32-macros` is the only deck that is not a `.pptx`. PowerPoint checks the file extension against
 the content type of the main part and refuses the pair when they disagree, so a macro-enabled
