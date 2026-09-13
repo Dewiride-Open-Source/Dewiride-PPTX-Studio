@@ -591,6 +591,12 @@ asked for `^0.1.4`, and run 34755263913 went red and opened issue #34 — the la
 paragraph describes, on a package I had not waited for. Once every package resolved, run
 34755351825 was green and closed the issue.
 
+Pull request #36 merged on CI run 34763025354 (main's run 34763313914 green on the merge
+`4c970b7`); release run 34763589307 published `@pptx-studio/render-svg` 0.6.0,
+`@pptx-studio/render-dom` 0.3.2 and `@pptx-studio/cli` 0.3.4, version commit `9625cca`. The
+canary was green before it (run 34763062307); after it I waited until `npm view` served all three
+new versions and dispatched, and run 34763792565 was green with no issue opened.
+
 ## Deviations from the plan
 
 - **Zoom is a mount, not `resize()`.** The plan named `MountedSlide.resize()` and said a
