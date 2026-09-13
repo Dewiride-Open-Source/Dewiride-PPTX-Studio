@@ -1,14 +1,7 @@
 /**
- * What Gate 3 claims, as checks with no tolerance in them.
- *
- * The gate's wording is "a 100-slide deck rendered faithfully at any zoom, entirely
- * client-side". Written out: the deck has a hundred slides and every one draws at every zoom
- * the page offers; the SVG at any zoom is the SVG at 100 % apart from what the stroke and grid
- * rules own - the two stroke attributes, a crisp path's half-pixel translate and a line end's
- * numbers (F2 and F3, ADR 0054); a 2x display's 100 % markup
- * is the 200 % markup to the byte; nothing leaves the page once the
- * deck is in hand; and our own raster of every slide at every zoom is the one recorded. The
- * scores against PowerPoint are reported beside all that and gate nothing (ADR 0035).
+ * What Gate 3 claims, as checks with no tolerance in them: "a 100-slide deck rendered faithfully
+ * at any zoom, entirely client-side", written out clause by clause in `tools/gate3/README.md`.
+ * The scores against PowerPoint are reported beside the checks and gate nothing (ADR 0035).
  */
 
 import { FidelityError } from '../fidelity/errors.ts';
@@ -59,11 +52,15 @@ export function maskRootSize(svg: string): string {
  * The SVG with what a zoom is allowed to change taken out.
  *
  * The root's size; `stroke-width` and `stroke-dasharray` (F2); a crisp path's half-pixel
- * translate (F3); a line end's numbers, its outline's commands kept (F2's M8). ADR 0054.
+ * translate and whether a picture's border band is crisp (F3); a line end's numbers, its
+ * outline's commands kept (F2's M8). ADR 0054.
  */
 export function maskZoom(svg: string): string {
   return maskRootSize(svg)
     .replace(/ (stroke-width|stroke-dasharray)="[^"]*"/g, ' $1="*"')
+    .replace(/<path\b[^>]*data-band="[^"]*"[^>]*>/g, (path) =>
+      path.replace(/ shape-rendering="crispEdges"/, ''),
+    )
     .replace(/<path\b[^>]*shape-rendering="crispEdges"[^>]*>/g, (path) =>
       path.replace(/ transform="translate\([^"]*\)"/, ''),
     )

@@ -468,8 +468,7 @@ function snapCases(family: string): {
   const measured = snap.measured as Record<string, Record<string, SnapMeasure>>;
   for (const probe of snap.probes) {
     if (probe.family !== family) continue;
-    for (const width of snap.widths) {
-      if (width < snap.snapFrom) continue;
+    for (const width of snap.gridWidths) {
       const seen = measured[probe.id]?.[String(width)];
       if (seen === undefined) continue;
       const scale = width / snap.slide.w;
@@ -521,15 +520,23 @@ describe('the pen on the device grid, re-derived from F3', () => {
     expect(snap.findings.stroke).toBe('SP');
   });
 
-  it('rounds an exact half pixel up, as the 480 and 960 exports do and the 1200 export does not', () => {
+  it('rounds an exact half pixel up, as every power-of-two export does and the 1200 export does not', () => {
     // 1.5 to 6.5 points at one pixel to the point: two to seven pixels, crisp.
     expect(penOf(1.5, 1).px).toBe(2);
     expect(penOf(2.5, 1).px).toBe(3);
     expect(penOf(4.5, 1).px).toBe(5);
     expect(penOf(6.5, 1).px).toBe(7);
-    for (const c of snapCases('tie').filter((k) => k.scale === 1)) {
+    // The same halves at a quarter and at two pixels to the point: 6, 10 and 14 points at 240,
+    // 0.75 to 2.75 at 1920, every one drawn the pen wide the rule says.
+    const halves = snapCases('tie').filter(
+      (k) => k.widthPx > 1 && k.widthPx - Math.floor(k.widthPx) === 0.5 && k.scale !== 1.25,
+    );
+    expect([...new Set(halves.map((k) => k.scale))].sort((a, b) => a - b)).toEqual([0.25, 1, 2]);
+    expect(halves).toHaveLength(28);
+    for (const c of halves) {
       const [first, last] = inkedRows(c.seen);
-      expect(last - first + 1, c.id).toBe(penOf(c.widthPx, c.scale).px);
+      expect(last - first + 1, `${c.id}@${String(c.scale)}`).toBe(penOf(c.widthPx, c.scale).px);
+      expect(penOf(c.widthPx, c.scale).px).toBe(Math.ceil(c.widthPx));
     }
     // The 3-pt strokes at 480 are a pixel and a half, and drew two.
     const atHalfScale = snapCases('stroke').filter((k) => k.scale === 0.5 && k.widthPx === 1.5);
@@ -538,11 +545,12 @@ describe('the pen on the device grid, re-derived from F3', () => {
       const [first, last] = inkedRows(c.seen);
       expect(last - first + 1, c.id).toBe(2);
     }
-    // At 1200 the same half went down and drew astride the pixel centre (ADR 0054, open question 3).
+    // At 1200 the same half went down and drew astride the pixel centre; the page never draws
+    // at a scale that is not a power of two (ADR 0054).
     const straddled = snapCases('tie').filter(
       (k) => k.scale === 1.25 && k.widthPx - Math.floor(k.widthPx) === 0.5,
     );
-    expect(straddled).toHaveLength(10);
+    expect(straddled).toHaveLength(16);
     for (const c of straddled) {
       expect(
         c.seen.cover.filter((v) => v > 0.4 && v < 0.6),

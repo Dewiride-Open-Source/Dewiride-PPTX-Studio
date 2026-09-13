@@ -571,18 +571,34 @@ interface SnapProbe {
 interface SnapMeasure {
   readonly from: number;
   readonly cover: readonly number[];
-  readonly partial: number;
+}
+interface SnapAtWidth {
+  readonly height: number;
+  readonly dpi: number;
+  readonly eighth: boolean;
+  readonly wholeHeight: boolean;
+  readonly wholeDpi: boolean;
+  readonly cases: number;
+  readonly rule: Readonly<Record<string, readonly [number, number]>>;
+  readonly ruleMisses: readonly string[];
+  readonly mappings: Readonly<Record<string, Readonly<Record<string, readonly [number, number]>>>>;
+  readonly partialRows: number;
+  readonly quarterRows: number;
 }
 interface SnapFixture {
+  readonly slide: { readonly w: number; readonly h: number };
   readonly widths: readonly number[];
-  readonly snapFrom: number;
+  readonly gridWidths: readonly number[];
   readonly tolerance: number;
   readonly cases: number;
   readonly excluded: readonly string[];
   readonly findings: Readonly<Record<string, unknown>> & {
     readonly partialRows: Readonly<Record<string, number>>;
+    readonly holdsAt: readonly number[];
+    readonly failsAt: readonly number[];
   };
   readonly candidates: Readonly<Record<string, readonly SnapScore[]>>;
+  readonly atWidth: Readonly<Record<string, SnapAtWidth>>;
   readonly probes: readonly SnapProbe[];
   readonly measured: Readonly<Record<string, Readonly<Record<string, SnapMeasure>>>>;
 }
@@ -590,12 +606,18 @@ interface SnapFixture {
 describe('experiment F3 - where the export puts an edge on the device grid', () => {
   const snap = readJson<SnapFixture>('snap.json');
   const halfUp = (v: number): number => Math.floor(v + 0.5);
-  /** The pen in whole pixels, never under one; a half went up at 960 and down at 1200. */
+  /** The pen in whole pixels, never under one; a half went up at 240, 480, 960 and 1920 and down at 1200. */
   const pen = (w: number, scale: number): number =>
     Math.max(1, w - Math.floor(w) === 0.5 && scale === 1.25 ? Math.floor(w) : halfUp(w));
+  /** Whether the pen sits on pixel centres: when the width rounded half up is odd. */
+  const odd = (w: number): boolean => Math.max(1, halfUp(w)) % 2 === 1;
   /** An odd pen sits on pixel centres: the rounded coordinate, half a pixel on. */
-  const snapped = (v: number, w: number): number =>
-    halfUp(v) + (Math.max(1, halfUp(w)) % 2 === 1 ? 0.5 : 0);
+  const snapped = (v: number, w: number): number => halfUp(v) + (odd(w) ? 0.5 : 0);
+  /** Device pixels per point along a read axis: the rounded height's down rows. */
+  const scaleAt = (width: number, axis: 'x' | 'y'): number =>
+    axis === 'x'
+      ? width / snap.slide.w
+      : Math.round((width * snap.slide.h) / snap.slide.w) / snap.slide.h;
   const coverOf = (top: number, bottom: number, from: number, to: number): number[] => {
     const out: number[] = [];
     for (let r = from; r <= to; r++) {
@@ -613,33 +635,33 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
     readonly w: number;
     readonly seen: number[];
   }
-  const cases = (family: string): Case[] =>
+  const caseOf = (probe: SnapProbe, width: number): Case => {
+    const scale = scaleAt(width, probe.read.axis);
+    const from = Math.round((probe.read.at - probe.read.half) * scale);
+    const to = Math.round((probe.read.at + probe.read.half) * scale);
+    const measure = snap.measured[probe.id]![String(width)]!;
+    const seen = new Array<number>(to - from + 1).fill(0);
+    measure.cover.forEach((v, i) => {
+      seen[measure.from - from + i] = v;
+    });
+    // To the nanopixel, so an inexact scale cannot put an exact half a hair under it.
+    const exact = (v: number): number => Math.round(v * 1e9) / 1e9;
+    return {
+      probe,
+      width,
+      scale,
+      from,
+      to,
+      c: exact(probe.centrePt * scale),
+      w: exact((probe.widthPt ?? 0) * scale),
+      seen,
+    };
+  };
+  /** A family's cases on the widths the rule is read from. */
+  const cases = (family: string, widths: readonly number[] = snap.gridWidths): Case[] =>
     snap.probes
       .filter((probe) => probe.family === family)
-      .flatMap((probe) =>
-        snap.widths
-          .filter((width) => width >= snap.snapFrom)
-          .map((width) => {
-            const scale = width / 960;
-            const from = Math.round((probe.read.at - probe.read.half) * scale);
-            const to = Math.round((probe.read.at + probe.read.half) * scale);
-            const measure = snap.measured[probe.id]![String(width)]!;
-            const seen = new Array<number>(to - from + 1).fill(0);
-            measure.cover.forEach((v, i) => {
-              seen[measure.from - from + i] = v;
-            });
-            return {
-              probe,
-              width,
-              scale,
-              from,
-              to,
-              c: probe.centrePt * scale,
-              w: (probe.widthPt ?? 0) * scale,
-              seen,
-            };
-          }),
-      );
+      .flatMap((probe) => widths.map((width) => caseOf(probe, width)));
   const worst = (a: readonly number[], b: readonly number[]): number =>
     Math.max(...a.map((v, i) => Math.abs(v - (b[i] ?? 0))));
   const fits = (all: readonly Case[], predict: (c: Case) => [number, number]): number =>
@@ -654,6 +676,31 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
   };
   const edge = (k: Case, at: number): [number, number] =>
     k.probe.shape === 'from' ? [at, Infinity] : [-Infinity, at];
+  /** A picture border: the pen centred half the true width outside the rounded frame edge. */
+  const border = (k: Case): [number, number] => {
+    const n = pen(k.w, k.scale);
+    const centre = halfUp(k.c) - k.w / 2;
+    return [centre - n / 2, centre + n / 2];
+  };
+  /** An algn="in" pen: a device pixel outside the rounded frame edge, half for an odd pen, the rest inside. */
+  const inset = (k: Case): [number, number] => {
+    const top = halfUp(k.c) - 1 + (odd(k.w) ? 0.5 : 0) + Math.max(0, 1 - k.w);
+    return [top, top + pen(k.w, k.scale)];
+  };
+  /** The family's rule, for the families whose rule has no bias of its own. */
+  const rule = (k: Case): [number, number] => {
+    switch (k.probe.family) {
+      case 'fill':
+      case 'picture':
+        return edge(k, halfUp(k.c));
+      case 'border':
+        return border(k);
+      case 'inset':
+        return inset(k);
+      default:
+        return band(k);
+    }
+  };
 
   /** A losing model's score in the fixture, summed over the families named. */
   const scored = (model: string, ...families: string[]): number =>
@@ -662,21 +709,23 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
       0,
     );
 
-  it('names one perfect reading per family, and every rival misses', () => {
-    expect(snap.cases).toBe(1498);
+  it('names one perfect reading per family on the grid widths, and every rival misses', () => {
+    expect(snap.cases).toBe(3388);
     expect(snap.excluded).toHaveLength(0);
+    expect(snap.gridWidths).toEqual([240, 480, 960, 1200, 1920, 3840]);
     for (const [family, scores] of Object.entries(snap.candidates)) {
       const perfect = scores.filter((score) => score.fits === score.of);
       expect(perfect, family).toHaveLength(1);
       expect(snap.findings[family], family).toBe(perfect[0]!.model);
       expect(scores.length, family).toBeGreaterThan(1);
     }
+    expect(snap.findings.holdsAt).toEqual(snap.gridWidths);
   });
 
-  it('snaps every axis-aligned stroke: the centre rounds half up and an odd pen sits on pixel centres, 732 of 732', () => {
-    const all = ['stroke', 'outline', 'triangle', 'rotated', 'tie'].flatMap(cases);
-    expect(all).toHaveLength(732);
-    expect(fits(all, band)).toBe(732);
+  it('snaps every axis-aligned stroke: the centre rounds half up and an odd pen sits on pixel centres, 852 of 852', () => {
+    const all = ['stroke', 'outline', 'triangle', 'rotated', 'tie'].flatMap((f) => cases(f));
+    expect(all).toHaveLength(852);
+    expect(fits(all, band)).toBe(852);
     // The reading anyone writes first - the true width, antialiased where it lies - is what a
     // browser draws, and it misses three cases in four.
     expect(fits(all, (k) => [k.c - k.w / 2, k.c + k.w / 2])).toBeLessThan(all.length / 4);
@@ -695,29 +744,37 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
     expect(snap.findings.partialRows['stroke']).toBe(partial);
   });
 
-  it('rounds an exact half pixel of width up at 960 and down at 1200, 24 of 24', () => {
-    const ties = cases('tie').filter((k) => k.w - Math.floor(k.w) === 0.5);
-    expect(ties.filter((k) => k.width === 960)).toHaveLength(12);
-    expect(ties.filter((k) => k.width === 1200)).toHaveLength(10);
-    // The 2-pt probe at 240 is half a pixel wide, which is one pixel under either rounding.
-    expect(ties.filter((k) => k.width === 240)).toHaveLength(2);
-    expect(fits(ties, band)).toBe(24);
-    // Neither rounding on its own fits both exports: half up misses 1200, half to even 960.
+  it('rounds an exact half pixel of width up at 240, 960 and 1920 and down at 1200, 44 of 44', () => {
+    const ties = cases('tie').filter((k) => k.w - Math.floor(k.w) === 0.5 && k.w > 1);
+    const at = (width: number): Case[] => ties.filter((k) => k.width === width);
+    expect(at(240)).toHaveLength(6);
+    expect(at(960)).toHaveLength(12);
+    expect(at(1200)).toHaveLength(16);
+    expect(at(1920)).toHaveLength(10);
+    // No integer-EMU width is a half pixel at 3840, and none of the tie widths is at 480.
+    expect(at(3840)).toHaveLength(0);
+    expect(at(480)).toHaveLength(0);
+    expect(fits(ties, band)).toBe(44);
     const always = (round: (w: number) => number): number =>
       fits(ties, (k) => {
         const n = Math.max(1, round(k.w));
         const centre = snapped(k.c, k.w);
         return [centre - n / 2, centre + n / 2];
       });
-    expect(always(halfUp)).toBe(12 + 2);
+    // Up everywhere misses the 16 at 1200; down everywhere misses the other 28.
+    expect(always(halfUp)).toBe(28);
+    expect(always((w) => Math.floor(w))).toBe(16);
     const halfEven = (v: number): number =>
       v - Math.floor(v) === 0.5
         ? Math.floor(v) % 2 === 0
           ? Math.floor(v)
           : Math.floor(v) + 1
         : halfUp(v);
-    expect(always(halfEven)).toBe(10 + 2);
-    expect(snap.candidates['tie']!.find((s) => s.model === 'SE2')?.fits).toBe(120);
+    expect(always(halfEven)).toBe(22);
+    // The fixture scores the same three readings over the whole family.
+    expect(scored('SG', 'tie')).toBe(cases('tie').length - 16);
+    expect(scored('SD2', 'tie')).toBe(cases('tie').length - 28);
+    expect(scored('SE2', 'tie')).toBe(cases('tie').length - 22);
   });
 
   it('rounds a fill edge and a picture edge half up, 192 of 192', () => {
@@ -744,15 +801,33 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
   it('keeps a picture border half its true width outside the rounded frame edge, 48 of 48', () => {
     const borders = cases('border');
     expect(borders).toHaveLength(48);
-    expect(
-      fits(borders, (k) => {
-        const n = pen(k.w, k.scale);
-        const centre = halfUp(k.c) - k.w / 2;
-        return [centre - n / 2, centre + n / 2];
-      }),
-    ).toBe(48);
+    expect(fits(borders, border)).toBe(48);
     // F2's O4 read this border at one width; a pen wholly outside the rounded edge misses 16.
     expect(fits(borders, (k) => [halfUp(k.c) - pen(k.w, k.scale), halfUp(k.c)])).toBe(32);
+  });
+
+  it('puts an algn="in" pen a device pixel outside the rounded frame edge and the rest inside, 48 of 48', () => {
+    const insets = cases('inset');
+    expect(insets).toHaveLength(48);
+    expect(fits(insets, inset)).toBe(48);
+    // A 1-pt pen at 100 % straddles its frame edge, half a row each side, where a centred one is crisp.
+    const straddling = insets.filter((k) => k.width === 960 && k.probe.widthPt === 1);
+    expect(straddling).toHaveLength(4);
+    for (const k of straddling) {
+      expect(k.seen.filter((v) => Math.abs(v - 0.5) < snap.tolerance)).toHaveLength(2);
+    }
+    // The alignment ignored - the stroke rule centred on the frame edge - coincides with IN on
+    // four of the eight probes at every width but 3840: the 1-pt pen at 480 and 1920, the 2-pt
+    // pen at 240, 960 and 1200.
+    expect(fits(insets, band)).toBe(scored('IX', 'inset'));
+    for (const width of snap.gridWidths) {
+      const here = insets.filter((k) => k.width === width);
+      expect(fits(here, band), String(width)).toBe(width === 3840 ? 0 : 4);
+    }
+    expect(fits(insets, (k) => [halfUp(k.c), halfUp(k.c) + pen(k.w, k.scale)])).toBe(
+      scored('IR', 'inset'),
+    );
+    expect(fits(insets, (k) => [k.c, k.c + k.w])).toBe(scored('I0', 'inset'));
   });
 
   it('snaps a slanted line at its endpoints and antialiases between them, 24 of 24', () => {
@@ -793,5 +868,158 @@ describe('experiment F3 - where the export puts an edge on the device grid', () 
     expect(fits(rounded, band)).toBe(scored('SP', 'roundRect'));
     expect(snap.findings['ellipse']).toBe('SQ');
     expect(snap.findings['roundRect']).toBe('SN');
+  });
+
+  it('misses 3 at 1040 and 15 at 1120: the exact halves placed the other way, the L steps, the 2-pt border', () => {
+    for (const width of [1040, 1120]) {
+      const here = snap.atWidth[String(width)]!;
+      expect(here.wholeDpi && here.wholeHeight && !here.eighth, String(width)).toBe(true);
+    }
+    // A 6.5-pixel pen at 1040 is drawn six wide on a pixel centre, and the 1-pt L step straddles
+    // its row.
+    expect(snap.atWidth['1040']!.ruleMisses).toEqual([
+      'outline-L-1-0_25-step',
+      'tie-6-0',
+      'tie-6-0_25',
+    ]);
+    const six = caseOf(
+      snap.probes.find((p) => p.id === 'tie-6-0')!,
+      1040,
+    );
+    expect(fits([six], (k) => [halfUp(k.c) - 2.5, halfUp(k.c) + 3.5])).toBe(1);
+    // A 3.5-pixel pen at 1120 is drawn four wide on a pixel centre, a frame edge on an exact
+    // half rounds down, and the 2-pt border is crisp one pen outside, a sixth of a row from BT.
+    expect(snap.atWidth['1120']!.ruleMisses).toEqual([
+      ...['0', '0_25', '0_5', '0_75'].map((o) => `stroke-h-3-${o}`),
+      ...['0', '0_25', '0_5', '0_75'].map((o) => `stroke-v-3-${o}`),
+      'outline-2-0_5-bottom',
+      'outline-L-1-0_25-step',
+      'outline-L-2-0_75-step',
+      ...['0', '0_25', '0_5', '0_75'].map((o) => `border-2-${o}`),
+    ]);
+    const three = caseOf(
+      snap.probes.find((p) => p.id === 'stroke-h-3-0')!,
+      1120,
+    );
+    expect(fits([three], (k) => [halfUp(k.c) - 1.5, halfUp(k.c) + 2.5])).toBe(1);
+    const bottom = caseOf(
+      snap.probes.find((p) => p.id === 'outline-2-0_5-bottom')!,
+      1120,
+    );
+    expect(bottom.c - Math.floor(bottom.c)).toBeCloseTo(0.5, 9);
+    expect(fits([bottom], (k) => [Math.floor(k.c) - 1, Math.floor(k.c) + 1])).toBe(1);
+    const wide = caseOf(
+      snap.probes.find((p) => p.id === 'border-2-0')!,
+      1120,
+    );
+    expect(fits([wide], (k) => [halfUp(k.c) - 2, halfUp(k.c)])).toBe(1);
+  });
+
+  it('keeps the columns and moves the rows by the stretch, in quarter pixels, at a fractional height', () => {
+    const plain = ['stroke', 'tie', 'fill', 'border', 'inset'];
+    for (const width of [120, 1000, 1320]) {
+      const here = snap.atWidth[String(width)]!;
+      expect(here.wholeHeight, String(width)).toBe(false);
+      expect(here.height).toBe(Math.round((width * snap.slide.h) / snap.slide.w));
+      // Every partial row is a quarter, as a 2x2 supersampler leaves them.
+      expect(here.quarterRows / here.partialRows, String(width)).toBeGreaterThan(0.9);
+      // The columns hold: every vertical stroke and every left and right edge.
+      const columns = ['stroke', 'fill', 'picture']
+        .flatMap((f) => cases(f, [width]))
+        .filter((k) => k.probe.read.axis === 'x');
+      expect(fits(columns, rule), String(width)).toBe(columns.length);
+      // The rows: the rule at the width's own scale, then moved by the stretch - exactly, or
+      // rounded up to the next quarter pixel.
+      const uniform = width / snap.slide.w;
+      const stretch = here.height / ((width * snap.slide.h) / snap.slide.w) - 1;
+      const rows = plain.flatMap((f) => cases(f, [width])).filter((k) => k.probe.read.axis === 'y');
+      const moved =
+        (move: (v: number) => number) =>
+        (k: Case): [number, number] => {
+          const [top, bottom] = rule({
+            ...k,
+            scale: uniform,
+            c: k.probe.centrePt * uniform,
+            w: (k.probe.widthPt ?? 0) * uniform,
+          });
+          const carry = (v: number): number => (Number.isFinite(v) ? move(v) : v);
+          return [carry(top), carry(bottom)];
+        };
+      const exact = fits(
+        rows,
+        moved((v) => v * (1 + stretch)),
+      );
+      const quarter = fits(
+        rows,
+        moved((v) => v + Math.ceil(v * stretch * 4) / 4),
+      );
+      const recorded = (name: string): number =>
+        Object.entries(here.mappings[name]!)
+          .filter(([family]) => plain.includes(family))
+          .reduce((sum, [, [f]]) => sum + f, 0);
+      expect(exact, String(width)).toBe(recorded('uniform'));
+      expect(quarter, String(width)).toBe(recorded('quarterStep'));
+      expect(quarter, String(width)).toBeGreaterThan(exact);
+      // At 1320 that is every one of them; at 1000 all but the 12-pt pen, 12.5 pixels there and
+      // an exact half at a scale that is not a power of two; at 120 the strokes gain a quarter row.
+      const missedUnder = (move: (v: number) => number): string[] =>
+        rows
+          .filter((k) => {
+            const [top, bottom] = moved(move)(k);
+            return worst(k.seen, coverOf(top, bottom, k.from, k.to)) > snap.tolerance;
+          })
+          .map((k) => k.probe.id);
+      const quarterMisses = missedUnder((v) => v + Math.ceil(v * stretch * 4) / 4);
+      if (width === 1320) expect(quarterMisses).toEqual([]);
+      if (width === 1000) expect(quarterMisses).toEqual(['tie-12-0', 'tie-12-0_25']);
+      if (width === 120) {
+        expect(quarterMisses.length).toBeGreaterThan(2);
+        expect(quarterMisses.filter((id) => id.startsWith('stroke-h'))).toHaveLength(16);
+      }
+    }
+  });
+
+  it('snaps no row at a fractional dots per inch, a column only where the resampling lands it, and no tie', () => {
+    const expected: Readonly<Record<string, { stroke: [number, number]; fill: [number, number] }>> =
+      {
+        '1008': { stroke: [9, 0], fill: [3, 0] },
+        '1100': { stroke: [12, 0], fill: [3, 0] },
+        '1184': { stroke: [6, 0], fill: [4, 0] },
+      };
+    for (const width of [1008, 1100, 1184]) {
+      const here = snap.atWidth[String(width)]!;
+      expect(here.wholeDpi, String(width)).toBe(false);
+      // Re-read from the profiles, by axis: every row misses; a third of the columns land.
+      const strokes = cases('stroke', [width]);
+      const fills = cases('fill', [width]);
+      const byAxis = (all: Case[]): [number, number] => [
+        fits(
+          all.filter((k) => k.probe.read.axis === 'x'),
+          rule,
+        ),
+        fits(
+          all.filter((k) => k.probe.read.axis === 'y'),
+          rule,
+        ),
+      ];
+      expect(byAxis(strokes), String(width)).toEqual(expected[String(width)]!.stroke);
+      expect(byAxis(fills), String(width)).toEqual(expected[String(width)]!.fill);
+      expect(
+        byAxis(strokes).reduce((a, b) => a + b),
+        String(width),
+      ).toBe(here.rule['stroke']![0]);
+      expect(fits(cases('tie', [width]), rule), String(width)).toBe(0);
+      expect(here.rule['tie']![0], String(width)).toBe(0);
+      // Coverage is not in quarters: a uniform antialiased edge lands within 0.02 of one 15 % of
+      // the time by chance, and these sit there.
+      expect(here.quarterRows / here.partialRows, String(width)).toBeGreaterThan(0.1);
+      expect(here.quarterRows / here.partialRows, String(width)).toBeLessThan(0.2);
+      for (const [name, byFamily] of Object.entries(here.mappings)) {
+        const fitsAll = Object.values(byFamily).reduce((sum, [f]) => sum + f, 0);
+        const ofAll = Object.values(byFamily).reduce((sum, [, n]) => sum + n, 0);
+        expect(fitsAll / ofAll, `${name}@${String(width)}`).toBeLessThan(0.51);
+      }
+    }
+    expect(snap.findings.failsAt).toEqual([120, 1000, 1008, 1040, 1100, 1120, 1184, 1320]);
   });
 });

@@ -294,7 +294,12 @@ export interface StrokePaint {
   readonly line: ResolvedLine;
   /** Half a device pixel in EMU for an odd pen at a named scale, else zero (F3, `snap.json`). */
   readonly shift: number;
+  /** Whether the true width is a whole number of device pixels at the named scale, so the pen is the width. */
+  readonly whole: boolean;
 }
+
+/** How far the device pen may sit from the true width and still be it: the width's own rounding. */
+const PEN_IS_WIDTH_WITHIN_EMU = 1;
 
 /**
  * The `stroke` attributes for one shape, or `null` when nothing is stroked.
@@ -352,7 +357,13 @@ export function strokeAttributes(
     if (paint['fill-opacity'] !== undefined) attrs['stroke-opacity'] = paint['fill-opacity'];
   }
 
-  return { attrs, band, line, shift: pen === null ? 0 : pen.shift };
+  return {
+    attrs,
+    band,
+    line,
+    shift: pen === null ? 0 : pen.shift,
+    whole: pen !== null && Math.abs(pen.width - line.width) <= PEN_IS_WIDTH_WITHIN_EMU,
+  };
 }
 
 /* -------------------------------------------------------------------------- */

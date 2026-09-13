@@ -1,19 +1,12 @@
 /**
  * Experiment F3 - where PowerPoint's export puts a whole-pixel edge on the device grid.
  *
- * Eight slides exported at seven widths: strokes, fills, outlines, pictures, line ends, half-pixel
- * pens and the shapes that are not axis-aligned, at up to four sub-pixel offsets. Every model
- * predicts the coverage profile across one edge, and `assertSeparable` refuses a pair no case
- * could tell apart. No `author.ps1`: nothing needs PowerPoint to author.
+ * Ten slides exported at `EXPORT_WIDTHS`: strokes, fills, outlines, pictures, inset strokes, line
+ * ends, half-pixel pens and the shapes that are not axis-aligned, at up to four sub-pixel offsets.
+ * Every model predicts a coverage profile; `assertSeparable` refuses a pair no case could tell apart.
  */
 
 import { ln, LINE_GEOM, RECT_GEOM } from '../../paint/lines/probes.ts';
-
-/** Export widths, in pixels: the same seven as F2, so a rule read here holds where F2's do. */
-export const EXPORT_WIDTHS: readonly number[] = [120, 240, 480, 960, 1200, 1920, 3840];
-
-/** The width from which an edge is scored: under it the export blurs every edge (F2, `zoom.json`). */
-export const SNAP_FROM = 240;
 
 /** Agreement between the two exports, and between a model and a case, as coverage of one row. */
 export const TOLERANCE = 0.15;
@@ -26,6 +19,50 @@ export const SLIDE = { w: 960, h: 540 } as const;
 
 export const EMU_PER_POINT = 12700;
 
+/**
+ * Export widths, in pixels: F2's seven, and seven more that are not an eighth of a pixel per
+ * point with a whole-pixel height, so a rule read where every width is both is tried where the
+ * gate's zooms never go - at a whole number of dots per inch and not, at a whole height and not.
+ */
+export const EXPORT_WIDTHS: readonly number[] = [
+  120, 240, 480, 960, 1000, 1008, 1040, 1100, 1120, 1184, 1200, 1320, 1920, 3840,
+];
+
+/** The export's height for a width, half up, as `read.ps1` asks for it. */
+export const heightOf = (width: number): number => Math.round((width * SLIDE.h) / SLIDE.w);
+
+/** The three things a width is or is not, any of which could be what decides whether the export snaps. */
+export interface ExportShape {
+  readonly width: number;
+  readonly height: number;
+  /** The scale is a multiple of an eighth of a pixel per point. */
+  readonly eighth: boolean;
+  /** The height is a whole number of pixels before rounding. */
+  readonly wholeHeight: boolean;
+  /** The width is a whole number of dots per inch. */
+  readonly wholeDpi: boolean;
+}
+
+export function exportShape(width: number): ExportShape {
+  return {
+    width,
+    height: heightOf(width),
+    eighth: Number.isInteger((width * 8) / SLIDE.w),
+    wholeHeight: Number.isInteger((width * SLIDE.h) / SLIDE.w),
+    wholeDpi: Number.isInteger((width * 72) / SLIDE.w),
+  };
+}
+
+/** The widths the grid rule is read from: an eighth of a pixel per point with a whole-pixel height. */
+export const GRID_WIDTHS: readonly number[] = EXPORT_WIDTHS.filter((width) => {
+  const shape = exportShape(width);
+  return shape.eighth && shape.wholeHeight;
+});
+
+/** Device pixels per point along an axis: the width's across columns, the rounded height's down rows. */
+export const axisScale = (width: number, axis: 'x' | 'y'): number =>
+  axis === 'x' ? width / SLIDE.w : heightOf(width) / SLIDE.h;
+
 /** The sub-pixel offsets, in points, that a 960-px export lands on the grid as pixels. */
 export const OFFSETS_PT: readonly number[] = [0, 0.25, 0.5, 0.75];
 
@@ -37,8 +74,19 @@ export const TIE_WIDTHS_PT: readonly number[] = [
   1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 1.2, 2, 2.8, 3.6, 4.4,
 ];
 
+/**
+ * The same question at 1920 (the quarters), 240 (6, 10, 14) and 120 (12, 20); no integer-EMU
+ * width is a half pixel at 3840, where a half needs an eighth of a point.
+ */
+export const WIDE_TIE_WIDTHS_PT: readonly number[] = [
+  0.75, 1.25, 1.75, 2.25, 2.75, 6, 10, 12, 14, 20,
+];
+
 /** The pens whose flat ends are read: both parities at 480 and 960, odd pens at 240 and 1200. */
 export const END_WIDTHS_PT: readonly number[] = [1, 2, 4];
+
+/** `algn="in"` widths, in points: whole pixels at 960, and at 480 and 1920 for the second. */
+export const INSET_WIDTHS_PT: readonly number[] = [1, 2];
 
 export type Family =
   | 'stroke'
@@ -46,6 +94,7 @@ export type Family =
   | 'fill'
   | 'picture'
   | 'border'
+  | 'inset'
   | 'end'
   | 'ellipse'
   | 'roundRect'
@@ -667,6 +716,70 @@ export function snapProbes(): Probe[] {
     });
   });
 
+  /* ------------------- slide 9: the half pixels at 1920, 240 and 120, wide pens among them */
+  let top = 24;
+  WIDE_TIE_WIDTHS_PT.forEach((w) => {
+    // A wide pen needs a wider window, and its neighbours out of it.
+    const half = Math.max(HALF_WINDOW, w / 2 + 4);
+    OFFSETS_PT.slice(0, 2).forEach((offset) => {
+      const y = top + offset;
+      const name = `tie-${tag(w)}-${tag(offset)}`;
+      probes.push({
+        id: name,
+        slide: 9,
+        family: 'tie',
+        question: `a ${String(w)}pt line, ${String(offset)}pt past the grid: which way does a half pixel round?`,
+        markup: shape({
+          id: id++,
+          name,
+          x: 120,
+          y,
+          cx: 600,
+          cy: 0,
+          geom: LINE_GEOM,
+          fill: '<a:noFill/>',
+          line: ln({ rawW: emu(w) }),
+        }),
+        read: { axis: 'y', at: y, half, along0: 200, along1: 640 },
+        shape: 'band',
+        centrePt: y,
+        widthPt: w,
+      });
+      top += 2 * half + 6;
+    });
+  });
+
+  /* ------------------------------------- slide 10: a stroke aligned inside its frame */
+  INSET_WIDTHS_PT.forEach((w, row) => {
+    OFFSETS_PT.forEach((offset, i) => {
+      const x = 60 + offset + i * 220;
+      const y = 60 + offset + row * 110;
+      const name = `inset-${tag(w)}-${tag(offset)}`;
+      probes.push({
+        id: name,
+        slide: 10,
+        family: 'inset',
+        question: `a ${String(w)}pt stroke aligned inside a frame whose top is ${String(offset)}pt past the grid`,
+        markup: shape({
+          id: id++,
+          name,
+          x,
+          y,
+          cx: 160,
+          cy: 80,
+          geom: RECT_GEOM,
+          fill: '<a:noFill/>',
+          line: ln({ rawW: emu(w), algn: 'in' }),
+        }),
+        read: { axis: 'y', at: y, half: HALF_WINDOW, along0: x + 30, along1: x + 130 },
+        shape: 'band',
+        centrePt: y,
+        widthPt: w,
+        edge: 'top',
+      });
+    });
+  });
+
   return probes;
 }
 
@@ -785,6 +898,14 @@ export const TIE_MODELS: readonly Model[] = [
     description:
       'the centre rounded half up, then on a pixel centre when the pen rounded half up is odd; the pen rounded half to even',
     predict: (c, w) => band(snapped(c, w) - Math.max(1, halfEven(w)) / 2, Math.max(1, halfEven(w))),
+  },
+  {
+    name: 'SD2',
+    description: 'SP with a half pixel rounded down at every width, never under one',
+    predict: (c, w) => {
+      const n = Math.max(1, w - Math.floor(w) === 0.5 ? Math.floor(w) : halfUp(w));
+      return band(snapped(c, w) - n / 2, n);
+    },
   },
 ];
 
@@ -931,6 +1052,79 @@ export const BORDER_MODELS: readonly Model[] = [
   },
 ];
 
+/** Where an `algn="in"` stroke lands: the border family's readings, inside a frame edge at `f`. */
+export const INSET_MODELS: readonly Model[] = [
+  {
+    name: 'I0',
+    description: 'the true width inside the frame, antialiased where it lies',
+    predict: (f, w) => band(f, w),
+  },
+  {
+    name: 'IR',
+    description: 'the frame edge rounded half up, the pen wholly inside it',
+    predict: (f, w) => band(halfUp(f), pen(w)),
+  },
+  {
+    name: 'IE',
+    description: 'the frame edge rounded half to even, the pen wholly inside it',
+    predict: (f, w) => band(halfEven(f), pen(w)),
+  },
+  {
+    name: 'IF',
+    description: 'the frame edge rounded down, the pen wholly inside it',
+    predict: (f, w) => band(Math.floor(f), pen(w)),
+  },
+  {
+    name: 'IC',
+    description: 'the frame edge rounded up, the pen wholly inside it',
+    predict: (f, w) => band(Math.ceil(f), pen(w)),
+  },
+  {
+    name: 'IH',
+    description: 'the pen inside the frame, half a pixel down, antialiased',
+    predict: (f, w) => band(f + 0.5, pen(w)),
+  },
+  {
+    name: 'IS',
+    description: 'a stroke band centred half the true width inside, its top rounded half up',
+    predict: (f, w) => band(halfUp(f + w / 2 - pen(w) / 2), pen(w)),
+  },
+  {
+    name: 'IP',
+    description: 'SP on a band centred half the true width inside the frame edge',
+    predict: (f, w, _probe, scale) => parityBand(snapped(f + w / 2, w), w, scale),
+  },
+  {
+    name: 'IT',
+    description:
+      'the frame edge rounded half up; the pen as SP draws it, centred half the true width inside it, antialiased',
+    predict: (f, w, _probe, scale) => parityBand(halfUp(f) + w / 2, w, scale),
+  },
+  {
+    name: 'IX',
+    description: 'the alignment ignored: SP, centred on the frame edge',
+    predict: (f, w, _probe, scale) => parityBand(snapped(f, w), w, scale),
+  },
+  {
+    name: 'IZ',
+    description: 'the pen as SP draws it, centred on the frame edge rounded half up, odd or even',
+    predict: (f, w, _probe, scale) => parityBand(halfUp(f), w, scale),
+  },
+  {
+    name: 'IW',
+    description:
+      'the pen as SP draws it, centred on the frame edge rounded half up, then inward by what the pen was widened by',
+    predict: (f, w, _probe, scale) => parityBand(halfUp(f) + Math.max(0, pen(w) - w), w, scale),
+  },
+  {
+    name: 'IN',
+    description:
+      'the pen as SP draws it, its outer edge a pixel outside the frame edge rounded half up - half a pixel for an odd pen - and the rest inside; a pen under a pixel wide slides inward by what it was widened by',
+    predict: (f, w, _probe, scale) =>
+      band(halfUp(f) - 1 + (oddPen(w) ? 0.5 : 0) + Math.max(0, 1 - w), drawnPen(w, scale)),
+  },
+];
+
 export const MODELS_BY_FAMILY: Readonly<Record<Family, readonly Model[]>> = {
   stroke: STROKE_MODELS,
   outline: STROKE_MODELS,
@@ -944,6 +1138,7 @@ export const MODELS_BY_FAMILY: Readonly<Record<Family, readonly Model[]>> = {
   picture: EDGE_MODELS,
   end: END_MODELS,
   border: BORDER_MODELS,
+  inset: INSET_MODELS,
 };
 
 /** The coverage of each pixel row from `from` to `to` inclusive under a band. */
@@ -963,10 +1158,13 @@ export function windowOf(
   return {
     from: Math.round((probe.read.at - probe.read.half) * scale),
     to: Math.round((probe.read.at + probe.read.half) * scale),
-    c: probe.centrePt * scale,
-    w: (probe.widthPt ?? 0) * scale,
+    c: exact(probe.centrePt * scale),
+    w: exact((probe.widthPt ?? 0) * scale),
   };
 }
+
+/** A device coordinate to the nanopixel, so an inexact scale cannot put an exact half a hair under it. */
+export const exact = (v: number): number => Math.round(v * 1e9) / 1e9;
 
 /** A model's profile over a probe's window at a scale. */
 export function predictedProfile(model: Model, probe: Probe, scale: number): number[] {
@@ -977,17 +1175,16 @@ export function predictedProfile(model: Model, probe: Probe, scale: number): num
 /** Refuse two models no scored width could tell apart on the probes that carry them. */
 export function assertSeparable(
   probes: readonly Probe[],
-  widths: readonly number[] = EXPORT_WIDTHS,
+  widths: readonly number[] = GRID_WIDTHS,
 ): void {
-  const scored = widths.filter((w) => w >= SNAP_FROM);
   for (const [family, models] of Object.entries(MODELS_BY_FAMILY)) {
     const carriers = probes.filter((p) => p.family === family);
     for (let a = 0; a < models.length; a++) {
       for (let b = a + 1; b < models.length; b++) {
         const separated = carriers.some((probe) =>
-          scored.some((width) => {
-            const pa = predictedProfile(models[a]!, probe, width / SLIDE.w);
-            const pb = predictedProfile(models[b]!, probe, width / SLIDE.w);
+          widths.some((width) => {
+            const pa = predictedProfile(models[a]!, probe, axisScale(width, probe.read.axis));
+            const pb = predictedProfile(models[b]!, probe, axisScale(width, probe.read.axis));
             return pa.some((v, i) => Math.abs(v - pb[i]!) > SEPARABLE_BY);
           }),
         );

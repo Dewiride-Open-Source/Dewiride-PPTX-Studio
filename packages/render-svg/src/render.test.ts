@@ -1019,7 +1019,7 @@ describe('strokes at a named width, re-derived from F2', () => {
     ).toThrow(RenderError);
   });
 
-  it('draws a picture border at the drawn width, under a band clip the zoom never moves', () => {
+  it('draws a picture border at the drawn width, on a frame outset by half the true width at every zoom', () => {
     const id = nextId++;
     const pic =
       `<p:pic><p:nvPicPr><p:cNvPr id="${String(id)}" name="picture"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>` +
@@ -1029,15 +1029,15 @@ describe('strokes at a named width, re-derived from F2', () => {
     const { slide } = buildChain({ shapes: [pic] });
     const at960 = renderSlide(slide, SIZE, { idPrefix: 'p', width: 960 });
     const at240 = renderSlide(slide, SIZE, { idPrefix: 'p', width: 240 });
-    // A quarter point is one pixel at 960 and four points at 240, doubled for the one-sided band.
-    expect(at960).toContain('stroke-width="25400"');
-    expect(at240).toContain('stroke-width="101600"');
-    // The clip keeping the outer half reaches the same constant distance at both.
-    const clipOf = (markup: string): string =>
-      /<clipPath[^>]*><path d="(M[^ ]+ [^H]+H[^V]+V[^H]+H[^Z]+Z)/.exec(markup)?.[1] ?? '';
-    expect(clipOf(at960)).toBe(clipOf(at240));
-    // Twice a quarter point plus the twenty-point pixel of the 5 % floor: 40.5 pt out.
-    expect(clipOf(at960).startsWith(`M-${String(40.5 * 12700)} -${String(40.5 * 12700)}H`)).toBe(
+    const borderOf = (markup: string): string =>
+      /<path [^>]*data-band="out"[^>]*>/.exec(markup)?.[0] ?? '';
+    // A quarter point is one pixel at 960 and four points at 240.
+    expect(borderOf(at960)).toContain('stroke-width="12700"');
+    expect(borderOf(at240)).toContain('stroke-width="50800"');
+    // The frame it is drawn on is outset by an eighth of a point at both: the same path.
+    const pathOf = (tag: string): string => /d="([^"]*)"/.exec(tag)?.[1] ?? '';
+    expect(pathOf(borderOf(at960))).toBe(pathOf(borderOf(at240)));
+    expect(pathOf(borderOf(at960)).startsWith(`M-${String(3175 / 2)} -${String(3175 / 2)}H`)).toBe(
       true,
     );
     expect(zoom.findings.border).toBe('T4');
@@ -1417,19 +1417,88 @@ describe('the device grid, re-derived from F3', () => {
     expect(crisp(pathTags(at(chevron, 960))[0]!)).toBe(false);
   });
 
-  it('keeps a clipped band antialiased under its antialiased clip, and snaps the picture under it', () => {
-    const id = nextId++;
-    const pic =
-      `<p:pic><p:nvPicPr><p:cNvPr id="${String(id)}" name="picture"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>` +
-      '<p:blipFill><a:blip r:embed="rId9"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
-      `<p:spPr><a:xfrm><a:off x="${String(RECT.x)}" y="${String(RECT.y)}"/><a:ext cx="${String(RECT.cx)}" cy="${String(RECT.cy)}"/></a:xfrm>` +
-      `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${ln(1)}</p:spPr></p:pic>`;
-    const tags = pathTags(at(pic, 960)).filter((tag) => !tag.includes('clipPath'));
-    const fill = tags.find((tag) => tag.includes('stroke="none"'))!;
+  it("draws a rectangular picture's border on the outset frame over the picture, crisp where the width is whole pixels", () => {
+    const picture = (prst: string): string => {
+      const id = nextId++;
+      return (
+        `<p:pic><p:nvPicPr><p:cNvPr id="${String(id)}" name="picture"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>` +
+        '<p:blipFill><a:blip r:embed="rId9"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
+        `<p:spPr><a:xfrm><a:off x="${String(RECT.x)}" y="${String(RECT.y)}"/><a:ext cx="${String(RECT.cx)}" cy="${String(RECT.cy)}"/></a:xfrm>` +
+        `<a:prstGeom prst="${prst}"><a:avLst/></a:prstGeom>${ln(1)}</p:spPr></p:pic>`
+      );
+    };
+    for (const width of [960, 1920, 240]) {
+      const tags = pathTags(at(picture('rect'), width)).filter((tag) => !tag.includes('clipPath'));
+      const fill = tags.find((tag) => tag.includes('stroke="none"'))!;
+      const border = tags.find((tag) => tag.includes('data-band="out"'))!;
+      expect(crisp(fill), String(width)).toBe(true);
+      // One point is a whole pixel at 960 and 1920, a quarter of one at 240.
+      expect(crisp(border), String(width)).toBe(width >= 960);
+      expect(shift(border), String(width)).toBeNull();
+      expect(border).not.toContain('clip-path');
+      expect(tags.indexOf(border)).toBeGreaterThan(tags.indexOf(fill));
+    }
+    // A picture that is not a rectangle keeps its double-width band under an antialiased clip.
+    const tags = pathTags(at(picture('roundRect'), 960));
     const band = tags.find((tag) => tag.includes('clip-path="url('))!;
-    expect(crisp(fill)).toBe(true);
     expect(crisp(band)).toBe(false);
-    expect(shift(band)).toBeNull();
+    expect(band).not.toContain('data-band');
+    // A custom geometry is a rectangle only as one closed walk round the frame's corners: an
+    // hourglass through the same four corners, or the walk left open, is clipped like any other.
+    const custom = (points: readonly [number, number][], closed = true): string =>
+      picture('rect').replace(
+        /<a:prstGeom prst="rect"><a:avLst\/><\/a:prstGeom>/,
+        `<a:custGeom><a:avLst/><a:gdLst/><a:ahLst/><a:cxnLst/><a:rect l="0" t="0" r="r" b="b"/>` +
+          `<a:pathLst><a:path w="${String(RECT.cx)}" h="${String(RECT.cy)}"><a:moveTo><a:pt x="${String(points[0]![0])}" y="${String(points[0]![1])}"/></a:moveTo>` +
+          points
+            .slice(1)
+            .map(([x, y]) => `<a:lnTo><a:pt x="${String(x)}" y="${String(y)}"/></a:lnTo>`)
+            .join('') +
+          `${closed ? '<a:close/>' : ''}</a:path></a:pathLst></a:custGeom>`,
+      );
+    const [w, h] = [RECT.cx, RECT.cy];
+    const walked = at(
+      custom([
+        [0, 0],
+        [w, 0],
+        [w, h],
+        [0, h],
+      ]),
+      960,
+    );
+    expect(walked).toContain('data-band="out"');
+    expect(walked).not.toContain('clipPath');
+    const widdershins = at(
+      custom([
+        [0, h],
+        [w, h],
+        [w, 0],
+        [0, 0],
+      ]),
+      960,
+    );
+    expect(widdershins).toContain('data-band="out"');
+    for (const other of [
+      custom([
+        [0, 0],
+        [w, h],
+        [w, 0],
+        [0, h],
+      ]),
+      custom(
+        [
+          [0, 0],
+          [w, 0],
+          [w, h],
+          [0, h],
+        ],
+        false,
+      ),
+    ]) {
+      const markup = at(other, 960);
+      expect(markup).not.toContain('data-band');
+      expect(markup).toContain('clipPath');
+    }
     expect(snap.findings.picture).toBe('ER');
     expect(snap.findings.border).toBe('BT');
   });
@@ -1511,7 +1580,13 @@ describe('the device grid, re-derived from F3', () => {
     readonly family: string;
     readonly centrePt: number;
     readonly widthPt?: number;
-    readonly read: { readonly axis: 'x' | 'y'; readonly at: number; readonly half: number };
+    readonly read: {
+      readonly axis: 'x' | 'y';
+      readonly at: number;
+      readonly half: number;
+      readonly along0: number;
+      readonly along1: number;
+    };
   }
 
   /** F3's own probe slide: every horizontal stroke, at the coordinates the export was asked for. */
@@ -1593,6 +1668,145 @@ describe('the device grid, re-derived from F3', () => {
     // Every odd pen, and every even pen off the grid: 25 of 28.
     expect(misses).toBe(25);
   });
+
+  /** F3's border probes as a slide: a white picture with a border, at the export's coordinates. */
+  function borderSlide(): { sheet: Sheet; probes: SnapProbe[] } {
+    const probes = (snap.probes as SnapProbe[]).filter((probe) => probe.family === 'border');
+    const shapes = probes.map((probe) => {
+      const id = nextId++;
+      const x = probe.read.along0 - 30;
+      return (
+        `<p:pic><p:nvPicPr><p:cNvPr id="${String(id)}" name="${probe.id}"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>` +
+        '<p:blipFill><a:blip r:embed="rId9"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
+        `<p:spPr><a:xfrm><a:off x="${String(Math.round(x * PT))}" y="${String(Math.round(probe.centrePt * PT))}"/>` +
+        `<a:ext cx="${String(160 * PT)}" cy="${String(80 * PT)}"/></a:xfrm>` +
+        `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>${ln(probe.widthPt ?? 0)}</p:spPr></p:pic>`
+      );
+    });
+    return { sheet: buildChain({ shapes }).slide, probes };
+  }
+
+  const white = (): { bytes: Uint8Array; contentType: string } => ({
+    bytes: Uint8Array.from(
+      atob(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8//8/AwAI/AL+hc2rNAAAAABJRU5ErkJggg==',
+      ),
+      (c) => c.charCodeAt(0),
+    ),
+    contentType: 'image/png',
+  });
+
+  /** Our rows across one probe's window against the export's, as the worst row's difference. */
+  async function rowError(
+    markup: string,
+    width: number,
+    height: number,
+    probe: SnapProbe,
+    scale: number,
+  ): Promise<number> {
+    const from = Math.round((probe.read.at - probe.read.half) * scale);
+    const to = Math.round((probe.read.at + probe.read.half) * scale);
+    const ours = await rowsAcross(
+      markup,
+      width,
+      height,
+      [Math.round(probe.read.along0 * scale), Math.round(probe.read.along1 * scale)],
+      [from, to],
+    );
+    const seen = (
+      snap.measured as Record<string, Record<string, { from: number; cover: number[] }>>
+    )[probe.id]![String(width)]!;
+    const theirs = new Array<number>(to - from + 1).fill(0);
+    seen.cover.forEach((v, i) => {
+      theirs[seen.from - from + i] = v;
+    });
+    return Math.max(...ours.map((v, i) => Math.abs(v - theirs[i]!)));
+  }
+
+  it('inks the rows PowerPoint inked on every border probe at 960, and at 240 all but a frame edge on a half', async () => {
+    const { sheet, probes } = borderSlide();
+    expect(probes).toHaveLength(8);
+    for (const width of [960, 240]) {
+      const scale = width / 960;
+      const height = (width * 9) / 16;
+      const markup = renderSlide(sheet, SIZE, { idPrefix: 'b', width, height, media: white });
+      const errors = await Promise.all(
+        probes.map(async (probe) => ({
+          probe,
+          error: await rowError(markup, width, height, probe, scale),
+        })),
+      );
+      if (width === 960) {
+        for (const { probe, error } of errors) {
+          expect(error, `${probe.id}@960`).toBeLessThanOrEqual(snap.tolerance);
+        }
+      } else {
+        // The 2-pt probes' frame edge is 102.5 px here: the export rounds it to 103, ours stays.
+        const missed = errors.filter(({ error }) => error > snap.tolerance);
+        expect(missed.map(({ probe }) => probe.id)).toEqual(
+          ['0', '0_25', '0_5', '0_75'].map((o) => `border-2-${o}`),
+        );
+        for (const { error } of missed) {
+          expect(error).toBeGreaterThanOrEqual(0.24);
+          expect(error).toBeLessThanOrEqual(0.26);
+        }
+      }
+    }
+  });
+
+  it('draws an algn="in" pen up to a pixel and a half too far in, which is what its clip can do', async () => {
+    const probes = (snap.probes as SnapProbe[]).filter((probe) => probe.family === 'inset');
+    expect(probes).toHaveLength(8);
+    const shapes = probes.map((probe) =>
+      sp({
+        rect: {
+          x: Math.round((probe.read.along0 - 30) * PT),
+          y: Math.round(probe.centrePt * PT),
+          cx: 160 * PT,
+          cy: 80 * PT,
+        },
+        line: `<a:ln w="${String(Math.round((probe.widthPt ?? 0) * PT))}" algn="in">${BLACK}</a:ln>`,
+        name: probe.id,
+      }),
+    );
+    const markup = renderSlide(buildChain({ shapes }).slide, SIZE, {
+      idPrefix: 'i',
+      width: 960,
+      height: 540,
+    });
+    const measured = snap.measured as Record<
+      string,
+      Record<string, { from: number; cover: number[] }>
+    >;
+    const centreOf = (rows: readonly number[], from: number): number => {
+      const ink = rows.reduce((sum, v) => sum + v, 0);
+      return rows.reduce((sum, v, i) => sum + v * (from + i + 0.5), 0) / ink;
+    };
+    for (const probe of probes) {
+      const from = Math.round(probe.read.at - probe.read.half);
+      const to = Math.round(probe.read.at + probe.read.half);
+      const ours = await rowsAcross(
+        markup,
+        960,
+        540,
+        [Math.round(probe.read.along0), Math.round(probe.read.along1)],
+        [from, to],
+      );
+      const seen = measured[probe.id]!['960']!;
+      // The gap between our band's centre and the export's, from the IN formula (ADR 0054).
+      const f = probe.centrePt;
+      const w = probe.widthPt ?? 0;
+      const halfUp = Math.floor(f + 0.5);
+      const parity = Math.max(1, Math.floor(w + 0.5)) % 2 === 1 ? 0.5 : 0;
+      const expected = f + w / 2 - (halfUp - 1 + parity + w / 2);
+      expect(centreOf(ours, from) - centreOf(seen.cover, seen.from), probe.id).toBeCloseTo(
+        expected,
+        1,
+      );
+      expect(Math.abs(expected)).toBeLessThanOrEqual(1.5);
+    }
+    expect(snap.findings.inset).toBe('IN');
+  });
 });
 
 describe('the outline band, re-derived', () => {
@@ -1613,22 +1827,29 @@ describe('the outline band, re-derived', () => {
 
   const band = pictures.outlineBands;
 
-  it('draws a one-sided band at double width, so half of it survives the clip', () => {
+  it("puts a rectangular picture's pen on the frame outset by half the width, so the whole width lies outside", () => {
     expect(band.picture.outsidePt + band.picture.insidePt).toBe(pictures.outlinePt);
+    expect(band.picture.insidePt).toBe(0);
     const markup = renderSlide(buildChain({ shapes: [pic()] }).slide, SIZE, { idPrefix: 'o' });
-    expect(markup).toContain(`stroke-width="${String(WIDTH * 2)}"`);
+    const border = [...markup.matchAll(/<path [^>]*>/g)]
+      .map((m) => m[0])
+      .find((tag) => tag.includes('data-band="out"'))!;
+    expect(border).toContain(`stroke-width="${String(WIDTH)}"`);
+    expect(border).toContain(`d="M${String(-WIDTH / 2)} ${String(-WIDTH / 2)}H`);
+    expect(border).not.toContain('clip-path');
+    expect(markup).not.toContain('clipPath');
   });
 
-  it('clips a picture band to the complement of its outline', () => {
-    const markup = renderSlide(buildChain({ shapes: [pic()] }).slide, SIZE, { idPrefix: 'o' });
-    // Nothing of the band falls inside the picture, so the clip is everything
-    // the outline does not cover: one path, two subpaths, evenodd.
-    expect(band.picture.insidePt).toBe(0);
+  it("clips any other picture's band, double width, to the complement of its outline", () => {
+    const rounded = pic().replace('prst="rect"', 'prst="roundRect"');
+    const markup = renderSlide(buildChain({ shapes: [rounded] }).slide, SIZE, { idPrefix: 'o' });
+    expect(markup).toContain(`stroke-width="${String(WIDTH * 2)}"`);
     expect(markup).toContain('clip-rule="evenodd"');
     expect(markup).toContain('clipPath');
+    expect(markup).not.toContain('data-band');
   });
 
-  it('keeps the picture under a clipped band: the fill is one path and the band another', async () => {
+  it('draws the border over the picture: the fill is one path and the pen another, after it', async () => {
     // A one-pixel red PNG, so the picture is a colour and not a gap.
     const red =
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==';
@@ -1644,11 +1865,11 @@ describe('the outline band, re-derived', () => {
       height: 270,
     });
     const paths = [...markup.matchAll(/<path [^>]*>/g)].map((m) => m[0]);
-    expect(paths).toHaveLength(3);
-    expect(paths[1]).toContain('fill="url(#k-1)"');
-    expect(paths[1]).not.toContain('clip-path');
-    expect(paths[2]).toContain('fill="none"');
-    expect(paths[2]).toContain('clip-path="url(#k-2)"');
+    expect(paths).toHaveLength(2);
+    expect(paths[0]).toContain('fill="url(#k-1)"');
+    expect(paths[0]).not.toContain('clip-path');
+    expect(paths[1]).toContain('fill="none"');
+    expect(paths[1]).toContain('data-band="out"');
     // And the pixel inside the frame is the picture's, not the page's white.
     const image = new Image();
     const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
