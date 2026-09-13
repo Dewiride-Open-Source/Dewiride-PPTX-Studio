@@ -248,8 +248,8 @@ import.meta.url), { type: 'module' })` under Turbopack becomes an 849-byte boots
 | the canary in CI, before                        | 42 s (run 34763792565)                                                                                                                            |
 | the site's dependencies                         | 21 runtime (12 of them `@pptx-studio/*`), 15 dev; no lockfile                                                                                     |
 | the branch                                      | 215 files, +13232 −4043; 164 of them under `website/`                                                                                             |
-| Lighthouse on `/`, a docs page, `/playground/`  | measured against the live site, in the follow-up                                                                                                  |
-| publish to served, the first release after this | measured by the registry wait step's log, in the follow-up                                                                                        |
+| Lighthouse on `/`, a docs page, `/playground/`  | not yet: not installed, and an install is a download                                                                                              |
+| publish to served, the first release after this | not yet: the first deploy ran on a push, not on a release                                                                                         |
 
 ## Verification
 
@@ -307,10 +307,42 @@ first. The walk now has 60 s; its assertions are unchanged.
 
 ## What the deploy said
 
-The first deploy is the merge of this pull request. Its run id, the registry wait, the curls of `/`,
-`/docs/packages/opc/`, `/decks/b02-layouts.pptx`, the Worker chunk and `/search.json`, a deck
-dropped on `/playground/` and its export opened in PowerPoint, and Lighthouse on three routes go
-here in the follow-up, `docs(3.12): what the deploy said`, as ADR 0054 did for its releases.
+Pull request #38 merged as `88028d2` on CI run 34779982487. The push to `main` touched
+`website/**`, so the first deploy was run 34780332460 on the `push` trigger: the build job 140 s
+(the registry answered every range in 7 s, install 36 s, build 29 s, the walk 9 s), the deploy job
+9 s (`configure-pages` reported `/Dewiride-PPTX-Studio`, the assertion against `BASE_PATH`
+passed, `deploy-pages` 5 s). GitHub Pages was enabled with `build_type: workflow` and the
+repository's homepage set to the site by `gh api` before the merge; the `github-pages`
+environment admits `main` only.
+
+The live site, asked with curl:
+
+| path                                         | answer                                                                            |
+| -------------------------------------------- | --------------------------------------------------------------------------------- |
+| `/`                                          | 200 `text/html`, 102 098 bytes                                                    |
+| `/docs/`, `/docs/packages/opc/`              | 200, 97 956 and 310 933 bytes                                                     |
+| `/demos/census/`, `/playground/`             | 200, 38 982 and 35 905 bytes                                                      |
+| `/search.json`                               | 200 `application/json`, 757 738 bytes                                             |
+| `/decks/b02-layouts.pptx`                    | 200 `application/vnd.openxmlformats-…`, 45 876 bytes — the corpus original's size |
+| `/rendered/a46-hundred-slides/slide-001.svg` | 200 `image/svg+xml`, 2295 bytes                                                   |
+| `/og.png`, `/sitemap.xml`, `/robots.txt`     | 200, 59 753 / 4745 / 105 bytes                                                    |
+| `/no-such-page/`                             | 404, the site's own page, 23 109 bytes                                            |
+
+The live site, driven in Chromium from this machine: `/playground/` reached network idle in
+5.5 s and mounted its first `[data-shape]` at 5.6 s, the Census tab answered at 7.5 s — the
+100-slide default deck, cold, over the network — with 68 responses and none at or above 400; the
+Worker bootstrap `turbopack-worker-2ru9m5gbh1na6.js` and the deck both came from under
+`/Dewiride-PPTX-Studio/`; on `/docs/packages/opc/` Ctrl+K found a page over the live index. Then
+a deck the site does not ship, `corpus/authored/b05-chart.pptx` (authored in PowerPoint, with a
+chart the site preserves and does not draw), through the picker's file input: opened and mounted
+in 100 ms, Census and Validate answered, "Export unchanged" streamed every part and the download
+was 66 130 bytes from a 67 962-byte source. `packages/cli/scripts/powerpoint-oracle.ps1` opened
+that download in the real PowerPoint with `OpenAndRepair` off: `ok: true, repair: false`, two
+slides, two shapes each.
+
+Not measured yet: Lighthouse, because it is not installed and installing it is a download; and
+the registry wait after a release, because the first deploy ran on a push whose ranges the
+registry already served — the first `workflow_run` deploy is phase 4's first release.
 
 ## Deviations from the plan
 
@@ -347,6 +379,6 @@ here in the follow-up, `docs(3.12): what the deploy said`, as ADR 0054 did for i
 4. **What 12.6 still owes.** This is the docs site as far as phase 3's packages go. Gate 12 asks
    for 200 slides, first paint under 3 s and a published fidelity score; 12.6 owes those numbers,
    and the pages for phases 4 to 11's features as each lands.
-5. **Lighthouse, the first deploy and the registry wait** are in the follow-up, not here.
+5. **Lighthouse and the registry wait after a release** are not measured yet, above.
 6. **The `pull_request` build has no Chromium cache.** `npx playwright install --with-deps
 chromium` runs on every build; a cache keyed on the Playwright version would remove it.
