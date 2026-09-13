@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { el } from '../element.js';
+import { openDeck } from './deck.js';
+import { createStrip } from './strip.js';
 import { slidesView } from './view.js';
 
 /**
@@ -80,6 +83,23 @@ describe('slidesView', () => {
     expect(box.height).toBe(135);
     expect(view.thumbBox(0).width).toBe(120);
     expect(view.thumbSvg(0)).toContain('viewBox');
+    view.dispose();
+  });
+
+  it('draws the strip again on request, with fresh elements, and reports the latest draw', async () => {
+    const view = slidesView(() => bytesOf(FILLS));
+    host().append(view.root);
+    await view.ready;
+    const before = [...view.root.querySelectorAll('.thumb-svg > svg')];
+    expect(before).toHaveLength(3);
+    const deck = openDeck(new Uint8Array(await bytesOf(FILLS)));
+    const strip = createStrip(el('div', 'strip'), deck, () => undefined);
+    await strip.done;
+    const first = strip.svg(0);
+    const again = await strip.redraw();
+    expect(again.failed).toEqual([]);
+    expect(await strip.done).toBe(again);
+    expect(strip.svg(0)).toBe(first);
     view.dispose();
   });
 

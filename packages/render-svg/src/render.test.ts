@@ -995,6 +995,28 @@ describe('strokes at a named width, re-derived from F2', () => {
     expect(zoom.findings.thin).toBe('T4');
   });
 
+  it('rounds to the device pixels of a 2x display: the strokes of twice the width', () => {
+    const slide = lineSlide(ln('3175'));
+    const rootSize = /\swidth="\d+" height="\d+"/;
+    const doubled = renderSlide(slide, SIZE, {
+      idPrefix: 'r',
+      width: 960,
+      height: 540,
+      devicePixelRatio: 2,
+    });
+    const twice = renderSlide(slide, SIZE, { idPrefix: 'r', width: 1920, height: 1080 });
+    expect(strokeWidth(doubled)).toBe('6350');
+    expect(doubled.replace(rootSize, '')).toBe(twice.replace(rootSize, ''));
+    expect(doubled).toContain('width="960"');
+    // The ratio is a device: without one there is nothing for it to name.
+    expect(() => renderSlide(slide, SIZE, { idPrefix: 'r', devicePixelRatio: 2 })).toThrow(
+      RenderError,
+    );
+    expect(() =>
+      renderSlide(slide, SIZE, { idPrefix: 'r', width: 960, devicePixelRatio: 0 }),
+    ).toThrow(RenderError);
+  });
+
   it('draws a picture border at the drawn width, under a band clip the zoom never moves', () => {
     const id = nextId++;
     const pic =

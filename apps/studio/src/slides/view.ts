@@ -10,9 +10,9 @@ import type { SlideSize } from '@pptx-studio/render-svg';
 import { el } from '../element.js';
 import { openDeck, type Deck } from './deck.js';
 import { createStage, type PageBox, type ShapeFrame, type Stage } from './stage.js';
-import { createStrip, type Strip } from './strip.js';
+import { createStrip, type Strip, type StripDrawn } from './strip.js';
 import { heapBytes, nextFrame, type OpenTimings, type ShowTimings } from './timings.js';
-import { fitZoom, ZOOMS, type ZoomChoice } from './zoom.js';
+import { fitZoom, watchDevicePixelRatio, ZOOMS, type ZoomChoice } from './zoom.js';
 
 const EMU_PER_POINT = 12700;
 
@@ -34,6 +34,8 @@ export interface SlidesView {
   stageShapes(): readonly ShapeFrame[];
   stageBox(): PageBox;
   thumbBox(index: number): PageBox;
+  /** Resolves when the strip's latest draw has finished. */
+  stripDone(): Promise<StripDrawn>;
   /** Stop drawing: the next deck's strip must not share the thread with this one's. */
   dispose(): void;
 }
@@ -98,6 +100,12 @@ export function slidesView(read: () => Promise<ArrayBuffer>): SlidesView {
   });
   window.addEventListener('resize', () => {
     if (choice === 'fit' && stage !== null) void show(current, 'fit').catch(() => undefined);
+  });
+  // A window dragged to another display: the strokes are rounded to its pixels, so redraw.
+  const unwatch = watchDevicePixelRatio(window, () => {
+    if (disposed || stage === null) return;
+    void show(current, choice).catch(() => undefined);
+    void stripView?.redraw();
   });
 
   const ready = (async (): Promise<DeckOpened> => {
@@ -175,8 +183,13 @@ export function slidesView(read: () => Promise<ArrayBuffer>): SlidesView {
       if (stripView === null) throw new Error('no deck is open');
       return stripView.box(index);
     },
+    stripDone: () => {
+      if (stripView === null) throw new Error('no deck is open');
+      return stripView.done;
+    },
     dispose: () => {
       disposed = true;
+      unwatch();
       stripView?.cancel();
       stage?.unmount();
     },

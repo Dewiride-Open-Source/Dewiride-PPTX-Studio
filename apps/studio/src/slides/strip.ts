@@ -6,7 +6,7 @@
  * is a page that answers clicks while it draws, and a strip the next deck can cancel.
  */
 
-import { mountSlide } from '@pptx-studio/render-dom';
+import { mountSlide, type MountedSlide } from '@pptx-studio/render-dom';
 
 import { el } from '../element.js';
 import type { Deck } from './deck.js';
@@ -17,9 +17,18 @@ import { stageSizeAt, THUMB_ZOOM } from './zoom.js';
 /** Main-thread time one frame's chunk may take before the loop yields. */
 const CHUNK_BUDGET_MS = 12;
 
+export interface StripDrawn {
+  /** Thumbnails the renderer refused, as `<slide>: <reason>`. */
+  readonly failed: readonly string[];
+  /** Main-thread time the mounts took, across every chunk. */
+  readonly cpuMs: number;
+}
+
 export interface Strip {
-  /** Resolves when the last thumbnail has mounted, with what failed and the time on the thread. */
-  readonly done: Promise<{ failed: readonly string[]; cpuMs: number }>;
+  /** Resolves when the last thumbnail of the latest draw has mounted. */
+  readonly done: Promise<StripDrawn>;
+  /** Draw every thumbnail again, at the display's current device pixel ratio. */
+  redraw(): Promise<StripDrawn>;
   select(index: number): void;
   svg(index: number): string;
   box(index: number): PageBox;
@@ -36,7 +45,9 @@ export function createStrip(
   const holders: HTMLElement[] = [];
   const cells: HTMLElement[] = [];
   const roots = new Map<number, SVGSVGElement>();
-  let cancelled = false;
+  const mounts = new Map<number, MountedSlide>();
+  // A draw stops as soon as it is not the latest one asked for.
+  let generation = 0;
 
   host.replaceChildren();
   deck.slides.forEach((_sheet, index) => {
@@ -58,11 +69,12 @@ export function createStrip(
     if (index !== null && index !== undefined) onSelect(Number(index));
   });
 
-  const done = (async (): Promise<{ failed: readonly string[]; cpuMs: number }> => {
+  async function draw(mine: number): Promise<StripDrawn> {
+    const ratio = window.devicePixelRatio;
     const failed: string[] = [];
     let cpuMs = 0;
     let index = 0;
-    while (index < deck.slides.length && !cancelled) {
+    while (index < deck.slides.length && mine === generation) {
       const started = performance.now();
       while (index < deck.slides.length && performance.now() - started < CHUNK_BUDGET_MS) {
         const sheet = deck.slides[index]!;
@@ -71,11 +83,13 @@ export function createStrip(
           const mounted = mountSlide(holder, sheet, deck.size, {
             width,
             height,
+            devicePixelRatio: ratio,
             idPrefix: `thumb${String(index)}`,
             media: deck.media,
             text: deck.text,
           });
           roots.set(index, mounted.root);
+          mounts.set(index, mounted);
         } catch (error) {
           // One slide the renderer cannot draw must not take the deck with it.
           const message = error instanceof Error ? error.message : String(error);
@@ -88,10 +102,27 @@ export function createStrip(
       if (index < deck.slides.length) await nextFrame();
     }
     return { failed, cpuMs };
-  })();
+  }
+
+  function clear(): void {
+    for (const mounted of mounts.values()) mounted.unmount();
+    mounts.clear();
+    roots.clear();
+    for (const holder of holders) holder.replaceChildren();
+  }
+
+  let done = draw(generation);
 
   return {
-    done,
+    get done() {
+      return done;
+    },
+    redraw() {
+      generation += 1;
+      clear();
+      done = draw(generation);
+      return done;
+    },
     select(index) {
       cells.forEach((cell, at) => cell.classList.toggle('on', at === index));
     },
@@ -106,7 +137,7 @@ export function createStrip(
       return pageBoxOf(root);
     },
     cancel() {
-      cancelled = true;
+      generation += 1;
     },
   };
 }

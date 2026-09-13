@@ -26,7 +26,9 @@ export type RenderErrorCode =
   /** A text direction this package lays out but does not yet draw. */
   | 'RENDER_TEXT_UNSUPPORTED'
   /** An image whose header is not a PNG, JPEG, GIF or BMP. */
-  | 'RENDER_IMAGE_FORMAT';
+  | 'RENDER_IMAGE_FORMAT'
+  /** A `devicePixelRatio` that is not a positive number, or one given with no width. */
+  | 'RENDER_DEVICE_PIXEL_RATIO';
 
 export const RENDER_ERROR_CODES: readonly RenderErrorCode[] = [
   'RENDER_UNKNOWN_PRESET',
@@ -35,6 +37,7 @@ export const RENDER_ERROR_CODES: readonly RenderErrorCode[] = [
   'RENDER_TEXT_FRAME',
   'RENDER_TEXT_UNSUPPORTED',
   'RENDER_IMAGE_FORMAT',
+  'RENDER_DEVICE_PIXEL_RATIO',
 ];
 
 export class RenderError extends Error {
