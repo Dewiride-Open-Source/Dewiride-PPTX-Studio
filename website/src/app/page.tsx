@@ -21,7 +21,7 @@ export default function Overview() {
 
       <Panel
         title="Install"
-        hint="Ten of the eleven run in the tab; the CLI is the one Node package."
+        hint="Every package but the CLI runs in the tab; the CLI is the one Node package."
       >
         <div className="p-4">
           <Snippet
@@ -41,8 +41,8 @@ export default function Overview() {
           >
             <div className="flex items-baseline justify-between gap-2">
               <h2 className="text-sm font-semibold text-ink-100">{tool.name}</h2>
-              {tool.server === true ? (
-                <span className="text-[10px] text-widened">server</span>
+              {tool.prerendered === true ? (
+                <span className="text-[10px] text-widened">build time</span>
               ) : null}
             </div>
             <p className="mt-1 font-mono text-[11px] text-chrome">@pptx-studio/{tool.package}</p>

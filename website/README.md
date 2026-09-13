@@ -41,10 +41,11 @@ not, so `npm install` here gets what the last release proved.
 | `/geometry`    | `geometry`   | The 187 presets, their guides and their draggable adjust handles           |
 | `/paint`       | `paint`      | Colour transforms in document order, the two-stop ramp, 54 pattern tiles   |
 | `/text`        | `text`       | Measurement, line breaking, the autofit ladder, 41 autonumber schemes      |
-| `/thumbnails`  | `cli`        | Server-side rendering, with no LibreOffice and no headless browser         |
+| `/thumbnails`  | `cli`        | Slides rendered in Node when the site was built, with no LibreOffice       |
 
-Ten of the eleven run entirely in the tab. `/thumbnails` is the one that posts the bytes anywhere,
-and it says so on the page.
+Every page runs entirely in the tab. `/thumbnails` shows what `prerender/decks.mjs` made of the
+sample decks when the site was built, because the CLI is the one Node package; a deck you open is
+not sent anywhere.
 
 ## Editing is three XML edits, and not a pretence
 
@@ -60,18 +61,19 @@ resize solver and no multi-select. Two refusals are deliberate and worth reading
 - Recolouring a shape with no `a:solidFill` of its own is refused for the same reason — the fill is
   coming down the placeholder chain or out of the theme's style matrix.
 
-## Two things this sample exposes
+## A static export
 
-**The `renderDeck` options object was CLI-shaped, and this sample is why it is not.** At 0.1.0 all
-eight fields were required, three of which — `out`, `json`, `quiet` — mean nothing to a web server,
-and [`src/app/api/thumbnails/route.ts`](./src/app/api/thumbnails/route.ts) passed them anyway,
-written against the API as published rather than around it. That awkward call site was the evidence
-for the fix: `RenderDeckOptions` is every field optional and the three verb-only ones gone, so the
-same route is now one line. Consuming a package from outside is the only thing that shows you this.
+`npm run build` writes a static site to `out/` (`output: 'export'`), under the path in `BASE_PATH`
+when one is set — GitHub Pages serves a project site under the repository's name. `prebuild` runs
+the CLI over `public/decks/` first, so `public/rendered/` is generated and never committed.
+`node deploy/check-export.mjs` serves `out/` the way Pages will and walks it in Chromium: the
+Worker, a fetched deck and the pre-rendered slides all have to answer under the base path before
+anything is uploaded.
 
-**A server with no fonts substitutes everything.** The route leaves `systemFonts` at its default of
-true, so locally it finds the real ones; a container that ships none will draw every typeface in a fallback.
-The response carries the report either way — that is `FaceUse`, and the page shows it.
+**A machine with no fonts substitutes everything.** `renderDeck` leaves `systemFonts` at its default
+of true, so it indexes the build machine's real faces; a runner that ships none draws every typeface
+in a fallback. `render.json` carries the report either way — that is `FaceUse`, and the page shows
+it.
 
 ## The decks
 
@@ -84,7 +86,7 @@ feature probes. `b02-layouts.pptx` contains the Blank layout, whose slide really
 
 ```sh
 npm run dev         # the app
-npm run build       # production build
+npm run build       # the static export, into out/ (prebuild renders the decks first)
 npm run typecheck   # tsc --noEmit
 npm run smoke       # render every shipped deck through the installed packages
 ```

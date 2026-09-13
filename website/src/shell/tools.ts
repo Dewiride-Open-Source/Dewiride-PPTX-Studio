@@ -6,8 +6,8 @@ export interface Tool {
   /** The package the tool is about, without the `@pptx-studio/` scope. */
   readonly package: string;
   readonly blurb: string;
-  /** True where the work happens on the server rather than in the tab. */
-  readonly server?: boolean;
+  /** True where the page shows what the build machine rendered, not the tab. */
+  readonly prerendered?: boolean;
 }
 
 export const TOOLS: readonly Tool[] = [
@@ -75,7 +75,7 @@ export const TOOLS: readonly Tool[] = [
     href: '/thumbnails',
     name: 'Thumbnails',
     package: 'cli',
-    blurb: 'Server-side rendering with no LibreOffice and no browser.',
-    server: true,
+    blurb: 'Rendered in Node at build time, with no LibreOffice and no browser.',
+    prerendered: true,
   },
 ];

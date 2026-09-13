@@ -30,8 +30,8 @@ export function Nav() {
           >
             <span className={`block text-sm ${on ? 'text-ink-100' : 'text-ink-200'}`}>
               {tool.name}
-              {tool.server === true ? (
-                <span className="ml-1.5 align-middle text-[10px] text-widened">server</span>
+              {tool.prerendered === true ? (
+                <span className="ml-1.5 align-middle text-[10px] text-widened">build time</span>
               ) : null}
             </span>
             <span className="block font-mono text-[11px] text-ink-500">{tool.package}</span>

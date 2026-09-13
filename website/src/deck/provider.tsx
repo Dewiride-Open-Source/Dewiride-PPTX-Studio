@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { publicUrl } from '@/site/base-path';
 import { DEFAULT_SAMPLE } from './samples';
 
 export interface LoadedDeck {
@@ -28,10 +29,9 @@ interface DeckState {
 const DeckContext = createContext<DeckState | null>(null);
 
 /**
- * One deck, held in the root layout so it survives navigating between tools.
+ * One deck, held in the root layout so it survives navigating between pages.
  *
- * The bytes never leave the tab except on the one route that says it is a
- * server route, and nothing is uploaded anywhere else.
+ * The bytes never leave the tab; nothing on this site uploads anything.
  */
 export function DeckProvider({ children }: { children: ReactNode }) {
   const [deck, setDeck] = useState<LoadedDeck | null>(null);
@@ -41,7 +41,7 @@ export function DeckProvider({ children }: { children: ReactNode }) {
   const loadSample = useCallback((file: string) => {
     setLoading(true);
     setError(null);
-    fetch(`/decks/${file}`)
+    fetch(publicUrl(`/decks/${file}`))
       .then(async (response) => {
         if (!response.ok) throw new Error(`${response.status} fetching ${file}`);
         return response.arrayBuffer();
