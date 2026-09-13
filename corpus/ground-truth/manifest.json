@@ -1352,32 +1352,14 @@
       "addedIn": "3.9"
     },
     {
-      "id": "fidelity-expected-linux-x64",
-      "kind": "fixture",
-      "storage": "committed",
-      "path": "render/fidelity/expected.linux-x64.json",
-      "license": "CC0-1.0",
-      "source": "self-authored",
-      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
-      "sha256": "a63c61ec724d36b7376987805eb51f897a4472355bbf31b898a71bc040599bb0",
-      "bytes": 55495,
-      "tags": ["fidelity", "baseline", "render"],
-      "description": "The digest of our own raster for every slide on linux-x64, and the font environment it was recorded in. This is the gate: a slide that rasterises differently here has changed, and no tolerance is involved in saying so.",
-      "recipe": {
-        "tool": "tools/fidelity/fidelity.ts",
-        "args": ["--record", "--bootstrap"]
-      },
-      "addedIn": "3.9"
-    },
-    {
       "id": "fidelity-expected-win32-x64",
       "kind": "fixture",
       "storage": "committed",
       "path": "render/fidelity/expected.win32-x64.json",
       "license": "CC0-1.0",
       "source": "self-authored",
-      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
-      "sha256": "72d61c3162874d90bfc827674f64cd602362a991c43ebcabb78f09c1b3b3b641",
+      "sourceNote": "tools/fidelity/fidelity.ts rendered every corpus slide with this repository's own renderer in Chromium and recorded the SHA-256 of each raster and the font environment it was drawn in. Nothing here was measured from PowerPoint or any other party: it is a regression lock for the platform it names.",
+      "sha256": "95e0dc4adcd7a92c6a738fd4cfc5f7729f726240b4fb069f82cabe4101f8af9f",
       "bytes": 55505,
       "tags": ["fidelity", "baseline", "render"],
       "description": "The digest of our own raster for every slide on win32-x64, and the font environment it was recorded in. This is the gate: a slide that rasterises differently here has changed, and no tolerance is involved in saying so.",
@@ -1514,32 +1496,14 @@
       "addedIn": "3.6"
     },
     {
-      "id": "gate3-expected-linux-x64",
-      "kind": "fixture",
-      "storage": "committed",
-      "path": "render/fidelity/zoom/expected.linux-x64.json",
-      "license": "CC0-1.0",
-      "source": "self-authored",
-      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
-      "sha256": "2f099cba7415bfdf6437d01539cc9d022fb3a88eb1165a576f39d25694892cc0",
-      "bytes": 110115,
-      "tags": ["fidelity", "baseline", "render", "zoom", "gate3"],
-      "description": "The digest of the studio page's own raster of every a46-hundred-slides slide at every zoom on linux-x64, and the font environment it was recorded in. This is Gate 3's regression lock: a slide that rasterises differently here at any zoom has changed, with no tolerance.",
-      "recipe": {
-        "tool": "tools/gate3/run-gate3.ts",
-        "args": ["--record", "--bootstrap"]
-      },
-      "addedIn": "3.11"
-    },
-    {
       "id": "gate3-expected-win32-x64",
       "kind": "fixture",
       "storage": "committed",
       "path": "render/fidelity/zoom/expected.win32-x64.json",
       "license": "CC0-1.0",
       "source": "self-authored",
-      "sourceNote": "PowerPoint 365 rendered the corpus deck this entry names and exported each slide as a PNG; tools/ground-truth/render/fidelity/analyse.ts reduced it through tools/fidelity/metric/reduce.ts. The deck is ours and CC0-1.0; what is committed is a measurement of how PowerPoint drew it, at a resolution that retains no glyph outline and no image.",
-      "sha256": "c8cb5dac2c0d779c98d7dff99682cf23477f65baeacfcd5185bd547a5dc75453",
+      "sourceNote": "tools/gate3/run-gate3.ts rendered every a46-hundred-slides slide at every zoom, through the studio page with this repository's own renderer in Chromium and recorded the SHA-256 of each raster and the font environment it was drawn in. Nothing here was measured from PowerPoint or any other party: it is a regression lock for the platform it names.",
+      "sha256": "894f284422907e59ed671a96a3320ded075246ee6e2500700b9f3ef9932d1315",
       "bytes": 110125,
       "tags": ["fidelity", "baseline", "render", "zoom", "gate3"],
       "description": "The digest of the studio page's own raster of every a46-hundred-slides slide at every zoom on win32-x64, and the font environment it was recorded in. This is Gate 3's regression lock: a slide that rasterises differently here at any zoom has changed, with no tolerance.",

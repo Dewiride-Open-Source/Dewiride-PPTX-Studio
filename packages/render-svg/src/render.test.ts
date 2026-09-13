@@ -1117,6 +1117,9 @@ describe('line ends, re-derived from C4 and F2', () => {
     expect(attr(head ?? '', 'orient')).toBe('auto-start-reverse');
     expect(attr(tail ?? '', 'orient')).toBe('auto');
     expect(attr(head ?? '', 'markerUnits')).toBe('userSpaceOnUse');
+    // The head is the med oval, three pens; the tail the lg triangle, five.
+    expect(attr(head ?? '', 'markerWidth')).toBe(String(6 * 12700));
+    expect(attr(tail ?? '', 'markerWidth')).toBe(String(10 * 12700));
   });
 
   it('sizes a head from a two-point pen on a one-point line: lg is five pens, so ten points', () => {
@@ -1164,8 +1167,11 @@ describe('line ends, re-derived from C4 and F2', () => {
     expect(none).not.toContain('<marker');
   });
 
-  /** Rows inked at the widest column of a large triangle head whose tip is at 500 pt, 100 pt. */
-  async function headHeight(markup: string, width: number): Promise<number> {
+  /** The inked rows at the widest column of a large triangle head whose tip is at 500 pt, 100 pt. */
+  async function headHeight(
+    markup: string,
+    width: number,
+  ): Promise<{ rows: number; centre: number }> {
     const height = (width * 9) / 16;
     const image = new Image();
     const href = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
@@ -1182,14 +1188,18 @@ describe('line ends, re-derived from C4 and F2', () => {
     URL.revokeObjectURL(href);
     const data = context.getImageData(0, 0, width, height).data;
     const scale = width / 960;
-    let widest = 0;
+    let widest = { rows: 0, centre: 0 };
     for (let x = Math.round(480 * scale); x <= Math.round(500 * scale); x++) {
       let rows = 0;
+      let sum = 0;
       for (let y = Math.round(84 * scale); y <= Math.round(116 * scale); y++) {
         const at = (y * width + x) * 4;
-        if (1 - Math.min(data[at]!, data[at + 1]!, data[at + 2]!) / 255 >= 0.5) rows += 1;
+        if (1 - Math.min(data[at]!, data[at + 1]!, data[at + 2]!) / 255 >= 0.5) {
+          rows += 1;
+          sum += y + 0.5;
+        }
       }
-      widest = Math.max(widest, rows);
+      if (rows > widest.rows) widest = { rows, centre: sum / rows };
     }
     return widest;
   }
@@ -1203,10 +1213,13 @@ describe('line ends, re-derived from C4 and F2', () => {
       );
     const [small, reference] = await Promise.all([at(240), at(960)]);
     const seen = zoom.measured['marker-0'];
-    expect(Math.abs(reference - seen['960'].boxH)).toBeLessThanOrEqual(zoom.boxTolerancePx);
-    expect(Math.abs(small - seen['240'].boxH)).toBeLessThanOrEqual(zoom.boxTolerancePx);
+    expect(Math.abs(reference.rows - seen['960'].boxH)).toBeLessThanOrEqual(zoom.boxTolerancePx);
+    expect(Math.abs(small.rows - seen['240'].boxH)).toBeLessThanOrEqual(zoom.boxTolerancePx);
     // A head that scaled with the line would be a quarter the size at 240; the pen's floor holds it.
-    expect(small).toBeGreaterThan(reference / 4);
+    expect(small.rows).toBeGreaterThan(reference.rows / 4);
+    // And it sits on the line, at y = 100 pt, not beside it.
+    expect(Math.abs(reference.centre - 100)).toBeLessThanOrEqual(1);
+    expect(Math.abs(small.centre - 25)).toBeLessThanOrEqual(1);
   });
 });
 

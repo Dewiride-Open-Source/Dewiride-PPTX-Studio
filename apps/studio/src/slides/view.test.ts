@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { el } from '../element.js';
 import { openDeck } from './deck.js';
+import { createStage } from './stage.js';
 import { createStrip } from './strip.js';
 import { slidesView } from './view.js';
 
@@ -12,6 +13,7 @@ import { slidesView } from './view.js';
 
 const MINIMAL = '/corpus/decks/a01-minimal.pptx';
 const FILLS = '/corpus/decks/a03-fills.pptx';
+const LINES = '/corpus/decks/a06-lines.pptx';
 
 async function bytesOf(path: string): Promise<ArrayBuffer> {
   const response = await fetch(path);
@@ -123,6 +125,30 @@ describe('slidesView', () => {
     // A redraw after a cancel is a fresh draw and completes.
     await strip.redraw();
     expect(host.querySelectorAll('svg')).toHaveLength(3);
+  });
+
+  it('mounts the stage again when the display ratio changes, at the same zoom', async () => {
+    // a06's second slide: 2.25-pt lines, two pixels at 1 px/pt and five at 2 px/pt.
+    const deck = openDeck(new Uint8Array(await bytesOf(LINES)));
+    const stageHost = el('div', 'stage');
+    const stage = createStage(stageHost, el('div', 'inspector'), deck);
+    const was = window.devicePixelRatio;
+    try {
+      await stage.show(1, 1);
+      const one = stage.svg();
+      expect((await stage.show(1, 1)).mountMs).toBe(0);
+      Object.defineProperty(window, 'devicePixelRatio', { value: was * 2, configurable: true });
+      expect((await stage.show(1, 1)).mountMs).toBeGreaterThan(0);
+      // The same slide at the same CSS size, with its strokes rounded to twice the pixels.
+      const widthOf = (svg: string): string =>
+        /<g data-shape.*?stroke-width="([^"]+)"/.exec(svg)?.[1] ?? '';
+      expect(widthOf(one)).toBe('25400');
+      expect(widthOf(stage.svg())).toBe('31750');
+      expect(stage.svg()).toContain('width="960"');
+    } finally {
+      Object.defineProperty(window, 'devicePixelRatio', { value: was, configurable: true });
+      stage.unmount();
+    }
   });
 
   it('stops drawing the strip when disposed', async () => {

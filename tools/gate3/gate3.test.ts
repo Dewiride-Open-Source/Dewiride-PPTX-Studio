@@ -34,8 +34,10 @@ const DECK = '/corpus/decks/a46-hundred-slides.pptx';
 
 const SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12192000 6858000" width="960" height="540">' +
-  '<defs><clipPath id="slide3-1"><path d="M0 0H10V10H0Z"/></clipPath></defs>' +
-  '<g data-shape="2"><path d="M0 0L100 0" stroke-width="12700" stroke-dasharray="50800 25400"/>' +
+  '<defs><clipPath id="slide3-1"><path d="M0 0H10V10H0Z"/></clipPath>' +
+  '<marker id="slide3-2" markerUnits="userSpaceOnUse" markerWidth="127000" markerHeight="127000" ' +
+  'refX="127000" refY="63500" orient="auto"><path d="M0,0 L127000,63500 L0,127000 Z" fill="#000"/></marker></defs>' +
+  '<g data-shape="2"><path d="M0 0L100 0" stroke-width="12700" stroke-dasharray="50800 25400" marker-end="url(#slide3-2)"/>' +
   '<rect width="200" height="100" fill="url(#slide3-1)"/></g></svg>';
 
 describe('the zooms and their widths', () => {
@@ -84,6 +86,21 @@ describe('the zoom mask', () => {
     expect(maskZoom(moved)).not.toBe(maskZoom(SVG));
   });
 
+  it('lets a line end grow with the pen, and nothing else about it change', () => {
+    const wider = SVG.replace(/127000/g, '158750')
+      .replace('refY="63500"', 'refY="79375"')
+      .replace('L127000,63500', 'L158750,79375');
+    expect(maskZoom(wider)).toBe(maskZoom(SVG));
+    // A path outside a marker is not the pen's to change.
+    expect(maskZoom(SVG.replace('M0 0H10V10H0Z', 'M0 0H11V10H0Z'))).not.toBe(maskZoom(SVG));
+    // Nor is the end's orientation, its paint, or which end it is on.
+    expect(maskZoom(SVG.replace('orient="auto"', 'orient="auto-start-reverse"'))).not.toBe(
+      maskZoom(SVG),
+    );
+    expect(maskZoom(SVG.replace('fill="#000"', 'fill="#111"'))).not.toBe(maskZoom(SVG));
+    expect(maskZoom(SVG.replace('marker-end=', 'marker-start='))).not.toBe(maskZoom(SVG));
+  });
+
   it('refuses anything that is not an <svg> root', () => {
     expect(() => maskZoom('<div/>')).toThrow(FidelityError);
     expect(() => maskRootSize('<div/>')).toThrow(FidelityError);
@@ -100,6 +117,7 @@ describe('the display ratio', () => {
     const bare = maskRootSize(SVG);
     expect(bare).not.toContain('width="960"');
     expect(bare).toContain('stroke-width="12700"');
+    expect(bare).toContain('markerWidth="127000"');
     expect(bare).toContain('<rect width="200" height="100"');
     const atTwo = SVG.replace('width="960" height="540"', 'width="1920" height="1080"');
     expect(maskRootSize(atTwo)).toBe(bare);

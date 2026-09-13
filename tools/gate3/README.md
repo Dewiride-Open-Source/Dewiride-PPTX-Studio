@@ -31,7 +31,11 @@ could not run — the third kept apart for the reason
    `<svg>`, screenshots the page's own DOM at an integer clip, reduces the screenshot through the same
    `oracleGrid` path PowerPoint's PNGs take, and scores it against PowerPoint's grid at that width.
    Then the strip: every 120-pixel thumbnail, the same way.
-4. Writes `fidelity/gate3/index.html`: one column per zoom, every slide worst first, and for the
+4. Switches the page to a device pixel ratio of 2 over CDP, without telling it, and asks for every
+   slide at 100 % again: the markup must be the 200 % markup, the raster is scored against
+   PowerPoint's 1920-pixel export as a sixth column, and the strip the page redrew on its own must
+   be the 25 % markup.
+5. Writes `fidelity/gate3/index.html`: one column per zoom, every slide worst first, and for the
    three worst at each zoom the page's screenshot beside PowerPoint's grid and the difference.
 
 The stage and the strip are pinned at whole page pixels by an injected stylesheet so a clip is
@@ -42,17 +46,21 @@ exact; nothing inside an `<svg>` is touched, and a fractional box is refused rat
 **Gated, with no tolerance in it** ([`checks.ts`](./checks.ts)):
 
 - the deck has at least a hundred slides, and every one draws at every zoom and in the strip;
-- the SVG at every zoom is byte-identical to the SVG at 100 % once the root's size and the values of
-  `stroke-width` and `stroke-dasharray` are masked — the two attributes the stroke rule rounds to
-  device pixels (F2, ADR 0054) — and the thumbnail is too, once its id prefix is renamed;
+- the SVG at every zoom is byte-identical to the SVG at 100 % once the root's size, the values of
+  `stroke-width` and `stroke-dasharray` and the size and outline of every line-end marker are
+  masked — what the stroke rule rounds to device pixels, and the head drawn from that pen (F2, ADR
+  0054) — and the thumbnail is too, once its id prefix is renamed;
+- on a 2x display, switched to unannounced after the zooms, every slide's 100 % markup is its 200 %
+  markup to the byte and the strip the page redraws on its own is the 25 % markup;
 - no page or console error;
 - no request the gate does not recognise (the page, its bundle under `/dist/`, the deck), and none
   at all once offline;
 - every raster is the one recorded in `corpus/ground-truth/render/fidelity/zoom/expected.<env>.json`,
   by SHA-256, under the same font lock `pnpm fidelity` uses.
 
-**Reported and never gated:** the scores against PowerPoint at each width, and every timing — parse,
-first slide, the strip, each mount, each screenshot. The two sides differ by a few levels everywhere,
+**Reported and never gated:** the scores against PowerPoint at each width, the 2x display's rasters
+against the 200 % rasters (Chromium's, not the page's: within a few levels and rarely identical),
+and every timing — parse, first slide, the strip, each mount, each screenshot. The two sides differ by a few levels everywhere,
 so a pass/fail on the number would need a tolerance, and a tolerance is the thing that gets loosened
 ([ADR 0035](../../docs/adr/phase-3-text/0035-the-fidelity-harness.md)).
 
