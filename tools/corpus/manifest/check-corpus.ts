@@ -37,9 +37,11 @@ import { join, relative } from 'node:path';
 import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import { CENSUS_FEATURE_KEYS } from '../census/keys.gen.ts';
 import { checkCorpus, humanBytes, type CorpusFile, type ManifestFile } from './check.ts';
+import { checkWebsiteCopies, readWebsiteManifest } from './website.ts';
 import type { Violation } from './schema.ts';
 
 const CORPUS = join(ROOT, 'corpus');
+const WEBSITE_DECKS = join(ROOT, 'website', 'public', 'decks');
 
 /** Workspace-relative, forward slashes, so a message is the same on every OS. */
 function rel(absolute: string): string {
@@ -180,6 +182,37 @@ const violations = checkCorpus({
   toolPaths: readToolPaths(),
   censusKeys: CENSUS_FEATURE_KEYS,
 });
+
+// The decks the public site serves, held to the corpus they were copied from.
+const websiteDecks = walk(WEBSITE_DECKS);
+const websiteManifest = websiteDecks.manifests[0];
+if (websiteManifest === undefined) {
+  console.error('corpus: no manifest.json under ' + rel(WEBSITE_DECKS));
+  process.exit(2);
+}
+let websiteJson: unknown;
+try {
+  websiteJson = JSON.parse(readFileSync(websiteManifest, 'utf8'));
+} catch (error) {
+  console.error('corpus: ' + rel(websiteManifest) + ' is not valid JSON');
+  console.error('  ' + (error instanceof Error ? error.message : String(error)));
+  process.exit(2);
+}
+violations.push(
+  ...checkWebsiteCopies({
+    manifestPath: rel(websiteManifest),
+    decks: readWebsiteManifest(websiteJson, rel(websiteManifest)),
+    copies: websiteDecks.files.map((absolute) => {
+      const bytes = readFileSync(absolute);
+      return {
+        path: rel(absolute),
+        bytes: bytes.byteLength,
+        sha256: createHash('sha256').update(bytes).digest('hex'),
+      };
+    }),
+    corpus: files,
+  }),
+);
 
 const entryCount = manifests.reduce((total, manifest) => {
   const entries = (manifest.json as { entries?: unknown[] } | null)?.entries;

@@ -51,6 +51,8 @@ export default tseslint.config(
       ],
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: false }],
       'no-console': ['error', { allow: ['warn', 'error'] }],
+      // A static export has no image optimiser, and every image here is an SVG.
+      '@next/next/no-img-element': 'off',
       eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-var': 'error',
       'prefer-const': 'error',

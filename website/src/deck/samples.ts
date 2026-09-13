@@ -1,44 +1,28 @@
-/**
- * The decks shipped with this example.
- *
- * All six are copied from the project's own corpus, all are CC0-1.0 and
- * self-authored, and the `b` ones were authored in real PowerPoint rather than
- * generated - which is why they are the ones worth looking at first.
- */
+import manifest from '../../public/decks/manifest.json';
 
+/** A deck the site serves: a byte-identical copy of a corpus deck, as `public/decks/manifest.json` claims it. */
 export interface Sample {
   readonly file: string;
-  readonly name: string;
+  readonly slides: number;
+  readonly bytes: number;
   readonly about: string;
 }
 
-export const SAMPLES: readonly Sample[] = [
-  {
-    file: 'b02-layouts.pptx',
-    name: 'Layouts',
-    about: 'The eleven built-in layouts, one slide each. The Blank one really is empty.',
-  },
-  { file: 'b03-text.pptx', name: 'Text', about: 'Placeholders, bullets and the text cascade.' },
-  {
-    file: 'b09-picture.pptx',
-    name: 'Picture',
-    about: 'Cropped image fills and a picture placeholder.',
-  },
-  {
-    file: 'a05-geometry.pptx',
-    name: 'Geometry',
-    about: 'Preset shapes, adjust handles and custom geometry.',
-  },
-  {
-    file: 'a44-transforms.pptx',
-    name: 'Transforms',
-    about: 'Rotated and flipped shapes, and nested groups.',
-  },
-  {
-    file: 'a45-backgrounds.pptx',
-    name: 'Backgrounds',
-    about: 'Themed backgrounds through the style matrix.',
-  },
-];
+export const SAMPLES: readonly Sample[] = manifest.decks.map((deck) => ({
+  file: deck.file,
+  slides: deck.slides,
+  bytes: deck.bytes,
+  about: deck.about,
+}));
 
-export const DEFAULT_SAMPLE = SAMPLES[0]!;
+/** The first deck in the manifest is the one every page opens on. */
+export const DEFAULT_SAMPLE: Sample = SAMPLES[0]!;
+
+export function sampleNamed(file: string): Sample | undefined {
+  return SAMPLES.find((sample) => sample.file === file);
+}
+
+/** `a46-hundred-slides.pptx` -> `a46 hundred slides`. */
+export function sampleTitle(sample: Sample): string {
+  return sample.file.replace(/\.ppt[xm]$/, '').replace(/-/g, ' ');
+}

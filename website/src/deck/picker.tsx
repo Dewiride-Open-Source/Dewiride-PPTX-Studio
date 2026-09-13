@@ -42,7 +42,7 @@ export function DeckPicker() {
         )}
         {SAMPLES.map((sample) => (
           <option key={sample.file} value={sample.file}>
-            {sample.name} - {sample.file}
+            {sample.file} - {sample.slides} slide(s)
           </option>
         ))}
       </select>

@@ -26,7 +26,7 @@ const check = (name, ok, detail) => {
 };
 
 for (const file of readdirSync(DECKS)
-  .filter((n) => n.endsWith('.pptx'))
+  .filter((n) => /\.ppt[xm]$/.test(n))
   .sort()) {
   const bytes = new Uint8Array(readFileSync(join(DECKS, file)));
 

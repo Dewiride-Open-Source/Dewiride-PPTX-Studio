@@ -1,0 +1,115 @@
+{
+  "$comment": "Copies of corpus decks the site serves; tools/corpus/manifest/check-corpus.ts holds each to its original (C020).",
+  "decks": [
+    {
+      "file": "a46-hundred-slides.pptx",
+      "slides": 100,
+      "bytes": 164143,
+      "sha256": "9d9c7d1366454224f4c968b21ec894bfee82d06c9391ce83cb2b052395e28730",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/decks/a46-hundred-slides.pptx",
+      "about": "A hundred generated slides of ten kinds - the size a deck has after a quarter of writing."
+    },
+    {
+      "file": "a43-kitchen-sink.pptm",
+      "slides": 10,
+      "bytes": 107724,
+      "sha256": "aa16b918ada5f4400ddedf12b96a1bc0f5627c95d4f9ed2fe371eef003c1088c",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/decks/a43-kitchen-sink.pptm",
+      "about": "Charts, SmartArt, OLE objects, animations and a macro in one macro-enabled file: everything that must survive an export untouched."
+    },
+    {
+      "file": "b02-layouts.pptx",
+      "slides": 11,
+      "bytes": 45876,
+      "sha256": "f20b377ae6a7294083b8d029be5340a0ac12df15d1ff86f054c8b365615614b9",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/authored/b02-layouts.pptx",
+      "about": "One slide per built-in layout, written by PowerPoint itself; the Blank layout's slide really is empty."
+    },
+    {
+      "file": "b03-text.pptx",
+      "slides": 3,
+      "bytes": 45116,
+      "sha256": "aa0b2e6638eb688223aa0fe4350b130233749c58aed5d5a8f00dc6240d3aac63",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/authored/b03-text.pptx",
+      "about": "Autofit as PowerPoint computed it, mixed runs, and a slide-number field."
+    },
+    {
+      "file": "b09-picture.pptx",
+      "slides": 2,
+      "bytes": 99703,
+      "sha256": "037aa3700e35e65124631ce4387285a78677344e7ded5dee837f3871cd83c6fd",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/authored/b09-picture.pptx",
+      "about": "Two pictures the two ways PowerPoint places them, with crop, shadow, reflection, glow and soft edge."
+    },
+    {
+      "file": "a05-geometry.pptx",
+      "slides": 3,
+      "bytes": 48007,
+      "sha256": "b7e7e85fb3296a2dffcf9fb5b12c223eaf8463cc2f2ee8bb0a285374efd5fa89",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/decks/a05-geometry.pptx",
+      "about": "Custom geometry with every path command, plus 24 presets at non-default adjust values."
+    },
+    {
+      "file": "a03-fills.pptx",
+      "slides": 3,
+      "bytes": 83224,
+      "sha256": "3dc0d207ad9ed1df2b009442d1d0d6c3fbd4fe662cb24bcf64e5d51cf20ebd42",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/decks/a03-fills.pptx",
+      "about": "Every DrawingML fill: six colour models, seven gradients, eight picture fills, group fill, all 54 patterns."
+    },
+    {
+      "file": "a06-lines.pptx",
+      "slides": 3,
+      "bytes": 45563,
+      "sha256": "62a057b764fda3ce8b333379b8f44f6d3c6641b88f5e26a227987e0d3226428f",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/decks/a06-lines.pptx",
+      "about": "Strokes at four widths, every cap, compound and dash, joins, arrowheads, and connectors glued to shapes."
+    },
+    {
+      "file": "a12-masters.pptx",
+      "slides": 3,
+      "bytes": 52838,
+      "sha256": "04d9fefd5ef2021c2645773202af1982cb32ae48d1b2d37e0dc2a0b2113128b3",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/decks/a12-masters.pptx",
+      "about": "Three masters with three themes and three colour maps; the same eight scheme colours resolve differently on each."
+    },
+    {
+      "file": "a44-transforms.pptx",
+      "slides": 2,
+      "bytes": 37981,
+      "sha256": "c45b3c0600159e49c2b6259777251f9cca73eb03b1ced4232792e54891de4f32",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/decks/a44-transforms.pptx",
+      "about": "Rotation and mirroring, and six nested groups that separate the two ways a transform could compose."
+    },
+    {
+      "file": "a45-backgrounds.pptx",
+      "slides": 4,
+      "bytes": 31783,
+      "sha256": "bed430e3c9070cb6108796bb7e5d5a5755fc87889ff0bf4e29b2bb1750c78998",
+      "license": "CC0-1.0",
+      "source": "self-authored",
+      "corpus": "corpus/decks/a45-backgrounds.pptx",
+      "about": "Slide backgrounds by all three routes: theme reference, explicit gradient, and inherited from the layout."
+    }
+  ]
+}

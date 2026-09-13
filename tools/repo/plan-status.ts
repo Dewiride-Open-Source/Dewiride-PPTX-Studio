@@ -9,6 +9,9 @@
  * Status is derived, not asserted: a sub-phase is done when `docs/plan/phases.json` names its ADR
  * and that file exists. The working agreement writes the ADR at the end of a sub-phase, so nothing
  * can be marked done here that has no record.
+ *
+ * The same run writes `website/src/status/plan.json`, the projection the site's status page reads:
+ * the site builds from its own directory alone, so the plan is copied in rather than read across.
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -22,6 +25,8 @@ const PLAN = repoPath('docs/plan');
 const DATA = join(PLAN, 'phases.json');
 const INDEX = join(PLAN, 'README.md');
 const ADR = repoPath('docs/adr');
+const BADGE = repoPath('.github/badges/roundtrip.json');
+const PROJECTION = repoPath('website/src/status/plan.json');
 
 /** The one state a sub-phase may claim without an ADR to show for it. */
 const IN_PROGRESS = 'in-progress';
@@ -278,22 +283,80 @@ function render(plan: Plan): string {
   return lines.join('\n');
 }
 
+/** The badge is the one place the round-trip count is asserted; the site repeats it, never recounts. */
+function roundTrip(): { decks: number; total: number } {
+  const badge = fields(JSON.parse(readFileSync(BADGE, 'utf8')), 'roundtrip.json');
+  const match = /^(\d+)\/(\d+) decks$/.exec(text(badge['message'], 'roundtrip.json.message'));
+  if (match?.[1] === undefined || match[2] === undefined) {
+    throw new Error(`roundtrip.json message is not "N/N decks": ${String(badge['message'])}`);
+  }
+  return { decks: Number(match[1]), total: Number(match[2]) };
+}
+
+/** What the site shows: the same facts as the table, with nothing that changes between runs. */
+function project(plan: Plan): string {
+  const state = (entry: Entry): 'done' | 'caveat' | 'in-progress' | 'todo' => {
+    if (entry.adr === undefined) return entry.state === IN_PROGRESS ? 'in-progress' : 'todo';
+    return entry.note === undefined ? 'done' : 'caveat';
+  };
+  const projection = {
+    recorded: plan.phases.reduce((sum, phase) => sum + done(phase), 0),
+    total: plan.phases.reduce((sum, phase) => sum + phase.subPhases.length, 0),
+    gatesClosed: plan.phases.filter((phase) => phase.gate.adr !== undefined).length,
+    gates: plan.phases.length,
+    roundTrip: roundTrip(),
+    phases: plan.phases.map((phase) => ({
+      number: phase.number,
+      title: phase.title,
+      done: done(phase),
+      total: phase.subPhases.length,
+      gate: { title: phase.gate.title, state: state(phase.gate), adr: phase.gate.adr ?? null },
+      subPhases: phase.subPhases.map((subPhase) => ({
+        id: subPhase.id,
+        title: subPhase.title,
+        state: state(subPhase),
+        adr: subPhase.adr ?? null,
+        result: subPhase.result ?? null,
+        note: subPhase.note ?? null,
+      })),
+    })),
+    carried: plan.carried,
+  };
+  return `${JSON.stringify(projection, null, 2)}\n`;
+}
+
 /** Formatted through Prettier so that `pnpm format:check` and this agree. */
+const plan = readPlan();
 const config = await resolveConfig(INDEX);
-const wanted = await format(render(readPlan()), { ...config, filepath: INDEX });
+const outputs: readonly { file: string; wanted: string; relative: string }[] = [
+  {
+    file: INDEX,
+    wanted: await format(render(plan), { ...config, filepath: INDEX }),
+    relative: 'docs/plan/README.md',
+  },
+  {
+    file: PROJECTION,
+    wanted: await format(project(plan), { ...config, filepath: PROJECTION }),
+    relative: 'website/src/status/plan.json',
+  },
+];
 
 if (process.argv.includes('--check')) {
-  let found: string;
-  try {
-    found = readFileSync(INDEX, 'utf8');
-  } catch {
-    found = '';
-  }
-  if (found !== wanted) {
-    console.error('docs/plan/README.md is out of date - run: node tools/repo/plan-status.ts');
-    process.exitCode = 1;
+  for (const { file, wanted, relative } of outputs) {
+    let found: string;
+    try {
+      found = readFileSync(file, 'utf8');
+    } catch {
+      found = '';
+    }
+    if (found !== wanted) {
+      console.error(`${relative} is out of date - run: node tools/repo/plan-status.ts`);
+      process.exitCode = 1;
+    }
   }
 } else {
-  writeFileSync(INDEX, wanted);
-  console.log(`wrote ${INDEX}`);
+  for (const { file, wanted } of outputs) {
+    writeFileSync(file, wanted);
+    console.log(`wrote ${file}`);
+  }
 }
