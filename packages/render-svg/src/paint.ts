@@ -294,6 +294,8 @@ export interface StrokePaint {
   readonly line: ResolvedLine;
   /** Half a device pixel in EMU for an odd pen at a named scale, else zero (F3, `snap.json`). */
   readonly shift: number;
+  /** Whether the true width is a whole number of device pixels at the named scale, so the pen is the width. */
+  readonly whole: boolean;
 }
 
 /**
@@ -305,6 +307,9 @@ export interface StrokePaint {
  * either way, and `compoundRails` in `paint` has the measured table for when a
  * renderer can use it.
  */
+/** How far the device pen may sit from the true width and still be it: the width's own rounding. */
+const WHOLE_PIXEL_EMU = 1;
+
 export function strokeAttributes(
   line: ResolvedLine | null,
   ctx: ColorContext,
@@ -352,7 +357,13 @@ export function strokeAttributes(
     if (paint['fill-opacity'] !== undefined) attrs['stroke-opacity'] = paint['fill-opacity'];
   }
 
-  return { attrs, band, line, shift: pen === null ? 0 : pen.shift };
+  return {
+    attrs,
+    band,
+    line,
+    shift: pen === null ? 0 : pen.shift,
+    whole: pen !== null && Math.abs(pen.width - line.width) <= WHOLE_PIXEL_EMU,
+  };
 }
 
 /* -------------------------------------------------------------------------- */

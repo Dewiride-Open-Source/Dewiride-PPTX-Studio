@@ -48,9 +48,10 @@ exact; nothing inside an `<svg>` is touched, and a fractional box is refused rat
 - the deck has at least a hundred slides, and every one draws at every zoom and in the strip;
 - the SVG at every zoom is byte-identical to the SVG at 100 % once the root's size, the values of
   `stroke-width` and `stroke-dasharray`, the half-pixel translate a crisp path carries when its
-  pen is odd, and the size and outline of every line-end marker are masked — what the stroke
-  rule rounds to device pixels, where the grid rule puts the pen, and the head drawn from that pen
-  (F2 and F3, ADR 0054) — and the thumbnail is too, once its id prefix is renamed;
+  pen is odd, whether a picture's border band is crisp, and the size and outline of every
+  line-end marker are masked — what the stroke rule rounds to device pixels, where the grid rule
+  puts the pen, and the head drawn from that pen (F2 and F3, ADR 0054) — and the thumbnail is
+  too, once its id prefix is renamed;
 - on a 2x display, switched to unannounced after the zooms, every slide's 100 % markup is its 200 %
   markup to the byte and the strip the page redraws on its own is the 25 % markup;
 - no page or console error;

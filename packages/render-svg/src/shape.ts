@@ -34,6 +34,8 @@ import {
   strokeAttributes,
   withEffects,
   type Attrs,
+  type StrokeBand,
+  type StrokePaint,
 } from './paint.js';
 import { element, num, type SvgElement, type SvgNode } from './node.js';
 import type { Placed } from './layout.js';
@@ -146,6 +148,109 @@ function outside(box: Box, nominalWidth: number): string {
   return `M${left} ${top}H${right}V${bottom}H${left}Z`;
 }
 
+/** Whether the paths are the frame's own rectangle and nothing else: a picture as it usually is. */
+function isBox(paths: readonly ResolvedPath[], box: Box): boolean {
+  if (paths.length !== 1) return false;
+  const corners: Point[] = [];
+  for (const segment of paths[0]!.segments) {
+    if (segment.kind === 'move' || segment.kind === 'line') corners.push(segment.to);
+    else if (segment.kind !== 'close') return false;
+  }
+  const near = (a: Point, b: Point): boolean =>
+    Math.abs(a.x - b.x) <= ALIGNED_EMU && Math.abs(a.y - b.y) <= ALIGNED_EMU;
+  if (corners.length === 5 && near(corners[0]!, corners[4]!)) corners.pop();
+  if (corners.length !== 4) return false;
+  const expected: readonly Point[] = [
+    { x: 0, y: 0 },
+    { x: box.cx, y: 0 },
+    { x: box.cx, y: box.cy },
+    { x: 0, y: box.cy },
+  ];
+  return expected.every((e) => corners.some((c) => near(c, e)));
+}
+
+/**
+ * The frame outset by half the true width: where a picture's border is centred, drawn over the
+ * picture at the device pen's width (F3, `BT`).
+ */
+function borderPath(box: Box, width: number): string {
+  const h = width / 2;
+  return `M${num(-h)} ${num(-h)}H${num(box.cx + h)}V${num(box.cy + h)}H${num(-h)}Z`;
+}
+
+/** Which side a picture's pen is drawn on: the outset frame for a rectangle, a clipped band for any other. */
+function bandOf(placed: Placed, border: boolean): StrokeBand | undefined {
+  if (placed.shape.kind !== 'pic') return undefined;
+  return border ? 'centre' : 'out';
+}
+
+/**
+ * A rectangular picture's border: the device pen on the frame outset by half the true width,
+ * crisp when the width is whole device pixels - then it is exactly F3's `BT` - and antialiased
+ * otherwise. The gate's mask owns the crispness as it owns the pen (ADR 0054).
+ */
+function borderNode(box: Box, stroke: StrokePaint, snapped: boolean): SvgElement {
+  return element('path', {
+    d: borderPath(box, stroke.line.width),
+    fill: 'none',
+    ...stroke.attrs,
+    'data-band': 'out',
+    ...(snapped && stroke.whole ? { 'shape-rendering': 'crispEdges' } : {}),
+  });
+}
+
+interface Grid {
+  readonly clip: string | null;
+  readonly snapped: boolean;
+  readonly crisp: Attrs;
+  readonly shifted: Attrs;
+}
+
+/** A path's fill and its pen: one node, or two where the pen is clipped or moved on its own. */
+function strokedNodes(
+  path: ResolvedPath,
+  fillAttrs: Attrs,
+  stroke: StrokePaint,
+  grid: Grid,
+  defs: Defs,
+): SvgElement[] {
+  const ends = lineEndAttributes(stroke, openEnds(path.segments), defs);
+  // A snapped fill and its pen are two paths at every zoom, since only an odd pen moves.
+  const split = grid.snapped && fillAttrs['fill'] !== 'none';
+  if (grid.clip === null && !split) {
+    return [
+      element('path', {
+        d: path.d,
+        ...fillAttrs,
+        ...stroke.attrs,
+        ...ends,
+        ...grid.crisp,
+        ...grid.shifted,
+      }),
+    ];
+  }
+  // The fill is its own path where a clip would otherwise keep only the band (ADR 0054).
+  return [
+    element('path', { d: path.d, ...fillAttrs, stroke: 'none', ...grid.crisp }),
+    grid.clip === null
+      ? element('path', {
+          d: path.d,
+          fill: 'none',
+          ...stroke.attrs,
+          ...ends,
+          ...grid.crisp,
+          ...grid.shifted,
+        })
+      : element('path', {
+          d: path.d,
+          fill: 'none',
+          ...stroke.attrs,
+          ...ends,
+          'clip-path': grid.clip,
+        }),
+  ];
+}
+
 /**
  * The nodes for one shape, in painting order.
  *
@@ -177,14 +282,17 @@ export function shapeNodes(
   const box: Box = { x: 0, y: 0, cx: placed.frame.cx, cy: placed.frame.cy };
   const fillBox = localFillBox(placed);
   const fill = fillAttributes(placed.fill, placed.colorContext, fillBox, defs);
-  // A picture's outline is drawn wholly outside its box, where a shape's default
-  // band straddles the geometry: 12pt out and none in, of a 12pt line. ADR 0037.
+  // A picture's outline is drawn outside its box, where a shape's default band straddles the
+  // geometry: 12pt out and none in, of a 12pt line (ADR 0037). A rectangular picture's is a pen
+  // on the frame outset by half the width, drawn over the picture (F3, `BT`); any other is a
+  // double-width band clipped to the outside.
+  const border = placed.shape.kind === 'pic' && isBox(paths, box);
   const stroke = strokeAttributes(
     placed.appearance.line === null ? null : resolveLine(placed.appearance.line),
     placed.colorContext,
     fillBox,
     defs,
-    placed.shape.kind === 'pic' ? 'out' : undefined,
+    bandOf(placed, border),
   );
 
   // A one-sided band is drawn at double width and clipped to the side it belongs
@@ -221,35 +329,13 @@ export function shapeNodes(
     if (!path.stroke || stroke === null) {
       return [element('path', { d: path.d, ...fillAttrs, stroke: 'none', ...crisp })];
     }
-    const ends = lineEndAttributes(stroke, openEnds(path.segments), defs);
-    // A snapped fill and its pen are two paths at every zoom, since only an odd pen moves.
-    const split = snapped && fillAttrs['fill'] !== 'none';
-    if (clip === null && !split) {
+    if (border) {
       return [
-        element('path', {
-          d: path.d,
-          ...fillAttrs,
-          ...stroke.attrs,
-          ...ends,
-          ...crisp,
-          ...shifted,
-        }),
+        element('path', { d: path.d, ...fillAttrs, stroke: 'none', ...crisp }),
+        borderNode(box, stroke, snapped),
       ];
     }
-    // The fill is its own path where a clip would otherwise keep only the band (ADR 0054).
-    return [
-      element('path', { d: path.d, ...fillAttrs, stroke: 'none', ...crisp }),
-      clip === null
-        ? element('path', {
-            d: path.d,
-            fill: 'none',
-            ...stroke.attrs,
-            ...ends,
-            ...crisp,
-            ...shifted,
-          })
-        : element('path', { d: path.d, fill: 'none', ...stroke.attrs, ...ends, 'clip-path': clip }),
-    ];
+    return strokedNodes(path, fillAttrs, stroke, { clip, snapped, crisp, shifted }, defs);
   });
 
   const transform = frameTransform(placed.frame);

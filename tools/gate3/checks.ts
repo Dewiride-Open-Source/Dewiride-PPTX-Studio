@@ -59,13 +59,17 @@ export function maskRootSize(svg: string): string {
  * The SVG with what a zoom is allowed to change taken out.
  *
  * The root's size; `stroke-width` and `stroke-dasharray` (F2); a crisp path's half-pixel
- * translate (F3); a line end's numbers, its outline's commands kept (F2's M8). ADR 0054.
+ * translate and whether a picture's border band is crisp (F3); a line end's numbers, its
+ * outline's commands kept (F2's M8). ADR 0054.
  */
 export function maskZoom(svg: string): string {
   return maskRootSize(svg)
     .replace(/ (stroke-width|stroke-dasharray)="[^"]*"/g, ' $1="*"')
     .replace(/<path\b[^>]*shape-rendering="crispEdges"[^>]*>/g, (path) =>
       path.replace(/ transform="translate\([^"]*\)"/, ''),
+    )
+    .replace(/<path\b[^>]*data-band="[^"]*"[^>]*>/g, (path) =>
+      path.replace(/ shape-rendering="crispEdges"/, ''),
     )
     .replace(/<marker\b[^>]*>[\s\S]*?<\/marker>/g, (marker) =>
       marker
