@@ -1206,7 +1206,7 @@ describe('line ends, re-derived from C4 and F2', () => {
 
   it('inks a ten-point head at 960 and a five-pixel one at 240, as PowerPoint did', async () => {
     const slide = ended('0', TAIL);
-    const at = (width: number): Promise<number> =>
+    const at = (width: number): Promise<{ rows: number; centre: number }> =>
       headHeight(
         renderSlide(slide, SIZE, { idPrefix: 'r', width, height: (width * 9) / 16 }),
         width,
