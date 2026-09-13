@@ -103,6 +103,38 @@ describe('the zoom mask', () => {
     expect(maskZoom(SVG.replace('marker-end=', 'marker-start='))).not.toBe(maskZoom(SVG));
   });
 
+  it('lets a crisp path move half a device pixel with its pen, and nothing else move at all', () => {
+    // An odd pen at 100 % is half of 1/2 pt on; at 200 % the pen is even and the shift is gone.
+    const odd = SVG.replace(
+      '<path d="M0 0L100 0"',
+      '<path d="M0 0L100 0" shape-rendering="crispEdges" transform="translate(6350 6350)"',
+    );
+    const even = SVG.replace(
+      '<path d="M0 0L100 0"',
+      '<path d="M0 0L100 0" shape-rendering="crispEdges"',
+    );
+    expect(maskZoom(odd)).toBe(maskZoom(even));
+    // Turned a quarter, the shift turns with it; the mask owns that too.
+    const turned = odd.replace('translate(6350 6350)', 'translate(6350 -6350)');
+    expect(maskZoom(turned)).toBe(maskZoom(even));
+    // Whether the path is crisp is the geometry's, not the zoom's, and a translate on an
+    // antialiased path or on a group is a shape moving.
+    expect(maskZoom(even)).not.toBe(maskZoom(SVG));
+    expect(
+      maskZoom(
+        SVG.replace(
+          '<path d="M0 0L100 0"',
+          '<path d="M0 0L100 0" transform="translate(6350 6350)"',
+        ),
+      ),
+    ).not.toBe(maskZoom(SVG));
+    expect(
+      maskZoom(
+        SVG.replace('<g data-shape="2">', '<g data-shape="2" transform="translate(6350 6350)">'),
+      ),
+    ).not.toBe(maskZoom(SVG));
+  });
+
   it('refuses anything that is not an <svg> root', () => {
     expect(() => maskZoom('<div/>')).toThrow(FidelityError);
     expect(() => maskRootSize('<div/>')).toThrow(FidelityError);

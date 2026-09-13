@@ -293,21 +293,39 @@ export function markerOvershoot(end: LineEnd | null, strokeWidth: number): numbe
 /** The smallest device scale a stroke is rounded for: a twentieth of a pixel to the point, 5 % zoom. */
 export const MIN_PX_PER_PT = 0.05;
 
+/** A stroke on the export's device grid: its pen, and where the pen sits (F2 and F3). */
+export interface DevicePen {
+  /** The pen, in EMU: the width in whole device pixels, a half up, never under one. */
+  readonly width: number;
+  /** Half a device pixel in EMU when the pen is odd, else zero: an odd pen sits on pixel centres. */
+  readonly shift: number;
+}
+
 /**
- * The width a stroke is drawn at, in EMU, at `pxPerPt` device pixels to the point.
+ * The pen a stroke is drawn with at `pxPerPt` device pixels to the point.
  *
- * PowerPoint's export draws a stroke at its width rounded to whole device pixels and never under
- * one, and a zero width as one pixel, at every export width from 120 to 3840 (F2, `zoom.json`).
+ * PowerPoint's export rounds a width to whole pixels, never under one (F2, `zoom.json`), and
+ * puts an odd pen on pixel centres, half a pixel past the rounded coordinate (F3's SP,
+ * `snap.json`); an exact half pixel rounds up at 960 wide, as it does here, and down at 1200.
  */
-export function deviceStrokeWidth(widthEmu: number, pxPerPt: number): number {
+export function devicePen(widthEmu: number, pxPerPt: number): DevicePen {
   if (!(pxPerPt >= MIN_PX_PER_PT)) {
     throw new PaintError(
       'LINE_DEVICE_SCALE',
       `${String(pxPerPt)} device pixels to the point, under the ${String(MIN_PX_PER_PT)} strokes are rounded for`,
     );
   }
-  const px = widthEmu <= 0 ? 1 : Math.max(1, Math.round((widthEmu / EMU_PER_POINT) * pxPerPt));
-  return (px / pxPerPt) * EMU_PER_POINT;
+  const px =
+    widthEmu <= 0 ? 1 : Math.max(1, Math.floor((widthEmu / EMU_PER_POINT) * pxPerPt + 0.5));
+  return {
+    width: (px / pxPerPt) * EMU_PER_POINT,
+    shift: px % 2 === 1 ? (0.5 / pxPerPt) * EMU_PER_POINT : 0,
+  };
+}
+
+/** The width a stroke is drawn at, in EMU, at `pxPerPt` device pixels to the point. */
+export function deviceStrokeWidth(widthEmu: number, pxPerPt: number): number {
+  return devicePen(widthEmu, pxPerPt).width;
 }
 
 /** The narrowest pen a line end is sized from: two points. */

@@ -40,11 +40,9 @@ export interface RenderOptions {
    * Defaults to something unique per call.
    */
   readonly idPrefix?: string;
-  /**
-   * `width` and `height` attributes, in CSS pixels. Omitted when absent. A width also names the
-   * device scale strokes are rounded to whole pixels at; without one they keep their true width.
-   */
+  /** The `width` attribute in CSS pixels, which also names the device scale strokes round to. */
   readonly width?: number;
+  /** The `height` attribute in CSS pixels: a box the slide is stretched into, as the export is (F2). */
   readonly height?: number;
   /** Device pixels per CSS pixel, so a 2x display rounds strokes to its own pixels. Default 1. */
   readonly devicePixelRatio?: number;
@@ -159,8 +157,8 @@ export function slideNode(sheet: Sheet, size: SlideSize, options: RenderOptions 
         viewBox: `0 0 ${String(size.cx)} ${String(size.cy)}`,
         ...(options.width === undefined ? {} : { width: options.width }),
         ...(options.height === undefined ? {} : { height: options.height }),
-        // Slides are a fixed aspect and nothing about them stretches.
-        preserveAspectRatio: 'xMidYMid meet',
+        // A named box is filled to the pixel, as the export fills its own; otherwise the aspect holds.
+        preserveAspectRatio: options.height === undefined ? 'xMidYMid meet' : 'none',
       },
       children,
     ),

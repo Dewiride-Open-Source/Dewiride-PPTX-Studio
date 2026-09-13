@@ -2,7 +2,7 @@
 
 Date: 2026-09-13
 Status: **accepted** — Gate 3 holds: 100 slides × 5 widths and a 2x display through the page,
-offline; 28/28 mutants killed in the first pass and 23/23 in the second
+offline; 28/28 mutants killed in the first pass, 23/23 in the second and 13/13 in the third
 
 **Sub-phase 3.11.** Gate 3 asks for "a 100-slide deck rendered faithfully at any zoom, entirely
 client-side". None of its four claims was true or checkable when this began: the largest committed
@@ -10,23 +10,23 @@ deck had eleven slides, the page drew no pictures and no `w="0"` lines, its stag
 pixels wide with no zoom control, and nothing measured what the page did or where it fetched from.
 This is the record of making each claim a measurement, and of what the measurements found.
 
-Code: `tools/ground-truth/render/zoom/`, `tools/gate3/`, `apps/studio/src/slides/`,
+Code: `tools/ground-truth/render/zoom/`, `tools/ground-truth/render/snap/`, `tools/gate3/`, `apps/studio/src/slides/`,
 `tools/corpus/tiers/a-generated/decks/deck/a46-hundred-slides/`, `tools/fidelity/{oracle,record,fixtures}.ts`,
 `tools/fidelity/metric/{grid,deck}.ts`, `packages/paint/src/lines/line.ts`,
 `packages/render-svg/src/{paint,shape,slide,image/media}.ts`, `packages/render-svg/src/text/`. Fixtures:
-`corpus/ground-truth/zoom.json`, `corpus/decks/a46-hundred-slides.pptx` and its oracle at five
-widths, `corpus/ground-truth/render/fidelity/zoom/expected.<env>.json`.
+`corpus/ground-truth/zoom.json`, `corpus/ground-truth/snap.json`, `corpus/decks/a46-hundred-slides.pptx`
+and its oracle at five widths, `corpus/ground-truth/render/fidelity/zoom/expected.<env>.json`.
 
 ---
 
 ## The sentence, as four measurements
 
-| claim                | what now checks it                                                                                                                                                                                                                                                                      |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| a 100-slide deck     | `a46-hundred-slides`, generated, 100 slides, in `corpus/decks/`; the oracle holds PowerPoint's export of every slide at 120, 240, 960, 1920 and 3840 pixels wide                                                                                                                        |
-| rendered faithfully  | every slide scored through the **page's own DOM** against that export, at every width; `pnpm fidelity` scores it through the `<img>` path as well                                                                                                                                       |
-| at any zoom          | experiment F2 asked PowerPoint what its export does at seven widths that a linear scale does not; the rule is in the renderer; the gate asserts the SVG at every zoom is the SVG at 100 % apart from what that rule owns, and that a 2x display's 100 % is the 200 % markup to the byte |
-| entirely client-side | the gate fetches the deck once, takes the browser context offline, and logs every request; a request it does not recognise, or any request after going offline, fails it                                                                                                                |
+| claim                | what now checks it                                                                                                                                                                                                                                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| a 100-slide deck     | `a46-hundred-slides`, generated, 100 slides, in `corpus/decks/`; the oracle holds PowerPoint's export of every slide at 120, 240, 960, 1920 and 3840 pixels wide                                                                                                                                                                                  |
+| rendered faithfully  | every slide scored through the **page's own DOM** against that export, at every width; `pnpm fidelity` scores it through the `<img>` path as well                                                                                                                                                                                                 |
+| at any zoom          | experiments F2 and F3 asked PowerPoint what its export does at seven widths that a linear scale does not, and where it puts an edge on the device grid; both rules are in the renderer; the gate asserts the SVG at every zoom is the SVG at 100 % apart from what those rules own, and that a 2x display's 100 % is the 200 % markup to the byte |
+| entirely client-side | the gate fetches the deck once, takes the browser context offline, and logs every request; a request it does not recognise, or any request after going offline, fails it                                                                                                                                                                          |
 
 `pnpm gate3` runs all of it in `pnpm check` and CI from committed fixtures, needs no Office, and
 exits 0 only when every count is zero. The scores are reported and gate nothing, for the reason ADR
@@ -71,23 +71,84 @@ from a two-point pen, above two points from the whole-pixel stroke, and never fr
 pixel — `markerPen` in `paint`, 49/49 against the fixture at its 1-px tolerance. What finishing it
 found is under "Line ends", below.
 
-**O4's half-up snap** is recorded and not implemented, and the record has to be read carefully.
-O4 fits 8/8 and O1 — wholly outside, unsnapped — 7/8, but the one case that separates them is
-`border-1pt` at 1200 px, where the inner edge sat half a pixel inside the frame. One case is an anecdote. What
-makes it worth keeping is the company it has: every whole-pixel stroke in the thin family from 240
-px up has a profile peak of exactly 1.0 — one crisp row, or two, or five, never a stroke straddling
-two rows at half coverage — while a stroke centred on an integer device coordinate in our SVG
-straddles, and Chromium antialiases it over two rows. PowerPoint snaps whole-pixel strokes to the
-grid; the border's half-up snap is one face of that. Which way it snaps, on which coordinate, for
-odd and even widths, on a diagonal and on a curve, is an experiment nobody has run, and a rule
-implemented from the border's one separating case would be a guess. Carried, as that experiment.
+**O4's half-up snap** was, in the first two versions of this record, carried rather than
+implemented: O4 fits 8/8 and O1 — wholly outside, unsnapped — 7/8, and the one case that separates
+them is `border-1pt` at 1200 px. One case is an anecdote. What made it worth carrying was the
+company it had: every whole-pixel stroke in the thin family from 240 px up has a profile peak of
+exactly 1.0 — one crisp row, or two, or five, never a stroke straddling two rows at half coverage —
+while a stroke centred on an integer device coordinate in our SVG straddles, and Chromium
+antialiases it over two rows. Which way PowerPoint snaps, on which coordinate, for odd and even
+widths, on a diagonal and on a curve, is experiment F3, below; O4 turned out to be one face of a
+rule that is not the border's at all.
 
 **Pattern coverage under 480 px** is PowerPoint's own artefact: `horz` at 480 px exported with no
 ink at all, and at 120 and 240 px with a 3-px period where six points is 0.75 and 1.5 px. P1 is
 scored from 960 up, where the period is six points to 0.02 px, and the fixture keeps the low widths
 under `patternBelow` rather than pretending a rule fits them.
 
-## The rule in the renderer
+## F3 — where an edge lands on the device grid
+
+**The question.** F2 said every whole-pixel stroke is crisp from 240 px up and said nothing about
+where; a crisp row can be the row above the coordinate or the row below, and an even pen and an odd
+one cannot both be centred on a grid line and be crisp. `tools/ground-truth/render/snap/` draws
+lines, rectangle outlines, an L-shaped custom outline, filled rectangles, pictures with and without
+a border, flat line ends, and the shapes that are not rectangles — an ellipse, a rounded rectangle,
+a triangle, a line rising two points over two hundred, a rectangle turned a quarter — at up to
+four sub-pixel offsets, 0, ¼, ½ and ¾ of a point, which at 960 px are the four quarters of a pixel
+and at 1200 px four others; the strokes, fills, pictures, borders and ends see all four, the shapes
+that are not rectangles three, the L and the half-pixel pens two. Eight slides, exported twice at F2's seven widths, 1498 cases, none excluded.
+The instrument is different from F2's: a model here predicts the coverage profile across the edge,
+row by row, so an antialiased reading and a snapped one are scored on the same numbers, and a
+profile is what the file keeps. Tolerance 0.15 of a row; two models are separable when they differ
+by 0.2 somewhere.
+
+**What it found.** One rule fits every axis-aligned stroke, 732 of 732, on every kind of shape
+that carries one:
+
+> The stroke's centre rounds half up to the device grid. The pen is the width rounded half up to
+> whole pixels, never under one — except that an exact half pixel rounded down at 1200 wide, below.
+> An odd pen then sits on pixel centres, half a pixel past the rounded coordinate; an even pen sits
+> on the grid line. Either way every edge of the pen is a pixel boundary, and the stroke is crisp
+> whatever the offset was.
+
+The readings it refutes, with their scores on the stroke family's 336: the true width antialiased
+where it lies, 80; the whole-pixel pen antialiased where it lies, which is what this renderer drew
+from the stroke rule until now, 100; the pen's top edge rounded half up without moving the centre — SR,
+which is what `shape-rendering="crispEdges"` does on its own — 256; the same with the centre
+rounded first, SG, 328, missing exactly the eight cases below. Fill edges and picture edges round
+half up, 192 of 192, so a filled rectangle a quarter pixel down starts whole on the row it is
+in, not on a 75 % row, and three quarters down starts on the next. A flat line end follows its pen onto pixel centres — the end column of an
+odd pen is half covered — and a one-pixel pen reaches a quarter pixel further at each end, 144 of 144. A picture border is not a snapped stroke: the frame edge rounds half up and the pen sits half
+the _true_ width outside it, antialiased, 48 of 48, which is what O4 saw at its one width. A
+slanted line is snapped at its endpoints and antialiased between them, 24 of 24 — the endpoints
+move, the line does not straddle where it happens to cross a row. A triangle's base and a
+rectangle turned 90° snap like any line. A curve does not: an ellipse's top is the stroke rule's
+band a quarter pixel down and its side an eighth right while its bottom is exactly the rule's, and
+a rounded rectangle's straight edges lose a quarter pixel across rows and an eighth across
+columns from their leading edge once the pen is wider than one — 72 of 72 each with that bias
+written into the model, 35 and 48 without it. The
+bias is the curve rasteriser's and the renderer does not chase it.
+
+**Two things it could not settle.** A pen of an exact half pixel — 1.5, 2.5, 3.5, 4.5, 5.5 and
+6.5 points at 960 px; 1.2, 2, 2.8, 3.6 and 4.4 at 1200 — rounded _up_ at 960 and drew crisp, 12 of
+12 (and the 3-pt strokes at 480, a pixel and a half, drew two, 8 of 8), and rounded _down_ at 1200
+and drew astride the pixel centre, half a row each side, 10 of 10. No arithmetic on the width
+explains it: every route through points, twips, EMU, inches or single precision gives 2.5 exactly
+either way. The fixture's winning reading says so in as many words, its half-to-even rival scores
+120 of 132 on the family that separates them, and the renderer rounds up, which is what 100 % does.
+And at 120 px the rule holds across the columns — every vertical stroke, every fill's left and right
+edge, every line end — while every row is a quarter pixel off it, so nothing fits both axes and the
+fixture keeps the 120-px scores under `below` without a winner and the profiles under `measured`.
+
+**One more, found by the corpus and not the probe deck.** `a41-a4` at 960 px wide is 1.2308
+pixels to the point, and PowerPoint's own 960-px export of its first slide, read at column 20 down
+rows 596 to 601, is 255, 255, 212, 80, 68, 68 where the bottom-left square's fill is 68: an
+antialiased edge about three quarters of the way down row 598, where the geometry says 598.15 and
+the stretched frame 598.5, not a snapped one. Every scale F3 measured is a multiple of a quarter;
+what the export does at one that is not is one sample, on a fill, read by hand and in no fixture.
+The snap rule costs that slide one basis point.
+
+## The rules in the renderer
 
 `deviceStrokeWidth(widthEmu, pxPerPt)` in `packages/paint`: `max(1, round(w · s))` device pixels, a
 zero width one pixel. `render-svg` applies it when `RenderOptions.width` names a device — the page
@@ -106,6 +167,43 @@ of the markup are the same at every zoom. `MountedSlide.resize()` is gone.
 
 The stroke rule moved 29 of the 31 corpus slides it touched toward PowerPoint (mean 9768 → 9770
 bp over the 154 slides then scored) and made none worse.
+
+### The grid rule
+
+`devicePen(widthEmu, pxPerPt)` in `packages/paint` returns the pen and, when it is odd, `shift`:
+half a device pixel in EMU. `render-svg` applies F3 when a width names a device and every segment
+of every path of the shape is horizontal or vertical on the slide — a preset rectangle, a line with
+no rise, a rectilinear `custGeom`, any of them turned by a multiple of 90° or flipped — and does
+nothing to a curve, a diagonal or a turned rectangle, which stay antialiased where they lie. A
+rectilinear path carries `shape-rendering="crispEdges"`, under which Skia fills the pixels whose
+rows round half up from the edges, which is F3's fill rule and, for an even pen, F3's stroke rule.
+An odd pen is moved half a device pixel down and right first, as a `transform="translate(h h)"`
+on the path itself in the shape's own coordinates — `(h, −h)` at 90°, `(−h, −h)` at 180°, the
+signs flipped with a flip — after which Skia's rounding lands it on pixel centres exactly as the
+export does. Where a shape has both a fill and an odd pen the fill is its own path with no
+translate, so its edges keep the fill rule and the pen alone moves; an even pen shares the fill's
+path. The clipped band of a picture border or an `algn="in"` stroke is left antialiased: Blink
+applies a `<clipPath>` antialiased whatever its child asks — the render test puts
+`crispEdges` on a clip's path and reads a 75 % row at its quarter-pixel edge, where the same edge
+on a crisp rectangle is whole — and a crisp band under an antialiased clip loses the fraction of a
+row the two disagree on: a46's picture slides fell 4 bp with the band crisp and rose 4 with it
+antialiased, a difference at the noise floor whose mechanism the test shows. The picture's own
+edge under the border is crisp. A pen of an exact half pixel rounds up, as at 480 and 960 px.
+
+A named `height` now stretches the slide into its box, `preserveAspectRatio="none"`, which is
+what F2 measured the export doing and what the page and both harnesses had been asking for by
+passing a rounded height; with only a width the aspect holds. On a 16:9 deck at the page's zooms
+the box is exact and nothing stretches; on A4 at 960 px it is 0.4 px over the height, which is
+where PowerPoint's own pixels are.
+
+What it moved: 86 of 254 fidelity rasters, 75 slides toward PowerPoint, one — `a41-a4-01`,
+above — one basis point away, and the corpus mean 9841 → 9844 bp. By deck: a07-text-cascade
+9891 → 9919, a10-rtl-cjk 9941 → 9966, a11-autofit 9921 → 9945, a12-masters 9973 → 9992,
+a45-backgrounds 9967 → 9984, a08-bullets 9962 → 9977, a09-fields 9976 → 9988, a06-lines 9969 → 9979. The gate's columns: 25 % 9878 → 9897 and the strip 9727 → 9749, where a pixel is scarce and a
+straddled stroke costs most; 100 % 9954 → 9956; 200 % 9960 → 9961; 400 % and the 2x display within
+a point. The mask owns the translate as it owns `stroke-width`: a crisp path's translate may
+appear, disappear and change between zooms; whether a path is crisp may not, and a translate on
+anything else is a shape moving.
 
 ### Line ends
 
@@ -230,24 +328,26 @@ floor (largest −6 bp, every `maxD` unchanged) and the strip fell to **761 ms**
 `pnpm gate3` on win32-x64, 2 m 11 s: 100 slides, 400 stage renders and 100 thumbnails, all drawn,
 all invariant, two requests for the deck and none after going offline, 500 rasters recorded.
 
-| zoom          | px wide | mean bp | worst slide                 |
-| ------------- | ------: | ------: | --------------------------- |
-| 100 %         |     960 |    9954 | a46-hundred-slides-40, 9819 |
-| 25 %          |     240 |    9878 | a46-hundred-slides-24, 9654 |
-| 200 %         |    1920 |    9960 | a46-hundred-slides-40, 9799 |
-| 400 %         |    3840 |    9964 | a46-hundred-slides-40, 9799 |
-| strip, 12.5 % |     120 |    9727 | a46-hundred-slides-88, 9184 |
+| zoom          | px wide | mean bp, first pass | with the grid rule | worst slide                 |
+| ------------- | ------: | ------------------: | -----------------: | --------------------------- |
+| 100 %         |     960 |                9954 |               9956 | a46-hundred-slides-40, 9819 |
+| 25 %          |     240 |                9878 |               9897 | a46-hundred-slides-24, 9692 |
+| 200 %         |    1920 |                9960 |               9961 | a46-hundred-slides-40, 9799 |
+| 400 %         |    3840 |                9964 |               9964 | a46-hundred-slides-40, 9799 |
+| strip, 12.5 % |     120 |                9727 |               9749 | a46-hundred-slides-24, 9243 |
 
 The strip is the honest column: at 120 px a cell is one pixel, text is under a pixel tall and every
-antialiasing decision shows. Slide 88 is a bar diagram whose labels PowerPoint drops into grey at
-that size and ours keeps legible. The stage columns climb with width because the cell grows with
+antialiasing decision shows. Before the grid rule its worst slide was 88, a bar diagram whose labels
+PowerPoint drops into grey at that size and ours keeps legible; with it, slide 24. The stage columns climb with width because the cell grows with
 it, as ADR 0022 predicted for anything that scales.
 
 The Linux runner said the same thing 15–27 bp lower, which is Carlito standing in for Calibri
 (CI run 34717006014, HeadlessChrome 151): 9928 / 9861 / 9933 / 9936 by zoom and 9708 for the strip,
 the same three worst slides, `pnpm fidelity` at 9826 over the corpus; the page parsed a46 in 105 ms,
 painted the first slide at 190 ms and the strip at 480 ms, in 14 MB of heap. Both platforms hold the
-gate and both baselines are committed.
+gate and both baselines are committed. With the grid rule the runner re-recorded both (CI run
+34754279761): 9930 / 9881 / 9935 / 9936 by zoom and 9736 for the strip, 9935 on the 2x display,
+`pnpm fidelity` at 9829 — the 25 % column and the strip up 20 and 28 bp, as on win32.
 
 **The 2x display**, measured. After the zooms the gate switches the page to a device pixel ratio of
 2 over CDP without telling it, asks for every slide at 100 % again, and reads the strip the page
@@ -257,7 +357,8 @@ markers included, since 2 px/pt is 2 px/pt however it is reached. The rasters ar
 not the page's, and they are not identical: 7 of 100 match the 200 % raster byte for byte and the
 rest differ by up to 5 levels of 255 (mean 9999 bp against 200 %), which is how Skia treats a 2x
 device matrix against a 2x transform. Scored against PowerPoint's 1920-px export as a sixth column
-the 2x stage is 9960 bp, the 200 % column's own number, worst slide 40 at 9798. So the markup is
+the 2x stage is 9960 bp, the 200 % column's own number, worst slide 40 at 9798 (9961 with the grid
+rule, as the 200 % column is). So the markup is
 gated and the raster reported. The strip is the half that proves the page noticed: nothing in the
 pass asks it to redraw, and a thumbnail it refuses on that redraw is counted as not drawn. One
 mechanism worth writing down: Playwright re-applies the context's device metrics on every
@@ -267,9 +368,10 @@ session it set the ratio on.
 **PowerPoint against itself**, the self-check the plan asked for, is a column of `pnpm gate3` now
 (`oracleSelfBp`, "PowerPoint vs its 960" in the report). Its own 120, 240, 1920 and 3840-px exports
 of a46, reduced to the same grids and scored against its 960 export, agree at 9742 / 9879 / 9977 /
-9977 bp; the page's columns at those widths are 9727 / 9878 / 9960 / 9964. At 25 % and in the strip
-the page is within a point, and fifteen, of how far PowerPoint's own 960 export is from its export
-at that width, which is the calibration the zoom columns needed.
+9977 bp; the page's columns at those widths were 9727 / 9878 / 9960 / 9964 in the first pass and
+are 9749 / 9897 / 9961 / 9964 with the grid rule. At 25 % and in the strip the page is now 18 and 7
+bp _closer_ to PowerPoint's export than PowerPoint's own 960 export is, which is the calibration the
+zoom columns needed and a bound they have passed.
 
 Two facts the gate established about the page that the plan had assumed. First, an inline `<svg>`
 root is **not** pixel-snapped by Blink: `getBoundingClientRect()` put the stage at y = 817.1875, and
@@ -277,14 +379,14 @@ a Playwright clip is viewport-relative unless `fullPage`, and then only as wide 
 gate pins the stage and the strip at page (0, 0) with an injected stylesheet, hides the one it is
 not shooting, and refuses a fractional box rather than rounding one. Second, only `stroke-width`
 and `stroke-dasharray` differed between zooms across every slide measured — the line-end markers
-joined them once heads were drawn — and the outline band's containment rectangle, whose reach was
-two drawn widths. Its reach is now
+joined them once heads were drawn, and a crisp path's half-pixel translate once the grid rule was —
+and the outline band's containment rectangle, whose reach was two drawn widths. Its reach is now
 `2 × (nominal width + one device pixel at the floor)`, zoom-invariant, after measuring that a reach
 past ~600 pt changes how Skia antialiases the clip (−10 bp on every bordered picture; identical up to
 600 pt).
 
-`pnpm fidelity` over 254 slides: corpus mean **9841 bp**, a46 mean 9955, minimum 9819; noise floor 4
-bp. The report's by-deck table puts the five lowest decks where the plan has not reached —
+`pnpm fidelity` over 254 slides: corpus mean **9841 bp** in the first pass and 9844 with the grid
+rule, a46 mean 9955 then 9957, minimum 9819; noise floor 4 bp. The report's by-deck table puts the five lowest decks where the plan has not reached —
 a23-smartart 7255, b04-table 7653, b06-smartart 8571, a22-chartex 8801, a37-mce 8823. The request
 log the gate keeps starts after the harness's own injections: the page's load and the harness's
 probe fetch are before it, the deck fetch and everything after are in it.
@@ -313,6 +415,29 @@ this repository to go through the page end to end, and it needed nothing fixed.
 - **The way it will fail.** The page in Chromium against PowerPoint's own pixels at five widths,
   offline; and a page that resizes instead of re-mounting on zoom is caught at the first slide
   (`FID_SVG_INTRINSIC_SIZE`: the stage was still at the fit size).
+- **Tests from F3.** `tools/ground-truth/fixtures.test.ts` re-derives the grid rule from
+  `corpus/ground-truth/snap.json` in its own words and holds it to 732 of 732 strokes, the fill
+  and picture edges to 192, the ends to 144, the borders to 48, the slant to 24 and both curve
+  biases to 72, asserts that the fixture names the one perfect reading per family, and pins every
+  rival it re-derives — the antialiased reading, the top-rounded reading, half-to-even, a pen
+  wholly outside the frame, a slant snapped at its read, the curves without their bias — to the
+  score the fixture recorded for it; `packages/paint/src/lines/line.test.ts` holds `devicePen`
+  to the rows of 328 of the 336 stroke cases and counts the eight 1200-px ties it departs from, and
+  to the 960 and 480 ties' widths; `packages/render-svg/src/render.test.ts` checks the markup —
+  crisp and shifted, a fill under an odd pen split from it, crisp alone, neither, the six turns
+  and flips against the frame's own inverse, the L and the chevron, the band under its clip, no
+  device, the stretch — reads a clip path's edge to show Blink antialiases it whatever its child
+  asks, and then draws F3's own 28 horizontal stroke probes at 960 and 1920 through the `<img>`
+  path and holds every row to PowerPoint's within the fixture's tolerance, 56 of 56, where the
+  same markup with the snap stripped from it misses 25 of 28; `tools/gate3/gate3.test.ts` holds
+  the mask to the translate a crisp path carries and nothing else.
+- **Mutants, 13/13 killed in the third pass.** The pen 3/3 (every pen shifted, none shifted, the
+  width rounded down); the renderer 8/8 (a turned rectangle still crisp, curves crisp, the shift
+  not turned, the fill not crisp, the box never stretched, any edge counted as aligned, a fill
+  never split from its pen, a fill split with no device); the mask 2/2 (the translate kept, the
+  translate stripped from any path). One more — the shift applied to a clipped band — survived
+  because the band never spreads the shift at all, so the clause it removed was redundant; the
+  clause is gone.
 - **Mutants, 23/23 killed in the second pass.** The marker pen 3/3 (a one-point floor, no device
   floor, the nominal width above two points); the line ends 7/7 (every path open, the head not
   reversed, every head centred, head and tail swapped, the head beside the line, a gradient head
@@ -379,7 +504,13 @@ the registry served the new CLI rather than 38 seconds after the publish, green 
 - **Seven export widths, not the plan's six**: 1200 px, above.
 - **The marker family is scored at 1 px**, not 0.15, above; the first version of this record said
   0.15 for every family.
-- **M8 was carried and then built**, and O4 is carried with its evidence read honestly, above.
+- **M8 was carried and then built**, and O4 was carried, read honestly, and then measured: the
+  third pass ran F3 and built the grid rule, above. The stroke rule's exact-half rounding is the
+  960 export's and not the 1200 export's, and a curve's quarter-pixel bias is recorded and not
+  drawn.
+- **A named height stretches.** The plan and the first two versions of this record had the root
+  keep its aspect in a named box; F2 had measured the export stretching into its box and the page
+  was passing a rounded height. The renderer now does what the page asked for.
 - **`sourceNote` per fixture claim** was planned, not built, and the manifest said "PowerPoint 365
   rendered the corpus deck" over our own raster digests and over 2.12's `blips.json`. Every claim
   now says where its bytes came from.
@@ -399,27 +530,38 @@ the registry served the new CLI rather than 38 seconds after the publish, green 
 
 ## Open questions
 
-1. **The strip's letterbox.** At 120 px a 16:9 slide is 67.5 px tall; PowerPoint rounds to 68 and
-   stretches (F2's frame finding), the page rounds to 68 and the SVG's `preserveAspectRatio` centres
-   it — a quarter-pixel disagreement that the 9727 column includes and nothing separates. It is also
-   why the 2x pass compares the strip's markup and not its raster: a 68-px thumbnail is 136 device
-   pixels tall and the 240-px oracle is 135.
+1. **The strip's 2x raster.** The strip now stretches into its 120 × 68 box as the export does, so
+   the quarter-pixel letterbox is gone; what remains is that a 68-px thumbnail is 136 device pixels
+   tall on a 2x display and the 240-px oracle is 135, which is why the 2x pass compares the strip's
+   markup and not its raster.
 2. **Pattern fills under 480 px** in PowerPoint's own export (`patternBelow`): whether the thinning
    is the export's or the screen's is not known.
-3. **Whole-pixel strokes on the device grid.** PowerPoint's are crisp from 240 px up and the
-   border's inner edge snaps half up (O4); ours straddle. The experiment that turns this into a rule
-   — which coordinate snaps, which way, for odd and even widths, on diagonals and curves — is the
-   one carried entry of this sub-phase.
-4. **The clip-reach edge.** Skia antialiases the outline band's clip differently once its reach
+3. **The exact half pixel.** A pen of exactly _k_ + ½ pixels rounds up at 480 and 960 px wide and
+   down at 1200, drawn astride the pixel centre, and no arithmetic on the width reproduces both.
+   The renderer rounds up. What the export does at 240, 1920 and 3840, where no probe wider than a
+   pixel lands on a half, is not measured.
+4. **A scale that is not a quarter.** At 1.2308 pixels to the point — A4 at 960 px — the export
+   antialiases a fill's edge at a quarter-pixel position instead of snapping it, on the one slide
+   that shows it. Every scale F3 measured is a multiple of a quarter. Whether the snap rule holds at
+   the fit zoom on a real display, which is rarely one, is the same question.
+5. **The curve rasteriser's quarter pixel**, and a flat end's half column, are measured and not
+   drawn. The export ends an odd pen on a half-covered column (a quarter further for a one-pixel
+   pen); `crispEdges` ends ours on a whole column, half a pixel from it. Curves stay antialiased
+   where they lie.
+6. **A clipped band under an antialiased clip.** Blink applies a `<clipPath>` antialiased whatever
+   its children ask, so a picture border's inner edge is a partial row where the export's is
+   crisp, and `algn="in"` strokes the same. A construction that snaps the band without the clip —
+   a ring path, say — would need the frame edge rounded in markup, which is a zoom-dependent number.
+7. **The clip-reach edge.** Skia antialiases the outline band's clip differently once its reach
    passes roughly 600 pt; a picture border wider than ~280 pt would cross it at any zoom. No corpus
    deck has one.
-5. **Effect filters at DPR > 1** are written in points, which is one CSS pixel at 100 %. The 2x stage
+8. **Effect filters at DPR > 1** are written in points, which is one CSS pixel at 100 %. The 2x stage
    pass took 27 s for 100 slides where the 200 % column's screenshots took 13 s; the extra is not
    measured apart and is nothing like the seconds a rotated filter cost, but whether the pathology
    returns at other ratios is not measured.
-6. **Line ends nobody measured.** A head on a freeform with several open subpaths, dashes running
+9. **Line ends nobody measured.** A head on a freeform with several open subpaths, dashes running
    under a head, a round cap poking past a triangle's tip on a thick line, the caps of an open
    arrow's arms, and where along a gradient-stroked line its head samples the ramp: the renderer
    does the plain thing for each and no fixture says whether PowerPoint does.
-7. **A second real deck.** One deck outside the corpus has been through the page. That is an
-   anecdote, not a rule.
+10. **A second real deck.** One deck outside the corpus has been through the page. That is an
+    anecdote, not a rule.

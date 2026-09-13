@@ -94,7 +94,7 @@ function gatedList(run: Gate3Run): string {
       run.notDrawn.length === 0,
     ],
     [
-      `${String(run.breaks.length)} zooms whose SVG differs from 100 % beyond stroke-width, stroke-dasharray and a line end's numbers`,
+      `${String(run.breaks.length)} zooms whose SVG differs from 100 % beyond stroke-width, stroke-dasharray, a crisp path's half-pixel translate and a line end's numbers`,
       run.breaks.length === 0,
     ],
     [
@@ -239,7 +239,7 @@ export function writeGate3Report(run: Gate3Run, out: string): string {
   const problems = [
     ...run.notDrawn.map((gap) => `${gap.key} did not draw: ${gap.reason}`),
     ...run.breaks.map(
-      (brk) => `${brk.key} differs at ${pct(brk.zoom)} beyond what the stroke rule owns`,
+      (brk) => `${brk.key} differs at ${pct(brk.zoom)} beyond what the stroke and grid rules own`,
     ),
     ...run.ratio.breaks.map(
       (brk) => `${brk.key} on a ${String(run.ratio.ratio)}x display: ${brk.what} is not the zoom's`,

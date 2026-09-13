@@ -24,7 +24,7 @@
  * writes minus thirty with a flip, and only a renderer that flips first has to.
  */
 
-import type { PathSegment, ResolvedPath } from '@pptx-studio/geometry';
+import type { PathSegment, Point, ResolvedPath } from '@pptx-studio/geometry';
 import { MIN_PX_PER_PT, resolveLine } from '@pptx-studio/paint';
 
 import {
@@ -38,7 +38,7 @@ import {
 import { element, num, type SvgElement, type SvgNode } from './node.js';
 import type { Placed } from './layout.js';
 import { shapeTextNodes, type TextEngine } from './text/draw.js';
-import { EMU_PER_POINT, frameTransform, type Box } from './transform.js';
+import { EMU_PER_POINT, frameTransform, type Box, type Frame } from './transform.js';
 
 /** Identifying attributes, so a caller can hit-test and a human can read a diff. */
 function identity(placed: Placed): Attrs {
@@ -78,6 +78,52 @@ function openEnds(segments: readonly PathSegment[]): { start: boolean; end: bool
   }
   const last = segments[segments.length - 1];
   return { start, end: last !== undefined && last.kind !== 'close' };
+}
+
+/** How far apart two coordinates may be and still share a pixel row: one EMU. */
+const ALIGNED_EMU = 1;
+
+const aligned = (a: Point, b: Point): boolean =>
+  Math.abs(a.x - b.x) <= ALIGNED_EMU || Math.abs(a.y - b.y) <= ALIGNED_EMU;
+
+/** Whether every edge of every path is horizontal or vertical on the slide: what the export snaps (F3, `snap.json`). */
+function rectilinear(paths: readonly ResolvedPath[], frame: Frame): boolean {
+  if (frame.rot % 90 !== 0) return false;
+  for (const path of paths) {
+    let start: Point | null = null;
+    let at: Point | null = null;
+    for (const segment of path.segments) {
+      switch (segment.kind) {
+        case 'move':
+          start = segment.to;
+          at = segment.to;
+          break;
+        case 'line':
+          if (at === null || !aligned(at, segment.to)) return false;
+          at = segment.to;
+          break;
+        case 'close':
+          if (at !== null && start !== null && !aligned(at, start)) return false;
+          at = start;
+          break;
+        default:
+          return false;
+      }
+    }
+  }
+  return true;
+}
+
+/** Half a device pixel down and right on the slide, as the shape's own coordinates see it. */
+function penShift(frame: Frame, shift: number): string {
+  const turns = ((frame.rot / 90) % 4) as 0 | 1 | 2 | 3;
+  const [x, y] = [
+    [shift, shift],
+    [shift, -shift],
+    [-shift, -shift],
+    [-shift, shift],
+  ][turns] as [number, number];
+  return `translate(${num(frame.flipH ? -x : x)} ${num(frame.flipV ? -y : y)})`;
 }
 
 /** The widest one device pixel a stroke is ever rounded up to, in EMU. */
@@ -159,21 +205,50 @@ export function shapeNodes(
     clip = `url(#${id})`;
   }
 
+  // At a named scale the export snaps every axis-aligned edge to the device grid and puts an odd
+  // pen on pixel centres; a curve or a turned edge stays antialiased where it lies (F3).
+  const snapped = defs.pxPerPt !== null && rectilinear(paths, placed.frame);
+  const crisp: Attrs = snapped ? { 'shape-rendering': 'crispEdges' } : {};
+  const shifted: Attrs =
+    snapped && stroke !== null && stroke.shift > 0
+      ? { transform: penShift(placed.frame, stroke.shift) }
+      : {};
+
   // `a:path/@fill="none"` is the path saying it is an outline, not the shape
   // saying it has no fill - `smileyFace`'s mouth against its face.
   const children: SvgElement[] = paths.flatMap((path) => {
     const fillAttrs = path.fill === 'none' ? { fill: 'none' } : fill;
     if (!path.stroke || stroke === null) {
-      return [element('path', { d: path.d, ...fillAttrs, stroke: 'none' })];
+      return [element('path', { d: path.d, ...fillAttrs, stroke: 'none', ...crisp })];
     }
     const ends = lineEndAttributes(stroke, openEnds(path.segments), defs);
-    if (clip === null) {
-      return [element('path', { d: path.d, ...fillAttrs, ...stroke.attrs, ...ends })];
+    // A snapped fill and its pen are two paths at every zoom, since only an odd pen moves.
+    const split = snapped && fillAttrs['fill'] !== 'none';
+    if (clip === null && !split) {
+      return [
+        element('path', {
+          d: path.d,
+          ...fillAttrs,
+          ...stroke.attrs,
+          ...ends,
+          ...crisp,
+          ...shifted,
+        }),
+      ];
     }
-    // A clipped band is its own path: clipping the fill with it would keep only the band.
+    // The fill is its own path where a clip would otherwise keep only the band (ADR 0054).
     return [
-      element('path', { d: path.d, ...fillAttrs, stroke: 'none' }),
-      element('path', { d: path.d, fill: 'none', ...stroke.attrs, ...ends, 'clip-path': clip }),
+      element('path', { d: path.d, ...fillAttrs, stroke: 'none', ...crisp }),
+      clip === null
+        ? element('path', {
+            d: path.d,
+            fill: 'none',
+            ...stroke.attrs,
+            ...ends,
+            ...crisp,
+            ...shifted,
+          })
+        : element('path', { d: path.d, fill: 'none', ...stroke.attrs, ...ends, 'clip-path': clip }),
     ];
   });
 
