@@ -325,10 +325,10 @@ a flat line end follows its pen; a picture border sits half its true width outsi
 frame edge, antialiased; an `algn="in"` stroke is the pen a device pixel outside the rounded
 frame edge and the rest inside; a slanted line is snapped at its endpoints and antialiased between
 them; a curve follows the same rule with a quarter-pixel bias the curve rasteriser adds. Where the
-rule stops is in the file too: a whole number of dots per inch that is not an eighth rounds an
-exact half's width and parity apart (1040, 1120, 1200), a fractional height keeps the columns and
-moves the rows by the stretch in quarter-pixel steps (120, 1000, 1320), and a fractional dots per
-inch (1008, 1100, 1184) is a resampled render that snaps nothing. ADR 0054.
+rule stops is in the file too: off the powers of two an exact half's width and parity round apart
+(1040 and 1120, whole dots per inch that are not an eighth, and 1200), a fractional height keeps
+the columns and moves the rows by the stretch in quarter-pixel steps (120, 1000, 1320), and a
+fractional dots per inch (1008, 1100, 1184) is a resampled render that snaps no row. ADR 0054.
 
 ### T5 — bullets, fields and script runs _(added in 3.5)_
 

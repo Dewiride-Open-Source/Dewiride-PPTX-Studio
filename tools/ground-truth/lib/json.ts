@@ -14,7 +14,7 @@ export function fixtureJson(value: unknown): string {
 
 /** The value as prettier prints it on one line: a space after every comma and colon. */
 function oneLine(value: unknown): string {
-  if (typeof value !== 'object' || value === null) return JSON.stringify(value);
+  if (typeof value !== 'object' || value === null) return JSON.stringify(value ?? null);
   if (Array.isArray(value)) {
     return value.length === 0 ? '[]' : `[${value.map(oneLine).join(', ')}]`;
   }
@@ -26,11 +26,12 @@ function oneLine(value: unknown): string {
   return `{ ${fields.join(', ')} }`;
 }
 
-function render(value: unknown, depth: number): string {
-  if (typeof value !== 'object' || value === null) return JSON.stringify(value);
+/** `prefix` is what precedes the value on its line: an object entry's key, colon and space. */
+function render(value: unknown, depth: number, prefix = 0): string {
+  if (typeof value !== 'object' || value === null) return JSON.stringify(value ?? null);
   const line = oneLine(value);
-  // The line, its indent and a trailing comma all count against the width.
-  if (2 * depth + line.length + 1 <= PRINT_WIDTH) return line;
+  // The line, its indent, its key and a trailing comma all count against the width.
+  if (2 * depth + prefix + line.length + 1 <= PRINT_WIDTH) return line;
   const pad = '  '.repeat(depth + 1);
   const close = '  '.repeat(depth);
   if (Array.isArray(value)) {
@@ -40,6 +41,9 @@ function render(value: unknown, depth: number): string {
     ([, item]) => item !== undefined,
   );
   return `{\n${entries
-    .map(([key, item]) => `${pad}${JSON.stringify(key)}: ${render(item, depth + 1)}`)
+    .map(([key, item]) => {
+      const head = `${JSON.stringify(key)}: `;
+      return `${pad}${head}${render(item, depth + 1, head.length)}`;
+    })
     .join(',\n')}\n${close}}`;
 }

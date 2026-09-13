@@ -1443,6 +1443,62 @@ describe('the device grid, re-derived from F3', () => {
     const band = tags.find((tag) => tag.includes('clip-path="url('))!;
     expect(crisp(band)).toBe(false);
     expect(band).not.toContain('data-band');
+    // A custom geometry is a rectangle only as one closed walk round the frame's corners: an
+    // hourglass through the same four corners, or the walk left open, is clipped like any other.
+    const custom = (points: readonly [number, number][], closed = true): string =>
+      picture('rect').replace(
+        /<a:prstGeom prst="rect"><a:avLst\/><\/a:prstGeom>/,
+        `<a:custGeom><a:avLst/><a:gdLst/><a:ahLst/><a:cxnLst/><a:rect l="0" t="0" r="r" b="b"/>` +
+          `<a:pathLst><a:path w="${String(RECT.cx)}" h="${String(RECT.cy)}"><a:moveTo><a:pt x="${String(points[0]![0])}" y="${String(points[0]![1])}"/></a:moveTo>` +
+          points
+            .slice(1)
+            .map(([x, y]) => `<a:lnTo><a:pt x="${String(x)}" y="${String(y)}"/></a:lnTo>`)
+            .join('') +
+          `${closed ? '<a:close/>' : ''}</a:path></a:pathLst></a:custGeom>`,
+      );
+    const [w, h] = [RECT.cx, RECT.cy];
+    const walked = at(
+      custom([
+        [0, 0],
+        [w, 0],
+        [w, h],
+        [0, h],
+      ]),
+      960,
+    );
+    expect(walked).toContain('data-band="out"');
+    expect(walked).not.toContain('clipPath');
+    const widdershins = at(
+      custom([
+        [0, h],
+        [w, h],
+        [w, 0],
+        [0, 0],
+      ]),
+      960,
+    );
+    expect(widdershins).toContain('data-band="out"');
+    for (const other of [
+      custom([
+        [0, 0],
+        [w, h],
+        [w, 0],
+        [0, h],
+      ]),
+      custom(
+        [
+          [0, 0],
+          [w, 0],
+          [w, h],
+          [0, h],
+        ],
+        false,
+      ),
+    ]) {
+      const markup = at(other, 960);
+      expect(markup).not.toContain('data-band');
+      expect(markup).toContain('clipPath');
+    }
     expect(snap.findings.picture).toBe('ER');
     expect(snap.findings.border).toBe('BT');
   });
@@ -1685,14 +1741,15 @@ describe('the device grid, re-derived from F3', () => {
           expect(error, `${probe.id}@960`).toBeLessThanOrEqual(snap.tolerance);
         }
       } else {
-        // The band is centred on the frame edge where it lies and the export rounds the edge
-        // first: the 2-pt probes' frame at 410 pt is 102.5 px here and rounds to 103, half a
-        // pixel from ours; the 1-pt probes' at 300 pt rounds to itself.
+        // The 2-pt probes' frame edge is 102.5 px here: the export rounds it to 103, ours stays.
         const missed = errors.filter(({ error }) => error > snap.tolerance);
         expect(missed.map(({ probe }) => probe.id)).toEqual(
           ['0', '0_25', '0_5', '0_75'].map((o) => `border-2-${o}`),
         );
-        for (const { error } of missed) expect(error).toBeLessThanOrEqual(0.26);
+        for (const { error } of missed) {
+          expect(error).toBeGreaterThanOrEqual(0.24);
+          expect(error).toBeLessThanOrEqual(0.26);
+        }
       }
     }
   });
@@ -1736,8 +1793,7 @@ describe('the device grid, re-derived from F3', () => {
         [from, to],
       );
       const seen = measured[probe.id]!['960']!;
-      // The export: a device pixel outside the rounded frame edge, half for an odd pen, the rest
-      // inside. Ours: the whole pen inside the frame edge where it lies. The gap is the formula's.
+      // The gap between our band's centre and the export's, from the IN formula (ADR 0054).
       const f = probe.centrePt;
       const w = probe.widthPt ?? 0;
       const halfUp = Math.floor(f + 0.5);

@@ -298,6 +298,9 @@ export interface StrokePaint {
   readonly whole: boolean;
 }
 
+/** How far the device pen may sit from the true width and still be it: the width's own rounding. */
+const PEN_IS_WIDTH_WITHIN_EMU = 1;
+
 /**
  * The `stroke` attributes for one shape, or `null` when nothing is stroked.
  *
@@ -307,9 +310,6 @@ export interface StrokePaint {
  * either way, and `compoundRails` in `paint` has the measured table for when a
  * renderer can use it.
  */
-/** How far the device pen may sit from the true width and still be it: the width's own rounding. */
-const WHOLE_PIXEL_EMU = 1;
-
 export function strokeAttributes(
   line: ResolvedLine | null,
   ctx: ColorContext,
@@ -362,7 +362,7 @@ export function strokeAttributes(
     band,
     line,
     shift: pen === null ? 0 : pen.shift,
-    whole: pen !== null && Math.abs(pen.width - line.width) <= WHOLE_PIXEL_EMU,
+    whole: pen !== null && Math.abs(pen.width - line.width) <= PEN_IS_WIDTH_WITHIN_EMU,
   };
 }
 

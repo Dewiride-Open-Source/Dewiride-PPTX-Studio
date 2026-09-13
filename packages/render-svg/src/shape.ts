@@ -148,25 +148,33 @@ function outside(box: Box, nominalWidth: number): string {
   return `M${left} ${top}H${right}V${bottom}H${left}Z`;
 }
 
-/** Whether the paths are the frame's own rectangle and nothing else: a picture as it usually is. */
+/** Whether the paths are one closed walk round the frame's own corners: a picture as it usually is. */
 function isBox(paths: readonly ResolvedPath[], box: Box): boolean {
   if (paths.length !== 1) return false;
+  const segments = paths[0]!.segments;
+  if (segments[segments.length - 1]?.kind !== 'close') return false;
   const corners: Point[] = [];
-  for (const segment of paths[0]!.segments) {
-    if (segment.kind === 'move' || segment.kind === 'line') corners.push(segment.to);
-    else if (segment.kind !== 'close') return false;
+  for (const segment of segments.slice(0, -1)) {
+    if (segment.kind === 'move' && corners.length === 0) corners.push(segment.to);
+    else if (segment.kind === 'line') corners.push(segment.to);
+    else return false;
   }
   const near = (a: Point, b: Point): boolean =>
     Math.abs(a.x - b.x) <= ALIGNED_EMU && Math.abs(a.y - b.y) <= ALIGNED_EMU;
   if (corners.length === 5 && near(corners[0]!, corners[4]!)) corners.pop();
   if (corners.length !== 4) return false;
-  const expected: readonly Point[] = [
+  const ring: readonly Point[] = [
     { x: 0, y: 0 },
     { x: box.cx, y: 0 },
     { x: box.cx, y: box.cy },
     { x: 0, y: box.cy },
   ];
-  return expected.every((e) => corners.some((c) => near(c, e)));
+  // The walk may start at any corner and go either way round, and nothing else.
+  const start = ring.findIndex((r) => near(corners[0]!, r));
+  if (start === -1) return false;
+  return [1, -1].some((step) =>
+    corners.every((c, i) => near(c, ring[(start + step * i + 8) % 4]!)),
+  );
 }
 
 /**
@@ -282,10 +290,7 @@ export function shapeNodes(
   const box: Box = { x: 0, y: 0, cx: placed.frame.cx, cy: placed.frame.cy };
   const fillBox = localFillBox(placed);
   const fill = fillAttributes(placed.fill, placed.colorContext, fillBox, defs);
-  // A picture's outline is drawn outside its box, where a shape's default band straddles the
-  // geometry: 12pt out and none in, of a 12pt line (ADR 0037). A rectangular picture's is a pen
-  // on the frame outset by half the width, drawn over the picture (F3, `BT`); any other is a
-  // double-width band clipped to the outside.
+  // A picture's pen lies outside its box (ADR 0037): on the outset frame for a rectangle (F3, `BT`).
   const border = placed.shape.kind === 'pic' && isBox(paths, box);
   const stroke = strokeAttributes(
     placed.appearance.line === null ? null : resolveLine(placed.appearance.line),

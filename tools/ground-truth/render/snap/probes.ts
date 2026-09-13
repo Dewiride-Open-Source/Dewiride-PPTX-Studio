@@ -1,10 +1,9 @@
 /**
  * Experiment F3 - where PowerPoint's export puts a whole-pixel edge on the device grid.
  *
- * Ten slides exported at twelve widths: strokes, fills, outlines, pictures, line ends, inset
- * strokes, half-pixel pens and the shapes that are not axis-aligned, at up to four sub-pixel
- * offsets. Every model predicts the coverage profile across one edge, and `assertSeparable`
- * refuses a pair no case could tell apart. No `author.ps1`: nothing needs PowerPoint to author.
+ * Ten slides exported at `EXPORT_WIDTHS`: strokes, fills, outlines, pictures, inset strokes, line
+ * ends, half-pixel pens and the shapes that are not axis-aligned, at up to four sub-pixel offsets.
+ * Every model predicts a coverage profile; `assertSeparable` refuses a pair no case could tell apart.
  */
 
 import { ln, LINE_GEOM, RECT_GEOM } from '../../paint/lines/probes.ts';
@@ -1159,10 +1158,13 @@ export function windowOf(
   return {
     from: Math.round((probe.read.at - probe.read.half) * scale),
     to: Math.round((probe.read.at + probe.read.half) * scale),
-    c: probe.centrePt * scale,
-    w: (probe.widthPt ?? 0) * scale,
+    c: exact(probe.centrePt * scale),
+    w: exact((probe.widthPt ?? 0) * scale),
   };
 }
+
+/** A device coordinate to the nanopixel, so an inexact scale cannot put an exact half a hair under it. */
+export const exact = (v: number): number => Math.round(v * 1e9) / 1e9;
 
 /** A model's profile over a probe's window at a scale. */
 export function predictedProfile(model: Model, probe: Probe, scale: number): number[] {

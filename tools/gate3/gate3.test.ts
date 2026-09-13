@@ -152,10 +152,10 @@ describe('the zoom mask', () => {
         SVG.replace('<path d="M0 0L100 0"', '<path d="M0 0L100 0" shape-rendering="crispEdges"'),
       ),
     ).not.toBe(maskZoom(SVG));
-    // And a band that moves is still a shape moving.
-    expect(
-      maskZoom(band.replace('data-band="out"', 'data-band="out" transform="translate(6350 6350)"')),
-    ).not.toBe(maskZoom(band));
+    // And a band that moves is still a shape moving, crisp or not.
+    const moved = 'data-band="out" transform="translate(6350 6350)"';
+    expect(maskZoom(band.replace('data-band="out"', moved))).not.toBe(maskZoom(band));
+    expect(maskZoom(crispBand.replace('data-band="out"', moved))).not.toBe(maskZoom(band));
   });
 
   it('refuses anything that is not an <svg> root', () => {

@@ -1,10 +1,9 @@
 /**
  * Experiment F3, step 3 - read the bitmaps and say where each edge landed.
  *
- * `node tools/ground-truth/render/snap/analyse.ts <work-dir> [--capture] [--fixture <path>]`. Every
- * probe's coverage profile is read on both exports and every candidate's profile is scored against
- * every case. The rule is read from `GRID_WIDTHS`, and the run throws unless exactly one reading
- * per family fits all of them; every other width is scored against that rule and characterised.
+ * `node tools/ground-truth/render/snap/analyse.ts <work-dir> [--capture] [--fixture <path>]`. The
+ * rule is read from `GRID_WIDTHS` and the run throws unless exactly one reading per family fits
+ * every case there; every other width is scored against that rule and characterised.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -365,7 +364,7 @@ const MAPPINGS: readonly Mapping[] = [
   },
 ];
 
-/** The family's winning model under a mapping, or `null` where the mapping has nothing to say. */
+/** The rule's worst-row error on a case under a mapping, or `null` where the mapping has nothing to say. */
 function errorUnder(mapping: Mapping, c: Case): number | null {
   const route = mapping.through(c.width, c.probe.read.axis);
   if (route === null) return null;
@@ -394,9 +393,9 @@ interface AtWidth {
   readonly ruleMisses: readonly string[];
   /** The rule's fits per family under each mapping that applies here, and the cases it was tried on. */
   readonly mappings: Readonly<Record<string, Readonly<Record<string, readonly [number, number]>>>>;
-  /** Rows neither clear nor full, over every case: a snapped width has none but the curves' and borders'. */
+  /** Rows neither clear nor full, over every case. */
   readonly partialRows: number;
-  /** Of the partial rows, how many are within 0.02 of a quarter: all of them under a 2x2 supersampler. */
+  /** Of the partial rows, how many are within 0.02 of a quarter: all under a 2x2 supersampler, 15 % by chance. */
   readonly quarterRows: number;
 }
 

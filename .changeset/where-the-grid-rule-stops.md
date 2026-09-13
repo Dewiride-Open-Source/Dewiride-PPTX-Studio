@@ -13,8 +13,9 @@ may let its crispness change with the pen as it lets `stroke-width` change. A pi
 a rectangle keeps its double-width band clipped to the outside. `StrokePaint` gains `whole`, whether
 the pen is the true width in whole device pixels.
 
-The rule's own domain is now measured: it holds at every width that is a whole number of dots per
-inch with a whole-pixel height, an exact half pixel rounds up at every power-of-two scale — which
-is every zoom the page has — and an `algn="in"` stroke, measured for the first time, sits a device
-pixel outside its rounded frame edge; the renderer's clipped band for it is up to a pixel and a
-half too far in, and the record says so.
+The rule's own domain is now measured: every case fits it on the six widths that are an eighth of
+a pixel per point with a whole-pixel height, 239 and 227 of 242 at the two other whole-dpi,
+whole-height widths where an exact half rounds its width and its parity apart, an exact half
+rounds up at every power-of-two scale — which is every zoom the page has — and an `algn="in"`
+stroke, measured for the first time, sits a device pixel outside its rounded frame edge; the
+renderer's clipped band for it is up to a pixel and a half too far in, and the record says so.

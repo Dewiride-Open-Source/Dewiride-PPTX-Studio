@@ -2,8 +2,8 @@
 
 Date: 2026-09-13
 Status: **accepted** — Gate 3 holds: 100 slides × 5 widths and a 2x display through the page,
-offline; 28/28 mutants killed in the first pass, 23/23 in the second, 13/13 in the third and 9/9
-in the fourth
+offline; 28/28 mutants killed in the first pass, 23/23 in the second, 13/13 in the third and
+11/11 in the fourth
 
 **Sub-phase 3.11.** Gate 3 asks for "a 100-slide deck rendered faithfully at any zoom, entirely
 client-side". None of its four claims was true or checkable when this began: the largest committed
@@ -99,9 +99,11 @@ rectangle turned a quarter — at up to four sub-pixel offsets, 0, ¼, ½ and ¾
 960 px are the four quarters of a pixel and at 1200 px four others; the strokes, fills, pictures,
 borders, inset strokes and ends see all four, the shapes that are not rectangles three, the L and
 the half-pixel pens two. Ten slides, exported twice at fourteen widths, 3388 cases, none excluded.
-The widths are F2's seven and seven more chosen so that each of three things a width can be — a
-whole number of dots per inch, a whole-pixel height, an eighth of a pixel per point — is present
-without the others: 1000, 1008, 1040, 1100, 1120, 1184 and 1320. The rule is read from the six
+The widths are F2's seven and seven more chosen across three things a width can be — a whole
+number of dots per inch, a whole-pixel height, an eighth of a pixel per point (which is always a
+whole dpi): a whole dpi without a whole height (1000), a whole height without a whole dpi (1008,
+1184), both without an eighth (1040, 1120), an eighth without a whole height (120, 1320), and none
+of the three (1100). The rule is read from the six
 widths that are an eighth of a pixel per point with a whole-pixel height, 240 to 3840, and every
 other width is scored against it. The instrument is different from F2's: a model here predicts the
 coverage profile across the edge, row by row, so an antialiased reading and a snapped one are
@@ -140,10 +142,12 @@ bias is the curve rasteriser's and the renderer does not chase it.
 the device pen with its outer edge one pixel outside the rounded frame edge — half a pixel for an
 odd pen — and the rest inside, and a pen narrower than a pixel slides inward by what it was
 widened by: 48 of 48 (IN). So a 1-pt inset stroke at 100 % straddles its frame edge, half a row
-each side, where a centred 1-pt stroke is crisp; a 4-pt one at 400 % is one pixel outside and
-fifteen inside. The alignment ignored — the stroke rule centred on the frame — is right at 200 %
-only, 20 of 48; the reading anyone writes first, the true width inside the frame, 1 of 48; the
-border family's readings mirrored inward, 0 to 10.
+each side, where a centred 1-pt stroke is crisp; a 2-pt one at 400 % is one pixel outside and
+seven inside. The alignment ignored — the stroke rule centred on the frame — coincides with IN
+wherever the two constructions land the same, the 1-pt pen at 480 and 1920 and the 2-pt pen at
+240, 960 and 1200, four of eight at every width but 3840 and 20 of 48 in all; the reading anyone
+writes first, the true width inside the frame, 1 of 48; the border family's readings mirrored
+inward, 0 to 10.
 
 **The exact half pixel, settled where the page draws.** A pen of exactly _k_ + ½ pixels — 6, 10
 and 14 points at 240, 1.5 to 6.5 at 960, 0.75 to 2.75 at 1920 — rounds _up_ and draws crisp, 28
@@ -154,35 +158,40 @@ to even, 230; the rule with 1200's exception, 252 of 252. 1200 is not alone, and
 rounding: at 1040 a 6.5-px pen is drawn six wide _on a pixel centre_ — the width rounded down and
 the parity up — and at 1120 a 3.5-px pen is drawn _four_ wide on a pixel centre, the width up and
 the parity down; at 1120 a frame edge on an exact half, 479.5, rounds down where 960 rounds every
-such edge up. The scales where nothing of this happens are the ones whose arithmetic is exact:
-the powers of two, which are every zoom the page offers. No arithmetic on the width reproduces
+such edge up, while a picture edge on a half, 304.5, rounds up there as everywhere. The scales
+where nothing of this happens are the ones whose arithmetic is exact: the powers of two, which are
+every zoom the page offers. No arithmetic on the width reproduces
 the rest — every route through points, twips, EMU, inches, 96-dpi pixels or single precision
 gives the half exactly — and the renderer rounds up.
 
 **Where the rule stops.** Each of the seven other widths is scored against the rule, family by
 family, and mapped where a mapping could explain it:
 
-| width | dpi  | height | eighth | the rule                                       | what it did instead                                                                                                                                                                                 |
-| ----- | ---- | ------ | ------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1040  | 78   | 585    | no     | 238 of 242                                     | the 6.5-px ties, one L step, the turned rectangle                                                                                                                                                   |
-| 1120  | 84   | 630    | no     | 227 of 242                                     | the eight 3.5-px strokes, a frame edge at 479.5, two L steps, the 2-pt border crisp one pen outside                                                                                                 |
-| 1000  | 75   | 562.5  | no     | columns hold; rows 0 of 42 ties, 8 of 16 fills | every partial row a quarter (275 of 292); the rule at 1000/960, rows moved by the stretch rounded _up_ to a quarter pixel: strokes 28/28, fills 8/8, borders 8/8, inset 8/8, ties 40/42, 137 of 150 |
-| 1320  | 99   | 742.5  | yes    | columns hold; rows the same                    | quarters (283 of 300); the same mapping 140 of 150, every stroke, tie, fill, border and inset                                                                                                       |
-| 120   | 9    | 67.5   | yes    | columns hold; rows the same                    | quarters (296 of 322); the mapping 108 of 150 — a stroke gains a quarter-row above it                                                                                                               |
-| 1008  | 75.6 | 567    | no     | 9 of 56 strokes, 0 ties, 3 fills               | not quarters (78 of 487); two- and three-row transitions on every edge; a whole-dpi render box-resampled fits 122 of 242 at best                                                                    |
-| 1184  | 88.8 | 666    | no     | 6 of 56, 0, 4                                  | the same, 62 of 242 at best                                                                                                                                                                         |
-| 1100  | 82.5 | 618.75 | no     | 12 of 56, 0, 3                                 | the same, 49 of 242 at best                                                                                                                                                                         |
+| width | dpi  | true height → exported | eighth | the rule                                       | what it did instead                                                                                                                                                                                 |
+| ----- | ---- | ---------------------- | ------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1040  | 78   | 585                    | no     | 239 of 242                                     | the two 6.5-px ties, the 1-pt L step astride its row                                                                                                                                                |
+| 1120  | 84   | 630                    | no     | 227 of 242                                     | the eight 3.5-px strokes, a frame edge at 479.5, two L steps, the 2-pt border crisp one pen outside                                                                                                 |
+| 1000  | 75   | 562.5 → 563            | no     | columns hold; rows 0 of 42 ties, 8 of 16 fills | every partial row a quarter (275 of 292); the rule at 1000/960, rows moved by the stretch rounded _up_ to a quarter pixel: strokes 28/28, fills 8/8, borders 8/8, inset 8/8, ties 40/42, 137 of 150 |
+| 1320  | 99   | 742.5 → 743            | yes    | columns hold; rows the same                    | quarters (283 of 300); the same mapping 140 of 150, every stroke, tie, fill, border and inset                                                                                                       |
+| 120   | 9    | 67.5 → 68              | yes    | columns hold; rows the same                    | quarters (296 of 322); the mapping 108 of 150 — a stroke gains a quarter-row above it                                                                                                               |
+| 1008  | 75.6 | 567                    | no     | no row; 9 of 28 columns, 3 of 8 fill edges     | quarters at the chance rate (78 of 487); two- and three-row transitions on every edge; an idealised render at 75 or 76 dpi box-resampled fits 122 of 242 at best                                    |
+| 1184  | 88.8 | 666                    | no     | no row; 6 of 28, 4 of 8                        | the same, 62 of 242 at best                                                                                                                                                                         |
+| 1100  | 82.5 | 618.75 → 619           | no     | no row; 12 of 28, 3 of 8                       | the same, 49 of 242 at best                                                                                                                                                                         |
 
-So the grid rule's domain is a whole number of dots per inch with a whole-pixel height, and within
-it the exact halves go astray off the powers of two. A fractional height does not stretch the
-snapped render: its columns obey the rule and its rows are the rule's rows moved by the stretch in
-quarter-pixel steps, as a rasteriser sampling four times a row and rounding up would leave them —
-the curves and the picture edges do not follow, and at 9 dpi a stroke gains a quarter-row nothing
-here explains. A fractional dots per inch is a different picture altogether: nothing snaps on
-either axis, coverage is not in quarters, and a crisp edge spans two or three rows, which is what
-a render at some other size resampled through a smooth kernel looks like; the two nearest
-whole-dpi renders through a box filter fit half the cases at 1008 and a quarter elsewhere, so the
-source and the kernel are not identified. `a41-a4` at 960 px wide is 88.6 dots per inch: the
+So every case fits the rule on the six widths that are an eighth of a pixel per point with a
+whole-pixel height; on the other two whole-dpi, whole-height widths it is 239 and 227 of 242, and
+what leaves it is an exact half of a pen drawn one way and placed the other, a frame edge on an
+exact half, the custom L's inner step, and at 1120 a 2-pt border a sixth of a row from BT. A
+fractional height does not stretch the snapped render: its columns obey the rule and its rows are
+the rule's rows moved by the stretch in quarter-pixel steps, as a rasteriser sampling four times a
+row and rounding up would leave them — the curves and the picture edges do not follow, and at 9
+dpi a stroke gains a quarter-row nothing here explains. A fractional dots per inch is a different
+picture altogether: no row fits the rule, a column does only where the resampling's phase happens
+to land it, partial coverage lands on a quarter at the 15 % a uniform antialiased edge does by
+chance, and a crisp edge spans two or three rows, which is what a render at some other size
+resampled through a smooth kernel looks like; a render at the whole dpi below or above — an
+idealised scale, since neither is an export with whole sides — resampled through a box filter fits
+half the cases at 1008 and a quarter elsewhere, so the source and the kernel are not identified. `a41-a4` at 960 px wide is 88.6 dots per inch: the
 antialiased edge the third pass read by hand on its first slide, 255, 255, 212, 80, 68, 68 down
 one column, is the third signature, and the basis point that slide gives up to the snap rule is
 the oracle's resampling, not a rule the renderer is missing. The page's zooms are 9, 18, 72, 144
@@ -227,9 +236,11 @@ path. A pen of an exact half pixel rounds up, as every power-of-two export does.
 
 A rectangular picture's border is drawn as F3 read it: the device pen on the frame outset by half
 the true width, over the picture, with no clip at all — `crispEdges` when the true width is a
-whole number of device pixels, which at 100, 200 and 400 % puts the band exactly where BT does,
-and antialiased otherwise, which at 25 % and in the strip is BT up to the frame edge's rounding,
-a number no zoom-invariant markup can carry. That crispness is the pen's, so the gate's mask owns
+whole number of device pixels, where it is exactly BT, and antialiased otherwise, where it is BT
+up to the frame edge's rounding, a number no zoom-invariant markup can carry. Which of the two a
+border gets is the width's, not the zoom's: a 1-pt border is crisp at 100, 200 and 400 % and
+antialiased at 25 % and in the strip; the 0.75-pt default is antialiased at 100 % too, the regime
+F3 measured with its 1- and 2-pt borders at 240 and 480. That crispness is the pen's, so the gate's mask owns
 it as it owns `stroke-width`: a path marked `data-band` may be crisp at one zoom and not at
 another, and no other path may. The band's inner half overlaps the picture at a small zoom, as
 the export's does. A picture that is not a rectangle keeps the double-width band clipped to the
@@ -383,13 +394,13 @@ floor (largest −6 bp, every `maxD` unchanged) and the strip fell to **761 ms**
 `pnpm gate3` on win32-x64, 2 m 11 s: 100 slides, 400 stage renders and 100 thumbnails, all drawn,
 all invariant, two requests for the deck and none after going offline, 500 rasters recorded.
 
-| zoom          | px wide | mean bp, first pass | with the grid rule | worst slide                 |
-| ------------- | ------: | ------------------: | -----------------: | --------------------------- |
-| 100 %         |     960 |                9954 |               9956 | a46-hundred-slides-40, 9819 |
-| 25 %          |     240 |                9878 |               9897 | a46-hundred-slides-24, 9692 |
-| 200 %         |    1920 |                9960 |               9961 | a46-hundred-slides-40, 9799 |
-| 400 %         |    3840 |                9964 |               9964 | a46-hundred-slides-40, 9799 |
-| strip, 12.5 % |     120 |                9727 |               9749 | a46-hundred-slides-24, 9243 |
+| zoom          | px wide | mean bp, first pass | with the grid rule | with the border on the frame | worst slide                 |
+| ------------- | ------: | ------------------: | -----------------: | ---------------------------: | --------------------------- |
+| 100 %         |     960 |                9954 |               9956 |                         9957 | a46-hundred-slides-40, 9819 |
+| 25 %          |     240 |                9878 |               9897 |                         9897 | a46-hundred-slides-24, 9692 |
+| 200 %         |    1920 |                9960 |               9961 |                         9961 | a46-hundred-slides-40, 9799 |
+| 400 %         |    3840 |                9964 |               9964 |                         9964 | a46-hundred-slides-40, 9799 |
+| strip, 12.5 % |     120 |                9727 |               9749 |                         9753 | a46-hundred-slides-24, 9243 |
 
 The strip is the honest column: at 120 px a cell is one pixel, text is under a pixel tall and every
 antialiasing decision shows. Before the grid rule its worst slide was 88, a bar diagram whose labels
@@ -424,7 +435,7 @@ session it set the ratio on.
 (`oracleSelfBp`, "PowerPoint vs its 960" in the report). Its own 120, 240, 1920 and 3840-px exports
 of a46, reduced to the same grids and scored against its 960 export, agree at 9742 / 9879 / 9977 /
 9977 bp; the page's columns at those widths were 9727 / 9878 / 9960 / 9964 in the first pass and
-are 9749 / 9897 / 9961 / 9964 with the grid rule. At 25 % and in the strip the page is now 18 and 7
+are 9753 / 9897 / 9961 / 9964 with the grid rule and the border on the frame. At 25 % and in the strip the page is now 18 and 11
 bp _closer_ to PowerPoint's export than PowerPoint's own 960 export is, which is the calibration the
 zoom columns needed and a bound they have passed.
 
@@ -471,7 +482,8 @@ this repository to go through the page end to end, and it needed nothing fixed.
   offline; and a page that resizes instead of re-mounting on zoom is caught at the first slide
   (`FID_SVG_INTRINSIC_SIZE`: the stage was still at the fit size).
 - **Tests from F3.** `tools/ground-truth/fixtures.test.ts` re-derives the grid rule from
-  `corpus/ground-truth/snap.json` in its own words and holds it to 732 of 732 strokes, the fill
+  `corpus/ground-truth/snap.json` in its own words and holds it to 852 of 852 strokes (732
+  before the fourth pass widened the tie family), the fill
   and picture edges to 192, the ends to 144, the borders to 48, the slant to 24 and both curve
   biases to 72, asserts that the fixture names the one perfect reading per family, and pins every
   rival it re-derives — the antialiased reading, the top-rounded reading, half-to-even, a pen
@@ -493,18 +505,30 @@ this repository to go through the page end to end, and it needed nothing fixed.
   the 6.5-px pen six wide and the 479.5 edge rounded down each re-read from the profiles, the
   fractional heights' columns to the rule and their rows to the quarter-step mapping exactly as
   the fixture scored it and above the exact stretch, and the fractional dots per inch to no reading
-  and no quarters; `line.test.ts` holds `devicePen` to the 28 halves at 240, 960 and 1920 and
-  counts the 16 at 1200 it departs from; `render.test.ts` checks the border band's markup — on
-  the outset frame, after the picture, crisp at 960 and 1920 and not at 240, no clip, and a
-  rounded picture still clipped — then draws F3's eight border probes through the `<img>` path
-  and holds every row to PowerPoint's at 960 and, at 240, all but the four whose frame edge is
-  102.5 px, and draws the eight inset probes and holds the gap between our band's centre and the
-  export's to the formula; `gate3.test.ts` holds the mask to a band's crispness and no other
-  path's.
-- **Mutants, 9/9 killed in the fourth pass.** The renderer 6/6 (the frame outset by the whole
+  and no quarters; `packages/paint/src/lines/line.test.ts` holds `devicePen` to the 28 halves
+  at 240, 960 and 1920 and counts the 16 at 1200 it departs from;
+  `packages/render-svg/src/render.test.ts` checks the border band's markup — on the outset
+  frame, after the picture, crisp at 960 and 1920 and not at 240, no clip, a rounded picture
+  still clipped, and a custom geometry a rectangle only as one closed walk round the frame's
+  corners either way — then draws F3's eight border probes through the `<img>` path and holds
+  every row to PowerPoint's at 960 and, at 240, all but the four whose frame edge is 102.5 px,
+  those held to the half pixel, and draws the eight inset probes and holds the gap between our
+  band's centre and the export's to the formula; `tools/gate3/gate3.test.ts` holds the mask to
+  a band's crispness and no other path's, and to a band's translate, crisp or not.
+- **Mutants, 11/11 killed in the fourth pass.** The renderer 7/7 (the frame outset by the whole
   width, the band never crisp, always crisp, the clipped construction kept for a rectangle, the
-  border under the picture, any picture taken for a rectangle); the pen 1/1 (a half rounded down);
-  the mask 2/2 (the band rule dropped, every path's crispness stripped).
+  border under the picture, any picture taken for a rectangle, the frame's corners in any order);
+  the pen 1/1 (a half rounded down); the mask 3/3 (the band rule dropped, every path's crispness
+  stripped, the band rule after the translate rule so a crisp band could move unseen).
+- **The review of this pass** — six read-only reviewers, one per dimension, a refuter per finding
+  — confirmed 57 findings and refuted 1. Two were defects: a custom-geometry picture that touched
+  the frame's four corners in any order, closed or not, was given the rectangular border; and the
+  mask stripped a crisp band's translate before it stripped the band's crispness, so a crisp band
+  that moved between zooms was no break. One was my arithmetic: `centrePt × scale` with the
+  inexact 1040 scale put a 474.5 a hair under the half and called PowerPoint's correct row a miss,
+  which is why 1040 reads 239 of 242 and not 238. The rest were the record overstating the rule's
+  domain, a "twelve widths" left from the design's first draft, the fixture's writer not counting
+  a record's key against the width, and comment caps; every one is fixed.
 - **Mutants, 13/13 killed in the third pass.** The pen 3/3 (every pen shifted, none shifted, the
   width rounded down); the renderer 8/8 (a turned rectangle still crisp, curves crisp, the shift
   not turned, the fill not crisp, the box never stretched, any edge counted as aligned, a fill
@@ -615,8 +639,9 @@ paragraph describes, on a package I had not waited for. Once every package resol
   left on the plan row: the half pixel at the widths no probe reached, a scale that is not a
   quarter, and a clipped band under Blink's clip. Its design was wrong once on the way: I had
   taken "an eighth of a pixel per point" for the thing that decided snapping, and 1000 px — not an
-  eighth, 75 dpi — behaved like 120; the factor is a whole number of dots per inch, and 1040 and
-  1120 were added to reach the cell the first design had no width in. The fixture is regenerated,
+  eighth, 75 dpi — behaved like 120; 1040 and 1120 were added to reach the cell the first design
+  had no width in, and they showed that a whole dpi with a whole height is not the rule's domain
+  either, only the powers of two are. The fixture is regenerated,
   not adapted; it is written so that a record stays on one line under prettier, since fourteen
   widths of profiles would not otherwise fit the corpus cap.
 
@@ -629,8 +654,9 @@ paragraph describes, on a package I had not waited for. Once every package resol
 2. **Pattern fills under 480 px** in PowerPoint's own export (`patternBelow`): whether the thinning
    is the export's or the screen's is not known.
 3. **The exact half pixel off the powers of two.** At 1040, 1120 and 1200 the width and the parity
-   of a _k_ + ½ pen round apart, and not the same way apart; at 1120 a coordinate on a half rounds
-   down. The fixture keeps every case and no arithmetic reproduces them. The page never draws at
+   of a _k_ + ½ pen round apart, and not the same way apart; at 1120 an outline's frame edge on a
+   half, 479.5, rounds down while a picture edge on a half, 304.5, rounds up. The fixture keeps
+   every case and no arithmetic reproduces them. The page never draws at
    such a scale; a renderer for a fit zoom would.
 4. **The screen at a fit zoom.** The export at a fractional dots per inch is a resampled picture
    of something, not a render at that scale, so it cannot say whether PowerPoint's own screen
