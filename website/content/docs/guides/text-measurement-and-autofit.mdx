@@ -1,0 +1,103 @@
+---
+title: Text measurement and autofit
+description: 'Measure runs, break lines, walk the autofit ladder, number bullets and find out which face will draw.'
+---
+
+## Goal
+
+Lines laid out the way PowerPoint lays them out, and the scale it would shrink them to.
+
+## You need
+
+```sh
+npm install @pptx-studio/text
+```
+
+## Steps
+
+### 1. Measure
+
+A canvas measurer, and the font a run resolves to: family, size in hundredths of a point, weight, style, spacing, kerning.
+
+```ts
+import { createCanvasMeasurer } from '@pptx-studio/text';
+
+const measurer = createCanvasMeasurer();
+const font = { family: 'Calibri', sz: 1800, bold: true };
+measurer.measure('Hello', font).width; // points
+```
+
+### 2. The line model
+
+The line box is 1.2 times the size, whatever the face; spacing is a percentage of it or a fixed number of points.
+
+```ts
+import { blockHeight, lineAdvance, naturalLineHeight } from '@pptx-studio/text';
+
+naturalLineHeight(18); // 21.6
+lineAdvance(1800, { kind: 'percent', value: 150000 }); // 32.4
+blockHeight(3, 21.6, 21.6); // three single-spaced lines
+```
+
+### 3. Break lines
+
+`breakOpportunities` is PowerPoint's breaker, which is smaller than UAX #14; `wrapText` fits them to a width using your measurer.
+
+```ts
+import { breakOpportunities, wrapText } from '@pptx-studio/text';
+
+const text = 'Measured against PowerPoint, not derived from the standard.';
+breakOpportunities(text);
+const lines = wrapText({
+  text,
+  widthPt: 200,
+  hyphenWidthPt: measurer.measure('-', font).width,
+  measure: (start, end) => measurer.measure(text.slice(start, end), font).width,
+});
+```
+
+### 4. Autofit
+
+Lay the text out at each candidate scale and let the ladder pick the first rung that fits. Never emit a scale it did not return.
+
+```ts
+import { effectiveFontSize, fitAutofit } from '@pptx-studio/text';
+
+const fitted = fitAutofit({
+  bodyHeightPt: 90,
+  layout: (scale) =>
+    paragraphs.map((p) => ({
+      lines: wrapAt(effectiveFontSize(p.sz, scale.fontScale) / 100).length,
+      sz: p.sz,
+      metrics,
+    })),
+});
+fitted.scale; // { fontScale, lnSpcReduction } - a rung of the ladder
+fitted.overflows; // true if even the last rung overflows
+```
+
+### 5. Bullets and fonts
+
+Numbers are counted, not stored; symbol bullets map through their face; `fontReport` says which face will actually draw.
+
+```ts
+import { createFontProbe, fontReport, formatAutonumber, symbolBulletChar } from '@pptx-studio/text';
+
+formatAutonumber('romanLcParenBoth', 4); // '(iv)'
+symbolBulletChar('•', 'Wingdings'); // the private-use code point Wingdings draws it at
+fontReport(['Aptos', 'Calibri'], createFontProbe()); // present | substituted | missing, per face
+```
+
+## What can go wrong
+
+- **`TextError` with `TEXT_NO_CANVAS`** - No 2D context: measure in a tab or a Worker, or supply your own `TextMeasurer`.
+- **`TextError` with `TEXT_FACE_METRICS`** - `faceLineMetrics` was asked about a face nobody measured; `hasFaceLineMetrics` tells you first, and `APPROXIMATE_FACE_METRICS` is the named fallback.
+- **`TextError` with `TEXT_AUTONUMBER_UNMEASURED`** - One of the two schemes PowerPoint shapes into glyph ids; the package refuses rather than guesses.
+
+## Try it
+
+<Demo name="text" />
+
+## Read more
+
+- [@pptx-studio/text](/docs/packages/text)

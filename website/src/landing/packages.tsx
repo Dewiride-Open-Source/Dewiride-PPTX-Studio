@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { Badge } from '@/design/badge';
 import { GROUP_TITLES, PACKAGES, RUNTIME_LABELS, type PackageGroup } from '@/site/packages';
+import { installedVersion } from '@/site/versions';
 
 const ORDER: readonly PackageGroup[] = ['read', 'draw', 'write', 'command-line'];
 
@@ -30,7 +31,9 @@ export function PackageGrid() {
                   <code className="font-mono text-[13px] font-medium text-fg">
                     @pptx-studio/{one.name}
                   </code>
-                  <span className="font-mono text-[11px] text-fg-faint">{one.version}</span>
+                  <span className="font-mono text-[11px] text-fg-faint">
+                    {installedVersion(one.name)}
+                  </span>
                 </div>
                 <p className="mt-2 flex-1 text-[13px] leading-relaxed text-fg-muted">{one.blurb}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">

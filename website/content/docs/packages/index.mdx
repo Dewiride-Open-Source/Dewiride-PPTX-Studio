@@ -1,0 +1,47 @@
+---
+title: Packages
+description: 'Twelve packages, one direction of dependency, and where each one runs.'
+---
+
+Dependencies run one way only, and the repository enforces it: `opc` and `xml` depend on
+nothing but a ZIP library; the drawing rules depend on nothing; the model reads the container and
+the rules; the renderers, the validator and the writer read the model; the CLI reads all of them
+and is the only package allowed to import Node.
+
+| Layer                       | Packages                                         | Depends on                                    |
+| --------------------------- | ------------------------------------------------ | --------------------------------------------- |
+| 0 - the container           | `opc`, `xml`                                     | `fflate` only                                 |
+| 1 - the rules               | `census`, `geometry`, `paint`, `text`            | layer 0 (census); nothing (the other three)   |
+| 2 - the document            | `model`                                          | layers 0 and 1                                |
+| 3 - what reads the document | `render-svg`, `render-dom`, `validate`, `writer` | layers 0 to 2; `render-dom` also `render-svg` |
+| 6 - Node                    | `cli`                                            | everything above, and `node:*`                |
+
+## Read the file
+
+- [opc](/docs/packages/opc) - the ZIP, the parts, the content types and the relationships.
+- [xml](/docs/packages/xml) - byte-preserving XML, with edits that undo themselves.
+- [census](/docs/packages/census) - what is inside, as plain JSON.
+
+## Draw it
+
+- [model](/docs/packages/model) - slides, layouts, masters and themes, with provenance.
+- [geometry](/docs/packages/geometry) - the 187 presets, custom paths, adjust handles.
+- [paint](/docs/packages/paint) - colour, fills, strokes and effects, measured.
+- [text](/docs/packages/text) - line boxes, breaking, autofit, bullets, fields, fonts.
+- [render-svg](/docs/packages/render-svg) - a slide to an SVG string.
+- [render-dom](/docs/packages/render-dom) - the same slide as live elements.
+
+## Write it back
+
+- [validate](/docs/packages/validate) - the 29 rules a file must not break.
+- [writer](/docs/packages/writer) - export, media sweep, preservation, round trip, bisect.
+
+## From the command line
+
+- [cli](/docs/packages/cli) - render, inspect, validate, roundtrip and bisect, in Node.
+
+## Versions
+
+Every package is versioned independently and released together; a caret range below 1.0 stays
+within its minor. The versions this site was built against are in the footer of every page and
+in each package's header above.

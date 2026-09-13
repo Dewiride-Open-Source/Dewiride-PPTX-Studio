@@ -1,16 +1,3 @@
-import census from '@pptx-studio/census/package.json';
-import cli from '@pptx-studio/cli/package.json';
-import geometry from '@pptx-studio/geometry/package.json';
-import model from '@pptx-studio/model/package.json';
-import opc from '@pptx-studio/opc/package.json';
-import paint from '@pptx-studio/paint/package.json';
-import renderDom from '@pptx-studio/render-dom/package.json';
-import renderSvg from '@pptx-studio/render-svg/package.json';
-import text from '@pptx-studio/text/package.json';
-import validate from '@pptx-studio/validate/package.json';
-import writer from '@pptx-studio/writer/package.json';
-import xml from '@pptx-studio/xml/package.json';
-
 export type PackageName =
   | 'opc'
   | 'xml'
@@ -32,8 +19,6 @@ export type PackageGroup = 'read' | 'draw' | 'write' | 'command-line';
 
 export interface PackageFacts {
   readonly name: PackageName;
-  /** The version installed from npm when this site was built. */
-  readonly version: string;
   readonly group: PackageGroup;
   readonly runsIn: readonly Runtime[];
   /** One sentence, for a developer who has never heard of the project. */
@@ -52,7 +37,6 @@ export const GROUP_TITLES: Record<PackageGroup, string> = {
 export const PACKAGES: readonly PackageFacts[] = [
   {
     name: 'opc',
-    version: opc.version,
     group: 'read',
     runsIn: ['tab', 'worker', 'node'],
     blurb:
@@ -61,7 +45,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'xml',
-    version: xml.version,
     group: 'read',
     runsIn: ['tab', 'worker', 'node'],
     blurb:
@@ -70,7 +53,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'census',
-    version: census.version,
     group: 'read',
     runsIn: ['tab', 'worker', 'node'],
     blurb:
@@ -79,7 +61,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'model',
-    version: model.version,
     group: 'draw',
     runsIn: ['tab', 'worker', 'node'],
     blurb:
@@ -88,7 +69,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'geometry',
-    version: geometry.version,
     group: 'draw',
     runsIn: ['tab', 'worker', 'node'],
     blurb:
@@ -97,7 +77,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'paint',
-    version: paint.version,
     group: 'draw',
     runsIn: ['tab', 'worker', 'node'],
     blurb:
@@ -106,7 +85,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'text',
-    version: text.version,
     group: 'draw',
     runsIn: ['tab', 'worker', 'node'],
     blurb:
@@ -115,7 +93,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'render-svg',
-    version: renderSvg.version,
     group: 'draw',
     runsIn: ['tab', 'worker', 'node'],
     blurb: 'A slide to an SVG string - in a tab, in a Worker, or in Node.',
@@ -123,7 +100,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'render-dom',
-    version: renderDom.version,
     group: 'draw',
     runsIn: ['tab'],
     blurb:
@@ -132,7 +108,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'validate',
-    version: validate.version,
     group: 'write',
     runsIn: ['tab', 'worker', 'node'],
     blurb: 'The 29 rules a .pptx must not break, with the part and XPath of everything that fired.',
@@ -140,7 +115,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'writer',
-    version: writer.version,
     group: 'write',
     runsIn: ['tab', 'worker', 'node'],
     blurb:
@@ -149,7 +123,6 @@ export const PACKAGES: readonly PackageFacts[] = [
   },
   {
     name: 'cli',
-    version: cli.version,
     group: 'command-line',
     runsIn: ['node'],
     blurb:

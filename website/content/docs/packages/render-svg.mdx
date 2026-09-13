@@ -1,0 +1,59 @@
+---
+title: render-svg
+description: 'A slide to an SVG string, in a tab, in a Worker, or in Node.'
+---
+
+<PackageHeader pkg="render-svg" />
+
+## What it is
+
+`renderSlide` takes a sheet from the model and returns SVG: transforms, groups, geometry, fills, strokes, effects, pictures and text, as a string, with no DOM involved. The same node tree is what `render-dom` mounts live, so the two never drift.
+
+Text is measured through an `OffscreenCanvas` by default; in Node, pass a measurer or `text: false`.
+
+## 30-second example
+
+<include lang="ts" meta='title="render.ts"'>
+  ../../../snippets/render-svg/render.ts#example
+</include>
+
+## Key concepts
+
+### A string, and only a string
+
+No document, no window. That is what lets the same renderer run in a Worker, in the CLI, and in the release smoke test.
+
+### Flip before rotate
+
+A shape mirrored after being rotated is saved with a different angle from one rotated after being mirrored; only one order of composition makes both read back correctly, and it was settled by making PowerPoint write the file.
+
+### Group child space
+
+A group maps its children through its own child offset and extent. `placeChild` composes the two frames; nested rotated groups were the test.
+
+### `@showMasterSp` hides everything above
+
+A slide that turns master shapes off hides the layout's too. `layoutSlide` gives the shapes drawn; `layoutSheet` gives the sheet's own.
+
+### Real `<text>`, never `foreignObject`
+
+Every line is placed as SVG text at a computed baseline, which is what a thumbnail, a PDF and an export all need.
+
+## API reference
+
+<ApiTable pkg="render-svg" />
+
+## Errors
+
+<ErrorCodes pkg="render-svg" />
+
+## Try it live
+
+<Demo name="render-svg" />
+
+## Read more
+
+- [ADR 0025 - renderers geometry](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0025-renderers-geometry.md)
+- [ADR 0026 - debug overlay preset gallery](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0026-debug-overlay-preset-gallery.md)
+- [ADR 0034 - text in both renderers](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0034-text-in-both-renderers.md)
+- [ADR 0037 - picture shapes](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0037-picture-shapes.md)

@@ -1,0 +1,104 @@
+---
+title: Edit a shape and save a file PowerPoint opens
+description: 'Move, recolour or retype a shape as an XML edit with an exact inverse, then export with the firewall on.'
+---
+
+## Goal
+
+Change one thing on one slide and get a `.pptx` back in which every other part is byte-identical.
+
+## You need
+
+```sh
+npm install @pptx-studio/opc @pptx-studio/xml @pptx-studio/model @pptx-studio/writer
+```
+
+## Steps
+
+### 1. Open with a baseline
+
+`openPackage` gives the store you edit and the untouched twin the checks compare against.
+
+```ts
+import { openPackage } from '@pptx-studio/writer';
+
+const pkg = openPackage(bytes); // { store, baseline, baselineBytes }
+```
+
+### 2. Find the shape in its part
+
+Match by namespace URI, never by prefix: a deck may spell `p:` as anything.
+
+```ts
+import { descendantElements, namespaceOf, parseXml } from '@pptx-studio/xml';
+
+const NS_P = 'http://schemas.openxmlformats.org/presentationml/2006/main';
+const part = '/ppt/slides/slide1.xml';
+const doc = parseXml(pkg.store.read(part));
+const cNvPr = [...descendantElements(doc.root)].find(
+  (el) =>
+    el.local === 'cNvPr' &&
+    namespaceOf(el) === NS_P &&
+    el.attributes.some((a) => a.qname === 'id' && a.value === '4'),
+);
+const shape = cNvPr?.parent?.parent; // p:sp > p:nvSpPr > p:cNvPr
+```
+
+### 3. Plan the edit and keep the inverse
+
+A move is two `setAttribute` edits on `a:off`; a recolour sets `a:srgbClr/@val`; a retype sets the first `a:t`'s text. `applyEdits` applies a batch atomically and returns the inverses - your undo stack.
+
+```ts
+import { applyEdits, type XmlEdit } from '@pptx-studio/xml';
+
+const off = /* the shape's own a:xfrm/a:off, if it has one */ offsetOf(shape);
+const x = off.attributes.find((a) => a.qname === 'x')!;
+const edits: XmlEdit[] = [
+  { kind: 'setAttribute', element: off, qname: 'x', value: String(Number(x.value) + 914400) }, // one inch right
+];
+const undo = applyEdits(edits);
+```
+
+### 4. The two refusals worth keeping
+
+A shape with no `a:xfrm` of its own takes its position from the layout; writing one is a Change Layout decision, not a drag. A shape with no `a:solidFill` of its own is coloured by the placeholder chain or the theme; the same applies.
+
+```ts
+if (shape.xfrm === undefined) throw new Error('inherits its position - change the layout instead');
+```
+
+### 5. Serialise the part and export
+
+Only the touched part is rewritten. `exportPackage` runs the preservation check and the 29 rules and throws rather than return bytes it just broke.
+
+```ts
+import { serializeXml } from '@pptx-studio/xml';
+import { exportPackage } from '@pptx-studio/writer';
+
+pkg.store.replacePart(part, serializeXml(doc));
+const result = exportPackage(pkg);
+result.rewritten; // ['/ppt/slides/slide1.xml']
+result.streamed; // every other part, copied still compressed
+const url = URL.createObjectURL(
+  new Blob([result.bytes.slice()], {
+    type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  }),
+);
+```
+
+## What can go wrong
+
+- **`XmlError` with `ERR_INVALID_EDIT`** - The edit named a node that is not in the tree, or an attribute that does not exist on it.
+- **`XmlError` with `ERR_SCHEMA_ORDER`** - An inserted child landed out of schema order; use `insertInOrder`.
+- **`WriterError` with `ERR_PRESERVATION_BROKEN`** - An entry not rewritten this session differs from the baseline - something wrote to the store outside the edit path.
+- **`ValidateError` with `ERR_VALIDATION_FAILED`** - A rule fired on the export; `detail.report` names the rule, the part and the XPath.
+
+## Try it
+
+<Demo name="render-svg" />
+
+## Read more
+
+- [@pptx-studio/xml](/docs/packages/xml)
+- [@pptx-studio/writer](/docs/packages/writer)
+- [@pptx-studio/validate](/docs/packages/validate)

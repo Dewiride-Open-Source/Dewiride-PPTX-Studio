@@ -1,0 +1,22 @@
+{
+  "title": "Packages",
+  "pages": [
+    "index",
+    "---Read the file---",
+    "opc",
+    "xml",
+    "census",
+    "---Draw it---",
+    "model",
+    "geometry",
+    "paint",
+    "text",
+    "render-svg",
+    "render-dom",
+    "---Write it back---",
+    "validate",
+    "writer",
+    "---From the command line---",
+    "cli"
+  ]
+}

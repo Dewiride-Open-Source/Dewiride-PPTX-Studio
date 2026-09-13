@@ -1,0 +1,81 @@
+---
+title: Concepts
+description: 'The package is the document, inheritance is never flattened, and preservation is the default - what those mean in practice.'
+---
+
+## The package is the document
+
+A `.pptx` is a ZIP archive of _parts_: XML files for the presentation, each slide, each layout and
+master, the theme; binary files for pictures, fonts and embedded objects. A small
+`[Content_Types].xml` says what each part is, and every part that points at another does so
+through its own `_rels/*.rels` file, by a relationship id that means something only inside that
+file.
+
+PPTX Studio keeps that package as the document. The model is a projection of it, made on demand,
+and an edit is a change to one part's XML. When you export, only the parts you rewrote are
+serialised again; every other part is copied out of the source archive still compressed. A chart,
+a macro, an animation timeline or an OLE object survives a save from code that cannot draw it,
+because nothing ever had to understand it.
+
+## Sheets and the chain
+
+A slide takes most of what you see from its layout, and the layout from its master, and the master
+its colours and fonts from the theme. The bindings are relationships, not names: which layout a
+slide uses is one line in that slide's `.rels`.
+
+A placeholder on a slide is matched to one on its layout by `idx`; a layout placeholder is matched
+to one on its master by a folded `type`. The two hops use different keys, and `inheritanceChain`
+shows both.
+
+## `undefined` means the file did not say
+
+A title on a slide usually has no position of its own. Most editors give it one the moment they
+open the file - and from then on the slide is a list of fixed boxes, the fact that the position
+was inherited is gone, and so is any ability to change the layout later and have the title follow.
+
+Here a property the file did not state stays `undefined`, and the resolver walks slide → layout →
+master → theme when asked. Every answer is a `Resolved<T>`: the value, its `origin` (one of ten
+sources for text), whether the source declared it explicitly, and which sheet and shape it came
+from. A provenance panel is a rendering of that answer, not a second computation.
+
+## Units
+
+| Quantity            | Unit in the file           | Conversion                         |
+| ------------------- | -------------------------- | ---------------------------------- |
+| Positions and sizes | EMU (English Metric Units) | 914,400 per inch, 12,700 per point |
+| Angles              | 60,000ths of a degree      | `5400000` is 90°                   |
+| Percentages         | hundred-thousandths        | `100000` is 100%                   |
+| Font size           | hundredths of a point      | `sz="1800"` is 18 pt               |
+
+## Bytes are the truth
+
+Every node the XML parser makes remembers the span of source it came from. A node nobody edited is
+re-emitted by slicing that span, so a part that was parsed and serialised is byte-identical to
+the one that was read - not canonically equivalent, identical. An edit marks exactly the nodes it
+touched as dirty, and `applyEdit` hands back the edit that undoes it, dirty flags included.
+
+## Preservation, and the firewall
+
+You do not opt in to preservation. The writer refuses to hand over bytes until two checks pass:
+every archive entry not rewritten this session is byte-identical to the baseline, and the 29
+rules of the validator hold. The rules are the ways PowerPoint is known to repair or refuse a
+file - half from the schema, half found by making PowerPoint decline a deck one change at a time.
+With a baseline, each finding says whether it was introduced by this session or inherited from
+the file.
+
+## Where the rules come from
+
+Every behavioural rule in these packages is either cited to ECMA-376 by clause or measured against
+PowerPoint 16.0.20326 and committed as a fixture under the repository's `corpus/ground-truth/`.
+A rule that is neither is a guess, and a guess that renders correctly on the deck in front of you
+is worse than an open question. The reasoning behind each decision lives in one architecture
+decision record per sub-phase, linked from every package page.
+
+## What is drawn, what is preserved
+
+| Tier       | Content                                                                 | Today                                                                       |
+| ---------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Full edit  | shapes, text, pictures, groups, tables                                  | shapes, pictures and groups are drawn; three text edits; tables are phase 4 |
+| Frame edit | charts, SmartArt, OLE, ink, 3-D                                         | preserved byte for byte, shown as frames                                    |
+| Preserve   | animations, macros, custom XML, `extLst`, unknown `mc:AlternateContent` | carried through every export untouched                                      |
+| Reject     | nothing yet                                                             | -                                                                           |

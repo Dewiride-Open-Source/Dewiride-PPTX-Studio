@@ -1,0 +1,133 @@
+---
+title: Show a live slide with render-dom
+description: 'Mount a slide as real SVG elements, zoom it, watch the device pixel ratio, and build a thumbnail strip.'
+---
+
+## Goal
+
+A slide on the page as elements you can hit-test, at a zoom the user chooses, with a strip of thumbnails beneath.
+
+## You need
+
+```sh
+npm install @pptx-studio/opc @pptx-studio/model @pptx-studio/render-svg @pptx-studio/render-dom
+```
+
+## Steps
+
+### 1. One text engine per deck
+
+Every mount measures text; sharing one engine shares the measurer and the font probe.
+
+```ts
+import { PartStore } from '@pptx-studio/opc';
+import { loadDocument } from '@pptx-studio/model';
+import { createTextEngine, mediaFromStore } from '@pptx-studio/render-svg';
+
+const store = PartStore.open(bytes);
+const doc = loadDocument(store);
+const media = mediaFromStore(store);
+const text = createTextEngine({ defaultTextStyle: doc.defaultTextStyle });
+```
+
+### 2. Mount at a width
+
+Zoom is CSS pixels per point: 100% draws a 13.333-inch slide 960 pixels wide. The device pixel ratio rounds the strokes; pass the display's.
+
+```ts
+import { mountSlide } from '@pptx-studio/render-dom';
+
+const host = document.querySelector('#stage')!;
+let mounted = mountSlide(host, doc.slides[0]!, doc.slideSize, {
+  width: 960,
+  devicePixelRatio: window.devicePixelRatio,
+  media,
+  text,
+});
+```
+
+### 3. Zoom is a fresh mount
+
+Strokes are rounded to the device pixels of the mounted width, so the SVG for 25% is not the SVG for 400%. There is no `resize()`; unmount and mount again. The line breaks do not move.
+
+```ts
+function show(zoom: number) {
+  mounted.unmount();
+  mounted = mountSlide(host, doc.slides[0]!, doc.slideSize, {
+    width: Math.round((zoom * doc.slideSize.cx) / 12700),
+    devicePixelRatio: window.devicePixelRatio,
+    media,
+    text,
+  });
+}
+```
+
+### 4. Follow the display
+
+A window dragged to a different monitor changes its ratio; listen for the change and mount again.
+
+```ts
+function watchRatio(onChange: () => void) {
+  const query = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+  query.addEventListener(
+    'change',
+    () => {
+      onChange();
+      watchRatio(onChange);
+    },
+    { once: true },
+  );
+}
+watchRatio(() => show(1));
+```
+
+### 5. Hit-test and overlay
+
+Every shape element carries `data-shape` with its `p:cNvPr/@id`; the text of a shape is a sibling group carrying `data-text`. The overlay draws the debug chrome for one shape.
+
+```ts
+import { mountOverlay } from '@pptx-studio/render-dom';
+
+host.addEventListener('click', (event) => {
+  const hit = (event.target as Element).closest('[data-shape], [data-text]');
+  const id = Number(hit?.getAttribute('data-shape') ?? hit?.getAttribute('data-text'));
+  const placed = mounted.placed.find((one) => one.shape.cNvPrId === id);
+  if (placed !== undefined) mountOverlay(mounted.root, placed, { unit: doc.slideSize.cx / 960 });
+});
+```
+
+### 6. A strip of thumbnails
+
+Mount each slide at 120 pixels wide in frame-sized chunks, so a hundred slides fill in without holding the main thread.
+
+```ts
+const queue = doc.slides.map((slide, index) => ({ slide, index }));
+function pump() {
+  const startedAt = performance.now();
+  while (queue.length > 0 && performance.now() - startedAt < 12) {
+    const { slide, index } = queue.shift()!;
+    mountSlide(document.querySelector(`#thumb-${index}`)!, slide, doc.slideSize, {
+      width: 120,
+      media,
+      text,
+    });
+  }
+  if (queue.length > 0) requestAnimationFrame(pump);
+}
+requestAnimationFrame(pump);
+```
+
+## What can go wrong
+
+- **`RenderDomError` with `RENDER_DOM_NO_HOST`** - The host element was null; query it after the DOM is ready.
+- **`RenderDomError` with `RENDER_DOM_NO_DOCUMENT`** - In a Worker there is no global `document`; pass one in `options.document`.
+- **`RenderError` with `RENDER_DEVICE_PIXEL_RATIO`** - A ratio of zero or less; use `window.devicePixelRatio`.
+
+## Try it
+
+<Demo name="render-dom" />
+
+## Read more
+
+- [@pptx-studio/render-dom](/docs/packages/render-dom)
+- [@pptx-studio/render-svg](/docs/packages/render-svg)

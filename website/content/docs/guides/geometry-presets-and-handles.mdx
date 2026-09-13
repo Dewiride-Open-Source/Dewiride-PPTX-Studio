@@ -1,0 +1,88 @@
+---
+title: Geometry presets and adjust handles
+description: 'Resolve a preset or custom geometry to SVG paths at a size, and turn a handle drag into an adjust value.'
+---
+
+## Goal
+
+Path data for any of the 187 presets, and the number to write back when a handle moves.
+
+## You need
+
+```sh
+npm install @pptx-studio/geometry
+```
+
+## Steps
+
+### 1. Resolve at a size
+
+Guides, paths, the text rectangle and the connection sites, all at one width and height.
+
+```ts
+import { getPreset, presetNames, resolveGeometry } from '@pptx-studio/geometry';
+
+presetNames().length; // 187
+const preset = getPreset('leftArrow')!;
+const geometry = resolveGeometry(preset, { w: 400, h: 240 }, { adjust: { adj1: 40000 } });
+geometry.paths.map((path) => path.d); // SVG path data
+geometry.textRect; // where text goes, which is not the shape's box
+geometry.connectionSites; // where a connector may attach
+```
+
+### 2. Non-finite guides
+
+At zero width a guide can divide by zero. Nothing throws; the guide is marked and the path is empty.
+
+```ts
+import { nonFiniteGuides } from '@pptx-studio/geometry';
+
+nonFiniteGuides(resolveGeometry(preset, { w: 0, h: 240 }).guides); // the names that went non-finite
+```
+
+### 3. Handles
+
+Each handle resolves to a position and one or two axes with the value they hold and the range they allow.
+
+```ts
+import { resolveHandles } from '@pptx-studio/geometry';
+
+for (const handle of resolveHandles(preset, { w: 400, h: 240 })) {
+  for (const axis of handle.axes)
+    console.log(axis.guide, axis.value, axis.min, axis.max, axis.widened);
+}
+```
+
+### 4. A drag becomes an adjust value
+
+Invert the formula for the point the pointer is at; the result is what `a:avLst` should hold.
+
+```ts
+import { dragHandle } from '@pptx-studio/geometry';
+
+const adjust = dragHandle(preset, { w: 400, h: 240 }, preset.ahLst[0]!, { x: 120, y: 60 });
+// { adj1: 30000 } -> <a:gd name="adj1" fmla="val 30000"/>
+```
+
+### 5. Custom geometry
+
+`a:custGeom` goes through the same evaluator; the model parses one into a `Geometry` for you.
+
+```ts
+import { custGeom } from '@pptx-studio/geometry';
+
+const geometry = custGeom({ pathLst: [/* commands */] });
+```
+
+## What can go wrong
+
+- **`GeometryError` with `PRESET_UNKNOWN`** - The name is not one of the 187; check `presetNames()`.
+- **`GeometryError` with `FMLA_*`** - A custom geometry carries a formula the evaluator does not know, or with the wrong number of operands.
+
+## Try it
+
+<Demo name="geometry" />
+
+## Read more
+
+- [@pptx-studio/geometry](/docs/packages/geometry)

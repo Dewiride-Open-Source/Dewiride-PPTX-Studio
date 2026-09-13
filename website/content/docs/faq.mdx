@@ -1,0 +1,72 @@
+---
+title: FAQ, and what this is not
+description: 'The questions a developer asks first, answered plainly, and the things PPTX Studio deliberately does not do.'
+---
+
+## Is my file uploaded?
+
+No. Every page on this site runs in your tab or in a Web Worker, and the site sets no cookies and
+loads nothing from a third party. The one page that shows something not computed in your tab - the
+command-line demo - shows slides rendered when the site was built, from the sample decks.
+
+## Can I edit a deck?
+
+Three edits today: move a shape that has a position of its own, recolour a shape that has a solid
+fill of its own, and retype a shape's first run. Each is an XML edit with an exact inverse, so
+undo restores the file rather than a copy. A command layer with selection, resize and rotate is
+phase 5; text editing is phase 6.
+
+## Why is "move" refused on some shapes?
+
+Because they have no position of their own. A title placeholder takes its position from the
+layout, which takes it from the master. Writing a position onto the slide would be a layout
+decision, not a drag - and it is the decision the change-layout verb of phase 7 has to be able to
+undo. The inheritance demo shows where the position comes from.
+
+## Does it draw charts, tables, SmartArt?
+
+Not yet. They are preserved byte for byte through an export and drawn as frames. Tables and
+SmartArt are phase 4; charts are phases 9 and 10. Nothing you cannot see is lost.
+
+## Can I use it in Node?
+
+Every package but `render-dom`; `cli` is Node-only. Text measurement needs a canvas or a measurer
+you supply, and the CLI supplies one from font tables.
+
+## Which browsers?
+
+The test suites run in real Chromium, not jsdom, and the packages need `OffscreenCanvas` for text
+measurement. Other evergreen browsers are expected to work and are not tested.
+
+## Is it stable?
+
+No. This is pre-alpha: versions are 0.x, ranges are carets, every change ships with a changeset,
+and the API will change before 1.0. The packages are on npm with provenance a consumer can verify
+with `npm audit signatures`.
+
+## Why does this site show an older version than npm?
+
+The site is rebuilt from the repository after a release, so for a short while after a release it
+can sit one release behind. The footer says which versions it was built against.
+
+## A deck breaks - what do I send?
+
+The census from the Census demo, downloaded as JSON - it holds no slide text - plus the validator
+report, and if you can run it, the output of `npx @pptx-studio/cli bisect` between a deck that
+works and one that does not.
+
+## What this is not
+
+PPTX Studio is not a PowerPoint clone, and it does not try to be. Omitted by design:
+
+- A SmartArt layout engine - SmartArt is drawn from the fallback drawing PowerPoint stores, and
+  preserved.
+- Animation authoring - timelines are preserved, never edited.
+- Chart data editing - chart parts are preserved; drawing them is phases 9 and 10.
+- OLE editing - embedded objects are preserved as frames.
+- A server rendering service as a product - the CLI renders on a server, and that is all.
+- Real-time collaboration in version 1.
+- A `.ppt` reader - the binary format from before 2007 is out of scope.
+- Format-pane parity - the toolbar is capped at seven controls.
+
+Not affiliated with or endorsed by Microsoft. PowerPoint is a trademark of Microsoft Corporation.

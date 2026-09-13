@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 import { DeckProvider } from '@/deck/provider';
-import { StaticSearchDialog } from '@/docs/search';
+import { LazySearchDialog } from '@/docs/search-lazy';
 import { SITE_URL } from '@/site/navigation';
 
 import './globals.css';
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="flex min-h-screen flex-col font-sans antialiased">
-        <RootProvider search={{ SearchDialog: StaticSearchDialog }}>
+        <RootProvider search={{ SearchDialog: LazySearchDialog }}>
           <DeckProvider>{children}</DeckProvider>
         </RootProvider>
       </body>

@@ -1,0 +1,52 @@
+---
+title: render-dom
+description: 'The same slide as live SVG elements you can hit-test, zoom and overlay, plus an HTML text layer.'
+---
+
+<PackageHeader pkg="render-dom" />
+
+## What it is
+
+`mountSlide` builds the tree `render-svg` describes as real `<svg>` elements in a host you give it, so a shape is an element you can find by its id and hit-test with a click. `mountOverlay` draws the debug chrome - paths, text rectangle, connection sites, draggable adjust handles - over one shape, and `mountTextLayer` puts real HTML text over the same line boxes for selection, an IME and a screen reader.
+
+## 30-second example
+
+<include lang="ts" meta='title="mount.ts"'>
+  ../../../snippets/render-dom/mount.ts#example
+</include>
+
+## Key concepts
+
+### One tree, two renderers
+
+`renderSlideMarkup` from this package is the string renderer applied to the same tree `mountSlide` instantiates; the tests check that the two agree.
+
+### A zoom is a fresh mount
+
+Strokes are rounded to the device pixels of the mounted width, so the SVG for 25% is not the SVG for 400%. There is no `resize()`: unmount and mount at the new width. The text layout does not change.
+
+### The overlay writes `a:avLst`
+
+Dragging a handle on the overlay produces a `HandleEdit` with the adjust list a save would write; `mergeAdjust` folds it into the shape's own.
+
+### The text layer
+
+One `div` per shape, one per line, a span per piece, over the identical line boxes the SVG used. Real text nodes, so the browser's selection and accessibility tree see words, not paths.
+
+## API reference
+
+<ApiTable pkg="render-dom" />
+
+## Errors
+
+<ErrorCodes pkg="render-dom" />
+
+## Try it live
+
+<Demo name="render-dom" />
+
+## Read more
+
+- [ADR 0025 - renderers geometry](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0025-renderers-geometry.md)
+- [ADR 0034 - text in both renderers](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0034-text-in-both-renderers.md)
+- [ADR 0054 - a hundred slides at any zoom](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0054-a-hundred-slides-at-any-zoom.md)

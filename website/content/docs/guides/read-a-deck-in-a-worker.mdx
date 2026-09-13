@@ -1,0 +1,70 @@
+---
+title: Read what is inside a deck in a Web Worker
+description: 'Run the census off the main thread, show progress, and hand back plain JSON.'
+---
+
+## Goal
+
+A description of a deck - parts, features, namespaces, problems - computed without freezing the page.
+
+## You need
+
+```sh
+npm install @pptx-studio/census
+```
+
+## Steps
+
+### 1. The worker
+
+`censusPackage` reports progress per part; post it on and post the finished census, which is plain JSON by design.
+
+```ts
+// census.worker.ts
+import { censusPackage } from '@pptx-studio/census';
+
+self.onmessage = ({ data }: MessageEvent<ArrayBuffer>) => {
+  const census = censusPackage(new Uint8Array(data), {
+    onProgress: (done, total) => self.postMessage({ progress: { done, total } }),
+  });
+  self.postMessage({ census });
+};
+```
+
+### 2. The page
+
+Transfer the buffer if the page no longer needs it; copy it if other code on the page still does.
+
+```ts
+const worker = new Worker(new URL('./census.worker.ts', import.meta.url), { type: 'module' });
+worker.onmessage = ({ data }) => {
+  if ('progress' in data) console.log(`${data.progress.done}/${data.progress.total}`);
+  else console.log(data.census.features, data.census.problems);
+};
+const buffer = await file.arrayBuffer();
+worker.postMessage(buffer, [buffer]);
+```
+
+### 3. Read the answer
+
+`features` are keyed to the phase of the plan that draws them; `problems` are observations, not refusals; `formatCensus` prints it the way the CLI does.
+
+```ts
+import { formatCensus } from '@pptx-studio/census';
+
+console.log(formatCensus(census));
+JSON.stringify(census); // safe: nothing in it is a Map, a Set or a class
+```
+
+## What can go wrong
+
+- **`OpcError`** - The only thing the census throws for: an archive that will not open. Everything else is an entry in `problems`.
+
+## Try it
+
+<Demo name="census" />
+
+## Read more
+
+- [@pptx-studio/census](/docs/packages/census)
+- [@pptx-studio/opc](/docs/packages/opc)

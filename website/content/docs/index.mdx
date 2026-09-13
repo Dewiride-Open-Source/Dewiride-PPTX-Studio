@@ -1,13 +1,84 @@
 ---
 title: Getting started
-description: Twelve packages that open, draw and write back .pptx files in the browser.
+description: 'Twelve packages that open, draw and write back .pptx files in the browser, keeping every part you did not touch.'
 ---
 
 ## What you get
 
-Every `@pptx-studio/*` package is ESM, ships its own TypeScript types, and runs in a browser tab or
-a Web Worker. One of them, the CLI, runs the same renderer in Node.
+`@pptx-studio/*` is twelve small TypeScript packages. Together they open a `.pptx`, draw its slides
+the way PowerPoint does, let you change it, and write it back with every part you did not touch
+copied out byte for byte. Each package is ESM, ships its own types, and runs in a browser tab or a
+Web Worker. One of them, the CLI, runs the same renderer in Node.
+
+The project is **pre-alpha**. The packages are on npm with provenance you can verify with
+`npm audit signatures`, but the API will change before 1.0, and this site can sit one release
+behind the repository.
+
+## Install
+
+You install only the packages you import from; the rest arrive as dependencies.
 
 ```sh
 npm install @pptx-studio/opc @pptx-studio/model @pptx-studio/render-svg
 ```
+
+Node 24 or newer for the CLI. Any evergreen browser for the rest - the test suites run in
+Chromium.
+
+## Your first program
+
+Open a deck, draw its first slide, and write the deck back out.
+
+```ts
+import { PartStore } from '@pptx-studio/opc';
+import { loadDocument } from '@pptx-studio/model';
+import { mediaFromStore, renderSlide } from '@pptx-studio/render-svg';
+import { exportPackage, openPackage } from '@pptx-studio/writer';
+
+const bytes = new Uint8Array(await file.arrayBuffer()); // a File from <input type="file">
+
+// Read
+const store = PartStore.open(bytes);
+const doc = loadDocument(store);
+
+// Draw
+const slide = doc.slides[0];
+if (slide === undefined) throw new Error('no slides');
+const svg = renderSlide(slide, doc.slideSize, {
+  width: 960,
+  media: mediaFromStore(store),
+  text: { defaultTextStyle: doc.defaultTextStyle },
+});
+
+// Write - nothing was edited, so every part streams back out untouched
+const { bytes: out, rewritten, streamed } = exportPackage(openPackage(bytes));
+```
+
+`rewritten` is empty and `streamed` is every part: the export is the original archive, entry by
+entry. The [Playground](/playground) does exactly this on a deck of your own.
+
+## Where it runs
+
+| Package                                                                    | Tab | Worker | Node |
+| -------------------------------------------------------------------------- | --- | ------ | ---- |
+| `opc`, `xml`, `census`, `geometry`, `paint`, `model`, `validate`, `writer` | yes | yes    | yes  |
+| `text` - measurement needs `OffscreenCanvas`; the rules do not             | yes | yes    | yes  |
+| `render-svg` - in Node, pass a measurer or `text: false`                   | yes | yes    | yes  |
+| `render-dom` - needs a `Document`, which you may pass in                   | yes | -      | -    |
+| `cli`                                                                      | -   | -      | yes  |
+
+## Bundler notes
+
+- ESM only, with no top-level `await` in any package, so the packages are importable from CommonJS
+  through a bundler.
+- A Web Worker is the right place for a census, a validation or an export of a large deck:
+  `new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })` is the form every
+  bundler understands.
+- Text measurement uses `OffscreenCanvas`, which every evergreen browser and every Worker has.
+
+## Where next
+
+- [Concepts](/docs/concepts) - the three ideas the design rests on, in plain words.
+- [Packages](/docs/packages) - one page per package, with its API read from the installed version.
+- [Guides](/docs/guides) - task-shaped walkthroughs, from rendering to exporting.
+- [Demos](/demos) - every package running on a sample deck or your own.

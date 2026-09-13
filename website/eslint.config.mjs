@@ -59,6 +59,12 @@ export default tseslint.config(
     },
   },
 
+  // The docs' code: a line that names a value is the point, and printing it is too.
+  {
+    files: ['snippets/**/*.ts'],
+    rules: { '@typescript-eslint/no-unused-expressions': 'off', 'no-console': 'off' },
+  },
+
   // Build-time scripts: Node, plain JavaScript, and they print.
   {
     files: ['*.mjs', 'deploy/*.mjs', 'prerender/*.mjs'],

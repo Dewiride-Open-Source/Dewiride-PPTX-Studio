@@ -1,0 +1,53 @@
+---
+title: opc
+description: 'The OPC container: read the .pptx ZIP safely, name its parts, follow its relationships, and write it back.'
+---
+
+<PackageHeader pkg="opc" />
+
+## What it is
+
+A `.pptx` is a ZIP archive with rules on top: every entry is a _part_ with a content type, and parts point at each other through small relationship files rather than by name. `@pptx-studio/opc` is the reader and writer for exactly that, and nothing more - it knows nothing about slides.
+
+It reads leniently, so a file PowerPoint opens is a file this opens, and writes strictly, so what comes out is what PowerPoint expects. Parts nobody touched are copied back out still compressed.
+
+## 30-second example
+
+<include lang="ts" meta='title="open.ts"'>
+  ../../../snippets/opc/open.ts#example
+</include>
+
+## Key concepts
+
+### Nothing finds anything by filename
+
+A slide does not know which layout it uses; only the slide's own `_rels/slideN.xml.rels` file does. Every lookup goes through `store.relationships(part)`, which is scoped to one part, and relationship ids are meaningful only inside that file.
+
+### Preservation is the default state
+
+A part you never asked for is never inflated, and on write it is copied across from the source archive byte for byte, still compressed. That is not an optimisation: it is why charts, macros and animations survive a save from code that cannot draw them.
+
+### Untrusted archives
+
+`PartStore.open` enforces `DEFAULT_ZIP_LIMITS` - archive size, total inflated size, entries, compression ratio - and checks CRCs and overlapping entries. A hostile file raises a typed `OpcError` rather than taking the tab down.
+
+### Two digests, not interchangeable
+
+`crc32` is what a ZIP entry carries; `sha256` is what the round-trip comparison uses for binary parts. Both are exported; neither stands in for the other.
+
+## API reference
+
+<ApiTable pkg="opc" />
+
+## Errors
+
+<ErrorCodes pkg="opc" />
+
+## Try it live
+
+<Demo name="opc" />
+
+## Read more
+
+- [ADR 0002 - zip reader](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-0-foundation/0002-zip-reader.md)
+- [ADR 0003 - the package](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-0-foundation/0003-the-package.md)

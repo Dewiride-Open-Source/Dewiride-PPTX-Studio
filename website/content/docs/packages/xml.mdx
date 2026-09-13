@@ -1,0 +1,54 @@
+---
+title: xml
+description: 'A byte-preserving XML tokenizer, tree, serializer and editor for OOXML parts.'
+---
+
+<PackageHeader pkg="xml" />
+
+## What it is
+
+The XML inside a `.pptx` has to come back out exactly as it went in, prefixes and whitespace included, or PowerPoint may repair the file. Browsers' `DOMParser` cannot promise that. `@pptx-studio/xml` parses into a tree where every node remembers the bytes it came from, and a node nobody edited re-emits by slicing the original buffer.
+
+Edits are operations that hand back their own inverse, so undo restores the document rather than a copy of it. Schema order, Markup Compatibility and `extLst` are handled here too.
+
+## 30-second example
+
+<include lang="ts" meta='title="edit.ts"'>
+  ../../../snippets/xml/edit.ts#example
+</include>
+
+## Key concepts
+
+### Spans are the truth, values are derived
+
+An element knows where it starts and ends in the source. Only a node marked `dirty` by an edit is re-serialised; everything else is copied. That is what makes the byte-identity check on the markup demo hold for every part of a deck.
+
+### Undo is exact, not equivalent
+
+`applyEdit` returns the edit that undoes it, including which dirty flags it set, so applying the inverse puts the tree back to the state it was in - not to a state that serialises the same.
+
+### Where a new child goes
+
+Elements have an order the schema fixes. `insertInOrder` uses the generated element-order table for the four DrawingML namespaces, so an inserted child lands where PowerPoint expects it.
+
+### Markup Compatibility is read, never rewritten
+
+`mc:AlternateContent`, `Ignorable` and `MustUnderstand` are walked for the effective content; the branches themselves are preserved untouched, because the future PowerPoint that reads them is not this code.
+
+## API reference
+
+<ApiTable pkg="xml" />
+
+## Errors
+
+<ErrorCodes pkg="xml" />
+
+## Try it live
+
+<Demo name="xml" />
+
+## Read more
+
+- [ADR 0004 - the xml layer](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-0-foundation/0004-the-xml-layer.md)
+- [ADR 0005 - the serializer](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-0-foundation/0005-the-serializer.md)
+- [ADR 0006 - order mce and edits](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-0-foundation/0006-order-mce-and-edits.md)

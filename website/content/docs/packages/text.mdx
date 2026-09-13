@@ -1,0 +1,59 @@
+---
+title: text
+description: 'Line spacing, wrapping, autofit, bullets, fields and font substitution, the way PowerPoint lays them out.'
+---
+
+<PackageHeader pkg="text" />
+
+## What it is
+
+A browser will lay text out for you, but not the way PowerPoint does, and not the same way on every operating system. `@pptx-studio/text` measures runs through a canvas and does the rest itself: the 1.2-times line box, the break opportunities, the fifteen-rung autofit ladder, the bullet numbering that is not in the file, the date fields, and which face a run actually gets when the one it asked for is missing.
+
+## 30-second example
+
+<include lang="ts" meta='title="wrap.ts"'>
+  ../../../snippets/text/wrap.ts#example
+</include>
+
+## Key concepts
+
+### Never `line-height: normal`
+
+It resolves from different font-table fields per operating system, so the same HTML wraps differently on macOS and Windows. The line box here is a font-independent 1.2 times the size, measured across thirteen faces and seven sizes.
+
+### Line breaking is smaller than UAX #14
+
+PowerPoint's breaker is simpler than the Unicode algorithm, and the package matches the simpler one: 2212 probes fitted. Thai does not break, and the package says so rather than guessing.
+
+### The fifteen-rung autofit ladder
+
+Shrink-on-overflow snaps to discrete rungs of font scale and line-spacing reduction. `fitAutofit` walks them in the measured order; a scale off the ladder is re-snapped by PowerPoint and the text visibly jumps.
+
+### The numbers are not in the file
+
+An autonumbered list stores the scheme and a start value; the number itself is counted. `numberParagraphs` and `formatAutonumber` count the way PowerPoint does, for 39 of the 41 schemes - two are shaped into glyph ids before drawing and are refused rather than guessed.
+
+### Which typeface a run actually gets
+
+`fontReport` probes the browser for each face the deck names and reports present, substituted or missing, with the metric-compatible substitute where one is known.
+
+## API reference
+
+<ApiTable pkg="text" />
+
+## Errors
+
+<ErrorCodes pkg="text" />
+
+## Try it live
+
+<Demo name="text" />
+
+## Read more
+
+- [ADR 0028 - measurement and the line model](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0028-measurement-and-the-line-model.md)
+- [ADR 0029 - line breaking](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0029-line-breaking.md)
+- [ADR 0030 - autofit](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0030-autofit.md)
+- [ADR 0031 - bullets fields and script runs](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0031-bullets-fields-and-script-runs.md)
+- [ADR 0032 - anchors insets and vertical text](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0032-anchors-insets-and-vertical-text.md)
+- [ADR 0033 - font substitution and the guard](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0033-font-substitution-and-the-guard.md)

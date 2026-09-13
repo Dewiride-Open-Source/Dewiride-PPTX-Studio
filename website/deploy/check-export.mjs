@@ -10,12 +10,36 @@
  * console error fails the check, before anything is uploaded.
  */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { gzipSync } from 'node:zlib';
+
 import { chromium } from 'playwright';
 
 import { serveOut } from './serve-out.mjs';
 
 const BASE_PATH = process.env['BASE_PATH'] ?? '';
 const TIMEOUT = 30_000;
+const OUT = join(import.meta.dirname, '..', 'out');
+
+/** Gzipped kilobytes of first-load script per page, set just above what the build measured. */
+const BUDGET_KB = {
+  '/': 230,
+  '/docs/packages/opc/': 250,
+  '/demos/render-dom/': 230,
+  '/playground/': 230,
+};
+
+/** The gzipped bytes of every module script a page loads; the nomodule polyfill never reaches a modern browser. */
+function firstLoadKb(path) {
+  const html = readFileSync(join(OUT, path, 'index.html'), 'utf8');
+  const scripts = [...html.matchAll(/<script[^>]*src="([^"]+.js)"[^>]*>/g)]
+    .filter((match) => !/noModule/.test(match[0]))
+    .map((match) => match[1].replace(BASE_PATH, ''));
+  let bytes = 0;
+  for (const script of new Set(scripts)) bytes += gzipSync(readFileSync(join(OUT, script))).length;
+  return bytes / 1024;
+}
 
 /** @type {string[]} */
 const failures = [];
@@ -99,6 +123,16 @@ try {
   await page.getByPlaceholder('Search').fill('started');
   await page.locator('[role="dialog"] button[aria-selected]').first().waitFor({ timeout: TIMEOUT });
   ok('/docs/ has a sidebar, and the search dialog finds a page');
+
+  for (const [path, budget] of Object.entries(BUDGET_KB)) {
+    const kb = firstLoadKb(path);
+    if (kb <= budget)
+      ok(`${path} loads ${kb.toFixed(0)} kB of script gzipped (budget ${String(budget)})`);
+    else
+      fail(
+        `${path} loads ${kb.toFixed(0)} kB of script gzipped, over the ${String(budget)} kB budget`,
+      );
+  }
 
   const missing = await page.request.get(at('/no-such-page/'));
   if (missing.status() === 404 && (await missing.text()).includes('<html'))

@@ -1,0 +1,57 @@
+---
+title: model
+description: 'Slides, layouts, masters and themes as one document, with a resolver that says where every value came from.'
+---
+
+<PackageHeader pkg="model" />
+
+## What it is
+
+A shape on a slide usually declares only what differs from its layout placeholder, which declares only what differs from the master's, which reads its colours and fonts from the theme. `@pptx-studio/model` parses all of those from a `PartStore`, binds them through each part's own relationships, and exposes a resolver that answers with the value _and_ its origin.
+
+A property the file did not state stays `undefined`. That is the one decision the later phases - change layout, theme swap, per-property reset - rest on.
+
+## 30-second example
+
+<include lang="ts" meta='title="resolve.ts"'>
+  ../../../snippets/model/resolve.ts#example
+</include>
+
+## Key concepts
+
+### `undefined` means the file did not say
+
+Other editors bake inherited values into the slide the moment they open it and lose the fact that the slide never had them. Here `shape.xfrm === undefined` is information, and `resolveXfrm` walks the chain on demand.
+
+### The two hops use different keys
+
+A slide placeholder finds its layout placeholder by `idx` alone; a layout placeholder finds its master placeholder by a folded `type`. `inheritanceChain` shows the hops and what matched.
+
+### Every binding comes from the part's own rels
+
+Which layout a slide uses, which master a layout uses, which theme a master uses: each is one relationship in that part's `.rels`, and nothing is looked up by name.
+
+### The style matrix and `phClr`
+
+A shape with an `a:style` reference takes its fill and line from the theme's format scheme, with the placeholder colour substituted in. `resolveAppearance` reports which of the three sources answered.
+
+### The resolver reports where it looked
+
+Every `Resolved<T>` carries `origin`, `explicit`, `sheet` and `shape`, so a provenance panel is a rendering of the answer, not a second computation.
+
+## API reference
+
+<ApiTable pkg="model" />
+
+## Errors
+
+<ErrorCodes pkg="model" />
+
+## Try it live
+
+<Demo name="model" />
+
+## Read more
+
+- [ADR 0024 - model parse and resolve](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0024-model-parse-and-resolve.md)
+- [ADR 0027 - the text cascade](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0027-the-text-cascade.md)
