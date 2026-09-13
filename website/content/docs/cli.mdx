@@ -1,0 +1,113 @@
+---
+title: Command line
+description: 'pptx-studio render, inspect, validate, roundtrip and bisect - the browser packages with a file argument and an exit code.'
+---
+
+<PackageHeader pkg="cli" />
+
+## Run it
+
+```sh
+npx @pptx-studio/cli <verb> <file> [options]
+```
+
+Node 24 or newer. The CLI is the one package that imports Node; everything it knows about `.pptx`
+lives in the browser packages beneath it, so an answer on the command line and the same answer in
+a tab cannot drift.
+
+## The verbs
+
+| Verb        | What it does                                                             | Exit 1 when                                   |
+| ----------- | ------------------------------------------------------------------------ | --------------------------------------------- |
+| `render`    | every slide, or one, as a standalone SVG; text measured from font tables | no face could be found at all, or a bad width |
+| `inspect`   | the census, as text or `--json`                                          | a structural error was found                  |
+| `validate`  | the 29 rules; the three baseline rules are skipped and named             | anything fatal                                |
+| `roundtrip` | read, write back, compare canonically; `--write` saves the output        | any difference, or the export refused         |
+| `bisect`    | ddmin over the changes between two packages, against an oracle           | -                                             |
+| `resolve`   | not built yet; it arrives with phase 7                                   | -                                             |
+
+## render
+
+```sh
+npx @pptx-studio/cli render deck.pptx --out slides/ --width 1280
+npx @pptx-studio/cli render deck.pptx --slide 3 --width 640 --out slide-3.svg --json
+npx @pptx-studio/cli render deck.pptx --font-dir ./fonts --no-system-fonts --out slides/
+npx @pptx-studio/cli render deck.pptx --no-text --out geometry/
+```
+
+| Option              | Meaning                                                                     |
+| ------------------- | --------------------------------------------------------------------------- |
+| `--out <path>`      | a directory for every slide, or a file for `--slide`                        |
+| `--width <px>`      | the SVG width; the height follows the slide's aspect (default 1920)         |
+| `--slide <n>`       | one slide, one-based                                                        |
+| `--font-dir <dir>`  | a directory of font files to index, in addition to the system's             |
+| `--no-system-fonts` | do not scan the system font directories                                     |
+| `--no-text`         | geometry only; no face is indexed                                           |
+| `--json`            | print the font report: every face asked for, what drew it, what was missing |
+
+From a program, `renderDeck(bytes, { slide, width, fontDirs, systemFonts, text })` returns
+`{ slides, width, height, fonts, missing, fontDirectories, facesIndexed }`.
+
+### Fonts
+
+There is no canvas in Node, so `render` indexes the machine's font files and reads advances and
+kerning out of their tables. Which face drew each run is reported in `fonts`, with `substituted`
+set where the face asked for was not there. A container that ships no fonts draws every typeface in
+a fallback, and says so - that is where you find out, not in a wrong-looking picture.
+
+The face box - ascent, descent, the line's ideographic baseline - is measured per rasteriser, so
+the same deck renders a whisker differently on Windows and Linux. There is no shaper: Arabic and
+Devanagari measure wide. Output is SVG; there is no PNG.
+
+## inspect
+
+```sh
+npx @pptx-studio/cli inspect deck.pptx
+npx @pptx-studio/cli inspect deck.pptx --json --parts --namespaces
+```
+
+The census, as `@pptx-studio/census` computes it in a browser: archive, parts, relationships,
+features keyed to the plan's phases, namespaces, problems.
+
+## validate
+
+```sh
+npx @pptx-studio/cli validate deck.pptx
+```
+
+Twenty-six rules run on a file by itself; V027 to V029 need the package as it was opened, so they
+are listed as skipped with the reason. Each finding names the rule, the part and the XPath.
+
+## roundtrip
+
+```sh
+npx @pptx-studio/cli roundtrip deck.pptx
+npx @pptx-studio/cli roundtrip deck.pptx --write out.pptx
+```
+
+Reads the deck, writes it back through the writer, and compares the two: XML parts canonically,
+relationship parts as graphs with opaque ids, binary parts by digest. This is the comparison the
+repository's round-trip badge is made of.
+
+## bisect
+
+```sh
+npx @pptx-studio/cli bisect before.pptx after.pptx --oracle validate
+npx @pptx-studio/cli bisect before.pptx after.pptx --oracle powerpoint
+```
+
+Given a deck that works and one that does not, finds the smallest set of changes between them that
+still reproduces the failure. The `validate` oracle runs anywhere; the `powerpoint` oracle drives
+PowerPoint through COM with `OpenAndRepair` off, and needs a Windows machine with Office.
+
+## Errors
+
+<ErrorCodes pkg="cli" />
+
+## API reference
+
+<ApiTable pkg="cli" />
+
+## Try it
+
+<Demo name="cli" />

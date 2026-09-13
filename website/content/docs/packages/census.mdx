@@ -1,0 +1,48 @@
+---
+title: census
+description: 'What is inside a deck, as plain JSON: parts, features, namespaces and problems.'
+---
+
+<PackageHeader pkg="census" />
+
+## What it is
+
+`censusPackage` opens a deck and returns one JSON-safe object describing it: the archive, every part with its size and element count, the relationship graph, the presentation structure, a feature census keyed to the phase of the plan that draws each feature, the namespaces actually used, and any problems it met on the way.
+
+It refuses nothing. A broken deck still gets a count, with the problem recorded beside it, which is what makes it the right thing to attach to a bug report.
+
+## 30-second example
+
+<include lang="ts" meta='title="census.worker.ts"'>
+  ../../../snippets/census/worker.ts#example
+</include>
+
+## Key concepts
+
+### Plain JSON on purpose
+
+No `Map`, no class instance, nothing that would not survive `postMessage`. The census is meant to be computed in a Web Worker and handed back, and the CLI's `inspect` prints the very same object.
+
+### Features by namespace, never by prefix
+
+A chart is recognised by the namespace its element is bound to, not by the `c:` prefix a writer happened to choose, so a deck that spells its prefixes differently counts the same.
+
+### Each feature names its phase
+
+Every feature in the census carries the sub-phase of the plan that renders it, so the answer to "will this deck draw?" is in the census itself.
+
+## API reference
+
+<ApiTable pkg="census" />
+
+## Errors
+
+<ErrorCodes pkg="census" />
+
+## Try it live
+
+<Demo name="census" />
+
+## Read more
+
+- [ADR 0008 - inspect worker and the benchmark](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-0-foundation/0008-inspect-worker-and-the-benchmark.md)

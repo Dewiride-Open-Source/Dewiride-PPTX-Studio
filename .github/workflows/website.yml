@@ -1,0 +1,187 @@
+# The public site, built from what npm serves and deployed to GitHub Pages.
+#
+# A third consumer of `@pptx-studio/*`, beside the candidate gate and the
+# canary. It installs the ranges the last release wrote into
+# `website/package.json`, so the site documents what npm serves and is at most
+# one release behind the tree. A change to the site that needs an API npm does
+# not serve yet is red here until the release, and that red is the point.
+#
+# It runs after a release rather than being run by one. `release.yml` pushes
+# the version commit with GITHUB_TOKEN, and a push made with that token starts
+# no workflow, so a `push` trigger never sees it. `workflow_run` does, and asks
+# for nothing the release does not already have. ADR 0055.
+name: website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      - '.github/workflows/website.yml'
+      - '.nvmrc'
+  pull_request:
+    paths:
+      - 'website/**'
+      - '.github/workflows/website.yml'
+      - '.nvmrc'
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CI: 'true'
+  NEXT_TELEMETRY_DISABLED: '1'
+  # A project site is served under the repository's name. A custom domain would make this ''.
+  BASE_PATH: /${{ github.event.repository.name }}
+
+jobs:
+  build:
+    name: the website, built from what npm serves
+    # A release that did not finish has nothing new to serve.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      # After a publish the registry serves a new version some time later - 38 s
+      # for cli 0.3.1, minutes for model 0.1.4 (ADR 0054). Each range in the
+      # manifest is asked for until it answers. `--prefer-online` so the loop is
+      # not answered by its own packument cache.
+      - name: Wait until the registry serves every version the manifest names
+        working-directory: website
+        run: |
+          deadline=$(( $(date +%s) + 900 ))
+          specs=$(node -p "Object.entries(require('./package.json').dependencies).filter(([n]) => n.startsWith('@pptx-studio/')).map(([n, r]) => n + '@' + r).join(' ')")
+          for spec in $specs; do
+            until served=$(npm view "$spec" version --json --prefer-online 2>/dev/null) && [ -n "$served" ]; do
+              if [ "$(date +%s)" -ge "$deadline" ]; then
+                echo "::error::the registry does not serve $spec after 15 minutes"
+                exit 1
+              fi
+              echo "$spec: not served yet, asking again in 20 s"
+              sleep 20
+            done
+            echo "$spec -> $served"
+          done
+
+      # The packument can lead the tarball by up to a minute, so only that class
+      # - a version npm does not have yet - is retried; anything else fails at once.
+      - name: Install from the registry
+        working-directory: website
+        run: |
+          deadline=$(( $(date +%s) + 300 ))
+          until npm install --no-audit --no-fund --prefer-online 2>&1 | tee "$RUNNER_TEMP/install.log"; do
+            grep -Eq 'ETARGET|E404' "$RUNNER_TEMP/install.log" || exit 1
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "::error::a version the manifest names is still not installable after 5 minutes"
+              exit 1
+            fi
+            echo "not served yet, asking again in 20 s"
+            sleep 20
+          done
+
+      # Real directories, not symlinks - the canary's assertion, for its reason.
+      - name: Assert nothing is linked
+        working-directory: website
+        run: |
+          for dir in node_modules/@pptx-studio/*; do
+            if [ -L "$dir" ]; then
+              echo "::error::$dir is a symlink; this must install real tarballs"
+              exit 1
+            fi
+          done
+          node -e "console.log(require('@pptx-studio/render-svg/package.json').version)"
+
+      - name: Typecheck
+        working-directory: website
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: website
+        run: npm run lint
+
+      - name: Smoke
+        working-directory: website
+        run: npm run smoke
+
+      # BASE_PATH is the one thing that differs from the build the candidate gate
+      # and the canary make: they build unprefixed, this builds under the name
+      # Pages serves the repository at, and the index has to say so.
+      - name: Build
+        working-directory: website
+        run: |
+          npm run build
+          test -f out/index.html
+          grep -q "\"$BASE_PATH/_next/" out/index.html
+          {
+            echo "### website/out"
+            echo '```'
+            du -sh out
+            find out -type f | wc -l | sed 's/$/ files/'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # A build that succeeds proves nothing about a base path, a Worker chunk or
+      # a fetched deck; only a page that runs does. Chromium, once, for this.
+      - name: Install Chromium
+        working-directory: website
+        run: npx playwright install --with-deps chromium
+
+      - name: Walk the export in a browser, served the way Pages serves it
+        working-directory: website
+        run: npm run check-export
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        if: github.event_name != 'pull_request'
+        with:
+          path: website/out
+
+  # The right to deploy and the OIDC token sit in a job with no checkout and
+  # nothing installed from the registry: ADR 0048's isolation, for two more
+  # permissions. The token cannot publish - npm matches a publisher to
+  # `release.yml` by file name and answers 404 to any other (ADR 0049).
+  deploy:
+    name: deployed to GitHub Pages
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Pages' own answer for where it serves this repository from, held against
+      # the path the build was made for, before anything is put there.
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+        id: pages
+
+      - name: The build's base path is the one Pages serves
+        env:
+          SERVED: ${{ steps.pages.outputs.base_path }}
+        run: |
+          if [ "$SERVED" != "$BASE_PATH" ]; then
+            echo "::error::Pages serves this repository at '$SERVED'; the build was made for '$BASE_PATH'"
+            exit 1
+          fi
+
+      - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        id: deployment

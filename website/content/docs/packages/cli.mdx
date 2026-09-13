@@ -1,0 +1,55 @@
+---
+title: cli
+description: 'The same engine from the command line: render, inspect, validate, round-trip and bisect, in Node.'
+---
+
+<PackageHeader pkg="cli" />
+
+## What it is
+
+`pptx-studio render` draws every slide to SVG with no browser and no LibreOffice, measuring text from the font tables on the machine. `inspect`, `validate`, `roundtrip` and `bisect` are the other packages' functions with a file argument and an exit code. `renderDeck` is the same renderer from a program.
+
+This is the one package that imports Node. Everything it knows about `.pptx` lives in the browser packages beneath it.
+
+## 30-second example
+
+<include lang="ts" meta='title="render.ts"'>
+  ../../../snippets/cli/render.ts#example
+</include>
+
+## Key concepts
+
+### Everything it knows lives somewhere else
+
+The CLI adds files, arguments and exit codes to the browser packages. A question answered on the command line and one answered in a tab cannot drift, because they are the same function.
+
+### `render` measures with font tables
+
+With no canvas, the CLI indexes the machine's font files, reads advances and kerning out of the SFNT tables, and measures from those. Which face drew which run is reported, never hidden.
+
+### A machine with no fonts substitutes everything
+
+A container that ships no faces draws every typeface in a fallback and the report says so - that is where you would find out, rather than in a wrong-looking picture.
+
+### No PNG, no shaping
+
+Output is SVG. Complex scripts are measured without a shaper, so Arabic and Devanagari measure wide; the face box follows the machine that renders.
+
+## API reference
+
+<ApiTable pkg="cli" />
+
+## Errors
+
+<ErrorCodes pkg="cli" />
+
+## Try it live
+
+<Demo name="cli" />
+
+## Read more
+
+- [ADR 0008 - inspect worker and the benchmark](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-0-foundation/0008-inspect-worker-and-the-benchmark.md)
+- [ADR 0012 - the round trip oracle](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-1-round-trip/0012-the-round-trip-oracle.md)
+- [ADR 0042 - rendering without a browser](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0042-rendering-without-a-browser.md)
+- [ADR 0045 - the face box belongs to the rasteriser](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-3-text/0045-the-face-box-belongs-to-the-rasteriser.md)

@@ -1,0 +1,68 @@
+---
+title: Validate before you ship
+description: 'Run the 29 rules on a file somebody sent you, or on an export, and read what they say.'
+---
+
+## Goal
+
+Know whether a deck will make PowerPoint show a repair prompt, and where.
+
+## You need
+
+```sh
+npm install @pptx-studio/validate @pptx-studio/writer
+```
+
+## Steps
+
+### 1. A file somebody sent you
+
+Findings are information; nothing is thrown for one.
+
+```ts
+import { validatePackage } from '@pptx-studio/validate';
+
+const report = validatePackage({ bytes });
+report.ok; // false when anything fatal fired
+report.findings; // rule, severity, where.part, where.xpath, message, origin
+report.skipped; // rules that could not run, and why
+```
+
+### 2. An export of your own
+
+Use the writer's own store with its baseline, not a re-opened one: the three baseline rules need the history, and `assertValid` throws rather than returning a boolean.
+
+```ts
+import { assertValid } from '@pptx-studio/validate';
+import { openPackage } from '@pptx-studio/writer';
+
+const pkg = openPackage(bytes);
+// ... edits ...
+assertValid({ store: pkg.store, baseline: pkg.baseline, baselineBytes: pkg.baselineBytes });
+```
+
+### 3. Read the rules themselves
+
+Each rule carries its title, its category, its severity and the evidence it rests on - schema, measured, or both.
+
+```ts
+import { RULES, formatReport, ruleById } from '@pptx-studio/validate';
+
+RULES.length; // 29
+ruleById('V022')?.why; // the paragraph behind the rule
+console.log(formatReport(report, { explain: true }));
+```
+
+## What can go wrong
+
+- **`ValidateError` with `ERR_UNVALIDATABLE`** - The package could not be read far enough to run the rules; the census will say what is wrong with it.
+- **`ValidateError` with `ERR_UNKNOWN_RULE`** - A rule id outside V001-V029 was named in `rules`.
+
+## Try it
+
+<Demo name="validate" />
+
+## Read more
+
+- [@pptx-studio/validate](/docs/packages/validate)
+- [@pptx-studio/writer](/docs/packages/writer)

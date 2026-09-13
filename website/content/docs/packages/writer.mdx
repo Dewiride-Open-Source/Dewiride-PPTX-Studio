@@ -1,0 +1,52 @@
+---
+title: writer
+description: 'Export a deck: re-serialise only what changed, sweep orphaned media, check preservation, run the firewall.'
+---
+
+<PackageHeader pkg="writer" />
+
+## What it is
+
+`openPackage` opens a deck twice - once to edit and once as an untouched baseline. `exportPackage` writes the archive with only the rewritten parts serialised afresh, checks that every other entry is byte-identical to the baseline, runs the 29 rules, and returns bytes only if both pass. `comparePackages` is the round-trip comparator the CI badge is made of, and `bisectPackages` narrows a breaking change to the smallest edit that reproduces it.
+
+## 30-second example
+
+<include lang="ts" meta='title="export.ts"'>
+  ../../../snippets/writer/export.ts#example
+</include>
+
+## Key concepts
+
+### Why the writer may not understand the document
+
+It streams parts it never parsed. That is the property that lets charts, SmartArt, macros and OLE objects survive a save from code that cannot draw them.
+
+### The baseline is not optional in practice
+
+Without it three rules, the media sweep and the preservation check quietly skip themselves. `openPackage` gives you both stores from one set of bytes.
+
+### Media collection is timid on purpose
+
+Only media orphaned by this session's edits is swept, and only when the reachability walk was complete; a part something unparsed might still point at is kept.
+
+### Round trip is not a byte comparison
+
+XML parts are compared canonically, relationships as graphs with opaque ids, binaries by digest. Entry order and deflate level differ legitimately between two archives holding one document.
+
+## API reference
+
+<ApiTable pkg="writer" />
+
+## Errors
+
+<ErrorCodes pkg="writer" />
+
+## Try it live
+
+<Demo name="writer" />
+
+## Read more
+
+- [ADR 0011 - the writer](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-1-round-trip/0011-the-writer.md)
+- [ADR 0012 - the round trip oracle](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-1-round-trip/0012-the-round-trip-oracle.md)
+- [ADR 0013 - bisect and the powerpoint oracle](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-1-round-trip/0013-bisect-and-the-powerpoint-oracle.md)

@@ -9,7 +9,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  exampleRanges,
+  websiteRanges,
   fileSpec,
   packedFrom,
   provenanceFailures,
@@ -112,7 +112,7 @@ describe('the scratch manifest', () => {
 
   it('carries the consumer own scripts, so the gate can run them', () => {
     // The gate runs `npm run smoke`, which only exists if the scripts survive
-    // replacing the example's manifest.
+    // replacing the website's manifest.
     expect(scratchManifest(PACKED, {}, { smoke: 'node smoke.mjs' }).scripts).toEqual({
       smoke: 'node smoke.mjs',
     });
@@ -219,7 +219,7 @@ describe('provenance', () => {
   });
 });
 
-describe('the example manifest', () => {
+describe('the website manifest', () => {
   const SCOPE = '@pptx-studio/';
   const written = { '@pptx-studio/xml': '^0.1.0', '@pptx-studio/cli': '^0.2.0', next: '16.3.4' };
 
@@ -250,7 +250,7 @@ describe('the example manifest', () => {
 
   it('ignores everything outside the scope', () => {
     expect(staleRanges({ ...written, next: '15.0.0' }, PACKED, SCOPE)).toEqual([]);
-    expect(exampleRanges({ ...written, next: '15.0.0' }, PACKED, SCOPE)).toEqual({
+    expect(websiteRanges({ ...written, next: '15.0.0' }, PACKED, SCOPE)).toEqual({
       ...written,
       next: '15.0.0',
     });
@@ -258,7 +258,7 @@ describe('the example manifest', () => {
 
   it('writes the caret of each packed version and keeps the order it was given', () => {
     const behind = [{ ...PACKED[0]!, version: '0.1.1' }, PACKED[1]!];
-    const ranges = exampleRanges(written, behind, SCOPE);
+    const ranges = websiteRanges(written, behind, SCOPE);
     expect(Object.keys(ranges)).toEqual(['@pptx-studio/xml', '@pptx-studio/cli', 'next']);
     expect(ranges['@pptx-studio/xml']).toBe('^0.1.1');
     expect(staleRanges(ranges, behind, SCOPE)).toEqual([]);

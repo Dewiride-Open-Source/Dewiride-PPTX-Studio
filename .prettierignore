@@ -5,5 +5,9 @@ coverage
 pnpm-lock.yaml
 corpus/**/*.pptx
 *.gen.ts
-examples/*/.next
-examples/*/next-env.d.ts
+website/.next
+website/out
+website/next-env.d.ts
+website/package-lock.json
+website/public/rendered
+website/src/reference/generated

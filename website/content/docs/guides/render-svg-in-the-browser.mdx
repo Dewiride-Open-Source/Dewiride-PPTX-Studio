@@ -1,0 +1,85 @@
+---
+title: Render a deck to SVG in the browser
+description: 'Read a .pptx from a file input and draw every slide as an SVG string, entirely in the tab.'
+---
+
+## Goal
+
+Turn a `.pptx` the visitor chose into one SVG per slide, with pictures and text, without a server.
+
+## You need
+
+```sh
+npm install @pptx-studio/opc @pptx-studio/model @pptx-studio/render-svg
+```
+
+## Steps
+
+### 1. Read the bytes
+
+A `File` from an input or a drop gives you an `ArrayBuffer`; the packages take a `Uint8Array`.
+
+```ts
+const input = document.querySelector<HTMLInputElement>('input[type=file]');
+const file = input?.files?.[0];
+if (file === undefined) throw new Error('choose a .pptx');
+const bytes = new Uint8Array(await file.arrayBuffer());
+```
+
+### 2. Open the package and load the document
+
+`PartStore.open` inflates the archive under safety limits; `loadDocument` parses every slide, layout, master and theme and binds them through their relationships.
+
+```ts
+import { PartStore } from '@pptx-studio/opc';
+import { loadDocument } from '@pptx-studio/model';
+
+const store = PartStore.open(bytes);
+const doc = loadDocument(store);
+console.log(doc.slides.length, doc.slideSize); // slides, and the size in EMU
+```
+
+### 3. Draw a slide
+
+`renderSlide` returns a string. `mediaFromStore` resolves each picture through the part it was written in; the text option takes the presentation's default text style so the tenth source of the cascade is there.
+
+```ts
+import { mediaFromStore, renderSlide } from '@pptx-studio/render-svg';
+
+const media = mediaFromStore(store);
+const svg = renderSlide(doc.slides[0]!, doc.slideSize, {
+  width: 960,
+  media,
+  text: { defaultTextStyle: doc.defaultTextStyle },
+});
+document.querySelector('#stage')!.innerHTML = svg;
+```
+
+### 4. Every slide
+
+The text engine is created inside `renderSlide` unless you pass one. For a whole deck, make one once so the measurer and the font probe are shared.
+
+```ts
+import { createTextEngine } from '@pptx-studio/render-svg';
+
+const text = createTextEngine({ defaultTextStyle: doc.defaultTextStyle });
+const svgs = doc.slides.map((slide) =>
+  renderSlide(slide, doc.slideSize, { width: 960, media, text }),
+);
+```
+
+## What can go wrong
+
+- **`OpcError` with `ERR_NOT_A_ZIP`** - The file is not a `.pptx` - a `.ppt` from PowerPoint 2003 is not a ZIP.
+- **`OpcError` with `ERR_ENCRYPTED_PACKAGE`** - The deck is password-protected; remove the password in PowerPoint first.
+- **`ModelError` with `MODEL_NO_PRESENTATION`** - A ZIP with no presentation part: a Word or Excel file with the wrong extension.
+- **`RenderError` with `RENDER_UNKNOWN_PRESET`** - A shape names a preset geometry outside the 187; the deck was written by something other than PowerPoint.
+
+## Try it
+
+<Demo name="render-svg" />
+
+## Read more
+
+- [@pptx-studio/render-svg](/docs/packages/render-svg)
+- [@pptx-studio/model](/docs/packages/model)

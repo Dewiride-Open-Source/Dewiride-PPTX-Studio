@@ -341,7 +341,8 @@ export type RuleId =
   | 'C016-gitattributes'
   | 'C017-sorted'
   | 'C018-serializers'
-  | 'C019-coverage';
+  | 'C019-coverage'
+  | 'C020-website-copy';
 
 export interface Violation {
   readonly rule: RuleId;

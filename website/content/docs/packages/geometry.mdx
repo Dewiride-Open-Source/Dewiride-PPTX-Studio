@@ -1,0 +1,56 @@
+---
+title: geometry
+description: 'The 187 preset shapes and custom paths as SVG path data, with the formula evaluator, arcs and adjust handles.'
+---
+
+<PackageHeader pkg="geometry" />
+
+## What it is
+
+DrawingML describes a shape as guides - little formulas over the width, height and adjust values - and paths built from them. `@pptx-studio/geometry` carries all 187 preset definitions, transcoded from the standard's own file and cross-checked, plus the evaluator, the arc mathematics and the SVG path emitter. Custom geometry goes through the same code.
+
+Nothing is painted here. Fills, strokes and effects are the paint package's job.
+
+## 30-second example
+
+<include lang="ts" meta='title="presets.ts"'>
+  ../../../snippets/geometry/presets.ts#example
+</include>
+
+## Key concepts
+
+### Adjust values merge by name
+
+A shape's `a:avLst` overrides the preset's defaults guide by guide. Pass them as `{ adjust }` and `resolveGeometry` evaluates the rest.
+
+### Division by zero is reachable and does not throw
+
+At zero width many guides go non-finite. The result marks them rather than throwing, because a zero-sized shape is something a deck can contain.
+
+### Arcs are rays, not parameters
+
+`a:arcTo` angles are measured against the ellipse's unskewed circle, negative sweeps run the other way, and a sweep of a whole turn is split - every case measured against what PowerPoint draws.
+
+### Dragging a handle inverts the formula
+
+`dragHandle` searches the declared range for the adjust value that puts the handle where the pointer is, and returns the number to write into `a:avLst`. Some declared ranges do not contain the shape's own value; those are widened and say so.
+
+## API reference
+
+<ApiTable pkg="geometry" />
+
+## Errors
+
+<ErrorCodes pkg="geometry" />
+
+## Try it live
+
+<Demo name="geometry" />
+
+## Read more
+
+- [ADR 0016 - preset geometry codegen](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0016-preset-geometry-codegen.md)
+- [ADR 0017 - the formula evaluator](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0017-the-formula-evaluator.md)
+- [ADR 0018 - arc math](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0018-arc-math.md)
+- [ADR 0019 - path emit and custgeom](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0019-path-emit-and-custgeom.md)
+- [ADR 0020 - adjust handles](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0020-adjust-handles.md)

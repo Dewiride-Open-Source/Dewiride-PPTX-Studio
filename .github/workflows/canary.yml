@@ -1,4 +1,4 @@
-# What npm is actually serving, checked against the example that consumes it.
+# What npm is actually serving, checked against the website that consumes it.
 #
 # This is a monitor, not a gate, and the distinction is the whole reason it is
 # its own workflow. It installs `@pptx-studio/*` from the public registry, so
@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   published:
-    name: the example, installed from npm
+    name: the website, installed from npm
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -42,12 +42,12 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      # `latest` rather than the example's own ranges. A `^0.1.0` cannot resolve
+      # `latest` rather than the website's own ranges. A `^0.1.0` cannot resolve
       # to 0.2.0 - a caret below 1.0 is bounded by the minor - so a monitor that
       # honoured the manifest would keep reporting on the version the next
       # release replaces, and would need a hand-edit after every one.
       - name: Point every @pptx-studio dependency at what npm is serving
-        working-directory: examples/nextjs-studio
+        working-directory: website
         run: |
           node -e '
             const fs = require("fs");
@@ -62,13 +62,13 @@ jobs:
       # lockfile would pin this to the day it was written and it would never be
       # a canary again.
       - name: Install from the registry
-        working-directory: examples/nextjs-studio
+        working-directory: website
         run: npm install --no-package-lock --no-fund --no-audit
 
       # Real directories, not symlinks. If pnpm had linked these the whole job
       # would pass while proving nothing.
       - name: Assert nothing is linked
-        working-directory: examples/nextjs-studio
+        working-directory: website
         run: |
           for dir in node_modules/@pptx-studio/*; do
             if [ -L "$dir" ]; then
@@ -79,17 +79,21 @@ jobs:
           node -e "console.log(require('@pptx-studio/render-svg/package.json').version)"
 
       - name: Typecheck
-        working-directory: examples/nextjs-studio
-        run: npx tsc --noEmit
+        working-directory: website
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: website
+        run: npm run lint
 
       # Renders every shipped deck through the published packages and asserts
       # the slide count, the SVG shape and a clean round trip.
       - name: Smoke
-        working-directory: examples/nextjs-studio
+        working-directory: website
         run: npm run smoke
 
       - name: Build
-        working-directory: examples/nextjs-studio
+        working-directory: website
         run: npm run build
 
       # Provenance is a claim about the published artifact, so only the registry

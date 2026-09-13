@@ -1,0 +1,88 @@
+---
+title: Colour, gradients and patterns
+description: 'Resolve a DrawingML colour through its theme, build the SVG for a gradient or a pattern, and stroke a dash correctly.'
+---
+
+## Goal
+
+The CSS colour, the `<linearGradient>` stops, the pattern tile or the dash array PowerPoint would paint.
+
+## You need
+
+```sh
+npm install @pptx-studio/paint @pptx-studio/model
+```
+
+## Steps
+
+### 1. A colour, through the theme
+
+A scheme colour needs the theme's scheme and the sheet's colour map; the model has both.
+
+```ts
+import { colorMapOf, schemeOf } from '@pptx-studio/model';
+import { resolveColor, toCss } from '@pptx-studio/paint';
+
+const ctx = { scheme: schemeOf(slide), map: colorMapOf(slide) };
+toCss(
+  resolveColor(
+    {
+      space: 'scheme',
+      name: 'accent1',
+      transforms: [
+        { op: 'lumMod', val: 60000 },
+        { op: 'lumOff', val: 40000 },
+      ],
+    },
+    ctx,
+  ),
+);
+```
+
+### 2. A gradient
+
+The stops for an SVG gradient and the vector for a linear one, in shape coordinates, with `gradientUnits="userSpaceOnUse"`.
+
+```ts
+import { linearGradientVector, svgStops } from '@pptx-studio/paint';
+
+const stops = svgStops(fill, ctx); // [{ offset, color, opacity }]
+const { x1, y1, x2, y2 } = linearGradientVector(fill.shade, width, height);
+```
+
+### 3. A pattern
+
+Tiles are 8 by 8 device pixels and do not scale with the shape; use `patternUnits="userSpaceOnUse"` at `PATTERN_PIXEL_EMU` times eight.
+
+```ts
+import { PATTERN_PIXEL_EMU, resolvePattern } from '@pptx-studio/paint';
+
+const pattern = resolvePattern(fill, ctx); // width, height, coverage, fg, bg
+const tileEmu = PATTERN_PIXEL_EMU * 8;
+```
+
+### 4. A dash and a cap
+
+SVG adds the cap on top of the dash; PowerPoint paints ink. `dashArray` compensates, which is why a round-capped dot is a disc and not a pill.
+
+```ts
+import { dashArray, resolveLine, svgStroke } from '@pptx-studio/paint';
+
+const line = resolveLine(shape.line);
+svgStroke(line); // stroke-width, linecap, linejoin, miterlimit, dasharray
+dashArray(line.dash ?? [], widthPx, line.cap);
+```
+
+## What can go wrong
+
+- **`PaintError` with `COLOR_NO_SCHEME`** - A scheme colour was resolved with no scheme in the context; pass `schemeOf(sheet)`.
+- **`PaintError` with `FILL_PATTERN_UNKNOWN` or `LINE_DASH_UNKNOWN`** - A name outside the 54 patterns or the eleven preset dashes.
+
+## Try it
+
+<Demo name="paint" />
+
+## Read more
+
+- [@pptx-studio/paint](/docs/packages/paint)
+- [@pptx-studio/model](/docs/packages/model)

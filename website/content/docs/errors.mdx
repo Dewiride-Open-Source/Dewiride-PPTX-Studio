@@ -1,0 +1,62 @@
+---
+title: Errors
+description: 'Every error class the packages throw and every code it can carry, read from the installed packages.'
+---
+
+## How errors work
+
+Every failure is a typed error with a machine-readable `code`, and where it helps, the part name
+or the token that caused it. Each package throws one class of its own; `census` throws only an
+`OpcError`, when the archive will not open, and records everything else as a problem in its
+answer. Where a package exports an `is<X>Error` guard, use it; otherwise check `instanceof`.
+
+Nothing is swallowed and nothing returns a plausible default in place of an answer: a missing
+face throws `TEXT_FACE_METRICS`, an unknown preset throws `PRESET_UNKNOWN`, and a file the writer
+would have broken throws `ERR_VALIDATION_FAILED` with the report attached.
+
+The codes below are read from the `dist/index.d.ts` of the packages this site installed, so
+they are the codes of the versions in the footer.
+
+## opc
+
+<ErrorCodes pkg="opc" />
+
+## xml
+
+<ErrorCodes pkg="xml" />
+
+## geometry
+
+<ErrorCodes pkg="geometry" />
+
+## paint
+
+<ErrorCodes pkg="paint" />
+
+## text
+
+<ErrorCodes pkg="text" />
+
+## model
+
+<ErrorCodes pkg="model" />
+
+## render-svg
+
+<ErrorCodes pkg="render-svg" />
+
+## render-dom
+
+<ErrorCodes pkg="render-dom" />
+
+## validate
+
+<ErrorCodes pkg="validate" />
+
+## writer
+
+<ErrorCodes pkg="writer" />
+
+## cli
+
+<ErrorCodes pkg="cli" />

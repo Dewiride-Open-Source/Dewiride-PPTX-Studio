@@ -1,0 +1,155 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+@import '@fontsource-variable/ibm-plex-sans';
+@import '@fontsource/ibm-plex-mono';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+/*
+ * The accents are the renderer's own debug-overlay palette, from
+ * `render-svg/src/overlay.ts`: chrome blue for selection, the text-rectangle
+ * purple for provenance, the connection-site teal, the handle red, the widened
+ * amber. A tool that draws OOXML should not invent a second set of colours for
+ * talking about it. Every other token is a surface or a line, in two schemes.
+ */
+:root {
+  --canvas: #f6f7f9;
+  --surface: #ffffff;
+  --sunken: #eef1f4;
+  --line: #d9dee5;
+  --line-strong: #b8c0cb;
+  --fg: #14181d;
+  --fg-muted: #4d5866;
+  --fg-faint: #7a8593;
+  --accent: #0b62b0;
+  --accent-soft: #e3effa;
+  --info: #6f3b93;
+  --site: #007a86;
+  --good: #1f7a4d;
+  --warn: #9a5a12;
+  --bad: #b3261e;
+  --desk: #e6eaef;
+  --selection: #cfe3f7;
+  --shadow-panel: 0 1px 2px rgb(20 24 29 / 0.06), 0 8px 24px -12px rgb(20 24 29 / 0.18);
+  --shadow-stage: 0 0 0 1px var(--line-strong), 0 18px 50px -20px rgb(20 24 29 / 0.45);
+}
+
+.dark {
+  --canvas: #08090b;
+  --surface: #0d0f13;
+  --sunken: #12151a;
+  --line: #1a1f26;
+  --line-strong: #262d37;
+  --fg: #e4e8ee;
+  --fg-muted: #8b95a3;
+  --fg-faint: #5c6675;
+  --accent: #3b8fd4;
+  --accent-soft: rgb(59 143 212 / 0.14);
+  --info: #a855c9;
+  --site: #00a5b5;
+  --good: #2fa869;
+  --warn: #d98a2b;
+  --bad: #e8453c;
+  --desk: #12151a;
+  --selection: #0b62b0;
+  --shadow-panel: 0 0 0 1px var(--line);
+  --shadow-stage: 0 0 0 1px var(--line-strong), 0 18px 50px -12px rgb(0 0 0 / 0.7);
+}
+
+/* Fumadocs reads these; pointing them at the same tokens makes the docs ours. */
+:root,
+.dark {
+  --color-fd-background: var(--canvas);
+  --color-fd-foreground: var(--fg);
+  --color-fd-muted: var(--sunken);
+  --color-fd-muted-foreground: var(--fg-muted);
+  --color-fd-popover: var(--surface);
+  --color-fd-popover-foreground: var(--fg);
+  --color-fd-card: var(--surface);
+  --color-fd-card-foreground: var(--fg);
+  --color-fd-border: var(--line);
+  --color-fd-primary: var(--accent);
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-secondary: var(--sunken);
+  --color-fd-secondary-foreground: var(--fg);
+  --color-fd-accent: var(--accent-soft);
+  --color-fd-accent-foreground: var(--fg);
+  --color-fd-ring: var(--accent);
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-info: var(--info);
+  --color-site: var(--site);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-desk: var(--desk);
+
+  --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  --radius-frame: 14px;
+
+  --shadow-panel: var(--shadow-panel);
+  --shadow-stage: var(--shadow-stage);
+
+  --ease-out-quart: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--fg);
+}
+
+/* The slide is whatever the deck paints; the site never tints it. */
+.stage-surface {
+  background: #ffffff;
+  box-shadow: var(--shadow-stage);
+}
+
+/*
+ * A placeholder PowerPoint wrote paints nothing - `fill="none" stroke="none"` -
+ * and SVG's default `visiblePainted` gives an unpainted path no pointer events,
+ * so an empty title would be unselectable. An editor has to be able to click it.
+ */
+.stage-surface [data-shape] path {
+  pointer-events: all;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--selection);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

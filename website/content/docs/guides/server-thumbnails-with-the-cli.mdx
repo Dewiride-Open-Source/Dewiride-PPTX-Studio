@@ -1,0 +1,71 @@
+---
+title: Server-side thumbnails with the CLI
+description: 'Render every slide to SVG in Node, with no LibreOffice and no headless browser.'
+---
+
+## Goal
+
+Thumbnails from a deck on a server, and a report of which fonts drew them.
+
+## You need
+
+```sh
+npm install @pptx-studio/cli
+```
+
+## Steps
+
+### 1. From the command line
+
+One file in, one SVG per slide out. `--json` prints the font report.
+
+```sh
+npx @pptx-studio/cli render deck.pptx --out slides/ --width 1280
+npx @pptx-studio/cli render deck.pptx --slide 1 --width 640 --out thumb.svg --json
+```
+
+### 2. From a program
+
+`renderDeck` is the same renderer with bytes in and strings out.
+
+```ts
+import { renderDeck } from '@pptx-studio/cli';
+
+const { slides, fonts, missing, facesIndexed } = renderDeck(bytes, { width: 1280 });
+slides[0]?.svg; // stands alone: pictures as data: URIs
+fonts.filter((face) => face.substituted); // what this machine could not draw as asked
+```
+
+### 3. Fonts
+
+The CLI indexes the machine's font files and measures from their tables. A container that ships no fonts substitutes everything, and `fonts` says so; give it faces with `--font-dir`.
+
+```sh
+npx @pptx-studio/cli render deck.pptx --font-dir ./fonts --out slides/
+```
+
+### 4. The other verbs
+
+The same packages, with a file argument and an exit code.
+
+```sh
+npx @pptx-studio/cli inspect deck.pptx           # the census, as text or --json
+npx @pptx-studio/cli validate deck.pptx          # the 29 rules; exit 1 on anything fatal
+npx @pptx-studio/cli roundtrip deck.pptx         # read, write back, compare; --write saves it
+npx @pptx-studio/cli bisect before.pptx after.pptx --oracle validate
+```
+
+## What can go wrong
+
+- **`CLI_NO_FACE`** - No font found at all; pass `--font-dir` or install one.
+- **`CLI_NO_SLIDE`** - `--slide` names a slide the deck does not have.
+- **`CLI_WIDTH`** - The width is not a positive whole number.
+
+## Try it
+
+<Demo name="cli" />
+
+## Read more
+
+- [@pptx-studio/cli](/docs/packages/cli)
+- [@pptx-studio/render-svg](/docs/packages/render-svg)

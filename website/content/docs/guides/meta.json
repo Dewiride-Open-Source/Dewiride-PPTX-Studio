@@ -1,0 +1,16 @@
+{
+  "title": "Guides",
+  "pages": [
+    "index",
+    "render-svg-in-the-browser",
+    "live-slide-with-render-dom",
+    "read-a-deck-in-a-worker",
+    "edit-a-shape-and-save",
+    "validate-before-you-ship",
+    "server-thumbnails-with-the-cli",
+    "understand-the-inheritance-chain",
+    "geometry-presets-and-handles",
+    "colour-gradients-and-patterns",
+    "text-measurement-and-autofit"
+  ]
+}

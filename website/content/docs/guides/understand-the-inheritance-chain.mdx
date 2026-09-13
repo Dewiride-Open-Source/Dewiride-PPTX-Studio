@@ -1,0 +1,78 @@
+---
+title: Understand the inheritance chain
+description: "Ask where a shape's position, fill or text size came from, and get the sheet that said so."
+---
+
+## Goal
+
+For any property of any shape, the value and the source - slide, layout, master, theme, or built in.
+
+## You need
+
+```sh
+npm install @pptx-studio/opc @pptx-studio/model
+```
+
+## Steps
+
+### 1. The sheets a slide resolves through
+
+From the slide to its layout to its master, each bound by the part's own relationships.
+
+```ts
+import { sheetChain, themeOf } from '@pptx-studio/model';
+
+sheetChain(slide).map((sheet) => sheet.kind); // ['slide', 'layout', 'master']
+themeOf(slide)?.name;
+```
+
+### 2. The chain for one shape
+
+A placeholder reaches its layout counterpart by `idx`, and the master's by type.
+
+```ts
+import { inheritanceChain } from '@pptx-studio/model';
+
+for (const link of inheritanceChain(shape, slide)) {
+  console.log(link.origin, link.sheet.partName, link.shape.name); // 'shape' | 'layoutPh' | 'masterPh'
+}
+```
+
+### 3. Resolve a property, with its origin
+
+The generic `resolve` takes a picker; the specific resolvers know the extra sources - the style matrix for fills, the theme for colours.
+
+```ts
+import { resolve, resolveAppearance, resolveBackground, resolveXfrm } from '@pptx-studio/model';
+
+resolveXfrm(shape, slide); // { value, origin, explicit, sheet, shape } | undefined
+resolve(shape, slide, (s) => s.prstGeom);
+resolveAppearance(shape, slide).fillOrigin; // 'shape' | 'layoutPh' | 'masterPh' | 'theme' ...
+resolveBackground(slide)?.form; // 'bgPr' | 'bgRef'
+```
+
+### 4. The text cascade
+
+Ten sources, from the run up to the built-in styles. Every resolver names the one that answered.
+
+```ts
+import { resolveSize, resolveLatinTypeface } from '@pptx-studio/model';
+
+const context = { sheet: slide, shape, defaultTextStyle: doc.defaultTextStyle };
+const paragraph = shape.text!.paragraphs[0]!;
+const run = paragraph.content.find((one) => one.kind === 'run');
+resolveSize(context, paragraph, run); // { value: 4400, origin: 'masterPh', ... }
+resolveLatinTypeface(context, paragraph, run); // { value: 'Calibri Light', origin: 'theme', ... }
+```
+
+## What can go wrong
+
+- **`doc.problems` has `MODEL_NO_PARENT` or `MODEL_NO_THEME`** - Not a throw: a slide with no layout, or a master with no theme, is recorded and the resolver stops the walk there.
+
+## Try it
+
+<Demo name="model" />
+
+## Read more
+
+- [@pptx-studio/model](/docs/packages/model)

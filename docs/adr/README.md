@@ -85,3 +85,4 @@ date.
 | [0052](phase-3-text/0052-the-box-rounds-half-up-and-the-markup-names-its-face.md) | The box rounds half up, and the markup names its face                |
 | [0053](phase-3-text/0053-what-linux-and-macos-said.md)                            | What Linux and macOS said                                            |
 | [0054](phase-3-text/0054-a-hundred-slides-at-any-zoom.md)                         | A hundred slides, at any zoom                                        |
+| [0055](phase-3-text/0055-the-website-installs-what-it-documents.md)               | The website installs what it documents                               |

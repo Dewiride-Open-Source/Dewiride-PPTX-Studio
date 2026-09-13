@@ -1,0 +1,57 @@
+---
+title: paint
+description: 'Colour, fills, strokes and effects, each rule measured against PowerPoint rather than read from the standard.'
+---
+
+<PackageHeader pkg="paint" />
+
+## What it is
+
+How a colour transform chain resolves, how a gradient is really blended, what a pattern tile looks like, how a dash is compensated for its cap, how a shadow's blur radius becomes a Gaussian sigma: none of that is in ECMA-376 in a form you can implement from. `@pptx-studio/paint` holds those rules as functions, and each one cites the fixture it was measured against.
+
+## 30-second example
+
+<include lang="ts" meta='title="colour.ts"'>
+  ../../../snippets/paint/colour.ts#example
+</include>
+
+## Key concepts
+
+### Transforms apply in document order and clamp between steps
+
+`lumMod` then `lumOff` is PowerPoint's "Lighter 40%"; the other order is a different, plausible, wrong colour. The 28 transforms are applied as written, clamping after each.
+
+### Six colour spaces, one resolver
+
+`srgb`, `scrgb`, `hsl`, `scheme`, `sys` and `prst` all resolve through `resolveColor`; a scheme colour needs the theme's scheme and the sheet's colour map, which the model package supplies.
+
+### The two-colour gradient curve
+
+PowerPoint does not blend two stops linearly. The measured curve is pre-sampled into a fifteen-knot ramp in a 2.2 power space, and every Office theme gradient has exactly that shape.
+
+### Pattern tiles are physical size
+
+The 54 patterns are 8-by-8 pixel tiles at 96 DPI and do not scale with the shape. They were transcoded from Mono's libgdiplus.
+
+### Caps, joins, and the dash the cap eats
+
+SVG adds a cap on top of a dash; PowerPoint paints the dash as ink. `dashArray` shortens each dash by a width and lengthens each gap by one so the ink matches.
+
+## API reference
+
+<ApiTable pkg="paint" />
+
+## Errors
+
+<ErrorCodes pkg="paint" />
+
+## Try it live
+
+<Demo name="paint" />
+
+## Read more
+
+- [ADR 0021 - colour](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0021-colour.md)
+- [ADR 0022 - fills](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0022-fills.md)
+- [ADR 0023 - lines](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0023-lines.md)
+- [ADR 0036 - image fills](https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio/blob/main/docs/adr/phase-2-geometry-and-paint/0036-image-fills.md)
