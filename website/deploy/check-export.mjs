@@ -74,6 +74,16 @@ try {
   await page.locator('[data-shape]').first().waitFor({ timeout: TIMEOUT });
   ok('/demos/render-svg/ fetched a sample deck and drew a shape');
 
+  // The live renderer: a slide mounted by render-dom, and the playground's bench over it.
+  await page.goto(at('/demos/render-dom/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
+  await page.locator('[data-shape]').first().waitFor({ timeout: TIMEOUT });
+  ok('/demos/render-dom/ mounted a live slide');
+  await page.goto(at('/playground/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
+  await page.locator('[data-shape]').first().waitFor({ timeout: TIMEOUT });
+  await page.getByRole('tab', { name: 'Census' }).click();
+  await page.getByText('namespaces', { exact: true }).waitFor({ timeout: TIMEOUT });
+  ok('/playground/ mounted the viewer and ran a census under a tab');
+
   // The CLI's output, rendered ahead of time.
   await page.goto(at('/demos/cli/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
   await page.locator('img[src*="/rendered/"]').first().waitFor({ timeout: TIMEOUT });

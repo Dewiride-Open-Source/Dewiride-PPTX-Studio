@@ -106,23 +106,6 @@
   --shadow-stage: var(--shadow-stage);
 
   --ease-out-quart: cubic-bezier(0.2, 0.7, 0.2, 1);
-
-  /* The demos' own dark scale, until each is rebuilt on the tokens above. */
-  --color-ink-900: #08090b;
-  --color-ink-850: #0d0f13;
-  --color-ink-800: #12151a;
-  --color-ink-700: #1a1f26;
-  --color-ink-600: #262d37;
-  --color-ink-500: #3a4350;
-  --color-ink-400: #5c6675;
-  --color-ink-300: #8b95a3;
-  --color-ink-200: #b9c1cc;
-  --color-ink-100: #e4e8ee;
-  --color-chrome: #3b8fd4;
-  --color-chrome-dim: #0b62b0;
-  --color-textrect: #a855c9;
-  --color-handle: #e8453c;
-  --color-widened: #d98a2b;
 }
 
 html {

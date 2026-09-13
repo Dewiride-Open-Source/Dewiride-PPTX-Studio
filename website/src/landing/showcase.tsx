@@ -28,7 +28,7 @@ export function Showcase() {
             slides · {(DEFAULT_SAMPLE.bytes / 1024).toFixed(0)} kB · drawn by{' '}
             <code className="font-mono">@pptx-studio/cli</code> when this site was built
           </span>
-          <Link href="/demos/render-svg" className="text-accent hover:underline">
+          <Link href="/demos/render-dom" className="text-accent hover:underline">
             Open it live, or drop your own →
           </Link>
         </figcaption>

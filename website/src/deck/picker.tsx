@@ -1,16 +1,29 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, type DragEvent } from 'react';
 
-import { Badge } from '@/shell/badge';
+import { Badge } from '@/design/badge';
+import { Button } from '@/design/button';
+import { Select } from '@/design/field';
+import { Status } from '@/design/state';
 import { useDeck } from './provider';
-import { SAMPLES } from './samples';
+import { SAMPLES, sampleNamed } from './samples';
 
-/** The deck chooser in the header: the six shipped decks, or one of your own. */
-export function DeckPicker() {
-  const { deck, loading, load, loadSample } = useDeck();
+const ACCEPT = '.pptx,.pptm,.ppsx,.potx';
+
+/** The deck chooser: a shipped sample, or one of the visitor's own, by button or by drop. */
+export function DeckPicker({ compact = false }: { compact?: boolean }) {
+  const { deck, loading, failure, load, loadSample } = useDeck();
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
+
+  const sample = deck === null ? undefined : sampleNamed(deck.name);
+  const drop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setOver(false);
+    const file = event.dataTransfer.files[0];
+    if (file !== undefined) load(file);
+  };
 
   return (
     <div
@@ -19,54 +32,54 @@ export function DeckPicker() {
         setOver(true);
       }}
       onDragLeave={() => setOver(false)}
-      onDrop={(event) => {
-        event.preventDefault();
-        setOver(false);
-        const file = event.dataTransfer.files[0];
-        if (file !== undefined) load(file);
-      }}
-      className={`flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 transition-colors ${
-        over ? 'border-chrome bg-chrome/10' : 'border-ink-700 bg-ink-850'
+      onDrop={drop}
+      className={`flex flex-wrap items-center gap-2 rounded-panel border px-3 py-2 transition-colors ${
+        over ? 'border-accent bg-accent-soft' : 'border-line bg-surface'
       }`}
     >
-      <span className="text-xs text-ink-400">Deck</span>
-      <select
-        value={SAMPLES.some((s) => s.file === deck?.name) ? deck?.name : ''}
+      <label htmlFor="deck-picker" className="text-[12px] font-medium text-fg-muted">
+        Deck
+      </label>
+      <Select
+        id="deck-picker"
+        value={sample?.file ?? ''}
         onChange={(event) => {
           if (event.target.value !== '') loadSample(event.target.value);
         }}
-        className="rounded border border-ink-600 bg-ink-800 px-2 py-1 font-mono text-[12px] text-ink-100"
+        className="max-w-[24rem] font-mono text-[12px]"
       >
-        {SAMPLES.some((s) => s.file === deck?.name) ? null : (
-          <option value="">{deck?.name ?? 'none'}</option>
-        )}
-        {SAMPLES.map((sample) => (
-          <option key={sample.file} value={sample.file}>
-            {sample.file} - {sample.slides} slide(s)
+        {sample === undefined ? <option value="">{deck?.name ?? 'none'}</option> : null}
+        {SAMPLES.map((one) => (
+          <option key={one.file} value={one.file}>
+            {one.file} · {one.slides} slide{one.slides === 1 ? '' : 's'}
           </option>
         ))}
-      </select>
-
-      <button
-        type="button"
-        onClick={() => input.current?.click()}
-        className="rounded border border-ink-600 bg-ink-800 px-2 py-1 text-[12px] text-ink-200 hover:border-chrome hover:text-ink-100"
-      >
+      </Select>
+      <Button size="sm" onClick={() => input.current?.click()}>
         Open a .pptx
-      </button>
+      </Button>
       <input
         ref={input}
         type="file"
-        accept=".pptx,.pptm,.ppsx,.potx"
+        accept={ACCEPT}
         hidden
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (file !== undefined) load(file);
         }}
       />
-
-      {loading ? <Badge tone="info">reading</Badge> : null}
-      <span className="text-[11px] text-ink-500">or drop one here - it never leaves the tab</span>
+      {deck?.own === true ? <Badge tone="accent">your file</Badge> : null}
+      {loading ? (
+        <Status busy>Reading the deck…</Status>
+      ) : failure !== null ? (
+        <Status>
+          <span className="text-bad">{failure.message}</span>
+        </Status>
+      ) : compact ? null : (
+        <span className="text-[11px] text-fg-faint">
+          or drop one here · it never leaves your browser
+        </span>
+      )}
     </div>
   );
 }

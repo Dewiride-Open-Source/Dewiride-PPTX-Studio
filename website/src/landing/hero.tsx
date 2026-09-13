@@ -31,7 +31,7 @@ export function Hero() {
         you open is uploaded anywhere. One package, the CLI, runs the same renderer in Node.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
-        <LinkButton href="/demos" variant="primary">
+        <LinkButton href="/playground" variant="primary">
           Try it with a deck
         </LinkButton>
         <LinkButton href="/docs" variant="secondary">

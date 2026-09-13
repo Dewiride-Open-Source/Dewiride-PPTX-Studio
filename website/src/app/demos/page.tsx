@@ -1,70 +1,52 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { Panel } from '@/shell/panel';
-import { Snippet } from '@/shell/code';
-import { TOOLS } from '@/shell/tools';
+import { Badge } from '@/design/badge';
+import { DEMOS } from '@/demos/registry';
+import { packageFacts, RUNTIME_LABELS } from '@/site/packages';
 
-export default function Overview() {
+export const metadata: Metadata = {
+  title: 'Demos',
+  description: 'One live demo per package, on the sample decks or on a .pptx you drop on the page.',
+};
+
+export default function DemosIndex() {
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      <header className="pt-2">
-        <h1 className="text-2xl font-semibold text-ink-100">
-          Eleven packages, eleven tools, nothing linked
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-300">
-          Every <code className="font-mono text-[12px] text-ink-200">@pptx-studio/*</code> import on
-          this site was installed from the public npm registry. This directory sits outside the
-          project&apos;s pnpm workspace on purpose, so nothing here resolves through a workspace
-          link. If a published tarball were broken, this app would not build.
+    <div className="flex flex-col gap-6">
+      <header>
+        <h1 className="text-xl font-semibold tracking-tight">Twelve demos, one per package</h1>
+        <p className="mt-1 max-w-2xl text-[13px] text-fg-muted">
+          Every one runs on the deck chosen above - a shipped sample or one of your own. Nothing is
+          uploaded; the CLI page shows what Node rendered when the site was built.
         </p>
       </header>
-
-      <Panel
-        title="Install"
-        hint="Every package but the CLI runs in the tab; the CLI is the one Node package."
-      >
-        <div className="p-4">
-          <Snippet
-            code={
-              'npm install @pptx-studio/opc @pptx-studio/xml @pptx-studio/model \\n  @pptx-studio/render-svg @pptx-studio/census @pptx-studio/validate \\n  @pptx-studio/writer @pptx-studio/geometry @pptx-studio/paint \\n  @pptx-studio/text @pptx-studio/cli'
-            }
-          />
-        </div>
-      </Panel>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {TOOLS.map((tool) => (
-          <Link
-            key={tool.href}
-            href={tool.href}
-            className="group rounded-lg border border-ink-700 bg-ink-850 p-4 transition-colors hover:border-chrome"
-          >
-            <div className="flex items-baseline justify-between gap-2">
-              <h2 className="text-sm font-semibold text-ink-100">{tool.name}</h2>
-              {tool.prerendered === true ? (
-                <span className="text-[10px] text-widened">build time</span>
-              ) : null}
-            </div>
-            <p className="mt-1 font-mono text-[11px] text-chrome">@pptx-studio/{tool.package}</p>
-            <p className="mt-2 text-[13px] leading-relaxed text-ink-300">{tool.blurb}</p>
-          </Link>
-        ))}
-      </div>
-
-      <Panel title="What this is not">
-        <div className="space-y-2 p-4 text-[13px] leading-relaxed text-ink-300">
-          <p>
-            Not a PowerPoint clone. The editing on the Slides page is three XML edits with their own
-            inverses, not the command bus that Phase 5 of the plan builds - there is no snapping, no
-            resize solver and no multi-select yet, and this app does not pretend otherwise.
-          </p>
-          <p>
-            Charts, SmartArt, tables and OLE objects are carried through an export byte-for-byte but
-            are not drawn yet; they are later phases. What is drawn is geometry, fills, gradients,
-            patterns, strokes, effects, pictures, nested rotated groups and text.
-          </p>
-        </div>
-      </Panel>
+      <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {DEMOS.map((demo) => {
+          const facts = packageFacts(demo.name);
+          return (
+            <li key={demo.name}>
+              <Link
+                href={`/demos/${demo.name}`}
+                className="flex h-full flex-col rounded-panel border border-line bg-surface p-4 shadow-panel transition-colors hover:border-accent"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-semibold text-fg">{demo.title}</span>
+                  <code className="font-mono text-[11px] text-fg-faint">{demo.name}</code>
+                </div>
+                <p className="mt-2 flex-1 text-[13px] leading-relaxed text-fg-muted">
+                  {demo.blurb}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {facts.runsIn.map((runtime) => (
+                    <Badge key={runtime}>{RUNTIME_LABELS[runtime]}</Badge>
+                  ))}
+                  {demo.prerendered === true ? <Badge tone="warn">build time</Badge> : null}
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

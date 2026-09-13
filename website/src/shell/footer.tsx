@@ -10,6 +10,7 @@ const COLUMNS: readonly { title: string; links: readonly { text: string; href: s
     links: [
       { text: 'Docs', href: '/docs' },
       { text: 'Demos', href: '/demos' },
+      { text: 'Playground', href: '/playground' },
       { text: 'Status and roadmap', href: '/docs/status' },
     ],
   },
