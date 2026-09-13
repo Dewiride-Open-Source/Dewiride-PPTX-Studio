@@ -25,14 +25,23 @@ const check = (name, ok, detail) => {
   if (!ok) failures += 1;
 };
 
-for (const file of readdirSync(DECKS)
-  .filter((n) => /\.ppt[xm]$/.test(n))
-  .sort()) {
+// The manifest is the list, so a deck it names and this cannot read is a
+// failure rather than a file the directory walk never saw.
+const manifest = JSON.parse(readFileSync(join(DECKS, 'manifest.json'), 'utf8'));
+const present = readdirSync(DECKS).filter((n) => /\.ppt[xm]$/.test(n));
+check(
+  'manifest.json names every deck served',
+  manifest.decks.length === present.length &&
+    present.every((file) => manifest.decks.some((deck) => deck.file === file)),
+  `${manifest.decks.length} named, ${present.length} present`,
+);
+
+for (const { file, slides } of manifest.decks) {
   const bytes = new Uint8Array(readFileSync(join(DECKS, file)));
 
   const store = PartStore.open(bytes);
   const document = loadDocument(store);
-  check(`${file}: opens`, document.slides.length > 0, `${document.slides.length} slide(s)`);
+  check(`${file}: opens`, document.slides.length === slides, `${document.slides.length} slide(s)`);
 
   const census = censusPackage(bytes);
   check(`${file}: census`, census.parts.length > 0, `${census.parts.length} parts`);
