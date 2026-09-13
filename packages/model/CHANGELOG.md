@@ -1,5 +1,12 @@
 # @pptx-studio/model
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [33a6f9d]
+  - @pptx-studio/paint@0.3.0
+
 ## 0.1.2
 
 ### Patch Changes
