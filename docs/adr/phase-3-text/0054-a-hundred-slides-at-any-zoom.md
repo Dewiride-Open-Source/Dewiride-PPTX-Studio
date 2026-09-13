@@ -2,7 +2,7 @@
 
 Date: 2026-09-13
 Status: **accepted** — Gate 3 holds: 100 slides × 5 widths and a 2x display through the page,
-offline; 28/28 mutants killed in the first pass, 23/23 in the second and 11/11 in the third
+offline; 28/28 mutants killed in the first pass, 23/23 in the second and 13/13 in the third
 
 **Sub-phase 3.11.** Gate 3 asks for "a 100-slide deck rendered faithfully at any zoom, entirely
 client-side". None of its four claims was true or checkable when this began: the largest committed
@@ -429,12 +429,13 @@ this repository to go through the page end to end, and it needed nothing fixed.
   path and holds every row to PowerPoint's within the fixture's tolerance, 56 of 56, where the
   same markup with the snap stripped from it misses 25 of 28; `tools/gate3/gate3.test.ts` holds
   the mask to the translate a crisp path carries and nothing else.
-- **Mutants, 11/11 killed in the third pass.** The pen 3/3 (every pen shifted, none shifted, the
-  width rounded down); the renderer 6/6 (a turned rectangle still crisp, curves crisp, the shift
-  not turned, the fill not crisp, the box never stretched, any edge counted as aligned); the mask
-  2/2 (the translate kept, the translate stripped from any path). A twelfth — the shift applied to
-  a clipped band — survived because the band never spreads the shift at all, so the clause it
-  removed was redundant; the clause is gone.
+- **Mutants, 13/13 killed in the third pass.** The pen 3/3 (every pen shifted, none shifted, the
+  width rounded down); the renderer 8/8 (a turned rectangle still crisp, curves crisp, the shift
+  not turned, the fill not crisp, the box never stretched, any edge counted as aligned, a fill
+  never split from its pen, a fill split with no device); the mask 2/2 (the translate kept, the
+  translate stripped from any path). One more — the shift applied to a clipped band — survived
+  because the band never spreads the shift at all, so the clause it removed was redundant; the
+  clause is gone.
 - **Mutants, 23/23 killed in the second pass.** The marker pen 3/3 (a one-point floor, no device
   floor, the nominal width above two points); the line ends 7/7 (every path open, the head not
   reversed, every head centred, head and tail swapped, the head beside the line, a gradient head
