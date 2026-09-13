@@ -210,7 +210,7 @@ export function shapeNodes(
   const snapped = defs.pxPerPt !== null && rectilinear(paths, placed.frame);
   const crisp: Attrs = snapped ? { 'shape-rendering': 'crispEdges' } : {};
   const shifted: Attrs =
-    snapped && stroke !== null && stroke.band === 'centre' && stroke.shift > 0
+    snapped && stroke !== null && stroke.shift > 0
       ? { transform: penShift(placed.frame, stroke.shift) }
       : {};
 
