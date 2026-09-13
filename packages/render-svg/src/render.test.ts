@@ -1752,7 +1752,8 @@ describe('the device grid, re-derived from F3', () => {
         }
       }
     }
-  });
+    // Sixteen rasters through the `<img>` path: 7 s on a fast runner, 18 s on a slow one.
+  }, 60_000);
 
   it('draws an algn="in" pen up to a pixel and a half too far in, which is what its clip can do', async () => {
     const probes = (snap.probes as SnapProbe[]).filter((probe) => probe.family === 'inset');

@@ -230,25 +230,26 @@ import.meta.url), { type: 'module' })` under Turbopack becomes an 849-byte boots
 
 ## Measurements
 
-| claim                                           | measurement                                                                                                                           |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| first-load script, gzipped: `/`                 | 218 kB (budget 230)                                                                                                                   |
-| `/docs/packages/opc/`                           | 239 kB (budget 250) — Fumadocs' shell and the MDX runtime over the same React                                                         |
-| `/demos/render-dom/`                            | 202 kB (budget 230)                                                                                                                   |
-| `/playground/`                                  | 203 kB (budget 230)                                                                                                                   |
-| the largest chunks                              | Shiki's Oniguruma wasm, 623 kB raw / 232 kB gzipped, and its grammars, 199 kB gzipped — loaded by a code block, never in a first load |
-| the Worker                                      | 849-byte bootstrap + 4 chunks, 70 kB gzipped                                                                                          |
-| `out/`                                          | 35 MB, 893 files; `search.json` 758 kB; `rendered/` 144 SVGs for eleven decks                                                         |
-| `next build`, this machine                      | 16.8 s to compile from a clean cache, 39 s end to end warm including `prebuild`; the walk 12 s                                        |
-| `prerender/decks.mjs`                           | 11 decks, 144 slides, 6133 ms at 1280 px                                                                                              |
-| the candidate gate, this machine                | 219 s end to end: pack, install, typecheck, lint, smoke, build                                                                        |
-| the candidate gate in CI, before                | 59 s (run 34764116456, `the packages this commit would publish`, typecheck + smoke + build of the example)                            |
-| the candidate gate in CI, after                 | measured on the pull request, in the follow-up                                                                                        |
-| the canary in CI, before                        | 42 s (run 34763792565)                                                                                                                |
-| the site's dependencies                         | 21 runtime (12 of them `@pptx-studio/*`), 15 dev; no lockfile                                                                         |
-| the branch                                      | 215 files, +13232 −4043; 164 of them under `website/`                                                                                 |
-| Lighthouse on `/`, a docs page, `/playground/`  | measured against the live site, in the follow-up                                                                                      |
-| publish to served, the first release after this | measured by the registry wait step's log, in the follow-up                                                                            |
+| claim                                           | measurement                                                                                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| first-load script, gzipped: `/`                 | 218 kB (budget 230)                                                                                                                               |
+| `/docs/packages/opc/`                           | 239 kB (budget 250) — Fumadocs' shell and the MDX runtime over the same React                                                                     |
+| `/demos/render-dom/`                            | 202 kB (budget 230)                                                                                                                               |
+| `/playground/`                                  | 203 kB (budget 230)                                                                                                                               |
+| the largest chunks                              | Shiki's Oniguruma wasm, 623 kB raw / 232 kB gzipped, and its grammars, 199 kB gzipped — loaded by a code block, never in a first load             |
+| the Worker                                      | 849-byte bootstrap + 4 chunks, 70 kB gzipped                                                                                                      |
+| `out/`                                          | 35 MB, 893 files; `search.json` 758 kB; `rendered/` 144 SVGs for eleven decks                                                                     |
+| `next build`, this machine                      | 16.8 s to compile from a clean cache, 39 s end to end warm including `prebuild`; the walk 12 s                                                    |
+| `prerender/decks.mjs`                           | 11 decks, 144 slides, 6133 ms at 1280 px                                                                                                          |
+| the candidate gate, this machine                | 219 s end to end: pack, install, typecheck, lint, smoke, build                                                                                    |
+| the candidate gate in CI, before                | 59 s (run 34764116456, `the packages this commit would publish`, typecheck + smoke + build of the example)                                        |
+| the candidate gate in CI, after                 | 93 s (run 34779051444): lint, and a build that renders eleven decks and reads the reference                                                       |
+| the site's build job in CI, on the pull request | 130 s (run 34779051486): the registry answered every range in 5 s, install 34 s, typecheck 4, lint 10, smoke 3, build 27, Chromium 26, the walk 9 |
+| the canary in CI, before                        | 42 s (run 34763792565)                                                                                                                            |
+| the site's dependencies                         | 21 runtime (12 of them `@pptx-studio/*`), 15 dev; no lockfile                                                                                     |
+| the branch                                      | 215 files, +13232 −4043; 164 of them under `website/`                                                                                             |
+| Lighthouse on `/`, a docs page, `/playground/`  | measured against the live site, in the follow-up                                                                                                  |
+| publish to served, the first release after this | measured by the registry wait step's log, in the follow-up                                                                                        |
 
 ## Verification
 
@@ -287,9 +288,26 @@ pnpm lint && pnpm typecheck`, `pnpm exec vitest run --project tools` (981 tests,
   `tools/repo/plan-status.ts` projects from `docs/plan/phases.json`.
 - **`pnpm check`** green on the commit that claims this sub-phase.
 
+## What CI said
+
+Pull request #38. The `website` workflow's first run anywhere was on the pull request, run
+34779051486: the registry served every one of the twelve ranges on the first ask, the install took
+34 s with no retry, and the walk passed all thirteen assertions on Linux with the same first-load
+numbers as this machine — 218/239/202/203 kB — and without the Windows prefetch tolerance, which
+is what shows the tolerance is scoped right. The runner has no fonts: every deck rendered with
+every typeface substituted, as the CLI page says it will. The candidate gate passed from the
+branch's tarballs in 93 s.
+
+`check` failed twice on the same test and nothing else: 3.11's border-probe raster walk in
+`packages/render-svg/src/render.test.ts`, sixteen renders through the `<img>` path, took 18.2 s
+and then 18.1 s against browser mode's 15 s default, where main's last run had it at 7.2 s.
+The whole job was 1.4× slower than that run — the package build 8.7 → 12.3 s, the suite's
+transform 16.9 → 25.1 s — so it was the runner, and the heaviest raster test crossed the cap
+first. The walk now has 60 s; its assertions are unchanged.
+
 ## What the deploy said
 
-The first run is the merge of this pull request. Its run id, the registry wait, the curls of `/`,
+The first deploy is the merge of this pull request. Its run id, the registry wait, the curls of `/`,
 `/docs/packages/opc/`, `/decks/b02-layouts.pptx`, the Worker chunk and `/search.json`, a deck
 dropped on `/playground/` and its export opened in PowerPoint, and Lighthouse on three routes go
 here in the follow-up, `docs(3.12): what the deploy said`, as ADR 0054 did for its releases.
