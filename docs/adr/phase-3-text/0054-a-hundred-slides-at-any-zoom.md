@@ -350,6 +350,14 @@ published it at 20:47:30 and was not yet serving it — so it opened issue #29 a
 and the next run (34718207672) was green and closed it. Replication lag, not the release; a canary
 dispatched straight after a publish should expect one red run.
 
+Pull request #31 merged on CI run 34745569128 (main's run 34745831906 green on the merge). The
+first release dispatch refused itself — no completed CI run for the merge commit yet — which is the
+gate ADR 0053 built working as designed; the second, run 34746098190, published
+`@pptx-studio/paint` 0.3.0, `@pptx-studio/render-svg` 0.4.0, `@pptx-studio/render-dom` 0.3.0,
+`@pptx-studio/cli` 0.3.2 and `@pptx-studio/model` 0.1.3 for the dependency, and pushed the version
+commit to `main`. The canary was green before the release (run 34745835364) and, dispatched once
+the registry served the new CLI rather than 38 seconds after the publish, green after it (run 34746231070) with no issue opened.
+
 ## Deviations from the plan
 
 - **Zoom is a mount, not `resize()`.** The plan named `MountedSlide.resize()` and said a
