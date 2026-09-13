@@ -242,7 +242,8 @@ a half too far in at every zoom, a device-pixel constant the markup cannot expre
 test holds to the formula. What the border construction moved: the twelve bordered-picture slides
 of a46 2 to 4 bp each at 100 % (9971 → 9975 on the first) and nothing else; the gate's 100 %
 column 9956 → 9957 and the strip 9749 → 9753, where PowerPoint's own 120-px export agrees with
-its 960 at 9742; 25, 200 and 400 % unchanged.
+its 960 at 9742; 25, 200 and 400 % unchanged. On the Linux runner (run 34760265774) the same:
+100 % 9930 → 9931, the strip 9736 → 9741, the rest and the corpus mean of 9829 unchanged.
 
 A named `height` now stretches the slide into its box, `preserveAspectRatio="none"`, which is
 what F2 measured the export doing and what the page and both harnesses had been asking for by
