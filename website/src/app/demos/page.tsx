@@ -36,6 +36,9 @@ export default function DemosIndex() {
                 <p className="mt-2 flex-1 text-[13px] leading-relaxed text-fg-muted">
                   {demo.blurb}
                 </p>
+                <p className="mt-2 text-[12px] leading-relaxed text-fg">
+                  <span className="font-semibold">Try:</span> {demo.tryThis}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {facts.runsIn.map((runtime) => (
                     <Badge key={runtime}>{RUNTIME_LABELS[runtime]}</Badge>
