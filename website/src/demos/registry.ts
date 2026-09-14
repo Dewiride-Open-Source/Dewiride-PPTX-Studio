@@ -27,8 +27,9 @@ export const DEMOS: readonly DemoEntry[] = [
     name: 'render-svg',
     title: 'Editor',
     blurb:
-      'Click a shape and drag it, colour it, type in it or delete it; undo; download the file.',
-    tryThis: 'Click the title, drag it somewhere else, then double-click it and type.',
+      'Click a shape and drag it, colour its fill or its text, type in it or delete it; undo; download the file.',
+    tryThis:
+      'Click the title, drag it somewhere else, pick a text colour from the toolbar, then double-click it and type.',
   },
   {
     name: 'model',

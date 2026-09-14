@@ -75,6 +75,8 @@ const fill = newElement(
 const undoFill = applyEdits([insertInOrder(spPr, fill)]);
 ```
 
+A text colour is the same edit one level down: an `a:solidFill` in each run's `a:rPr`, and in the paragraph's `a:endParaRPr` when it has one, which is what PowerPoint writes for a font colour over the whole text. A run without an `a:rPr` is given one first, and `insertInOrder` puts it before the `a:t`.
+
 ### 5. Serialise the part and export
 
 Only the touched part is rewritten. `exportPackage` runs the preservation check and the 29 rules and throws rather than return bytes it just broke.

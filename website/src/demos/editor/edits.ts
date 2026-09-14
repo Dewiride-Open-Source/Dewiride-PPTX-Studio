@@ -1,11 +1,7 @@
 /**
- * The editor's four gestures as XML edits on the slide's own part, planned in
- * batches so a later batch can see what the earlier ones did.
- *
- * Each writes what PowerPoint writes for the same gesture: a dragged
- * placeholder gets an `a:xfrm` of its own, a recoloured shape an `a:solidFill`
- * in its `p:spPr`, and the layout keeps everything else. `insertInOrder` puts
- * every new element where the schema does. ADR 0055.
+ * The editor's gestures as XML edits on the slide's own part, planned in batches so a later
+ * batch can see what the earlier ones did. Each writes what PowerPoint writes for the same
+ * gesture, placed by `insertInOrder`; ADR 0055 has the measurements.
  */
 
 import {
@@ -150,6 +146,13 @@ function alphaOf(fill: XElement | undefined): XElement | undefined {
   return color === undefined ? undefined : child(color, NS_A, 'alpha');
 }
 
+/** A six-digit hex value in the form `a:srgbClr` takes, or a refusal. */
+function hexValue(hex: string): string {
+  const value = hex.replace('#', '').toUpperCase();
+  if (!/^[0-9A-F]{6}$/.test(value)) throw new NotEditable(`${hex} is not a six-digit hex colour.`);
+  return value;
+}
+
 function replaceFill(a: string, parent: XElement, value: string): readonly XmlEdit[] {
   const existing = fillElement(parent);
   if (existing !== undefined && is(existing, NS_A, 'solidFill')) {
@@ -183,8 +186,7 @@ function replaceFill(a: string, parent: XElement, value: string): readonly XmlEd
  * in place of whichever fill it declared. A connector's colour is its line's.
  */
 export function* planRecolour(shape: XElement, hex: string): Plan {
-  const value = hex.replace('#', '').toUpperCase();
-  if (!/^[0-9A-F]{6}$/.test(value)) throw new NotEditable(`${hex} is not a six-digit hex colour.`);
+  const value = hexValue(hex);
   if (is(shape, NS_P, 'pic'))
     throw new NotEditable('A picture keeps its image; it has no fill to colour.');
   if (is(shape, NS_P, 'grpSp')) {
@@ -212,6 +214,43 @@ export function* planRecolour(shape: XElement, hex: string): Plan {
     return;
   }
   yield replaceFill(a, properties, value);
+}
+
+/**
+ * Colour every character of a shape's text: an `a:solidFill` in each run's, break's and
+ * field's `a:rPr` and in every `a:endParaRPr`, written where one is missing — what
+ * PowerPoint writes for a font colour over the whole text (ADR 0055).
+ */
+export function* planRecolourText(shape: XElement, hex: string): Plan {
+  const value = hexValue(hex);
+  const body = textBody(shape);
+  if (body === undefined) throw new NotEditable('This shape holds no text to colour.');
+  const a = drawingPrefix(body);
+  const paragraphs = paragraphElements(body);
+  if (paragraphs.length === 0) throw new NotEditable('This text body has no paragraph to colour.');
+
+  const missing: XmlEdit[] = [];
+  for (const paragraph of paragraphs) {
+    const content = contentElements(paragraph);
+    for (const holder of content) {
+      if (child(holder, NS_A, 'rPr') === undefined)
+        missing.push(insertInOrder(holder, newElement(qn(a, 'rPr'))));
+    }
+    if (content.length === 0 && child(paragraph, NS_A, 'endParaRPr') === undefined)
+      missing.push(insertInOrder(paragraph, newElement(qn(a, 'endParaRPr'))));
+  }
+  yield missing;
+
+  const fills: XmlEdit[] = [];
+  for (const paragraph of paragraphs) {
+    for (const holder of contentElements(paragraph)) {
+      const rPr = child(holder, NS_A, 'rPr');
+      if (rPr !== undefined) fills.push(...replaceFill(a, rPr, value));
+    }
+    const end = child(paragraph, NS_A, 'endParaRPr');
+    if (end !== undefined) fills.push(...replaceFill(a, end, value));
+  }
+  yield fills;
 }
 
 const same = (left: readonly string[], right: readonly string[]): boolean =>

@@ -15,7 +15,15 @@ import {
 } from '@pptx-studio/xml';
 
 import type { ReplacedPart } from '@/deck/worker/protocol';
-import { applyAll, planDelete, planMove, planRecolour, planRetext, type Plan } from './edits.ts';
+import {
+  applyAll,
+  planDelete,
+  planMove,
+  planRecolour,
+  planRecolourText,
+  planRetext,
+  type Plan,
+} from './edits.ts';
 import { nameOf, shapeElement } from './locate.ts';
 
 interface Step {
@@ -60,6 +68,7 @@ export interface Editor {
   readonly cancel: () => void;
   readonly move: (sheet: Sheet, cNvPrId: number, frame: Frame, dx: number, dy: number) => boolean;
   readonly recolour: (sheet: Sheet, cNvPrId: number, hex: string) => boolean;
+  readonly recolourText: (sheet: Sheet, cNvPrId: number, hex: string) => boolean;
   readonly retext: (
     sheet: Sheet,
     cNvPrId: number,
@@ -249,10 +258,17 @@ export function useEditor(bytes: Uint8Array | null, base: Document | null): Edit
         ),
       recolour: (sheet, id, hex) =>
         run(
-          (name) => `Coloured ${name} ${hex.toUpperCase()}`,
+          (name) => `Filled ${name} ${hex.toUpperCase()}`,
           sheet,
           id,
           (shape) => planRecolour(shape, hex),
+        ),
+      recolourText: (sheet, id, hex) =>
+        run(
+          (name) => `Coloured the text of ${name} ${hex.toUpperCase()}`,
+          sheet,
+          id,
+          (shape) => planRecolourText(shape, hex),
         ),
       retext: (sheet, id, paragraphs) =>
         run(
