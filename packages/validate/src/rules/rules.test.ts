@@ -9,18 +9,18 @@ import { deck } from '../testing/deck.js';
  * A rule that is defined and never called looks exactly like a rule that is
  * enforced, from every angle except the one that matters. These tests are the
  * angle that matters: they hold the count, the ids, the wiring and the shape of
- * each entry, so that adding a thirtieth rule is a deliberate act with a diff
+ * each entry, so that adding a rule is a deliberate act with a diff
  * rather than something that happens.
  */
 
 describe('the rule table', () => {
-  it('has twenty-nine rules, and the plan says twenty-nine', () => {
-    expect(RULES).toHaveLength(29);
+  it('has thirty-one rules: the twenty-nine the plan says, and the two tables measured', () => {
+    expect(RULES).toHaveLength(31);
   });
 
-  it('numbers them V001…V029 with no gaps', () => {
+  it('numbers them V001…V031 with no gaps', () => {
     expect(RULE_IDS).toEqual(
-      Array.from({ length: 29 }, (_, i) => 'V' + String(i + 1).padStart(3, '0')),
+      Array.from({ length: 31 }, (_, i) => 'V' + String(i + 1).padStart(3, '0')),
     );
   });
 
@@ -73,18 +73,19 @@ describe('the rule table', () => {
     }
   });
 
-  it('has one warning, and it is the one PowerPoint opens', () => {
-    // Everything else is a refusal or a repair. `V021` is the odd one: an
+  it('has two warnings, and they are the ones PowerPoint opens', () => {
+    // Everything else is a refusal or a repair. `V021` is one odd one: an
     // unmatched placeholder inherits nothing and the file still opens, so
     // blocking an export over it would stop a user saving a deck that already
-    // works everywhere.
+    // works everywhere. `V030` is the other: a table that disagrees with itself
+    // opens without a word and is silently rewritten on the next save.
     const warnings = RULES.filter((rule) => rule.severity === 'warning').map((rule) => rule.id);
-    expect(warnings).toEqual(['V021']);
+    expect(warnings).toEqual(['V021', 'V030']);
   });
 
   it('resolves by id, and only by an id that exists', () => {
     expect(ruleById('V001')?.category).toBe('package');
-    expect(ruleById('V030')).toBeUndefined();
+    expect(ruleById('V032')).toBeUndefined();
     expect(ruleById('')).toBeUndefined();
   });
 

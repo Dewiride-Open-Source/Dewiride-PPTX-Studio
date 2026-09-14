@@ -31,7 +31,7 @@ That guess is wrong, and this is the sub-phase that found out.
 
 Two halves, cheapest first, as in 2.7 and 2.8.
 
-**PowerPoint authored first.** `tools/ground-truth/model/author.ps1` drives the
+**PowerPoint authored first.** `tools/ground-truth/model/sheets/author.ps1` drives the
 object model to _make_ the structures and then reads the files it saved. One
 script, and it settled the sub-phase's central architectural question plus four
 others before a probe existed:
@@ -56,8 +56,8 @@ others before a probe existed:
   `FollowMasterBackground = False` writes `p:bgPr`, never `p:bgRef`.
 
 **Then the probes.** 114 of them across 37 packages
-(`tools/ground-truth/model/probes.ts`), read back through
-`tools/ground-truth/model/read.ps1` and reduced by `tools/ground-truth/model/analyse.ts`.
+(`tools/ground-truth/model/sheets/probes.ts`), read back through
+`tools/ground-truth/model/sheets/read.ps1` and reduced by `tools/ground-truth/model/sheets/analyse.ts`.
 
 ## The measurement is a position, and it is free
 

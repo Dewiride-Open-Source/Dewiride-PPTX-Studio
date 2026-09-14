@@ -268,6 +268,6 @@ describe('the preservation rules on a deck nobody touched', () => {
     // V003 is the one rule that reads the archive rather than the store, and
     // no bytes were passed here. It is named in `skipped`, not counted as a pass.
     expect(report.skipped.map((entry) => entry.rule)).toEqual(['V003']);
-    expect(report.checked).toHaveLength(28);
+    expect(report.checked).toHaveLength(30);
   });
 });

@@ -110,7 +110,7 @@ export const PACKAGES: readonly PackageFacts[] = [
     name: 'validate',
     group: 'write',
     runsIn: ['tab', 'worker', 'node'],
-    blurb: 'The 29 rules a .pptx must not break, with the part and XPath of everything that fired.',
+    blurb: 'The 31 rules a .pptx must not break, with the part and XPath of everything that fired.',
     dependsOn: ['opc'],
   },
   {

@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 /**
  * The other half of sub-phase 1.2's verification, and the harder half to fake.
  *
- * `packages/validate/src/validate.test.ts` breaks a deck twenty-nine ways and
+ * `packages/validate/src/validate.test.ts` breaks a deck thirty-one ways and
  * checks that each rule fires. That proves the rules can detect. It cannot
  * prove the thing a validator actually has to be: **quiet on good files.**
  *
@@ -138,10 +138,10 @@ describe('the validator against the corpus', () => {
     expect(unreadable).toEqual([]);
   });
 
-  it('ran twenty-six rules on each; the other three want a baseline', () => {
+  it('ran twenty-eight rules on each; the other three want a baseline', () => {
     for (const deck of DECKS) {
       const report = REPORTS.get(deck.id)!;
-      expect(report.checked, deck.id).toHaveLength(26);
+      expect(report.checked, deck.id).toHaveLength(28);
       expect(
         report.skipped.map((entry) => entry.rule),
         deck.id,

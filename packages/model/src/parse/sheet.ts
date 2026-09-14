@@ -32,6 +32,7 @@ import {
   parseLine,
   parseLineElement,
 } from './paint.js';
+import { parseTableChild } from './table.js';
 import { parseTextBodyChild, parseTextStyles } from './text.js';
 import {
   PLACEHOLDER_TYPES,
@@ -323,6 +324,7 @@ function parseShape(element: XElement, kind: ShapeKind, partName: string): Shape
     prstGeom: prstGeom === undefined ? undefined : (attributeValue(prstGeom, 'prst') ?? ''),
     geometry: parseGeometry(spPr, partName),
     text: parseTextBodyChild(element, partName),
+    table: kind === 'graphicFrame' ? parseTableChild(element, partName) : undefined,
     children,
     node: element,
   };

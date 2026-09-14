@@ -110,14 +110,14 @@ describe('a no-op export of every committed deck', () => {
     }
   });
 
-  it('runs all twenty-nine rules, because a baseline was supplied', () => {
+  it('runs all thirty-one rules, because a baseline was supplied', () => {
     // The contrast with `validate.test.ts`, which runs twenty-six: a file on
     // the command line has no history, so the three preservation rules are
     // skipped there and named as skipped. Here there is a baseline, and they
     // run against real markup - which is the first time in the project that
     // they have.
     for (const { deck, result } of results) {
-      expect(result.report?.checked, deck.id).toHaveLength(29);
+      expect(result.report?.checked, deck.id).toHaveLength(31);
       expect(result.report?.skipped, deck.id).toEqual([]);
     }
   });

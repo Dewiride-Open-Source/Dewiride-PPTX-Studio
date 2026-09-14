@@ -21,6 +21,8 @@ import {
   v015ShapeTreePrologue,
   v016TextBody,
   v017GraphicFrame,
+  v030TableGrid,
+  v031TableAttributes,
 } from './rules/required.js';
 import { v018SlideIds, v019SheetIds, v020ShapeIds, v021PlaceholderIndices } from './rules/id.js';
 import {
@@ -45,7 +47,7 @@ import {
 import { ruleById, RULE_IDS, type RuleId } from './rules/rules.js';
 
 /**
- * The twenty-nine, wired to their implementations.
+ * The thirty-one, wired to their implementations.
  *
  * A plain table, so that "is every rule reachable" is a thing a test can ask
  * rather than a thing a reader has to believe. `rules.test.ts` asserts that the
@@ -82,6 +84,8 @@ const IMPLEMENTATIONS: Readonly<Record<RuleId, (ctx: Context) => void>> = {
   V027: v027UneditedPartsUnchanged,
   V028: v028OpaqueContainersUnchanged,
   V029: v029TextAndFieldIdentity,
+  V030: v030TableGrid,
+  V031: v031TableAttributes,
 };
 
 /** Rules that cannot run without the archive bytes. See `Context.archive`. */

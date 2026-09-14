@@ -7,7 +7,7 @@ description: 'Export a deck: re-serialise only what changed, sweep orphaned medi
 
 ## What it is
 
-`openPackage` opens a deck twice - once to edit and once as an untouched baseline. `exportPackage` writes the archive with only the rewritten parts serialised afresh, checks that every other entry is byte-identical to the baseline, runs the 29 rules, and returns bytes only if both pass. `comparePackages` is the round-trip comparator the CI badge is made of, and `bisectPackages` narrows a breaking change to the smallest edit that reproduces it.
+`openPackage` opens a deck twice - once to edit and once as an untouched baseline. `exportPackage` writes the archive with only the rewritten parts serialised afresh, checks that every other entry is byte-identical to the baseline, runs the 31 rules, and returns bytes only if both pass. `comparePackages` is the round-trip comparator the CI badge is made of, and `bisectPackages` narrows a breaking change to the smallest edit that reproduces it.
 
 ## 30-second example
 

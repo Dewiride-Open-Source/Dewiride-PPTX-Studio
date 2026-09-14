@@ -457,7 +457,7 @@ exactly until the next Tier A change.
 | `b01-blank`       | 1      | the floor — `a01-minimal` as Microsoft writes it, and the file every lexical claim is checked against |
 | `b02-layouts`     | 11     | the eleven built-in layouts, slide _i_ bound to layout _i_, for sub-phase 7.1's matrix                |
 | `b03-text`        | 3      | `a:normAutofit`'s `@fontScale` as the ladder that defines it produced them                            |
-| `b04-table`       | 1      | a built-in style GUID whose definition is nowhere in the package                                      |
+| `b04-table`       | 1      | a merge as PowerPoint spells it, and the built-in style it writes into `tableStyles.xml`              |
 | `b05-chart`       | 2      | one `c:plotArea` holding a `c:barChart` **and** a `c:lineChart`                                       |
 | `b06-smartart`    | 3      | three families, five parts each, and the `dsp:` fallback                                              |
 | `b07-ole`         | 1      | E6's own deck, committed — `mc:AlternateContent` with no `vmlDrawing` part                            |

@@ -11,7 +11,7 @@ import type { Context } from '../context.js';
 import { elementLocation } from '../report/location.js';
 
 /**
- * `V013` … `V017`: children and attributes that are not optional.
+ * `V013` … `V017`, `V030` and `V031`: children and attributes that are not optional.
  *
  * Every one of these is a `minOccurs` the schema states plainly, and every one
  * is broken the same way: by an editor deleting the last of something. The last
@@ -166,6 +166,233 @@ export function v017GraphicFrame(ctx: Context): void {
           'without one names no table, chart, diagram or OLE object at all.',
       );
     }
+  });
+}
+
+/** The lexical forms of `xsd:boolean`. */
+const BOOLEANS = new Set(['1', '0', 'true', 'false']);
+const INT = /^[+-]?\d+$/;
+
+/** `a:gridCol` carries `@w`, `a:tr` carries `@h`, and a cell's four merge attributes are typed. */
+export function v031TableAttributes(ctx: Context): void {
+  forEachElement(ctx, (part, element) => {
+    if (namespaceOf(element) !== NS.a) return;
+    const missing = (name: string): void => {
+      ctx.add(
+        'V031',
+        elementLocation(part, element),
+        '<' +
+          element.qname +
+          '> has no @' +
+          name +
+          '. CT_TableCol and CT_TableRow require it, and C7 measured the repair prompt: ' +
+          'PowerPoint opens the deck only after rewriting the part.',
+      );
+    };
+    if (element.local === 'gridCol' && attribute(element, 'w') === undefined) missing('w');
+    if (element.local === 'tr' && attribute(element, 'h') === undefined) missing('h');
+    if (element.local !== 'tc') return;
+    for (const [name, ok, type] of [
+      ['gridSpan', INT, 'xsd:int'],
+      ['rowSpan', INT, 'xsd:int'],
+      ['hMerge', BOOLEANS, 'xsd:boolean'],
+      ['vMerge', BOOLEANS, 'xsd:boolean'],
+    ] as const) {
+      const raw = attribute(element, name)?.value;
+      if (raw === undefined || (ok instanceof RegExp ? ok.test(raw) : ok.has(raw))) continue;
+      ctx.add(
+        'V031',
+        elementLocation(part, element),
+        '<a:tc>/@' +
+          name +
+          ' is "' +
+          raw +
+          '", which is not an ' +
+          type +
+          '. C7 measured gridSpan="2.0" and hMerge="on": a repair prompt each; the span is ' +
+          'dropped with the merge it named and the flag comes back as "1" under its span.',
+      );
+    }
+  });
+}
+
+/** A grid position's owner under the rule C7 measured. */
+interface Owner {
+  readonly row: number;
+  readonly col: number;
+  rows: number;
+  cols: number;
+}
+
+/** Zero is one and a negative runs to the edge: C7's span-zero and span-negative. */
+function spanOf(raw: string | undefined): number {
+  if (raw === undefined) return 1;
+  const n = Number(raw);
+  return n < 0 ? Number.POSITIVE_INFINITY : Math.max(1, n);
+}
+
+function flagged(cell: XElement, name: string): boolean {
+  const raw = attribute(cell, name)?.value;
+  return raw === '1' || raw === 'true';
+}
+
+/**
+ * The occupancy `@pptx-studio/model` ships, over attributes: each cell takes the next column, a
+ * claimed position is covered whatever it says, a span stops at the edge or at a claimed position.
+ */
+function owners(cells: readonly (readonly XElement[])[], cols: number): (Owner | null)[][] {
+  const grid: (Owner | null)[][] = cells.map(() =>
+    Array.from<Owner | null>({ length: cols }).fill(null),
+  );
+  cells.forEach((line, r) => {
+    line.forEach((cell, c) => {
+      if (c >= cols || grid[r]![c] !== null) return;
+      const wide = spanOf(attribute(cell, 'gridSpan')?.value);
+      const tall = spanOf(attribute(cell, 'rowSpan')?.value);
+      const owner: Owner = { row: r, col: c, rows: 1, cols: 1 };
+      while (c + owner.cols < cols && owner.cols < wide && grid[r]![c + owner.cols] === null) {
+        owner.cols += 1;
+      }
+      owner.rows = Math.min(tall, cells.length - r);
+      for (let rr = r; rr < r + owner.rows; rr++) {
+        for (let cc = c; cc < c + owner.cols; cc++) grid[rr]![cc] = owner;
+      }
+    });
+  });
+  return grid;
+}
+
+/** The table PowerPoint reads: one cell per column in every row, a flag exactly where a span covers. */
+export function v030TableGrid(ctx: Context): void {
+  forEachElement(ctx, (part, element) => {
+    if (element.local !== 'tbl' || namespaceOf(element) !== NS.a) return;
+    const add = (where: XElement, message: string): void => {
+      ctx.add('V030', elementLocation(part, where), message);
+    };
+    const grid = childElements(element).find((child) => child.local === 'tblGrid');
+    const cols =
+      grid === undefined ? 0 : childElements(grid).filter((c) => c.local === 'gridCol').length;
+    const rows = childElements(element).filter((child) => child.local === 'tr');
+    if (cols === 0 || rows.length === 0) {
+      add(
+        element,
+        'the table has ' +
+          String(cols) +
+          ' column(s) and ' +
+          String(rows.length) +
+          ' row(s). PowerPoint invents one of whichever is missing, empty, and writes it back - ' +
+          'measured in C7.',
+      );
+      return;
+    }
+    const cells = rows.map((row) => childElements(row).filter((child) => child.local === 'tc'));
+    cells.forEach((line, r) => {
+      if (line.length === cols) return;
+      add(
+        rows[r]!,
+        'row ' +
+          String(r + 1) +
+          ' holds ' +
+          String(line.length) +
+          ' cell(s) for ' +
+          String(cols) +
+          ' column(s). PowerPoint pads a short row with an empty cell, drops the cells past the ' +
+          'last column, and writes the result back - measured in C7.',
+      );
+    });
+    const grid2 = owners(cells, cols);
+    cells.forEach((line, r) => {
+      line.forEach((cell, c) => {
+        const owner = grid2[r]?.[c];
+        if (owner === null || owner === undefined) return;
+        const at = 'cell (' + String(r + 1) + ', ' + String(c + 1) + ')';
+        if (owner.row === r && owner.col === c) {
+          for (const [name, span] of [
+            ['gridSpan', owner.cols],
+            ['rowSpan', owner.rows],
+          ] as const) {
+            const written = attribute(cell, name)?.value;
+            if (written === undefined || Number(written) === span) continue;
+            add(
+              cell,
+              at +
+                ' says ' +
+                name +
+                '="' +
+                written +
+                '" and covers ' +
+                String(span) +
+                '. A span stops at the grid edge or at a position an earlier span claimed, zero ' +
+                'is one and a negative runs to the edge; PowerPoint writes the span it drew - ' +
+                'measured in C7.',
+            );
+          }
+          for (const name of ['hMerge', 'vMerge'] as const) {
+            if (!flagged(cell, name)) continue;
+            add(
+              cell,
+              at +
+                ' says ' +
+                name +
+                '="1" and no span covers it. The flag changes nothing: PowerPoint reads the ' +
+                'spans alone, 76 of 76 in C7, and drops the flag on save.',
+            );
+          }
+          return;
+        }
+        for (const [name, covered] of [
+          ['hMerge', owner.col < c],
+          ['vMerge', owner.row < r],
+        ] as const) {
+          if (covered === flagged(cell, name)) continue;
+          if (!covered) {
+            add(
+              cell,
+              at +
+                ' says ' +
+                name +
+                '="1" and the span of cell (' +
+                String(owner.row + 1) +
+                ', ' +
+                String(owner.col + 1) +
+                ') covers it the other way. PowerPoint drops the flag on save - measured in C7.',
+            );
+            continue;
+          }
+          add(
+            cell,
+            at +
+              ' is covered by the span of cell (' +
+              String(owner.row + 1) +
+              ', ' +
+              String(owner.col + 1) +
+              ') and does not say ' +
+              name +
+              '="1". PowerPoint reads it as covered anyway and adds the flag on save; a reader ' +
+              'that trusts the flag draws a cell PowerPoint does not - measured in C7.',
+          );
+        }
+        // PowerPoint's own form repeats the anchor's rowSpan along its row and its gridSpan
+        // down its column; any other span on a covered cell is deleted on save.
+        for (const [name, allowed] of [
+          ['gridSpan', c === owner.col ? owner.cols : null],
+          ['rowSpan', r === owner.row ? owner.rows : null],
+        ] as const) {
+          const written = attribute(cell, name)?.value;
+          if (written === undefined || Number(written) === allowed) continue;
+          add(
+            cell,
+            at +
+              ' is covered and says ' +
+              name +
+              '="' +
+              written +
+              '". A covered cell’s own span is ignored and PowerPoint deletes it on save unless ' +
+              'it repeats the anchor’s other span, as PowerPoint’s own form does - measured in C7.',
+          );
+        }
+      });
+    });
   });
 }
 

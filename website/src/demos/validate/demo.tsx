@@ -61,7 +61,7 @@ export default function ValidateDemo({ full }: DemoProps) {
   }, [deck, worker]);
 
   if (failure !== null) return <ErrorState {...failure} />;
-  if (result === null) return <Status busy>Running the 29 rules in the Worker…</Status>;
+  if (result === null) return <Status busy>Running the 31 rules in the Worker…</Status>;
 
   const { report } = result;
   const fired = new Set(report.findings.map((finding) => finding.rule));

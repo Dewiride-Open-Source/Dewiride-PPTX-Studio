@@ -1,6 +1,6 @@
 ---
 title: Validate before you ship
-description: 'Run the 29 rules on a file somebody sent you, or on an export, and read what they say.'
+description: 'Run the 31 rules on a file somebody sent you, or on an export, and read what they say.'
 ---
 
 ## Goal
@@ -56,7 +56,7 @@ console.log(formatReport(report, { explain: true }));
 ## What can go wrong
 
 - **`ValidateError` with `ERR_UNVALIDATABLE`** - The package could not be read far enough to run the rules; the census will say what is wrong with it.
-- **`ValidateError` with `ERR_UNKNOWN_RULE`** - A rule id outside V001-V029 was named in `rules`.
+- **`ValidateError` with `ERR_UNKNOWN_RULE`** - A rule id outside V001-V031 was named in `rules`.
 
 ## Try it
 

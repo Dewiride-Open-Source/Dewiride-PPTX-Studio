@@ -19,7 +19,7 @@ import { ruleById, type RuleCategory, type RuleId, type Severity } from '../rule
  * never saved again. The editor would be refusing to give the user back their
  * own file over a problem it did not cause and cannot fix. `PartStore.write`
  * already made exactly this call for dangling relationships, and this is the
- * same call generalised to all twenty-nine rules.
+ * same call generalised to all thirty-one rules.
  *
  * So `origin` is not a per-rule judgement call. It is computed by running the
  * rules a second time against the package **as it was opened** and differencing

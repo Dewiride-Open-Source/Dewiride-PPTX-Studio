@@ -1,4 +1,8 @@
+import { attributeValue, childElements, parseXmlString, type XElement } from '@pptx-studio/xml';
 import { describe, expect, it } from 'vitest';
+
+import tables from '../../../corpus/ground-truth/tables.json' with { type: 'json' };
+
 import { formatReport, type Report } from './report/report.js';
 import type { RuleId } from './rules/rules.js';
 import { deck, minimalDeck, relsPart, rel, shape, IDENTITY_CLR_MAP } from './testing/deck.js';
@@ -62,9 +66,9 @@ describe('a deck that passes', () => {
     const clean = report({ bytes, store });
 
     // No baseline was given, so the three preservation rules cannot run. A
-    // report that omitted them would look like twenty-nine passes.
+    // report that omitted them would look like thirty-one passes.
     expect(clean.skipped.map((entry) => entry.rule)).toEqual(['V027', 'V028', 'V029']);
-    expect(clean.checked).toHaveLength(26);
+    expect(clean.checked).toHaveLength(28);
     for (const entry of clean.skipped) expect(entry.why).toContain('package as it was opened');
   });
 
@@ -553,6 +557,168 @@ describe('V017 graphic frames', () => {
     expect(found).toHaveLength(1);
     expect(found[0]).toContain('no <p:xfrm>');
     expect(found[0]).toContain('not the a:xfrm every other shape uses');
+  });
+});
+
+describe('V030 and V031 tables, against what PowerPoint wrote back in C7', () => {
+  const TABLE_URI = 'http://schemas.openxmlformats.org/drawingml/2006/table';
+  /** The C5 test slide with a probe's table on it. */
+  const withTable = (markup: string, xfrm = true): Record<string, string> => {
+    const parts = minimalDeck();
+    return {
+      'ppt/slides/slide1.xml': parts['ppt/slides/slide1.xml']!.replace(
+        '</p:spTree>',
+        '<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="3" name="table"/>' +
+          '<p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/>' +
+          '</p:nvGraphicFramePr>' +
+          (xfrm
+            ? '<p:xfrm><a:off x="914400" y="914400"/><a:ext cx="5486400" cy="1371600"/></p:xfrm>'
+            : '') +
+          '<a:graphic><a:graphicData uri="' +
+          TABLE_URI +
+          '">' +
+          markup +
+          '</a:graphicData></a:graphic>' +
+          '</p:graphicFrame></p:spTree>',
+      ),
+    };
+  };
+  const NS =
+    'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" ' +
+    'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+
+  /** A row's cells as PowerPoint would compare them: spans as counts, flags as booleans. */
+  type Cell = readonly [number, number, boolean, boolean];
+  const normal = (attrs: Readonly<Record<string, string | undefined>>): Cell => [
+    Number(attrs['gridSpan'] ?? 1),
+    Number(attrs['rowSpan'] ?? 1),
+    attrs['hMerge'] === '1' || attrs['hMerge'] === 'true',
+    attrs['vMerge'] === '1' || attrs['vMerge'] === 'true',
+  ];
+  const writtenGrid = (markup: string): Cell[][] => {
+    const tbl = parseXmlString('<x ' + NS + '>' + markup + '</x>').root.children.find(
+      (n): n is XElement => n.type === 'element',
+    )!;
+    return childElements(tbl)
+      .filter((child) => child.qname === 'a:tr')
+      .map((row) =>
+        childElements(row)
+          .filter((child) => child.qname === 'a:tc')
+          .map((cell) =>
+            normal({
+              gridSpan: attributeValue(cell, 'gridSpan'),
+              rowSpan: attributeValue(cell, 'rowSpan'),
+              hMerge: attributeValue(cell, 'hMerge'),
+              vMerge: attributeValue(cell, 'vMerge'),
+            }),
+          ),
+      );
+  };
+  const asWritten = tables.probes.filter((p) => p.repaired === false && p.resaved !== null);
+
+  it('V030 fires on exactly the probes whose grid PowerPoint read back differently', () => {
+    // Differently in what it reads: a lexical form normalised, an explicit 1 dropped, or its
+    // own repeated span added to a flagged cell is the same grid written PowerPoint's way.
+    const disagreements: string[] = [];
+    for (const probe of asWritten) {
+      const written = writtenGrid(probe.markup);
+      const resaved = probe.resaved.rows.map((row) => row.cells.map((cell) => normal(cell)));
+      // A span PowerPoint added to a flagged cell is its own redundant form, not a disagreement.
+      const padded = resaved.map((row, r) =>
+        row.map((cell, c): Cell => {
+          const before = written[r]?.[c];
+          if (before === undefined || !(cell[2] || cell[3])) return cell;
+          return [before[0] === 1 ? 1 : cell[0], before[1] === 1 ? 1 : cell[1], cell[2], cell[3]];
+        }),
+      );
+      const rewritten =
+        probe.resaved.cols.length !== (probe.markup.match(/<a:gridCol\b/g) ?? []).length ||
+        JSON.stringify(written) !== JSON.stringify(padded);
+      const fired = broken('V030', withTable(probe.markup)).length > 0;
+      if (fired !== rewritten) {
+        disagreements.push(
+          probe.id + ': ' + (rewritten ? 'rewritten and silent' : 'kept and fired'),
+        );
+      }
+    }
+    expect(disagreements).toEqual([]);
+    expect(asWritten.length).toBe(76);
+  });
+
+  it('V030 names the disagreement', () => {
+    const probe = (id: string): string => tables.probes.find((p) => p.id === id)!.markup;
+    expect(broken('V030', withTable(probe('span-no-flag-h'))).join('\n')).toContain(
+      'cell (1, 2) is covered by the span of cell (1, 1) and does not say hMerge="1"',
+    );
+    expect(broken('V030', withTable(probe('flag-no-span-h'))).join('\n')).toContain(
+      'cell (1, 2) says hMerge="1" and no span covers it',
+    );
+    expect(broken('V030', withTable(probe('cross'))).join('\n')).toContain(
+      'cell (2, 1) says gridSpan="2" and covers 1',
+    );
+    expect(broken('V030', withTable(probe('row-short'))).join('\n')).toContain(
+      'row 1 holds 3 cell(s) for 4 column(s)',
+    );
+    expect(broken('V030', withTable(probe('no-cols'))).join('\n')).toContain(
+      '0 column(s) and 3 row(s)',
+    );
+    expect(broken('V030', withTable(probe('covered-anchor-v'))).join('\n')).toContain(
+      'cell (1, 2) is covered and says rowSpan="2"',
+    );
+    expect(broken('V030', withTable(probe('cross'))).join('\n')).toContain(
+      'cell (2, 2) says hMerge="1" and the span of cell (1, 2) covers it the other way',
+    );
+  });
+
+  it('V030 is silent on the form PowerPoint writes for its own merges and splits', () => {
+    for (const slide of tables.findings.canonical) {
+      const cols = Math.max(...slide.rows.map((row) => row.length));
+      const markup =
+        '<a:tbl><a:tblPr/><a:tblGrid>' +
+        '<a:gridCol w="1371600"/>'.repeat(cols) +
+        '</a:tblGrid>' +
+        slide.rows
+          .map(
+            (row) =>
+              '<a:tr h="457200">' +
+              row
+                .map(
+                  (cell) =>
+                    '<a:tc' +
+                    Object.entries(cell)
+                      .map(([k, v]) => ' ' + k + '="' + String(v) + '"')
+                      .join('') +
+                    '><a:txBody><a:bodyPr/><a:lstStyle/><a:p/></a:txBody><a:tcPr/></a:tc>',
+                )
+                .join('') +
+              '</a:tr>',
+          )
+          .join('') +
+        '</a:tbl>';
+      expect(broken('V030', withTable(markup)), slide.name).toEqual([]);
+    }
+    expect(tables.findings.canonical.length).toBe(12);
+  });
+
+  it('V031 fires on the four lexical repairs and on nothing PowerPoint opened as written', () => {
+    const probe = (id: string) => tables.probes.find((p) => p.id === id)!;
+    for (const [id, text] of [
+      ['gridcol-no-w', '<a:gridCol> has no @w'],
+      ['tr-no-h', '<a:tr> has no @h'],
+      ['merge-on', '<a:tc>/@hMerge is "on", which is not an xsd:boolean'],
+      ['span-float', '<a:tc>/@gridSpan is "2.0", which is not an xsd:int'],
+    ] as const) {
+      const found = broken('V031', withTable(probe(id).markup));
+      expect(found, id).toHaveLength(1);
+      expect(found[0], id).toContain(text);
+    }
+    for (const p of asWritten) expect(broken('V031', withTable(p.markup)), p.id).toEqual([]);
+    expect(broken('V016', withTable(probe('tc-body-no-p').markup)).join('\n')).toContain(
+      'has no <a:p>',
+    );
+    expect(broken('V017', withTable(probe('frame-missing').markup, false)).join('\n')).toContain(
+      'no <p:xfrm>',
+    );
   });
 });
 
