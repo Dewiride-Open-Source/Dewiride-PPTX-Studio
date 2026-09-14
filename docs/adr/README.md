@@ -86,3 +86,9 @@ date.
 | [0053](phase-3-text/0053-what-linux-and-macos-said.md)                            | What Linux and macOS said                                            |
 | [0054](phase-3-text/0054-a-hundred-slides-at-any-zoom.md)                         | A hundred slides, at any zoom                                        |
 | [0055](phase-3-text/0055-the-website-installs-what-it-documents.md)               | The website installs what it documents                               |
+
+## Phase 4 — tables and smartart
+
+| #                                                                   | decision                |
+| ------------------------------------------------------------------- | ----------------------- |
+| [0056](phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md) | The spans are the merge |

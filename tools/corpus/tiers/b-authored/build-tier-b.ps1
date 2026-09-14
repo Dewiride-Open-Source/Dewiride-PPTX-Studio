@@ -236,12 +236,10 @@ try {
     # ===================================================================== b04
     if (Want 'b04-table') {
         Write-Host 'b04-table'
-        # `ppt/tableStyles.xml` in every stock template is an EMPTY
-        # `<a:tblStyleLst def="{5C22544A-...}"/>`, so a renderer that reads only
-        # that part draws every real table white and borderless. This deck is
-        # the evidence: a table carrying a built-in style id that resolves to
-        # nothing in the package, plus the six banding flags that drive
-        # sub-phase 4.3's thirteen-layer cascade.
+        # A table PowerPoint authored: its own spelling of a merge, the six
+        # banding flags that drive sub-phase 4.3's cascade, and the full
+        # `a:tblStyle` it writes into `ppt/tableStyles.xml` for a built-in
+        # style once a table uses it.
         $p = $app.Presentations.Add($msoTrue)
         $s = $p.Slides.AddSlide(1, $p.SlideMaster.CustomLayouts.Item(6))
         $s.Shapes.Item(1).TextFrame.TextRange.Text = 'b04 - a built-in table style, and merged cells'

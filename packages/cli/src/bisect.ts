@@ -26,7 +26,7 @@ import {
  * ## What it is for
  *
  * It is the debugger for this project, and the plan says so in as many words.
- * `validate` answers "does this break one of the twenty-nine rules"; `roundtrip`
+ * `validate` answers "does this break one of the firewall's rules"; `roundtrip`
  * answers "did we change anything"; neither answers the question you actually
  * have at two in the morning, which is *which* of the four hundred things that
  * changed is the one PowerPoint objects to.
@@ -43,7 +43,7 @@ import {
  *
  * ## The oracles
  *
- * `--oracle validate` (the default) asks the twenty-nine rules. It needs no
+ * `--oracle validate` (the default) asks the firewall's rules. It needs no
  * PowerPoint, runs in milliseconds, and is what the tests use - but it can only
  * find failures we already know how to describe.
  *
@@ -94,7 +94,7 @@ export function oracleScriptPath(): string {
 }
 
 /**
- * The twenty-nine rules, asked of one candidate.
+ * The firewall's rules, asked of one candidate.
  *
  * No baseline is supplied and none could be: a candidate is a package that
  * never existed until this run, and it has no history. That makes every fatal

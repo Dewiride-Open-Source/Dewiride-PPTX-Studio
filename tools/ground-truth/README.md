@@ -178,7 +178,7 @@ two that get through are both `a:custDash` degeneracies.
 Two halves again, and this time the cheap half answered the sub-phase's central architectural
 question outright.
 
-**Ask PowerPoint to author the inheritance** — `tools/ground-truth/model/author.ps1`, then unzip the slide,
+**Ask PowerPoint to author the inheritance** — `tools/ground-truth/model/sheets/author.ps1`, then unzip the slide,
 layout and master parts from what it saved. Three slides on one layout: one untouched, one typed
 into, one nudged a single point. **Only the nudged one has an `a:xfrm`**, and it has the whole
 resolved rectangle, inherited two hops and baked in at once. Typing does not create geometry. That
@@ -189,9 +189,9 @@ whose 22 layouts sit in one flat folder.
 **Then measure what it resolved.**
 
 ```bash
-node tools/ground-truth/model/build-deck.ts <dir>
-powershell -File tools/ground-truth/model/read.ps1 -Dir <dir>
-node tools/ground-truth/model/analyse.ts <dir> --fixture corpus/ground-truth/sheets.json
+node tools/ground-truth/model/sheets/build-deck.ts <dir>
+powershell -File tools/ground-truth/model/sheets/read.ps1 -Dir <dir>
+node tools/ground-truth/model/sheets/analyse.ts <dir> --fixture corpus/ground-truth/sheets.json
 npx prettier --write corpus/ground-truth/sheets.json
 ```
 
@@ -269,6 +269,42 @@ Four things worth copying:
   It found a bug nothing else did: `svgStops` returns a fraction and the renderer divided it by a
   hundred thousand again, collapsing every gradient to its last stop. Seventeen samples at once, and
   not one unit test.
+
+### C7 — which cells a merge covers _(added in 4.1)_
+
+```bash
+powershell -File tools/ground-truth/model/tables/author.ps1 -Dir <dir>
+node tools/ground-truth/model/tables/build-deck.ts <dir>
+powershell -File tools/ground-truth/model/tables/read.ps1 -Dir <dir>
+node tools/ground-truth/model/tables/analyse.ts <dir> --fixture corpus/ground-truth/tables.json
+npx prettier --write corpus/ground-truth/tables.json
+```
+
+A table cell has four attributes that say the same thing twice: `gridSpan`/`rowSpan` on the cell
+that grows, `hMerge`/`vMerge` on the cells it grows over. The schema ties neither pair to the other,
+so the probes disagree on purpose — a span with no flag, a flag with no span, spans that collide,
+spans past the edge, negative spans, rows with the wrong number of cells — and 82 packages of one
+table each ask PowerPoint which cell every grid position belongs to.
+
+**The object model answers the occupancy question directly.** `Table.Cell(r, c).Shape` reports a
+rectangle for every position, and a covered position reports its _anchor's_: the second cell of a
+two-column merge answers `216 × 36` at the first cell's left edge. So every candidate rule predicts a
+rectangle per position from the column widths and row heights PowerPoint also reports, and one
+number per position decides — no bitmap, no fitting. Six candidates were scored and one fits all 76
+probes PowerPoint opened as written; the flags-only reading a person writes first fits 52.
+
+Three more things the same run settled: the frame's `a:ext` says nothing about how big a table is
+drawn (the grid's sums do, 76/76 against 62/76), `a:tr/@h` is a minimum the content grows
+(72/72 against 68/72), and a column is never narrower than its cells' side margins plus two points
+(75/75 against 71/75 for "as written"). The `resaved/` copies are what PowerPoint wrote back: a
+missing flag added, a stray one dropped, a losing span deleted, a short row padded, a fifth cell
+dropped, an unknown `a:tableStyleId` discarded and a built-in one kept.
+
+**PowerPoint authors the same thing** in `author.ps1`: twelve merges and splits and nine resizes,
+each logged with the grid its object model reported, so the rule fitted on the probes is also
+scored against the markup PowerPoint's own writer produces — including its canonical form for a
+block merge, which puts `rowSpan` on every horizontally covered cell of the anchor's row and
+`gridSpan` on every vertically covered cell of its column.
 
 ### F2 — what the export does at another width _(added in 3.11)_
 
@@ -428,7 +464,9 @@ paint/                   -> packages/paint
   fills/                 C3  - 144 probes: gradients, the 54 tiles, 15 hostile
   lines/                 C4  - 213 probes: dashes, caps, joins, arrowheads
 
-model/                   -> packages/model.   C5  - 114 probes: matching, inheritance
+model/                   -> packages/model
+  sheets/                C5  - 114 probes: matching, inheritance
+  tables/                C7  - 82 probes: the occupancy grid, row heights, column widths
 render/                  -> packages/render-*
   transforms/            C6  - 65 probes: group maps, turns, compositing
   text/                  T8  - 160 probes: the turn, the baseline, alignment, rules

@@ -10,7 +10,7 @@ import { formatReport, validatePackage, type Report } from '@pptx-studio/validat
  *
  * ## What this command can and cannot ask
  *
- * Six of the twenty-nine rules compare a package against the package **as it
+ * Six of the firewall's rules compare a package against the package **as it
  * was opened**, and a file dropped on the command line has no such history.
  * They are skipped, and the report says so by name rather than counting them as
  * passes - `--quiet` still prints the skipped list, because a report that

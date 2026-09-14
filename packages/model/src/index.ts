@@ -196,6 +196,24 @@ export {
 export { parseBodyProps, parseBodyPropsChild } from './parse/body.js';
 
 export {
+  INVENTED_COLUMN_WIDTH,
+  TABLE_URI,
+  tableGrid,
+  type GridCell,
+  type Table,
+  type TableCell,
+  type TableCellBorders,
+  type TableCellProps,
+  type TableColumn,
+  type TableGrid,
+  type TableProps,
+  type TableRow,
+  type TableStyleRef,
+} from './table.js';
+
+export { parseTable, parseTableChild } from './parse/table.js';
+
+export {
   requestedTypefaces,
   resolveTypeface,
   resolveTypefaceOf,

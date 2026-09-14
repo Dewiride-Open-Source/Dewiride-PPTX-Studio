@@ -1,13 +1,13 @@
 ---
 title: validate
-description: 'The 29 rules a .pptx must not break, with the part and XPath of everything that fired.'
+description: 'The 31 rules a .pptx must not break, with the part and XPath of everything that fired.'
 ---
 
 <PackageHeader pkg="validate" />
 
 ## What it is
 
-PowerPoint repairs or refuses a file silently, and names no part and no line when it does. `@pptx-studio/validate` runs 29 rules over a package - half derived from the schema, half from decks PowerPoint declined one change at a time - and reports findings with a part, an XPath and whether the problem was introduced by this session or inherited from the file.
+PowerPoint repairs or refuses a file silently, and names no part and no line when it does. `@pptx-studio/validate` runs 31 rules over a package - half derived from the schema, half from decks PowerPoint declined one change at a time - and reports findings with a part, an XPath and whether the problem was introduced by this session or inherited from the file.
 
 `assertValid` throws rather than returning a boolean, so a writer cannot hand over bytes it just broke.
 

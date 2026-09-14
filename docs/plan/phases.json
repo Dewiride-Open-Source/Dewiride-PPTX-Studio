@@ -259,7 +259,9 @@
       "subPhases": [
         {
           "id": "4.1",
-          "title": "Table parse: grid, spans, merges"
+          "title": "Table parse: grid, spans, merges",
+          "adr": "phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md",
+          "result": "PowerPoint’s object model reports every grid position as its anchor’s rectangle, so C7 built 82 tables, 52 of them to disagree with themselves - a span with no flag, a flag with no span, spans that collide, spans past the edge, zero and negative spans, rows with the wrong number of cells - and one rule fits all 76 PowerPoint opened as written and the 21 it authored itself: each a:tc takes the next column, the spans on the anchor are the whole story, a covered position is covered whatever its own attributes say, a span stops at the edge or at the first claimed position, zero is one, a negative runs to the edge, and hMerge/vMerge change nothing (76/76 against 52/76 for the flags a person reads first). a:tr/@h is a minimum the content grows (72/72 against 68/72), a column is never narrower than its cells’ side margins plus 2 pt (75/75 against 71/75), and the frame’s a:ext says nothing about the drawn size (76/76 for the grid’s sums against 62/76). Six probes are repairs; PowerPoint writes the rest back normalised, adding the flags its spans imply, deleting a losing span, padding a short row, dropping a fifth cell, and discarding an unknown tableStyleId. `Shape.table` and `tableGrid` in @pptx-studio/model carry the parse and the rule; V030 warns on a table PowerPoint reads differently from what it says and V031 refuses four of the six it repairs, V016 and V017 the other two; b04-table’s record was wrong about its tableStyles.xml, which PowerPoint fills, and is corrected. 9/9 mutants killed and one shown unreachable and removed."
         },
         {
           "id": "4.2",
@@ -622,8 +624,8 @@
   ],
   "carried": [
     {
-      "title": "`packages/validate` is still at 1.2's 29 rules",
-      "detail": "Four text sub-phases each identified rules that belong in the repair firewall and none were added: `p:kinsoku/@lang`, three `bodyPr` rules, `@panose` shape, and `@u`/`@strike` simple types.",
+      "title": "`packages/validate` carries none of the rules the text phase identified",
+      "detail": "Four text sub-phases each identified rules that belong in the repair firewall and none were added: `p:kinsoku/@lang`, three `bodyPr` rules, `@panose` shape, and `@u`/`@strike` simple types. 4.1 added the two table rules; these are still owed.",
       "raisedIn": ["ADR 0029", "ADR 0032", "ADR 0033", "ADR 0034"]
     }
   ]

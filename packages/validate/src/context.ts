@@ -189,7 +189,7 @@ class RuntimeContext implements Context {
     } catch (error) {
       // Not a rule violation. `@pptx-studio/xml` refuses a DOCTYPE, a bad
       // encoding and markup that is not well formed, and each of those is a
-      // fact about the file rather than about one of the twenty-nine rules.
+      // fact about the file rather than about one of the rules.
       // Recording it as a problem keeps the report honest: the rules that
       // wanted this part did not run on it.
       if (!quiet) this.problem(part, describe(error));

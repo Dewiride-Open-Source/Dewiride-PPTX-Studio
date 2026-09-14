@@ -118,11 +118,13 @@ export const AUTHORED_DECKS: readonly AuthoredDeck[] = [
     description:
       'A 4x4 table carrying the built-in style {5C22544A-7EE6-4342-B048-85BDC9FD1C3A} - "Medium Style ' +
       '2 - Accent 1", which is the default a new table gets - with FirstRow, LastRow, FirstCol and ' +
-      'HorizBanding on, LastCol and VertBanding off, one horizontal merge and one vertical one. The ' +
-      'deck exists to prove a negative: ppt/tableStyles.xml in this package is an EMPTY ' +
-      'a:tblStyleLst whose @def is that same GUID, so the style the table names is defined nowhere ' +
-      'in the file. A renderer that reads only that part draws this table white and borderless, ' +
-      'which is why sub-phase 4.2 has to re-derive all 74 definitions instead of parsing them.',
+      'HorizBanding on, LastCol and VertBanding off, one horizontal merge and one vertical one, ' +
+      'written as PowerPoint writes them: gridSpan="2" then hMerge="1", rowSpan="2" then vMerge="1", ' +
+      'the merged text kept as paragraphs of the anchor and the covered cells left with an empty ' +
+      'body. ppt/tableStyles.xml here is NOT empty: PowerPoint writes the full a:tblStyle of every ' +
+      'built-in style a table in the deck uses, so this part is a measured serialisation of one of ' +
+      'the 74 for sub-phase 4.2. The empty part is the stock template before any table is inserted, ' +
+      'which is what a20-tables carries.',
     features: {
       placeholder: 64,
       shape: 64,

@@ -1,6 +1,6 @@
 # @pptx-studio/validate
 
-**The repair firewall.** Twenty-nine rules a `.pptx` must not break, checked
+**The repair firewall.** Thirty-one rules a `.pptx` must not break, checked
 before any bytes are handed over, each finding carrying the part and the XPath.
 
 Apache-2.0 · browser and Web Worker only, no Node · part of
@@ -28,7 +28,7 @@ quietly lost something.
 So this is not a schema validator with a nice report. It is the only feedback
 loop that exists, and it runs on every export in development and in production.
 
-## Twenty-nine rules, in two halves
+## Thirty-one rules, in two halves
 
 Roughly half come from ECMA-376: content-type coverage, `xsd:sequence` child
 order, `minOccurs`, the four identifier ranges. Those are derivable, and one of
@@ -38,18 +38,19 @@ schemas and checked against 194 148 elements PowerPoint wrote.
 The other half cannot be derived from anything. Each is the record of a package
 built with **one** change in it, opened in PowerPoint 16.0.20326, and declined:
 
-|        |                                                                                                |
-| ------ | ---------------------------------------------------------------------------------------------- |
-| `V022` | a `p:ph type="hdr"` on a slide. The other seven content types all open.                        |
-| `V023` | a geometry guide referenced but never defined. `ST_GeomGuideName` is an unconstrained token.   |
-| `V024` | a `c:strLit` inside a series `c:tx`, two elements away from where the literal forms are legal. |
-| `V025` | a `p:control`, in all eight forms tried. An empty `p:controls` is accepted.                    |
-| `V026` | a `cs:chartStyle` with thirty of its thirty-one entries. No chart style at all is fine.        |
-| `V019` | a master id colliding with a layout id. They are one number space and no schema says so.       |
-| `V020` | a `p:cNvPr/@id` between 2147483648 and 4294967294. 4294967295 opens; it is minus one.          |
-| `V009` | a slide without exactly one layout relationship; a `cx:chartSpace` with no `.rels`.            |
-| `V004` | a percent-escape of an _unreserved_ character in a part name. `0x808D1005`.                    |
-| `V012` | an `a:ahXY` directly under `a:custGeom`, without its `a:ahLst` wrapper.                        |
+|        |                                                                                                      |
+| ------ | ---------------------------------------------------------------------------------------------------- |
+| `V022` | a `p:ph type="hdr"` on a slide. The other seven content types all open.                              |
+| `V023` | a geometry guide referenced but never defined. `ST_GeomGuideName` is an unconstrained token.         |
+| `V024` | a `c:strLit` inside a series `c:tx`, two elements away from where the literal forms are legal.       |
+| `V025` | a `p:control`, in all eight forms tried. An empty `p:controls` is accepted.                          |
+| `V026` | a `cs:chartStyle` with thirty of its thirty-one entries. No chart style at all is fine.              |
+| `V019` | a master id colliding with a layout id. They are one number space and no schema says so.             |
+| `V020` | a `p:cNvPr/@id` between 2147483648 and 4294967294. 4294967295 opens; it is minus one.                |
+| `V009` | a slide without exactly one layout relationship; a `cx:chartSpace` with no `.rels`.                  |
+| `V004` | a percent-escape of an _unreserved_ character in a part name. `0x808D1005`.                          |
+| `V012` | an `a:ahXY` directly under `a:custGeom`, without its `a:ahLst` wrapper.                              |
+| `V031` | an `a:gridCol` without `@w`, an `a:tr` without `@h`, `gridSpan="2.0"`, `hMerge="on"`: a repair each. |
 
 Every rule carries a `why` recording what was tried and what opened, so whoever
 eventually contradicts one knows what they are contradicting.
@@ -85,7 +86,7 @@ the same reason.
 
 Two suites that check opposite things, and neither substitutes for the other.
 
-**It fires.** `validate.test.ts` breaks a minimal deck twenty-nine ways, one per
+**It fires.** `validate.test.ts` breaks a minimal deck thirty-one ways, one per
 rule, and asserts each rule reports the right part and the right XPath.
 
 **It is quiet.** `tools/corpus/suites/validate.test.ts` runs all fifty-two committed

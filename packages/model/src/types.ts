@@ -18,6 +18,7 @@
 
 import type { ClrMap, ClrScheme, Color, Effect, Fill, Line } from '@pptx-studio/paint';
 import type { ShapeGeometry } from './parse/geometry.js';
+import type { Table } from './table.js';
 import type { TextBody, TextStyles } from './text.js';
 import type { XElement } from '@pptx-studio/xml';
 
@@ -204,6 +205,8 @@ export interface Shape {
    * is one level of the text cascade; the paragraphs are the text itself.
    */
   readonly text: TextBody | undefined;
+  /** The `a:tbl` of a `p:graphicFrame` whose graphic data is a table. */
+  readonly table: Table | undefined;
   /** Children, for a `grpSp`. Empty for everything else. */
   readonly children: readonly Shape[];
   /** The element this was read from. Edits go here, never to the fields above. */

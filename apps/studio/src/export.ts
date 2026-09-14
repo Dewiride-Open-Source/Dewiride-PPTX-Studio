@@ -32,7 +32,7 @@ import type { Report } from '@pptx-studio/validate';
  *    than pass.
  * 2. **The edit**, if one was asked for. See below.
  * 3. **`exportPackage`** - prepare hooks, media collection, the write, then the
- *    preservation check and the twenty-nine rules. The bytes are returned only
+ *    preservation check and the thirty-one rules. The bytes are returned only
  *    if both pass; a failure throws and nothing reaches the page.
  * 4. **`comparePackages`** - the 1.4 oracle, run over the archive that was just
  *    emitted rather than over the store's opinion of it. Redundant with the

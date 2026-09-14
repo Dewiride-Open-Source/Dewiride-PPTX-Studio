@@ -152,11 +152,34 @@ Geometry is not special. Fills, lines, effects and `p:style` all travel the same
 were measured arriving from the layout placeholder and from the master placeholder through a layout
 that declared nothing.
 
+## A table is its grid, and the spans are the whole of a merge
+
+A `p:graphicFrame` whose `a:graphicData` is a table carries `shape.table`: the `a:tblPr` flags and
+style source, every `a:gridCol`, every `a:tr` with its cells, and each cell's spans (absent reads
+as 1), flags (absent reads as false), body and `a:tcPr`. `tableGrid(table)` is what PowerPoint draws
+from it, and the rule was measured in C7 (`corpus/ground-truth/tables.json`) on 82 tables, 52 of them
+built to disagree with themselves:
+
+- Each `a:tc` takes the next column. A short row is padded with empty positions; a fifth cell in a
+  four-column grid is dropped.
+- `gridSpan` and `rowSpan` on the anchor are the whole story, 76 of 76. A position an earlier span
+  claimed is covered whatever its own attributes say; a span stops at the grid edge or at the
+  first claimed position; zero is one and a negative runs to the edge.
+- `hMerge` and `vMerge` change nothing. The flags-only reading a person writes first fits 52 of 76,
+  and PowerPoint rewrites the flags from the spans on save.
+- `a:tr/@h` is the least a row is drawn at, never the most (72/72 against 68/72 for a fixed height);
+  a column is never narrower than its cells' side margins plus 2 pt; and the frame's `a:ext` says
+  nothing about the drawn size, which is the grid's sums (76/76 against 62/76).
+
+Cell text is a `TextBody` like any other. The table style a `tableStyleId` names is 4.2; the
+thirteen-part cascade is 4.3; drawing the grid is 4.4.
+
 ## What is not here
 
 - Nothing is painted. The renderers are 2.10.
 - The ten-source **text** cascade is 3.1. `Origin` already declares the five members only that
   cascade can produce, so 3.1 adds cases rather than widening a type every consumer has switched on.
+- Table styles, their cascade and their drawing are 4.2 to 4.4; SmartArt is 4.5.
 - Commands, undo and history are Phase 5; Change Layout is 7.4. What PowerPoint rewrites when a
   layout changes is recorded in the fixture and not acted on.
 - `a:effectDag` is not modelled — a directed graph of effect primitives PowerPoint has never been
@@ -166,6 +189,7 @@ that declared nothing.
 ## Fixtures
 
 `corpus/ground-truth/sheets.json` — 114 probes in 37 packages, sub-phase 2.9.
+`corpus/ground-truth/tables.json` — 82 tables, one package each, and 21 slides PowerPoint authored, sub-phase 4.1.
 
 The measurement is a **position**, and PowerPoint reports it directly. C3 and C4 sampled bitmaps
 because a fill and a stroke are pictures; an inheritance is not. A placeholder with no `a:xfrm` of
@@ -180,4 +204,5 @@ parent it matched — one number, no fitting, no error bars.
 against a summary of them, so a rule that drifts fails on the measurements.
 
 See `docs/adr/phase-0-foundation/0007-ground-truth.md`, `docs/adr/phase-2-geometry-and-paint/0021-colour.md`, `docs/adr/phase-2-geometry-and-paint/0022-fills.md`,
-`docs/adr/phase-2-geometry-and-paint/0023-lines.md` and `docs/adr/phase-2-geometry-and-paint/0024-model-parse-and-resolve.md`.
+`docs/adr/phase-2-geometry-and-paint/0023-lines.md`, `docs/adr/phase-2-geometry-and-paint/0024-model-parse-and-resolve.md`
+and `docs/adr/phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md`.

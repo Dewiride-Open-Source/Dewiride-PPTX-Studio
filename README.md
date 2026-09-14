@@ -63,58 +63,59 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 
 ## What works today
 
-| Area                                                 | Status         |
-| ---------------------------------------------------- | -------------- |
-| Repository, toolchain, architecture guards           | ✅ 0.1         |
-| OPC container: ZIP reader, budgets, part names       | ✅ 0.2         |
-| OPC container: parts, content types, relationships   | ✅ 0.3         |
-| Byte-preserving XML tokenizer and node model         | ✅ 0.4         |
-| XML serializer and the byte-identical round trip     | ✅ 0.5         |
-| Schema order, Markup Compatibility, invertible edits | ✅ 0.6         |
-| Ground truth: embedded fonts, colour transforms      | ✅ 0.7         |
-| Feature census, `cli inspect`, the Worker boundary   | ✅ 0.8         |
-| The corpus: 55 licensed decks, three producers       | ✅ 1.1         |
-| The repair firewall: 29 rules, `cli validate`        | ✅ 1.2         |
-| Writer: dirty-part export, media GC, prepare hooks   | ✅ 1.3         |
-| The round-trip oracle and `cli roundtrip`            | ✅ 1.4         |
-| `cli bisect` and the PowerPoint oracle               | ✅ 1.5         |
-| The CI round-trip gate and badge                     | ✅ 1.6         |
-| Open, re-save and download in the browser            | ✅ Gate 1      |
-| The 187 preset shape definitions                     | ✅ 2.1         |
-| The formula evaluator: 17 operators, built-in guides | ✅ 2.2         |
-| Arc math: the unskew, winding, the whole-turn split  | ✅ 2.3         |
-| Path emit, and `custGeom` as the same thing          | ✅ 2.4         |
-| Adjust handles: drag one, get the value to write     | ✅ 2.5         |
-| Colour: six bases, 28 transforms, theme and clrMap   | ✅ 2.6         |
-| Gradients and the 54 pattern tiles, both measured    | ✅ 2.7         |
-| Dashes, joins, arrowheads and effects, all measured  | ✅ 2.8         |
-| The document model, and the inheritance walk         | ✅ 2.9         |
-| Both renderers: transforms, groups, flip before rot  | ✅ 2.10        |
-| The debug overlay and the 187-preset gallery         | ✅ 2.11        |
-| Image fills: crop, tile, and the blip colour effects | ✅ 2.12        |
-| Picture shapes, and the border drawn outside them    | ✅ 2.13        |
-| Gate 2 side by side, with per-slide diff heatmaps    | ✅ 2.14        |
-| Painted: fills, strokes, gradients, effects, groups  | ✅ Gate 2      |
-| Text parse and the 10-source cascade                 | ✅ 3.1         |
-| Measurement and the line model                       | ✅ 3.2         |
-| Line breaking                                        | ✅ 3.3         |
-| Autofit, view and edit modes                         | ✅ 3.4         |
-| Bullets, fields, script runs                         | ✅ 3.5         |
-| Anchors, insets, vertical text                       | ✅ 3.6         |
-| Font substitution and the guard                      | ✅ 3.7         |
-| Text in both renderers                               | ✅ 3.8         |
-| The fidelity harness, and the Linux baseline         | ✅ 3.9         |
-| First npm release: `render-svg` and `cli render`     | ✅ 3.10        |
-| A hundred slides at any zoom, through the page       | ✅ 3.11        |
-| The public website, from npm, on GitHub Pages        | ✅ 3.12        |
-| A 100-slide deck at any zoom, entirely client-side   | ✅ Gate 3      |
-| Tables and SmartArt                                  | ⬜ Phase 4     |
-| Select, move, resize, rotate                         | ⬜ Phase 5     |
-| Text editing                                         | ⬜ Phase 6     |
-| Layout switching, theme verbs, backgrounds           | ⬜ Phase 7     |
-| Font embedding, custom font upload and export        | ⬜ Phase 8     |
-| Charts                                               | ⬜ Phases 9–10 |
-| Accessibility, virtualization, 1.0                   | ⬜ Phase 12    |
+| Area                                                    | Status         |
+| ------------------------------------------------------- | -------------- |
+| Repository, toolchain, architecture guards              | ✅ 0.1         |
+| OPC container: ZIP reader, budgets, part names          | ✅ 0.2         |
+| OPC container: parts, content types, relationships      | ✅ 0.3         |
+| Byte-preserving XML tokenizer and node model            | ✅ 0.4         |
+| XML serializer and the byte-identical round trip        | ✅ 0.5         |
+| Schema order, Markup Compatibility, invertible edits    | ✅ 0.6         |
+| Ground truth: embedded fonts, colour transforms         | ✅ 0.7         |
+| Feature census, `cli inspect`, the Worker boundary      | ✅ 0.8         |
+| The corpus: 55 licensed decks, three producers          | ✅ 1.1         |
+| The repair firewall: 29 rules, `cli validate`           | ✅ 1.2         |
+| Writer: dirty-part export, media GC, prepare hooks      | ✅ 1.3         |
+| The round-trip oracle and `cli roundtrip`               | ✅ 1.4         |
+| `cli bisect` and the PowerPoint oracle                  | ✅ 1.5         |
+| The CI round-trip gate and badge                        | ✅ 1.6         |
+| Open, re-save and download in the browser               | ✅ Gate 1      |
+| The 187 preset shape definitions                        | ✅ 2.1         |
+| The formula evaluator: 17 operators, built-in guides    | ✅ 2.2         |
+| Arc math: the unskew, winding, the whole-turn split     | ✅ 2.3         |
+| Path emit, and `custGeom` as the same thing             | ✅ 2.4         |
+| Adjust handles: drag one, get the value to write        | ✅ 2.5         |
+| Colour: six bases, 28 transforms, theme and clrMap      | ✅ 2.6         |
+| Gradients and the 54 pattern tiles, both measured       | ✅ 2.7         |
+| Dashes, joins, arrowheads and effects, all measured     | ✅ 2.8         |
+| The document model, and the inheritance walk            | ✅ 2.9         |
+| Both renderers: transforms, groups, flip before rot     | ✅ 2.10        |
+| The debug overlay and the 187-preset gallery            | ✅ 2.11        |
+| Image fills: crop, tile, and the blip colour effects    | ✅ 2.12        |
+| Picture shapes, and the border drawn outside them       | ✅ 2.13        |
+| Gate 2 side by side, with per-slide diff heatmaps       | ✅ 2.14        |
+| Painted: fills, strokes, gradients, effects, groups     | ✅ Gate 2      |
+| Text parse and the 10-source cascade                    | ✅ 3.1         |
+| Measurement and the line model                          | ✅ 3.2         |
+| Line breaking                                           | ✅ 3.3         |
+| Autofit, view and edit modes                            | ✅ 3.4         |
+| Bullets, fields, script runs                            | ✅ 3.5         |
+| Anchors, insets, vertical text                          | ✅ 3.6         |
+| Font substitution and the guard                         | ✅ 3.7         |
+| Text in both renderers                                  | ✅ 3.8         |
+| The fidelity harness, and the Linux baseline            | ✅ 3.9         |
+| First npm release: `render-svg` and `cli render`        | ✅ 3.10        |
+| A hundred slides at any zoom, through the page          | ✅ 3.11        |
+| The public website, from npm, on GitHub Pages           | ✅ 3.12        |
+| A 100-slide deck at any zoom, entirely client-side      | ✅ Gate 3      |
+| Table parse: the grid, and the spans that are the merge | ✅ 4.1         |
+| Tables and SmartArt                                     | ⬜ Phase 4     |
+| Select, move, resize, rotate                            | ⬜ Phase 5     |
+| Text editing                                            | ⬜ Phase 6     |
+| Layout switching, theme verbs, backgrounds              | ⬜ Phase 7     |
+| Font embedding, custom font upload and export           | ⬜ Phase 8     |
+| Charts                                                  | ⬜ Phases 9–10 |
+| Accessibility, virtualization, 1.0                      | ⬜ Phase 12    |
 
 ## Repository layout
 

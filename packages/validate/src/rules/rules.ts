@@ -1,7 +1,7 @@
 /**
- * The twenty-nine rules, and the evidence for each.
+ * The thirty-one rules, and the evidence for each.
  *
- * ## Why a table and not twenty-nine functions
+ * ## Why a table and not thirty-one functions
  *
  * The functions are in the files beside this one. What lives here is the part a
  * person reads: what each rule claims, how sure we are, and *how we know*. A
@@ -74,7 +74,7 @@ export interface Rule {
  * The shape each entry is checked against.
  *
  * `RULES` is `as const satisfies readonly RuleShape[]` rather than typed
- * `readonly Rule[]`, so that `RuleId` below can be the union of the twenty-nine
+ * `readonly Rule[]`, so that `RuleId` below can be the union of the thirty-one
  * literal ids written here instead of `string`. Annotating the array would
  * widen `id`, and then a caller could ask for a rule that does not exist and be
  * told so only at run time.
@@ -314,14 +314,16 @@ export const RULES = [
     id: 'V016',
     category: 'required',
     severity: 'fatal',
-    evidence: 'schema',
+    evidence: 'both',
     title: 'every text body has `a:bodyPr` and at least one `a:p`',
     why:
       '`CT_TextBody` is `bodyPr` then optional `lstStyle` then `a:p` at ' +
       '`[1..unbounded]`. A shape whose text was deleted down to nothing is the ' +
       'way this gets broken in an editor: the last paragraph goes, and what is ' +
       'left is a `p:txBody` with no `a:p` in it. An empty paragraph is not the ' +
-      'same as no paragraph, and `a:endParaRPr` is where its height comes from.',
+      'same as no paragraph, and `a:endParaRPr` is where its height comes from. ' +
+      'C7 measured it on a table cell: a repair prompt, and PowerPoint writes the ' +
+      'paragraph in.',
   },
   {
     id: 'V017',
@@ -524,6 +526,39 @@ export const RULES = [
       'repair the file. And a field’s cached `a:t` is the only thing that renders ' +
       'when we cannot evaluate the field ourselves, so discarding it turns a date ' +
       'placeholder into an empty box on every consumer that is not PowerPoint.',
+  },
+  {
+    id: 'V030',
+    category: 'required',
+    severity: 'warning',
+    evidence: 'measured',
+    title:
+      'a table is the one PowerPoint reads: a cell per column in every row, a flag where a span covers',
+    why:
+      'Nothing in the schema ties an `a:tr` to the number of `a:gridCol`, or a ' +
+      '`gridSpan` on one cell to the `hMerge` on the next. C7 built 82 tables, 52 ' +
+      'of them to disagree with themselves, and asked PowerPoint which cell every ' +
+      'grid position belongs to: the spans on the anchor are the whole answer (76 of ' +
+      '76, against 52 for the flags), a short row is padded, a fifth cell is ' +
+      'dropped, a colliding or oversized span is clamped and a covered cell\u2019s ' +
+      'own span ignored - and PowerPoint writes all of that back on save. The ' +
+      'deck opens without a word, which is why this is a warning: the file says ' +
+      'one table and PowerPoint draws another, and the next save is the one ' +
+      'that rewrites the part.',
+  },
+  {
+    id: 'V031',
+    category: 'required',
+    severity: 'fatal',
+    evidence: 'both',
+    title: '`a:gridCol/@w`, `a:tr/@h`, and typed `gridSpan`, `rowSpan`, `hMerge`, `vMerge`',
+    why:
+      '`CT_TableCol/@w` and `CT_TableRow/@h` are required `ST_Coordinate`s, the ' +
+      'spans are `xsd:int` and the flags `xsd:boolean`. C7 measured each: a ' +
+      '`gridCol` without `@w`, a `tr` without `@h`, `gridSpan="2.0"` and ' +
+      '`hMerge="on"` are a repair prompt apiece; PowerPoint saves the column at ' +
+      'its minimum width, the row at zero, the span gone and the flag as "1". ' +
+      '`w="108pt"`, the universal-measure spelling, opens clean and is not this rule.',
   },
 ] as const satisfies readonly RuleShape[];
 

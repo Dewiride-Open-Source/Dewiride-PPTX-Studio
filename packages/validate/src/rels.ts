@@ -17,7 +17,7 @@ import type { Context } from './context.js';
  * `Relationships.parse` **refuses** a duplicate `Id`, an `Id` that is not an
  * `xsd:ID`, and an empty `Target`. It has to: it is the type the rest of the
  * codebase uses to look relationships up, and a collection with two `rId3`s
- * cannot answer the only question anyone asks it. But three of the twenty-nine
+ * cannot answer the only question anyone asks it. But three of the thirty-one
  * rules are *about* exactly those defects, and a rule that can only see files
  * its own parser already accepted can never report them. Going through that
  * parser would turn every one of those findings into "this part could not be
@@ -67,7 +67,7 @@ export function readRelsParts(ctx: Context): readonly RelsPart[] {
 }
 
 /**
- * Memoised above, because five of the twenty-nine rules want this list and each
+ * Memoised above, because five of the thirty-one rules want this list and each
  * would otherwise re-walk every `.rels` part in the package. The parsed trees
  * are already cached on the context; what is saved here is the element scan and
  * the allocation, which on a three-hundred-slide deck is five passes over a

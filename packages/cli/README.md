@@ -3,7 +3,7 @@
 **Command line tools for PPTX packages.** As of sub-phase 3.10 that is five
 verbs: `render`, which draws slides as SVG with no browser and no LibreOffice;
 `inspect`, which reads a deck and tells you what is in it; `validate`, which
-checks it against the twenty-nine rules a `.pptx` must not break; `roundtrip`,
+checks it against the thirty-one rules a `.pptx` must not break; `roundtrip`,
 which reads a deck, writes it back, and proves nothing moved; and `bisect`,
 which narrows a broken deck down to the change that breaks it.
 
@@ -75,7 +75,7 @@ validate: 26 rule(s), 1 finding(s), 1 blocking
 Exit status is **1** when anything fatal was found and **0** otherwise; a
 warning never fails the command.
 
-Three of the twenty-nine rules compare a package against the package **as it was
+Three of the thirty-one rules compare a package against the package **as it was
 opened**, and a file on the command line has no such history. They are skipped,
 and the report names them rather than counting them as passes. That makes
 `validate` a diagnostic; the export gate is `assertValid`, which the writer calls

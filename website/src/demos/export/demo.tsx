@@ -26,7 +26,7 @@ store.replacePart('/docProps/core.xml', edited);     // or nothing at all
 const result = exportPackage({ store, baseline, baselineBytes });
 result.rewritten;   // parts serialised afresh - empty on a no-op
 result.streamed;    // parts copied across still compressed
-result.bytes;       // only if the preservation check and the 29 rules passed`;
+result.bytes;       // only if the preservation check and the 31 rules passed`;
 
 const MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
 
@@ -135,7 +135,7 @@ export default function ExportDemo({ full }: DemoProps) {
             <p>
               Four things, in order, in a Worker: the package is opened twice - once to edit and
               once as the untouched baseline; the prepare hooks and the media sweep run; the archive
-              is written; then the preservation check and the twenty-nine rules run over what was
+              is written; then the preservation check and the thirty-one rules run over what was
               written. Bytes come back only if both pass.
             </p>
             <p>

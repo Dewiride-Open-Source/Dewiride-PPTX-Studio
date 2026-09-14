@@ -9,7 +9,7 @@ const PRINCIPLES: readonly { title: string; body: string }[] = [
   },
   {
     title: 'Preservation by default, checked before you get the bytes.',
-    body: 'You do not opt in to keeping content. The writer re-serialises only the parts you changed, then runs 29 rules that real PowerPoint is known to refuse and will not hand you a file it just broke. That is tested on 55 decks in CI, and the round trip opens in PowerPoint 365 with no repair prompt.',
+    body: 'You do not opt in to keeping content. The writer re-serialises only the parts you changed, then runs 31 rules that real PowerPoint is known to refuse and will not hand you a file it just broke. That is tested on 55 decks in CI, and the round trip opens in PowerPoint 365 with no repair prompt.',
   },
 ];
 

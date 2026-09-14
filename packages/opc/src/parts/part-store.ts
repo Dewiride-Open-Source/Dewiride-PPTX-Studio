@@ -47,7 +47,7 @@ import {
  *   preserved instead, and reported by `danglingRelationships`; PowerPoint
  *   tolerates those and refusing them would make such a deck unexportable.
  *   Deciding what is safe to delete is 1.3's job and it needs the whole graph.
- * - **It does not validate markup.** The 29 rules are 1.2. What `write`
+ * - **It does not validate markup.** The firewall's rules are 1.2. What `write`
  *   asserts here is only the OPC layer, and only the parts of it we have
  *   watched PowerPoint reject.
  */

@@ -64,6 +64,8 @@ export type ModelErrorCode =
   /** A paragraph level that is not an integer. */
   | 'MODEL_TEXT_LEVEL'
   | 'MODEL_TEXT_TYPEFACE'
+  /** A table attribute missing where the schema requires it, or not of the type it names. */
+  | 'MODEL_TABLE_ATTR'
   | 'BLIP_NO_EMBED'
   | 'BLIP_DUOTONE'
   | 'BLIP_CLR_CHANGE'
@@ -116,4 +118,5 @@ export const MODEL_ERROR_CODES: readonly ModelErrorCode[] = [
   'MODEL_TEXT_FIELD',
   'MODEL_TEXT_LEVEL',
   'MODEL_TEXT_TYPEFACE',
+  'MODEL_TABLE_ATTR',
 ];

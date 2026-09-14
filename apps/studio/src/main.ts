@@ -507,7 +507,7 @@ function renderExport(): HTMLElement {
       'note',
       'Everything is read and written in the Worker in this tab. Nothing is uploaded. ' +
         'The bytes you get are only handed over once the preservation check and the ' +
-        'twenty-nine repair-firewall rules have both passed.',
+        'thirty-one repair-firewall rules have both passed.',
     ),
   );
 
