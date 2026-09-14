@@ -1,5 +1,5 @@
 /**
- * The four gestures over every slide the site ships: what they write sits in
+ * The editor's gestures over every slide the site ships: what they write sits in
  * schema order, parses back into a sheet, and their inverses restore the part
  * byte for byte.
  */
@@ -22,7 +22,15 @@ import {
   type XElement,
 } from '@pptx-studio/xml';
 
-import { NotEditable, applyAll, planDelete, planMove, planRecolour, planRetext } from './edits.ts';
+import {
+  NotEditable,
+  applyAll,
+  planDelete,
+  planMove,
+  planRecolour,
+  planRecolourText,
+  planRetext,
+} from './edits.ts';
 import {
   NS_A,
   NS_P,
@@ -296,6 +304,138 @@ describe('recolour', () => {
       connectors > 0 && pictures > 0,
       `${String(connectors)} connectors, ${String(pictures)} pictures`,
     );
+  });
+});
+
+describe('recolour text', () => {
+  const solid = (props: XElement | undefined, where: string): void => {
+    assert.ok(props !== undefined, `${where}: run properties present`);
+    const fill = fillElement(props);
+    assert.ok(fill !== undefined && is(fill, NS_A, 'solidFill'), `${where}: a solid fill`);
+    const color = childElements(fill)[0];
+    assert.ok(color !== undefined && is(color, NS_A, 'srgbClr'));
+    assert.equal(attributeOf(color, 'val'), '2FA869');
+  };
+
+  it('writes the colour into every run, break, field and paragraph end', () => {
+    const had = new Map<string, number>();
+    for (const slide of slides()) {
+      const tree = parseXml(slide.source);
+      for (const shape of shapesOf(tree)) {
+        const body = textBody(shape);
+        if (body === undefined) continue;
+        for (const paragraph of paragraphElements(body)) {
+          for (const holder of childElements(paragraph)) {
+            if (!['r', 'br', 'fld'].includes(holder.local)) continue;
+            const rPr = child(holder, NS_A, 'rPr');
+            const kind = rPr === undefined ? 'no rPr' : (fillElement(rPr)?.local ?? 'inherited');
+            had.set(kind, (had.get(kind) ?? 0) + 1);
+          }
+        }
+        const where = `${slide.deck} ${slide.partName}`;
+        roundTrip(slide, tree, planRecolourText(shape, '#2fa869'), () => {
+          for (const paragraph of paragraphElements(body)) {
+            const content = childElements(paragraph).filter((one) =>
+              ['r', 'br', 'fld'].includes(one.local),
+            );
+            for (const holder of content) solid(child(holder, NS_A, 'rPr'), where);
+            const end = child(paragraph, NS_A, 'endParaRPr');
+            if (content.length === 0 || end !== undefined) solid(end, where);
+          }
+          inOrder(body, where);
+        });
+      }
+    }
+    for (const kind of ['inherited', 'solidFill']) {
+      assert.ok((had.get(kind) ?? 0) > 0, `${kind} covered`);
+    }
+  });
+
+  it('writes the properties a run or an empty paragraph lacks, first among its children', () => {
+    // Every run the site ships carries an a:rPr, so the case is made by stripping them.
+    const content = (paragraph: XElement): XElement[] =>
+      childElements(paragraph).filter((one) => ['r', 'br', 'fld'].includes(one.local));
+    const holds = (kind: 'run' | 'empty') => (shape: XElement) => {
+      const body = textBody(shape);
+      return (
+        body !== undefined &&
+        paragraphElements(body).some((p) => (kind === 'run') === content(p).length > 0)
+      );
+    };
+    const seen = new Set<string>();
+    for (const slide of slides()) {
+      for (const kind of ['run', 'empty'] as const) {
+        if (seen.has(kind)) continue;
+        const shaped = parseXml(slide.source);
+        const index = shapesOf(shaped).findIndex(holds(kind));
+        if (index < 0) continue;
+        seen.add(kind);
+        applyEdits(
+          [...descendantElements(textBody(shapesOf(shaped)[index]!)!)]
+            .filter((one) => is(one, NS_A, 'rPr') || is(one, NS_A, 'endParaRPr'))
+            .map((node) => ({ kind: 'removeChild' as const, parent: node.parent!, node })),
+        );
+        const stripped = { ...slide, source: serializeXml(shaped) };
+        const tree = parseXml(stripped.source);
+        const target = shapesOf(tree)[index];
+        assert.ok(target !== undefined);
+        const body = textBody(target);
+        assert.ok(body !== undefined);
+        roundTrip(stripped, tree, planRecolourText(target, '#2fa869'), () => {
+          for (const paragraph of paragraphElements(body)) {
+            for (const holder of content(paragraph)) {
+              assert.equal(childElements(holder)[0]?.local, 'rPr', 'a:rPr first in its run');
+              solid(child(holder, NS_A, 'rPr'), slide.partName);
+            }
+            const end = child(paragraph, NS_A, 'endParaRPr');
+            if (content(paragraph).length === 0) solid(end, slide.partName);
+            else assert.equal(end, undefined, 'no end properties invented');
+          }
+          inOrder(body, slide.partName);
+        });
+      }
+      if (seen.size === 2) return;
+    }
+    assert.fail(`covered: ${[...seen].join(', ')}`);
+  });
+
+  it("keeps a run's other properties and its place", () => {
+    for (const slide of slides()) {
+      const tree = parseXml(slide.source);
+      for (const shape of shapesOf(tree)) {
+        const body = textBody(shape);
+        if (body === undefined) continue;
+        const rPr = [...descendantElements(body)].find(
+          (one) =>
+            is(one, NS_A, 'rPr') && fillElement(one) === undefined && one.attributes.length > 1,
+        );
+        if (rPr === undefined) continue;
+        const attributes = rPr.attributes.map((attr) => [attr.qname, attr.value]);
+        const run = rPr.parent;
+        assert.ok(run !== undefined);
+        roundTrip(slide, tree, planRecolourText(shape, '#2fa869'), () => {
+          assert.equal(childElements(run)[0], rPr, 'a:rPr is still the first child of its run');
+          assert.deepEqual(
+            rPr.attributes.map((attr) => [attr.qname, attr.value]),
+            attributes,
+          );
+          assert.equal(childElements(rPr).length, 1, 'the fill is all that was added');
+        });
+        return;
+      }
+    }
+    assert.fail('no slide with an attributed, inherited-colour run');
+  });
+
+  it('refuses a shape without text', () => {
+    for (const slide of slides()) {
+      const tree = parseXml(slide.source);
+      const picture = shapesOf(tree).find((one) => is(one, NS_P, 'pic'));
+      if (picture === undefined) continue;
+      assert.throws(() => applyAll(planRecolourText(picture, '#000000')), NotEditable);
+      return;
+    }
+    assert.fail('no slide with a picture');
   });
 });
 

@@ -368,14 +368,15 @@ inverse — behind a form, and called it an editor.
 
 ### What the editor is now
 
-Direct manipulation on the slide, over four gestures, each an XML edit on the slide's own part:
+Direct manipulation on the slide, over five gestures, each an XML edit on the slide's own part:
 
-| gesture                                                           | what is written                                                                                                                                                                                                                                                                             | as PowerPoint writes it                                                                    |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| drag, arrow keys                                                  | `a:off/@x @y` on the shape's own `a:xfrm`; a shape that inherits its transform is given one at the frame it resolved to, `insertInOrder` placing it first in `p:spPr`; a group's child moves in the group's units (`ext / chExt`); a graphic frame through its own `p:xfrm`                 | a dragged placeholder gets a local `a:xfrm`; the layout keeps everything else              |
-| colour, from eight swatches or the native picker                  | an `a:srgbClr/@val` when the shape's own fill is already one; otherwise an `a:solidFill` inserted where the schema puts it and whichever fill was there — `noFill`, `gradFill`, `pattFill`, a scheme colour — removed, an `a:alpha` carried over; a connector's colour is its `a:ln`'s      | a recoloured placeholder gets a local `a:solidFill`; transparency survives a colour change |
-| double-click, Enter, or the toolbar: type where the text is drawn | one entry per paragraph, split at soft breaks; an unchanged paragraph is not touched; a changed one keeps its `a:pPr` and its first run's `a:rPr` and the rest of its runs collapse into that one; a new paragraph copies the last one's properties; an `a:br` carries the run's properties | typing over a selection that spans runs keeps the first run's formatting                   |
-| Delete                                                            | `removeChild` of the shape element; the inverse puts it back at the same index                                                                                                                                                                                                              | —                                                                                          |
+| gesture                                                           | what is written                                                                                                                                                                                                                                                                                                                                           | as PowerPoint writes it                                                                                                                                                                                                  |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| drag, arrow keys                                                  | `a:off/@x @y` on the shape's own `a:xfrm`; a shape that inherits its transform is given one at the frame it resolved to, `insertInOrder` placing it first in `p:spPr`; a group's child moves in the group's units (`ext / chExt`); a graphic frame through its own `p:xfrm`                                                                               | a dragged placeholder gets a local `a:xfrm`; the layout keeps everything else                                                                                                                                            |
+| colour, from eight swatches or the native picker                  | an `a:srgbClr/@val` when the shape's own fill is already one; otherwise an `a:solidFill` inserted where the schema puts it and whichever fill was there — `noFill`, `gradFill`, `pattFill`, a scheme colour — removed, an `a:alpha` carried over; a connector's colour is its `a:ln`'s                                                                    | a recoloured placeholder gets a local `a:solidFill`; transparency survives a colour change                                                                                                                               |
+| text colour, from the same swatches                               | an `a:solidFill` in every run's, break's and field's `a:rPr` and in every `a:endParaRPr` the body has, set when it is already an `a:srgbClr`, otherwise inserted where the schema puts it in place of whatever fill was there; a run without an `a:rPr` is given one, first among its children; an empty paragraph without an `a:endParaRPr` is given one | a font colour over the whole text: every `a:rPr` gets the `a:solidFill`, `lang` and `b` untouched, the `a:endParaRPr` too, and a paragraph with runs and no `a:endParaRPr` is not given one — measured 2026-09-14, below |
+| double-click, Enter, or the toolbar: type where the text is drawn | one entry per paragraph, split at soft breaks; an unchanged paragraph is not touched; a changed one keeps its `a:pPr` and its first run's `a:rPr` and the rest of its runs collapse into that one; a new paragraph copies the last one's properties; an `a:br` carries the run's properties                                                               | typing over a selection that spans runs keeps the first run's formatting                                                                                                                                                 |
+| Delete                                                            | `removeChild` of the shape element; the inverse puts it back at the same index                                                                                                                                                                                                                                                                            | —                                                                                                                                                                                                                        |
 
 A plan is a generator of batches, and each batch is applied before the next is planned, because
 a later insertion has to see what an earlier removal did to the indices; `applyAll` rolls the
@@ -402,8 +403,9 @@ slide's shape. render-svg draws nothing for a `p:graphicFrame`, so the stage dra
 frame the slide owns as a labelled dashed box — "Chart 1 · chart, preserved and not drawn yet" —
 that can be selected, moved and deleted, which is `SCOPE.md`'s frame-edit tier. A picture's
 colour control is off with "A picture keeps its image"; a group's with "colour the shapes inside
-it"; a frame's with "preserved as it is". The toolbar has three controls. The status line names
-the shape in every step: "Coloured Deck title #E8453C", "Undid: Deleted Accent panel".
+it"; a frame's with "preserved as it is". The toolbar has four controls: Fill, Text, Edit,
+Delete. The status line names the shape in every step: "Filled Deck title #E8453C", "Coloured
+the text of Deck title #2FA869", "Undid: Deleted Accent panel".
 
 The FAQ's "Why is move refused on some shapes?" and the guide's "two refusals worth keeping" taught
 the same refusal and are rewritten to say what a gesture writes; the demo's name is "Editor";
@@ -414,6 +416,36 @@ naming the first thing to do on it, and the blurbs no longer speak in the packag
 ("the tree with its byte offsets, an edit and its exact inverse, byte-identical re-emission" is
 "the XML of one part, edited in place and written back without touching a byte you did not
 change").
+
+### What the second review found
+
+The toolbar's one colour control coloured the fill, and a visitor who clicked it on the title
+wanted the words: the screenshot came back with the title on an orange panel and the text still
+white, and "no way to change text color". The control is now two — Fill and Text — with the same
+swatches, each carrying the colour as drawn.
+
+What PowerPoint writes for a font colour was asked in writing before the planner was: a
+presentation authored over COM with a title placeholder, a text box of two paragraphs with a bold
+run and a soft break, and an empty trailing paragraph, saved before and after
+`TextRange.Font.Color.RGB` over the whole text. The slide after carries `<a:solidFill><a:srgbClr
+val="E8453C"/></a:solidFill>` inside every `a:rPr` — the bold run's `b="1"` and every
+`lang` kept, the bold run's earlier red replaced — inside the `a:br`'s `a:rPr`, and inside the
+empty paragraph's `a:endParaRPr`; a paragraph that has runs and no `a:endParaRPr` is not given
+one. That is the row in the table above, and the planner writes exactly it.
+
+Driving the toolbar from the keyboard found a second defect: a picked swatch unmounts under the
+pointer, focus fell to the document, and Ctrl+Z after a colour did nothing until the slide was
+clicked again — the same after Delete from the toolbar and after a typing session closed. Focus
+now goes back to the slide when a swatch is picked, a shape deleted or the text box closed, and a
+key pressed on a toolbar control is that control's alone, so Enter on the Fill button opens its
+swatches and not the text box.
+
+Reading the toolbar's swatches back over the session found a third: every one was near black,
+because the site formatted `Rgba` channels as bytes and paint's are 0..1, so `#FFFFFF` came out
+as `#010101` — the fill's swatch had been wrong since the toolbar was written, and the text box's
+fallback luminance test could never call a background light. The site now formats through paint's
+own `toHexColor`, and the swatches read white, `#4472C4` for the accent panel and `#2FA869`
+after the pick.
 
 ### What the editor found in the packages
 
@@ -438,7 +470,15 @@ whose declared fill is 165 inherited, 451 `noFill`, 190 solid, 183 gradient, 89 
 and 3 group. Each test applies the plan, checks what it wrote — every touched element in schema
 order by `outOfOrderChildren`, the new `a:xfrm` first in `p:spPr`, the old fill gone, the
 transparency carried, the first run kept, an unchanged paragraph still clean — parses the sheet
-again, applies the inverses and holds the part to its original bytes. Eleven tests, 1.9 s.
+again, applies the inverses and holds the part to its original bytes. Eleven tests, 1.9 s;
+fifteen with the text colour, 8 s. The text colour's tests count what the decks' runs carry —
+1,071 `a:rPr` with no fill of their own, 190 with a scheme colour, one with an RGB, 13 breaks, 91
+fields, 179 empty paragraphs — and, because every run the site ships carries an `a:rPr`, make
+the case without one by stripping them from a shape and holding what the planner writes back.
+Five mutants of the planner: breaks skipped, the paragraph end skipped, a missing `a:rPr` not
+written, an empty paragraph's `a:endParaRPr` not written — each failed a test; the fifth,
+dropping the fast path that sets an existing `a:srgbClr` in place of inserting a new one, is
+equivalent in what it writes and survived.
 
 In Chromium over the served export, on the default deck: a click on `Deck title` shows its
 toolbar; the red swatch turns its `<a:noFill/>` into `#E8453C`; a double-click opens the text
@@ -455,6 +495,13 @@ The seven downloads opened in the real PowerPoint through `powerpoint-oracle.ps1
 `OpenAndRepair` off: every one `ok: true, repair: false`, with its slide and shape counts.
 The moved placeholder's download was made on the candidate gate's build — the site from this
 commit's tarballs, the fixed rule inside — because the registry served the old one.
+
+The text colour in Chromium over the export: the default deck's title from `#FFFFFF` to
+`#2FA869` in every `<tspan>`, `b02-layouts`'s title and subtitle from the inherited `#000000`,
+`a43-kitchen-sink`'s from `currentColor`; Ctrl+Z back and Ctrl+Y forward; a fill after the text
+colour leaves the text's; and the three downloads opened in the real PowerPoint with no repair,
+which then read the colour back over COM as `#2FA869`, type RGB, on every coloured shape and
+`#FFFFFF`, type scheme, on the untouched subtitle.
 
 ### What Lighthouse said
 
@@ -543,7 +590,7 @@ from the web font swapping in, where the baseline's three runs had 0.001; that i
   rather than `execFileSync`, whose types do not carry `windowsVerbatimArguments`.
 - **The OG image is a checked-in PNG**, generated once from the icon; Next's
   `opengraph-image` route exported it without an extension.
-- **The editor is direct manipulation over four gestures**, not the plan's three edits behind a
+- **The editor is direct manipulation over five gestures**, not the plan's three edits behind a
   panel, and a shape that inherits a property is given a local one rather than refused. Above.
 - **Graphic frames are drawn by the editor's stage**, as labelled boxes, because render-svg draws
   nothing for them and the frame-edit tier needs something to select.

@@ -13,6 +13,7 @@ import {
   type ListStyle,
   type Sheet,
 } from '@pptx-studio/model';
+import { toHexColor, type Rgba } from '@pptx-studio/paint';
 import type { Placed } from '@pptx-studio/render-svg';
 
 import { useDocument } from '@/deck/document';
@@ -58,8 +59,7 @@ const inverses = applyEdits([
 store.replacePart(doc.slides[0].partName, serializeXml(tree));
 const sheet = { ...parseSheet(tree.root, doc.slides[0].partName), parent: doc.slides[0].parent, theme: doc.slides[0].theme };`;
 
-const hexOf = (rgb: { r: number; g: number; b: number }): string =>
-  `#${[rgb.r, rgb.g, rgb.b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+const hexOf = (rgba: Rgba): string => `#${toHexColor(rgba)}`;
 
 /** The shape's text as paragraphs of segments, from the model. */
 function paragraphsOf(placed: Placed): Paragraphs {
@@ -85,7 +85,7 @@ function resolvedText(
   const light =
     background === null
       ? true
-      : 0.2126 * background.r + 0.7152 * background.g + 0.0722 * background.b > 140;
+      : 0.2126 * background.r + 0.7152 * background.g + 0.0722 * background.b > 0.55;
   const paragraph = placed.shape.text?.paragraphs[0];
   if (paragraph === undefined) {
     return {
@@ -116,7 +116,21 @@ function resolvedText(
   };
 }
 
-const COLOUR_REFUSED: Partial<Record<string, string>> = {
+/** The colour the shape's first run is drawn in, when that is one solid colour. */
+function textColourOf(
+  placed: Placed,
+  sheet: Sheet,
+  defaultTextStyle: ListStyle | undefined,
+): string | null {
+  const paragraph = placed.shape.text?.paragraphs[0];
+  if (paragraph === undefined) return null;
+  const run = paragraph.content.find((one) => one.kind !== 'br');
+  const context = { sheet, shape: placed.shape, defaultTextStyle };
+  const fill = resolveRun(context, paragraph, run, (props) => props.fill)?.value;
+  return fill?.type === 'solid' ? hexOf(resolveOnSheet(fill.color, sheet)) : null;
+}
+
+const FILL_REFUSED: Partial<Record<string, string>> = {
   pic: 'A picture keeps its image',
   grpSp: 'A group has no colour of its own; colour the shapes inside it',
   graphicFrame: 'Charts, tables and diagrams are preserved as they are',
@@ -166,7 +180,7 @@ function Editor({ full }: DemoProps) {
   const [exported, setExported] = useState<string | null>(null);
   const [exportFailure, setExportFailure] = useState<Failure | null>(null);
   const textOpen = useRef(false);
-  const colourOpen = useRef(false);
+  const picking = useRef<'fill' | 'text' | null>(null);
 
   const document = editor.view?.document ?? parsed?.document ?? null;
   const sheet = document?.slides[Math.min(at, (document?.slides.length ?? 1) - 1)];
@@ -207,12 +221,17 @@ function Editor({ full }: DemoProps) {
   const shapeName = (placed: Placed): string =>
     placed.shape.name === '' ? `shape #${String(placed.shape.cNvPrId)}` : placed.shape.name;
 
+  // The keys are the slide's; a control that unmounts under the focus hands it back.
+  const focusStage = (): void =>
+    wrapper.current?.querySelector<HTMLElement>('.stage-surface')?.focus();
+
   const closeText = (commit: boolean): void => {
     if (!textOpen.current) return;
     textOpen.current = false;
     if (commit) editor.end();
     else editor.cancel();
     setEditing(null);
+    focusStage();
   };
 
   const openText = (placed: Placed): void => {
@@ -269,25 +288,31 @@ function Editor({ full }: DemoProps) {
     window.addEventListener('pointerup', up);
   };
 
+  const colours = {
+    fill: { apply: editor.recolour, label: (name: string) => `Filled ${name}` },
+    text: { apply: editor.recolourText, label: (name: string) => `Coloured the text of ${name}` },
+  } as const;
+
   // The native picker fires an input per drag; one gesture takes them all.
-  const colour = (hex: string, live: boolean): void => {
+  const pick = (which: 'fill' | 'text', hex: string, live: boolean): void => {
     if (chosen === null) return;
-    if (live && !colourOpen.current) {
-      colourOpen.current = true;
-      editor.begin(`Coloured ${shapeName(chosen)}`);
+    if (live && picking.current === null) {
+      picking.current = which;
+      editor.begin(colours[which].label(shapeName(chosen)));
     }
-    editor.recolour(sheet, chosen.shape.cNvPrId, hex);
+    colours[which].apply(sheet, chosen.shape.cNvPrId, hex);
   };
 
-  const colourEnd = (): void => {
-    if (!colourOpen.current) return;
-    colourOpen.current = false;
+  const pickEnd = (which: 'fill' | 'text'): void => {
+    if (picking.current !== which) return;
+    picking.current = null;
     editor.end();
   };
 
   const remove = (id: number): void => {
     closeText(true);
     if (editor.remove(sheet, id)) setSelected(null);
+    focusStage();
   };
 
   const keys = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -330,12 +355,14 @@ function Editor({ full }: DemoProps) {
   };
 
   const fill = chosen === null ? null : resolveSolidFill(chosen.shape, sheet);
+  const textRefused =
+    chosen === null || chosen.shape.text === undefined ? 'This shape holds no text' : null;
   const status =
     editor.view?.refused ??
     note ??
     exported ??
     editor.view?.said ??
-    'Click a shape to select it. Drag it, double-click to type in it, or use the toolbar that appears.';
+    'Click a shape to select it. Drag it, double-click to type in it, or pick its fill or text colour from the toolbar.';
 
   return (
     <div ref={wrapper} className="flex flex-col gap-3" onKeyDown={keys}>
@@ -429,11 +456,19 @@ function Editor({ full }: DemoProps) {
               placed={chosen}
               unit={unit}
               stage={{ width, height: stageHeight }}
-              colour={fill === null ? null : hexOf(fill)}
-              colourRefused={COLOUR_REFUSED[chosen.shape.kind] ?? null}
-              textRefused={chosen.shape.text === undefined ? 'This shape holds no text' : null}
-              onColour={colour}
-              onColourEnd={colourEnd}
+              fill={{
+                value: fill === null ? null : hexOf(fill),
+                refused: FILL_REFUSED[chosen.shape.kind] ?? null,
+                onPick: (hex, live) => pick('fill', hex, live),
+                onEnd: () => pickEnd('fill'),
+              }}
+              text={{
+                value: textColourOf(chosen, sheet, document.defaultTextStyle),
+                refused: textRefused,
+                onPick: (hex, live) => pick('text', hex, live),
+                onEnd: () => pickEnd('text'),
+              }}
+              textRefused={textRefused}
               onText={() => openText(chosen)}
               onDelete={() => remove(chosen.shape.cNvPrId)}
             />
@@ -491,6 +526,12 @@ function Editor({ full }: DemoProps) {
                 <Kbd>Enter</Kbd> a line break, <Kbd>Esc</Kbd> puts the text back
               </dd>
               <dt>
+                <Kbd>toolbar</Kbd>
+              </dt>
+              <dd>
+                Fill and Text each open eight swatches and a picker; a colour is one undo step
+              </dd>
+              <dt>
                 <Kbd>Delete</Kbd>
               </dt>
               <dd>remove the shape</dd>
@@ -507,12 +548,12 @@ function Editor({ full }: DemoProps) {
           </Panel>
           <Callout kind="honest">
             <p>
-              Move, colour, type and delete - not yet resize, rotate, add a shape, pick a font or a
-              bullet, which are phases 5 and 6. Typing over a paragraph keeps its first run's
-              formatting and drops the others'. A dragged placeholder gets a position of its own, as
-              PowerPoint writes it; Reset and Change Layout, which take it back, are phase 7.
-              Charts, tables and SmartArt can be moved and deleted but are drawn as frames until
-              their phases draw them.
+              Move, fill, colour the text, type and delete - not yet resize, rotate, add a shape,
+              pick a font, a size or a bullet, which are phases 5 and 6. Typing over a paragraph
+              keeps its first run's formatting and drops the others'. A dragged placeholder gets a
+              position of its own, as PowerPoint writes it; Reset and Change Layout, which take it
+              back, are phase 7. Charts, tables and SmartArt can be moved and deleted but are drawn
+              as frames until their phases draw them.
             </p>
           </Callout>
         </>

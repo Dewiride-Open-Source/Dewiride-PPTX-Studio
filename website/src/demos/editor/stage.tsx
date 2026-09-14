@@ -284,7 +284,8 @@ export function Stage({
       onSelect(null);
       return;
     }
-    if (chosen === null) return;
+    // A key on a toolbar control is that control's, not the slide's.
+    if (chosen === null || event.target !== event.currentTarget) return;
     if (event.key === 'Delete' || event.key === 'Backspace') {
       event.preventDefault();
       onDelete(chosen.shape.cNvPrId);

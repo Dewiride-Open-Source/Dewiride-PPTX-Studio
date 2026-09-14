@@ -11,15 +11,16 @@ command-line demo - shows slides rendered when the site was built, from the samp
 
 ## Can I edit a deck?
 
-Four gestures today, on the [editor](/demos/render-svg) and the playground's Edit tab: drag a
-shape, colour it, type in it where it is, delete it. Each is an XML edit on the slide's own part
+Five gestures today, on the [editor](/demos/render-svg) and the playground's Edit tab: drag a
+shape, fill it, colour its text, type in it where it is, delete it. Each is an XML edit on the slide's own part
 with an exact inverse, so undo restores the file rather than a copy, and the download opens in
 PowerPoint. Resize, rotate, adding a shape, fonts and a real caret are phases 5 and 6.
 
 ## What happens to a placeholder I move or colour?
 
-It gets an `a:xfrm` or an `a:solidFill` of its own on the slide, which is exactly what
-PowerPoint writes when you drag or recolour one; the layout keeps every other property, and the
+It gets an `a:xfrm` or an `a:solidFill` of its own on the slide - in its `p:spPr` for a
+fill, in every run's `a:rPr` for a text colour - which is exactly what PowerPoint writes when
+you drag or recolour one; the layout keeps every other property, and the
 inheritance demo shows which. Reset and Change Layout, which take a local override back, are
 phase 7.
 
