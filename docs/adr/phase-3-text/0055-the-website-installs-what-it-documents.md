@@ -447,6 +447,11 @@ fallback luminance test could never call a background light. The site now format
 own `toHexColor`, and the swatches read white, `#4472C4` for the accent panel and `#2FA869`
 after the pick.
 
+The selection outline carried a square at each corner, which is the universal promise of a resize
+handle, and dragging one did nothing. The outline is now a plain rectangle: resize and rotate are
+sub-phase 5.3's, measured against PowerPoint rather than written as an `a:ext` edit here, and a
+control that is drawn is a control that works.
+
 ### What the editor found in the packages
 
 **V028 mistook the extent of a transform for an extension.** The first placeholder dragged on

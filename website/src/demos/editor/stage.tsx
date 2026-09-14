@@ -94,41 +94,19 @@ function inside(frame: Frame, x: number, y: number): boolean {
   return Math.abs(lx) <= frame.cx / 2 && Math.abs(ly) <= frame.cy / 2;
 }
 
+/** An outline and nothing at its corners: a handle would promise the resize that is phase 5's. */
 function Selection({ frame, unit }: { frame: Frame; unit: number }) {
-  const stroke = 1.5 * unit;
-  const handle = 7 * unit;
-  const corners = [
-    [frame.x, frame.y],
-    [frame.x + frame.cx, frame.y],
-    [frame.x, frame.y + frame.cy],
-    [frame.x + frame.cx, frame.y + frame.cy],
-  ];
   return (
-    <g
+    <rect
       transform={`rotate(${String(frame.rot)} ${String(frame.x + frame.cx / 2)} ${String(frame.y + frame.cy / 2)})`}
-    >
-      <rect
-        x={frame.x}
-        y={frame.y}
-        width={frame.cx}
-        height={frame.cy}
-        fill="none"
-        stroke="var(--accent)"
-        strokeWidth={stroke}
-      />
-      {corners.map(([x, y]) => (
-        <rect
-          key={`${String(x)}-${String(y)}`}
-          x={(x ?? 0) - handle / 2}
-          y={(y ?? 0) - handle / 2}
-          width={handle}
-          height={handle}
-          fill="var(--surface)"
-          stroke="var(--accent)"
-          strokeWidth={stroke}
-        />
-      ))}
-    </g>
+      x={frame.x}
+      y={frame.y}
+      width={frame.cx}
+      height={frame.cy}
+      fill="none"
+      stroke="var(--accent)"
+      strokeWidth={1.5 * unit}
+    />
   );
 }
 
