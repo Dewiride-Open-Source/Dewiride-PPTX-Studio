@@ -202,7 +202,7 @@ export default function GeometryDemo({ full }: DemoProps) {
             <p>
               Nothing here is painted: fills and strokes are the paint package&apos;s job, and the
               colours on this stage are the debug overlay&apos;s. A deck&apos;s custom geometry is
-              drawn on the slides page, not here.
+              drawn on the editor page, not here.
             </p>
           </Callout>
         </>

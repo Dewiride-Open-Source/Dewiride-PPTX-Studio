@@ -59,6 +59,21 @@ export default tseslint.config(
     },
   },
 
+  // Tests run under node:test, whose describe and it return promises the runner owns.
+  {
+    files: ['src/**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-floating-promises': [
+        'error',
+        {
+          allowForKnownSafeCalls: [
+            { from: 'package', name: ['describe', 'it'], package: 'node:test' },
+          ],
+        },
+      ],
+    },
+  },
+
   // The docs' code: a line that names a value is the point, and printing it is too.
   {
     files: ['snippets/**/*.ts'],

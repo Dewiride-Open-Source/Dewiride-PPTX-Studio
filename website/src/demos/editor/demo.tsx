@@ -1,156 +1,345 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { Download, Redo2, Undo2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 
-import { flatten, layoutSlide, type Placed } from '@pptx-studio/render-svg';
+import {
+  resolveBackgroundColor,
+  resolveLatinTypeface,
+  resolveRun,
+  resolveSize,
+  resolveSolidFill,
+  resolveOnSheet,
+  type ListStyle,
+  type Sheet,
+} from '@pptx-studio/model';
+import type { Placed } from '@pptx-studio/render-svg';
 
 import { useDocument } from '@/deck/document';
 import { DeckWorkerError, useDeckWorker } from '@/deck/worker/client';
-import { Badge } from '@/design/badge';
 import { Button } from '@/design/button';
 import { Callout } from '@/design/callout';
-import { Code, Mono } from '@/design/code';
-import { Slider, Switch, TextInput } from '@/design/field';
+import { Code, Kbd } from '@/design/code';
+import { Slider, Switch } from '@/design/field';
 import { Panel } from '@/design/panel';
 import { ErrorState, Status, type Failure } from '@/design/state';
 import type { DemoProps } from '../registry';
-import { Stage, useStage } from './stage';
+import { Stage, useStage, type Hit } from './stage';
+import { SvgSource } from './svg-source';
+import { drawnText, TextBox, type DrawnText, type Paragraphs } from './text-box';
+import { Toolbar } from './toolbar';
 import { useEditor } from './use-editor';
 
-const EMU_PER_POINT = 12700;
-const pt = (emu: number): string => (emu / EMU_PER_POINT).toFixed(1);
 const MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
 
-const SWATCHES = ['#E8453C', '#D98A2B', '#2FA869', '#0B62B0', '#7B1FA2', '#111111', '#FFFFFF'];
-
 const HOW = `import { PartStore } from '@pptx-studio/opc';
-import { loadDocument } from '@pptx-studio/model';
+import { loadDocument, parseSheet } from '@pptx-studio/model';
 import { slideNode, serializeSvg, flatten, mediaFromStore, createTextEngine } from '@pptx-studio/render-svg';
+import { parseXml, serializeXml, applyEdits, insertInOrder, newElement, newAttribute } from '@pptx-studio/xml';
 
 const store = PartStore.open(bytes);
 const doc = loadDocument(store);
-const text = createTextEngine({ defaultTextStyle: doc.defaultTextStyle });   // one measurer for the deck
+const text = createTextEngine({ defaultTextStyle: doc.defaultTextStyle });
 
+// Draw a slide, and get every shape's frame back for hit-testing.
 const { node, placed } = slideNode(doc.slides[0], doc.slideSize, { media: mediaFromStore(store), text });
-const svg = serializeSvg(node);   // the picture, as a string
-const shapes = flatten(placed);   // the same shapes, for hit-testing
+const svg = serializeSvg(node);
+const shapes = flatten(placed);
 
-// Every edit is an XmlEdit on the slide's own part; applyEdit hands back the inverse.
-// Move: two setAttribute on a:off. Recolour: a:srgbClr/@val. Retype: setValue on the first a:t.`;
+// Edit the slide's own XML. insertInOrder puts a new element where the schema does;
+// applyEdits returns the inverses, which is undo.
+const tree = parseXml(store.read(doc.slides[0].partName));
+const spPr = /* the selected shape's p:spPr */ null;
+const inverses = applyEdits([
+  insertInOrder(spPr, newElement('a:solidFill', [], [newElement('a:srgbClr', [newAttribute('val', 'E8453C')])])),
+]);
 
-function SvgSource({ svg, name }: { svg: string; name: string }) {
-  const [shown, setShown] = useState(false);
-  const download = () => {
-    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `${name}.svg`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+// Write the part back and re-read that one sheet; every other part is untouched bytes.
+store.replacePart(doc.slides[0].partName, serializeXml(tree));
+const sheet = { ...parseSheet(tree.root, doc.slides[0].partName), parent: doc.slides[0].parent, theme: doc.slides[0].theme };`;
+
+const hexOf = (rgb: { r: number; g: number; b: number }): string =>
+  `#${[rgb.r, rgb.g, rgb.b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+
+/** The shape's text as paragraphs of segments, from the model. */
+function paragraphsOf(placed: Placed): Paragraphs {
+  const text = placed.shape.text;
+  if (text === undefined) return [['']];
+  return text.paragraphs.map((paragraph) => {
+    const segments = [''];
+    for (const one of paragraph.content) {
+      if (one.kind === 'br') segments.push('');
+      else segments[segments.length - 1] += one.text;
+    }
+    return segments;
+  });
+}
+
+/** What the box shows when nothing is drawn yet: the resolved face and size, in a colour the background can take. */
+function resolvedText(
+  placed: Placed,
+  sheet: Sheet,
+  defaultTextStyle: ListStyle | undefined,
+): DrawnText {
+  const background = resolveBackgroundColor(sheet);
+  const light =
+    background === null
+      ? true
+      : 0.2126 * background.r + 0.7152 * background.g + 0.0722 * background.b > 140;
+  const paragraph = placed.shape.text?.paragraphs[0];
+  if (paragraph === undefined) {
+    return {
+      fontFamily: 'Calibri',
+      fontSize: 18,
+      fontWeight: 'normal',
+      fontStyle: 'normal',
+      fill: light ? '#111111' : '#FFFFFF',
+    };
+  }
+  const context = { sheet, shape: placed.shape, defaultTextStyle };
+  const fill = resolveRun(context, paragraph, undefined, (props) => props.fill)?.value;
+  const colour =
+    fill?.type === 'solid'
+      ? hexOf(resolveOnSheet(fill.color, sheet))
+      : light
+        ? '#111111'
+        : '#FFFFFF';
+  return {
+    fontFamily: resolveLatinTypeface(context, paragraph, undefined).value,
+    fontSize: resolveSize(context, paragraph, undefined).value / 100,
+    fontWeight:
+      resolveRun(context, paragraph, undefined, (props) => props.b)?.value === true
+        ? 'bold'
+        : 'normal',
+    fontStyle: 'normal',
+    fill: colour,
   };
-  return (
-    <Panel
-      title="The SVG it emitted"
-      hint={`${(svg.length / 1024).toFixed(1)} kB · ${String((svg.match(/<defs/g) ?? []).length)} <defs> · real <text>, never foreignObject`}
-      aside={
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => setShown((on) => !on)} aria-expanded={shown}>
-            {shown ? 'Hide' : 'View'}
-          </Button>
-          <Button size="sm" onClick={download}>
-            Download .svg
-          </Button>
-        </div>
-      }
-    >
-      {shown ? (
-        <div className="max-h-96 overflow-auto p-4">
-          <Code
-            lang="xml"
-            code={
-              svg.length > 60_000
-                ? `${svg.slice(0, 60_000)}\n<!-- … ${String(svg.length - 60_000)} more characters -->`
-                : svg
-            }
-          />
-        </div>
-      ) : null}
-    </Panel>
-  );
+}
+
+const COLOUR_REFUSED: Partial<Record<string, string>> = {
+  pic: 'A picture keeps its image',
+  grpSp: 'A group has no colour of its own; colour the shapes inside it',
+  graphicFrame: 'Charts, tables and diagrams are preserved as they are',
+  contentPart: 'Ink is preserved as it is',
+};
+
+interface Editing {
+  readonly id: number;
+  readonly drawn: DrawnText;
+  readonly initial: Paragraphs;
+}
+
+const KEYS = new WeakMap<Uint8Array, number>();
+let next = 0;
+
+/** A key per deck, so a new deck mounts a fresh editor with nothing carried over. */
+function keyOf(bytes: Uint8Array | null): number {
+  if (bytes === null) return -1;
+  let key = KEYS.get(bytes);
+  if (key === undefined) {
+    key = next;
+    next += 1;
+    KEYS.set(bytes, key);
+  }
+  return key;
 }
 
 export default function EditorDemo({ full }: DemoProps) {
+  const { bytes } = useDocument();
+  return <Editor key={keyOf(bytes)} full={full} />;
+}
+
+function Editor({ full }: DemoProps) {
   const { parsed, failure, loading, bytes, name } = useDocument();
-  const editor = useEditor(bytes);
+  const editor = useEditor(bytes, parsed?.document ?? null);
   const worker = useDeckWorker();
+  const wrapper = useRef<HTMLDivElement>(null);
   const [at, setAt] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
-  const [overlay, setOverlay] = useState(true);
-  const [withText, setWithText] = useState(true);
-  const [zoom, setZoom] = useState(820);
-  const [exported, setExported] = useState<{
-    url: string;
-    rewritten: number;
-    streamed: number;
-  } | null>(null);
+  const [editing, setEditing] = useState<Editing | null>(null);
+  const [debug, setDebug] = useState(false);
+  const [zoom, setZoom] = useState<number | null>(null);
+  const [fit, setFit] = useState(820);
+  const frame = useRef<HTMLDivElement>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exported, setExported] = useState<string | null>(null);
   const [exportFailure, setExportFailure] = useState<Failure | null>(null);
-  const drag = useRef<{ id: number; x: number; y: number } | null>(null);
+  const textOpen = useRef(false);
+  const colourOpen = useRef(false);
 
   const document = editor.view?.document ?? parsed?.document ?? null;
-  const version = editor.view?.version ?? 0;
   const sheet = document?.slides[Math.min(at, (document?.slides.length ?? 1) - 1)];
   const size = document?.slideSize;
-  const placed: readonly Placed[] = useMemo(
-    () => (sheet === undefined ? [] : flatten(layoutSlide(sheet))),
-    [sheet],
+  const drawn = useStage(sheet, size, parsed?.text ?? null, `e${String(at)}`, parsed?.media);
+  // A drag or a typing session outlives the render it started in, and edits the sheet as it is now.
+  const latest = useRef(sheet);
+  useEffect(() => {
+    latest.current = sheet;
+  }, [sheet]);
+
+  // The slide fills the width it has until the zoom slider says otherwise.
+  useEffect(() => {
+    const element = frame.current;
+    if (element === null) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width !== undefined && width > 0) setFit(Math.max(320, Math.floor(width)));
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const chosen = useMemo(
+    () => drawn.placed.find((one) => one.shape.cNvPrId === selected && one.sheet === sheet) ?? null,
+    [drawn.placed, selected, sheet],
   );
-  const text = useMemo(
-    () => (parsed === null ? null : withText ? parsed.text : false),
-    [parsed, withText],
-  );
-  const drawn = useStage(sheet, size, text, `e${String(at)}v${String(version)}`, parsed?.media);
 
   if (loading) return <Status busy>Reading the deck…</Status>;
   if (failure !== null) return <ErrorState {...failure} />;
-  if (
-    parsed === null ||
-    document === null ||
-    sheet === undefined ||
-    size === undefined ||
-    text === null
-  ) {
+  if (parsed === null || document === null || sheet === undefined || size === undefined) {
     return <p className="text-[13px] text-fg-muted">This package has no slides.</p>;
   }
 
-  const shape = placed.find((one) => one.shape.cNvPrId === selected) ?? null;
-  const emuPerPixel = size.cx / zoom;
+  const width = zoom ?? fit;
+  const unit = size.cx / width;
+  const stageHeight = Math.round((width * size.cy) / size.cx);
+  const shapeName = (placed: Placed): string =>
+    placed.shape.name === '' ? `shape #${String(placed.shape.cNvPrId)}` : placed.shape.name;
 
-  const exportEdit = () => {
+  const closeText = (commit: boolean): void => {
+    if (!textOpen.current) return;
+    textOpen.current = false;
+    if (commit) editor.end();
+    else editor.cancel();
+    setEditing(null);
+  };
+
+  const openText = (placed: Placed): void => {
+    if (textOpen.current) return;
+    if (placed.shape.text === undefined) {
+      setNote(`${shapeName(placed)} holds no text.`);
+      return;
+    }
+    const surface = wrapper.current?.querySelector<HTMLElement>('.stage-surface') ?? null;
+    const style =
+      (surface === null ? null : drawnText(surface, placed.shape.cNvPrId)) ??
+      resolvedText(placed, sheet, document.defaultTextStyle);
+    textOpen.current = true;
+    editor.begin(`Retyped ${shapeName(placed)}`);
+    setNote(null);
+    setSelected(placed.shape.cNvPrId);
+    setEditing({ id: placed.shape.cNvPrId, drawn: style, initial: paragraphsOf(placed) });
+  };
+
+  const select = (hit: Hit | null): void => {
+    closeText(true);
+    setNote(
+      hit !== null && !hit.own
+        ? `${shapeName(hit.placed)} comes from the ${hit.placed.sheet.kind}; editing it there is phase 7.`
+        : null,
+    );
+    setSelected(hit?.own === true ? hit.placed.shape.cNvPrId : null);
+  };
+
+  const dragStart = (placed: Placed, event: { clientX: number; clientY: number }): void => {
+    const id = placed.shape.cNvPrId;
+    const { frame } = placed;
+    let last = { x: event.clientX, y: event.clientY };
+    let began = false;
+    const move = (moveEvent: PointerEvent): void => {
+      const dx = (moveEvent.clientX - last.x) * unit;
+      const dy = (moveEvent.clientY - last.y) * unit;
+      // A drag under three pixels is a click, and turning every click into a no-op
+      // edit would fill the undo stack with nothing.
+      if (!began && Math.abs(dx) + Math.abs(dy) < unit * 3) return;
+      if (!began) {
+        began = true;
+        editor.begin(`Moved ${shapeName(placed)}`);
+      }
+      last = { x: moveEvent.clientX, y: moveEvent.clientY };
+      if (latest.current !== undefined) editor.move(latest.current, id, frame, dx, dy);
+    };
+    const up = (): void => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      if (began) editor.end();
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  // The native picker fires an input per drag; one gesture takes them all.
+  const colour = (hex: string, live: boolean): void => {
+    if (chosen === null) return;
+    if (live && !colourOpen.current) {
+      colourOpen.current = true;
+      editor.begin(`Coloured ${shapeName(chosen)}`);
+    }
+    editor.recolour(sheet, chosen.shape.cNvPrId, hex);
+  };
+
+  const colourEnd = (): void => {
+    if (!colourOpen.current) return;
+    colourOpen.current = false;
+    editor.end();
+  };
+
+  const remove = (id: number): void => {
+    closeText(true);
+    if (editor.remove(sheet, id)) setSelected(null);
+  };
+
+  const keys = (event: KeyboardEvent<HTMLDivElement>): void => {
+    if (editing !== null || !(event.ctrlKey || event.metaKey)) return;
+    if (event.key === 'z' && !event.shiftKey) {
+      event.preventDefault();
+      editor.undo();
+    } else if (event.key === 'y' || (event.key === 'z' && event.shiftKey)) {
+      event.preventDefault();
+      editor.redo();
+    }
+  };
+
+  const download = (): void => {
     const current = worker.current;
     if (current === null || bytes === null) return;
+    closeText(true);
+    setExporting(true);
     setExportFailure(null);
+    const file = name ?? 'deck.pptx';
     current
       .export(bytes, editor.replaced())
       .then((done) => {
-        setExported((was) => {
-          if (was !== null) URL.revokeObjectURL(was.url);
-          return {
-            url: URL.createObjectURL(new Blob([done.bytes], { type: MIME })),
-            rewritten: done.rewritten.length,
-            streamed: done.streamed,
-          };
-        });
+        const url = URL.createObjectURL(new Blob([done.bytes], { type: MIME }));
+        const anchor = window.document.createElement('a');
+        anchor.href = url;
+        anchor.download = file;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        setExported(
+          `Downloaded ${file}: ${String(done.rewritten.length)} part${done.rewritten.length === 1 ? '' : 's'} rewritten, ${String(done.streamed)} streamed out untouched.`,
+        );
       })
       .catch((cause: unknown) =>
         setExportFailure(
           cause instanceof DeckWorkerError ? cause.failure : { message: String(cause) },
         ),
-      );
+      )
+      .finally(() => setExporting(false));
   };
 
+  const fill = chosen === null ? null : resolveSolidFill(chosen.shape, sheet);
+  const status =
+    editor.view?.refused ??
+    note ??
+    exported ??
+    editor.view?.said ??
+    'Click a shape to select it. Drag it, double-click to type in it, or use the toolbar that appears.';
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
+    <div ref={wrapper} className="flex flex-col gap-3" onKeyDown={keys}>
+      <div className="flex flex-wrap items-center gap-2">
         <div className="flex gap-1 overflow-x-auto pb-1" role="tablist" aria-label="Slides">
           {document.slides.map((one, index) => (
             <button
@@ -159,8 +348,10 @@ export default function EditorDemo({ full }: DemoProps) {
               role="tab"
               aria-selected={index === at}
               onClick={() => {
+                closeText(true);
                 setAt(index);
                 setSelected(null);
+                setNote(null);
               }}
               className={`shrink-0 rounded-control border px-2 py-1 font-mono text-[12px] ${
                 index === at
@@ -172,217 +363,143 @@ export default function EditorDemo({ full }: DemoProps) {
             </button>
           ))}
         </div>
-        <span className="ml-auto inline-flex items-center gap-2 text-[12px] text-fg-muted">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={editor.view?.canUndo !== true}
+            onClick={editor.undo}
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 size={14} aria-hidden /> Undo
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={editor.view?.canRedo !== true}
+            onClick={editor.redo}
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo2 size={14} aria-hidden /> Redo
+          </Button>
+          <Button size="sm" variant="primary" disabled={exporting} onClick={download}>
+            <Download size={14} aria-hidden /> {exporting ? 'Exporting…' : 'Download .pptx'}
+          </Button>
+        </div>
+      </div>
+
+      <div
+        ref={frame}
+        className="max-w-full overflow-auto rounded-frame border border-line bg-desk p-3"
+      >
+        <Stage
+          content={drawn}
+          size={size}
+          width={width}
+          sheet={sheet}
+          selected={selected}
+          debug={debug}
+          editing={editing?.id ?? null}
+          onSelect={select}
+          onDragStart={dragStart}
+          onOpenText={openText}
+          onNudge={(id, dx, dy) => chosen !== null && editor.move(sheet, id, chosen.frame, dx, dy)}
+          onDelete={remove}
+          inSlide={
+            editing === null || chosen === null ? null : (
+              <TextBox
+                key={`${String(editing.id)}-${String(at)}`}
+                placed={chosen}
+                sheet={sheet}
+                drawn={editing.drawn}
+                initial={editing.initial}
+                onInput={(paragraphs) => {
+                  if (latest.current !== undefined)
+                    editor.retext(latest.current, editing.id, paragraphs);
+                }}
+                onCommit={() => closeText(true)}
+                onCancel={() => closeText(false)}
+              />
+            )
+          }
+        >
+          {chosen === null || editing !== null ? null : (
+            <Toolbar
+              key={chosen.shape.cNvPrId}
+              placed={chosen}
+              unit={unit}
+              stage={{ width, height: stageHeight }}
+              colour={fill === null ? null : hexOf(fill)}
+              colourRefused={COLOUR_REFUSED[chosen.shape.kind] ?? null}
+              textRefused={chosen.shape.text === undefined ? 'This shape holds no text' : null}
+              onColour={colour}
+              onColourEnd={colourEnd}
+              onText={() => openText(chosen)}
+              onDelete={() => remove(chosen.shape.cNvPrId)}
+            />
+          )}
+        </Stage>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 text-[12px]">
+        <p
+          role="status"
+          aria-live="polite"
+          className={`min-w-0 basis-full sm:flex-1 sm:basis-auto ${editor.view?.refused == null ? 'text-fg-muted' : 'text-warn'}`}
+        >
+          {status}
+        </p>
+        <span className="inline-flex items-center gap-2 text-fg-muted">
           zoom
           <Slider
             ariaLabel="Zoom"
             min={360}
             max={1400}
             step={20}
-            value={zoom}
+            value={width}
             onChange={setZoom}
             format={(v) => `${String(Math.round((v / 960) * 100))}%`}
           />
         </span>
-        <Switch checked={overlay} onChange={setOverlay}>
+        <Switch checked={debug} onChange={setDebug}>
           overlay
         </Switch>
-        <Switch checked={withText} onChange={setWithText}>
-          text
-        </Switch>
-        <Button size="sm" disabled={editor.view?.canUndo !== true} onClick={editor.undo}>
-          Undo
-        </Button>
-        <Button size="sm" disabled={editor.view?.canRedo !== true} onClick={editor.redo}>
-          Redo
-        </Button>
       </div>
-
-      {editor.view?.refused == null ? null : (
-        <Callout kind="warn" title="Refused">
-          <p>{editor.view.refused}</p>
-        </Callout>
-      )}
-
-      <div className="flex flex-wrap items-start gap-4">
-        <div className="max-w-full overflow-auto rounded-frame border border-line bg-desk p-3">
-          <Stage
-            key={`${sheet.partName}-${String(version)}`}
-            content={drawn}
-            size={size}
-            width={zoom}
-            selected={selected}
-            overlay={overlay}
-            onSelect={setSelected}
-            onNudge={(id, dx, dy) => editor.move(sheet, id, dx, dy)}
-            onShapePointerDown={(one, event) => {
-              drag.current = { id: one.shape.cNvPrId, x: event.clientX, y: event.clientY };
-              const move = (moveEvent: PointerEvent): void => {
-                const from = drag.current;
-                if (from === null) return;
-                const dx = (moveEvent.clientX - from.x) * emuPerPixel;
-                const dy = (moveEvent.clientY - from.y) * emuPerPixel;
-                // A drag under three pixels is a click, and turning every click
-                // into a no-op edit would fill the undo stack with nothing.
-                if (Math.abs(dx) + Math.abs(dy) < emuPerPixel * 3) return;
-                drag.current = { id: from.id, x: moveEvent.clientX, y: moveEvent.clientY };
-                editor.move(sheet, from.id, dx, dy);
-              };
-              const up = (): void => {
-                drag.current = null;
-                window.removeEventListener('pointermove', move);
-                window.removeEventListener('pointerup', up);
-              };
-              window.addEventListener('pointermove', move);
-              window.addEventListener('pointerup', up);
-            }}
-          />
-        </div>
-
-        <div className="flex min-w-72 flex-1 flex-col gap-4">
-          <Panel
-            title="Selection"
-            hint={shape === null ? 'Click a shape on the slide.' : undefined}
-          >
-            {shape === null ? (
-              <p className="p-4 text-[13px] text-fg-muted">
-                Nothing selected. Clicking picks the innermost shape, so a click inside a group
-                selects the child rather than the group.
-              </p>
-            ) : (
-              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 p-4 text-[13px]">
-                <dt className="text-fg-muted">name</dt>
-                <dd className="text-fg">
-                  {shape.shape.name === '' ? `#${String(shape.shape.cNvPrId)}` : shape.shape.name}
-                </dd>
-                <dt className="text-fg-muted">kind</dt>
-                <dd className="text-fg">{shape.shape.kind}</dd>
-                <dt className="text-fg-muted">position</dt>
-                <dd className="tabular text-fg">
-                  {pt(shape.frame.x)}, {pt(shape.frame.y)} pt
-                </dd>
-                <dt className="text-fg-muted">size</dt>
-                <dd className="tabular text-fg">
-                  {pt(shape.frame.cx)} × {pt(shape.frame.cy)} pt
-                </dd>
-                {shape.frame.rot === 0 ? null : (
-                  <>
-                    <dt className="text-fg-muted">rotation</dt>
-                    <dd className="tabular text-fg">{shape.frame.rot.toFixed(2)}°</dd>
-                  </>
-                )}
-                {!shape.frame.flipH && !shape.frame.flipV ? null : (
-                  <>
-                    <dt className="text-fg-muted">mirrored</dt>
-                    <dd className="text-fg">
-                      {[shape.frame.flipH ? 'H' : '', shape.frame.flipV ? 'V' : '']
-                        .filter(Boolean)
-                        .join(' + ')}
-                    </dd>
-                  </>
-                )}
-                <dt className="text-fg-muted">geometry</dt>
-                <dd className="text-fg">{shape.geometry?.name ?? 'custom or none'}</dd>
-                <dt className="text-fg-muted">declared on</dt>
-                <dd className="text-fg">{shape.sheet.kind}</dd>
-              </dl>
-            )}
-          </Panel>
-
-          {shape === null ? null : (
-            <Panel title="Edit" hint="Each one is an XmlEdit that hands back its own inverse.">
-              <div className="flex flex-col gap-3 p-4">
-                <div>
-                  <p className="mb-1.5 text-[12px] text-fg-muted">Fill</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {SWATCHES.map((hex) => (
-                      <button
-                        key={hex}
-                        type="button"
-                        title={hex}
-                        aria-label={`Fill ${hex}`}
-                        onClick={() => editor.recolour(sheet, shape.shape.cNvPrId, hex)}
-                        style={{ background: hex }}
-                        className="h-7 w-7 rounded-control border border-line-strong"
-                      />
-                    ))}
-                  </div>
-                </div>
-                <label className="block">
-                  <span className="mb-1.5 block text-[12px] text-fg-muted">First run</span>
-                  <TextInput
-                    placeholder="type, then press Enter"
-                    className="w-full"
-                    onKeyDown={(event) => {
-                      if (event.key !== 'Enter') return;
-                      editor.retext(sheet, shape.shape.cNvPrId, event.currentTarget.value);
-                    }}
-                  />
-                </label>
-                <p className="text-[12px] text-fg-faint">
-                  Drag the shape on the slide to move it, or nudge with the arrow keys once it is
-                  selected. A placeholder with no <Mono tone="dim">a:xfrm</Mono> refuses, and says
-                  why.
-                </p>
-              </div>
-            </Panel>
-          )}
-
-          <Panel
-            title="Session"
-            aside={
-              editor.view === null ? null : (
-                <Button size="sm" variant="primary" onClick={exportEdit}>
-                  Download this edit
-                </Button>
-              )
-            }
-          >
-            <div className="p-4 text-[13px] text-fg-muted">
-              {editor.view === null || editor.view.editedParts.length === 0 ? (
-                <p>No part has been rewritten yet.</p>
-              ) : (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span>Rewritten:</span>
-                  {editor.view.editedParts.map((part) => (
-                    <Badge key={part}>{part}</Badge>
-                  ))}
-                </div>
-              )}
-              {editor.view?.lastStep == null ? null : (
-                <p className="mt-2">Last step: {editor.view.lastStep}</p>
-              )}
-              {exported === null ? null : (
-                <p className="mt-2 text-fg">
-                  Exported: {exported.rewritten} part(s) rewritten, {exported.streamed} streamed.{' '}
-                  <a
-                    href={exported.url}
-                    download={name ?? 'deck.pptx'}
-                    className="text-accent hover:underline"
-                  >
-                    Download
-                  </a>
-                </p>
-              )}
-              {exportFailure === null ? null : <ErrorState {...exportFailure} />}
-              <p className="mt-2 text-[12px] text-fg-faint">
-                Every other part is still the bytes that were read; the export streams them back out
-                untouched.
-              </p>
-            </div>
-          </Panel>
-        </div>
-      </div>
-
-      {drawn.error === null ? (
-        <SvgSource
-          svg={drawn.svg}
-          name={`${(name ?? 'deck').replace(/\.ppt[xm]$/, '')}-slide-${String(at + 1)}`}
-        />
-      ) : null}
+      {exportFailure === null ? null : <ErrorState {...exportFailure} />}
 
       {full ? (
         <>
+          {drawn.error === null ? (
+            <SvgSource
+              svg={drawn.svg}
+              name={`${(name ?? 'deck').replace(/.ppt[xm]$/, '')}-slide-${String(at + 1)}`}
+            />
+          ) : null}
+          <Panel title="Keys">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 p-4 text-[13px] text-fg-muted">
+              <dt>
+                <Kbd>drag</Kbd>
+              </dt>
+              <dd>
+                move the shape; the arrow keys nudge it a point, with <Kbd>Shift</Kbd> ten
+              </dd>
+              <dt>
+                <Kbd>double-click</Kbd> / <Kbd>Enter</Kbd>
+              </dt>
+              <dd>
+                type in the shape; <Kbd>Enter</Kbd> is a new paragraph, <Kbd>Shift</Kbd>+
+                <Kbd>Enter</Kbd> a line break, <Kbd>Esc</Kbd> puts the text back
+              </dd>
+              <dt>
+                <Kbd>Delete</Kbd>
+              </dt>
+              <dd>remove the shape</dd>
+              <dt>
+                <Kbd>Ctrl</Kbd>+<Kbd>Z</Kbd> / <Kbd>Ctrl</Kbd>+<Kbd>Y</Kbd>
+              </dt>
+              <dd>undo and redo, each step the exact inverse of the XML edit it undoes</dd>
+            </dl>
+          </Panel>
           <Panel title="How this page does it">
             <div className="p-4">
               <Code code={HOW} />
@@ -390,9 +507,12 @@ export default function EditorDemo({ full }: DemoProps) {
           </Panel>
           <Callout kind="honest">
             <p>
-              Three edits with exact inverses, not an editor: no snapping, no resize, no rotate, no
-              multi-select and no text editing - those are phases 5 and 6. Charts, tables, SmartArt
-              and OLE objects are drawn as frames until their phase draws them.
+              Move, colour, type and delete - not yet resize, rotate, add a shape, pick a font or a
+              bullet, which are phases 5 and 6. Typing over a paragraph keeps its first run's
+              formatting and drops the others'. A dragged placeholder gets a position of its own, as
+              PowerPoint writes it; Reset and Change Layout, which take it back, are phase 7.
+              Charts, tables and SmartArt can be moved and deleted but are drawn as frames until
+              their phases draw them.
             </p>
           </Callout>
         </>

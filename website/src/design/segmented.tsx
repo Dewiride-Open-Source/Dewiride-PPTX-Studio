@@ -34,7 +34,7 @@ export function Segmented<T extends string>({
           <label
             key={option.value}
             className={`inline-flex cursor-pointer items-center rounded-[4px] font-medium transition-colors duration-150 has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-accent ${pad} ${
-              on ? 'bg-accent text-white' : 'text-fg-muted hover:bg-sunken hover:text-fg'
+              on ? 'bg-accent text-on-accent' : 'text-fg-muted hover:bg-sunken hover:text-fg'
             }`}
           >
             <input

@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, useEffect, useRef, useState, type ErrorInfo, type ReactNode } from 'react';
 
 import { DeckPicker } from '@/deck/picker';
 import { describeFailure } from '@/deck/failures';
 import { Badge } from '@/design/badge';
-import { ErrorState } from '@/design/state';
+import { ErrorState, Skeleton } from '@/design/state';
 import { SiteError } from '@/site/errors';
 import { LOADED } from './loaded';
 import { demoNamed, type DemoEntry } from './registry';
@@ -47,10 +47,34 @@ export function Demo({ name, full = false }: DemoProps) {
   return <LoadedDemo entry={entry} full={full} />;
 }
 
+/** True once the element is within a screen of the viewport, and from then on. */
+function useNear(ref: { readonly current: HTMLElement | null }, always: boolean): boolean {
+  const [near, setNear] = useState(always);
+  useEffect(() => {
+    const element = ref.current;
+    if (always || element === null) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setNear(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '100% 0px' },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref, always]);
+  return near;
+}
+
 function LoadedDemo({ entry, full }: { entry: DemoEntry; full: boolean }) {
   const Loaded = LOADED[entry.name];
+  const root = useRef<HTMLDivElement>(null);
+  // A docs page reads first; the demo's chunk and the deck parse wait until the reader is near it.
+  const near = useNear(root, full);
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={root} className="flex flex-col gap-4">
       {full ? null : (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <DeckPicker compact />
@@ -60,7 +84,7 @@ function LoadedDemo({ entry, full }: { entry: DemoEntry; full: boolean }) {
         </div>
       )}
       <DemoBoundary name={entry.name}>
-        <Loaded full={full} />
+        {near ? <Loaded full={full} /> : <Skeleton className="w-full" />}
       </DemoBoundary>
     </div>
   );

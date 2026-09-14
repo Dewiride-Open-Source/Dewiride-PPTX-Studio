@@ -93,10 +93,23 @@ try {
   await page.getByText('namespaces', { exact: true }).waitFor({ timeout: TIMEOUT });
   ok('/demos/census/ reached the Worker and got a census back');
 
-  // A deck fetched through publicUrl, drawn by the string renderer.
+  // A deck fetched through publicUrl, drawn by the string renderer, and the
+  // editor over it: a click gets a toolbar, a swatch changes the drawn fill.
   await page.goto(at('/demos/render-svg/'), { waitUntil: 'networkidle', timeout: TIMEOUT });
-  await page.locator('[data-shape]').first().waitFor({ timeout: TIMEOUT });
+  const deckTitle = page.locator('.stage-surface [data-shape="11"]').first();
+  await deckTitle.waitFor({ state: 'attached', timeout: TIMEOUT });
   ok('/demos/render-svg/ fetched a sample deck and drew a shape');
+  const box = await deckTitle.boundingBox();
+  if (box === null) throw new Error('the title shape has no box to click');
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await page.getByRole('toolbar', { name: /Edit Deck title/ }).waitFor({ timeout: TIMEOUT });
+  await page.getByRole('button', { name: 'Colour' }).click();
+  await page.getByRole('button', { name: /Colour Deck title #E8453C/ }).click();
+  await deckTitle
+    .locator('path[fill="#E8453C"]')
+    .first()
+    .waitFor({ state: 'attached', timeout: TIMEOUT });
+  ok('/demos/render-svg/ selected a shape and coloured it from the toolbar');
 
   // The live renderer: a slide mounted by render-dom, and the playground's bench over it.
   await page.goto(at('/demos/render-dom/'), { waitUntil: 'networkidle', timeout: TIMEOUT });

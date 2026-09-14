@@ -235,7 +235,7 @@ export default function ViewerDemo({ full }: DemoProps) {
             <p>
               No virtualization: every thumbnail of a long deck is mounted, in frame-sized chunks as
               it scrolls into view - slide virtualization is 12.1. No gestures: selection here is a
-              click, and moving a shape is the slides page&apos;s three edits. There is no{' '}
+              click; dragging, colouring and typing are the editor&apos;s. There is no{' '}
               <Mono tone="dim">resize()</Mono> on a mounted slide - a zoom is a fresh mount.
             </p>
           </Callout>
