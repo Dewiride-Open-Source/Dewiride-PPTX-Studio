@@ -96,8 +96,12 @@ export function DemoHeader({ entry }: { entry: DemoEntry }) {
     <header className="flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 className="text-xl font-semibold tracking-tight">{entry.title}</h1>
-        <p className="mt-1 text-[13px] text-fg-muted">
-          <code className="font-mono text-fg">@pptx-studio/{entry.name}</code> · {entry.blurb}
+        <p className="mt-1 max-w-2xl text-[13px] text-fg-muted">{entry.blurb}</p>
+        <p className="mt-1 text-[13px] text-fg">
+          <span className="font-semibold">Try:</span> {entry.tryThis}
+          <code className="ml-2 font-mono text-[12px] text-fg-faint">
+            @pptx-studio/{entry.name}
+          </code>
         </p>
       </div>
       <div className="flex items-center gap-2">

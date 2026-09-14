@@ -408,6 +408,12 @@ the shape in every step: "Coloured Deck title #E8453C", "Undid: Deleted Accent p
 The FAQ's "Why is move refused on some shapes?" and the guide's "two refusals worth keeping" taught
 the same refusal and are rewritten to say what a gesture writes; the demo's name is "Editor";
 the export walk now selects the title shape and colours it from the toolbar on every deploy.
+The review's other finding was that the demos could not be understood; every demo's header and
+its card on the index now open with one plain sentence on what the page shows and a "Try:" line
+naming the first thing to do on it, and the blurbs no longer speak in the packages' own terms
+("the tree with its byte offsets, an edit and its exact inverse, byte-identical re-emission" is
+"the XML of one part, edited in place and written back without touching a byte you did not
+change").
 
 ### What the editor found in the packages
 
@@ -510,8 +516,9 @@ grey, Fumadocs' default, at 3.98:1 on the site's dark surface — the dark theme
 component alike; the purple `--info` badge colour at 4.2:1 on its own tint in dark, now
 `#bf7fd9` (6.4:1); and `--fg-faint` at 4.37:1 on the accent tint a selected row carries, now
 `#808b9a` (4.73:1). Against the local export with those three, Lighthouse's accessibility
-category is 100 on `/`, `/docs/packages/opc/`, `/playground/` and `/demos/render-svg/`;
-the live confirmation is the next deploy's. One docs-desktop run scored a layout shift of 0.103
+category is 100 on `/`, `/docs/packages/opc/`, `/playground/` and `/demos/render-svg/`,
+and on the deploy that carried them (run 34809496384) the live site scores 100 for accessibility,
+best practices and SEO on all four. One docs-desktop run scored a layout shift of 0.103
 from the web font swapping in, where the baseline's three runs had 0.001; that is the font's
 `swap`, not this change, and it is open below. The playground's mobile score is the deck: the
 100-slide default opens on the main thread, and that is 12.1's.
