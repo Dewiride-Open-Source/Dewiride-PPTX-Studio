@@ -20,9 +20,10 @@
   --line-strong: #b8c0cb;
   --fg: #14181d;
   --fg-muted: #4d5866;
-  --fg-faint: #7a8593;
+  --fg-faint: #5f6a7a;
   --accent: #0b62b0;
   --accent-soft: #e3effa;
+  --on-accent: #ffffff;
   --info: #6f3b93;
   --site: #007a86;
   --good: #1f7a4d;
@@ -42,9 +43,10 @@
   --line-strong: #262d37;
   --fg: #e4e8ee;
   --fg-muted: #8b95a3;
-  --fg-faint: #5c6675;
+  --fg-faint: #7a8594;
   --accent: #3b8fd4;
   --accent-soft: rgb(59 143 212 / 0.14);
+  --on-accent: #08090b;
   --info: #a855c9;
   --site: #00a5b5;
   --good: #2fa869;
@@ -69,7 +71,7 @@
   --color-fd-card-foreground: var(--fg);
   --color-fd-border: var(--line);
   --color-fd-primary: var(--accent);
-  --color-fd-primary-foreground: #ffffff;
+  --color-fd-primary-foreground: var(--on-accent);
   --color-fd-secondary: var(--sunken);
   --color-fd-secondary-foreground: var(--fg);
   --color-fd-accent: var(--accent-soft);
@@ -88,6 +90,7 @@
   --color-fg-faint: var(--fg-faint);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
   --color-info: var(--info);
   --color-site: var(--site);
   --color-good: var(--good);

@@ -1,6 +1,6 @@
 ---
 title: Edit a shape and save a file PowerPoint opens
-description: 'Move, recolour or retype a shape as an XML edit with an exact inverse, then export with the firewall on.'
+description: 'Move, colour or retype a shape as XML edits with exact inverses, then export with the firewall on.'
 ---
 
 ## Goal
@@ -46,12 +46,12 @@ const shape = cNvPr?.parent?.parent; // p:sp > p:nvSpPr > p:cNvPr
 
 ### 3. Plan the edit and keep the inverse
 
-A move is two `setAttribute` edits on `a:off`; a recolour sets `a:srgbClr/@val`; a retype sets the first `a:t`'s text. `applyEdits` applies a batch atomically and returns the inverses - your undo stack.
+A move is two `setAttribute` edits on `a:off`; a colour sets `a:srgbClr/@val`; a retype sets an `a:t`'s text. `applyEdits` applies a batch atomically and returns the inverses - your undo stack.
 
 ```ts
 import { applyEdits, type XmlEdit } from '@pptx-studio/xml';
 
-const off = /* the shape's own a:xfrm/a:off, if it has one */ offsetOf(shape);
+const off = /* the shape's own a:xfrm/a:off */ offsetOf(shape);
 const x = off.attributes.find((a) => a.qname === 'x')!;
 const edits: XmlEdit[] = [
   { kind: 'setAttribute', element: off, qname: 'x', value: String(Number(x.value) + 914400) }, // one inch right
@@ -59,12 +59,20 @@ const edits: XmlEdit[] = [
 const undo = applyEdits(edits);
 ```
 
-### 4. The two refusals worth keeping
+### 4. A shape that inherits gets an override of its own
 
-A shape with no `a:xfrm` of its own takes its position from the layout; writing one is a Change Layout decision, not a drag. A shape with no `a:solidFill` of its own is coloured by the placeholder chain or the theme; the same applies.
+A placeholder with no `a:xfrm` takes its position from the layout, and a shape with no `a:solidFill` is coloured by its style or the theme. Give it one, where the schema puts it: that is what PowerPoint writes for the same gesture, and the layout keeps everything else. `insertInOrder` is the only sanctioned way to add an OOXML child.
 
 ```ts
-if (shape.xfrm === undefined) throw new Error('inherits its position - change the layout instead');
+import { insertInOrder, newAttribute, newElement } from '@pptx-studio/xml';
+
+const spPr = /* the shape's p:spPr */ propertiesOf(shape);
+const fill = newElement(
+  'a:solidFill',
+  [],
+  [newElement('a:srgbClr', [newAttribute('val', 'E8453C')])],
+);
+const undoFill = applyEdits([insertInOrder(spPr, fill)]);
 ```
 
 ### 5. Serialise the part and export

@@ -42,8 +42,8 @@ export default function PaintDemo({ full }: DemoProps) {
           <Callout kind="honest">
             <p>
               Every preview here is the SVG this library emits, drawn by your browser - not
-              PowerPoint&apos;s own raster. Effects are on the slides pages; a preset shadow
-              (prstShdw) is recorded on the way through and not modelled.
+              PowerPoint&apos;s own raster. Effects are on the editor and viewer pages; a preset
+              shadow (prstShdw) is recorded on the way through and not modelled.
             </p>
           </Callout>
         </>

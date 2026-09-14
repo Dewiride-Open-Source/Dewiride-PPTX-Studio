@@ -11,17 +11,17 @@ command-line demo - shows slides rendered when the site was built, from the samp
 
 ## Can I edit a deck?
 
-Three edits today: move a shape that has a position of its own, recolour a shape that has a solid
-fill of its own, and retype a shape's first run. Each is an XML edit with an exact inverse, so
-undo restores the file rather than a copy. A command layer with selection, resize and rotate is
-phase 5; text editing is phase 6.
+Four gestures today, on the [editor](/demos/render-svg) and the playground's Edit tab: drag a
+shape, colour it, type in it where it is, delete it. Each is an XML edit on the slide's own part
+with an exact inverse, so undo restores the file rather than a copy, and the download opens in
+PowerPoint. Resize, rotate, adding a shape, fonts and a real caret are phases 5 and 6.
 
-## Why is "move" refused on some shapes?
+## What happens to a placeholder I move or colour?
 
-Because they have no position of their own. A title placeholder takes its position from the
-layout, which takes it from the master. Writing a position onto the slide would be a layout
-decision, not a drag - and it is the decision the change-layout verb of phase 7 has to be able to
-undo. The inheritance demo shows where the position comes from.
+It gets an `a:xfrm` or an `a:solidFill` of its own on the slide, which is exactly what
+PowerPoint writes when you drag or recolour one; the layout keeps every other property, and the
+inheritance demo shows which. Reset and Change Layout, which take a local override back, are
+phase 7.
 
 ## Does it draw charts, tables, SmartArt?
 

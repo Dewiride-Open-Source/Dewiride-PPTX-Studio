@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "smoke": "node smoke.mjs",
-    "check-export": "node deploy/check-export.mjs"
+    "check-export": "node deploy/check-export.mjs",
+    "test": "node --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@fontsource-variable/ibm-plex-sans": "5.3.0",

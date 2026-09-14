@@ -8,6 +8,7 @@
     "noUncheckedIndexedAccess": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
     "skipLibCheck": true,

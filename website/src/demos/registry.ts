@@ -21,8 +21,9 @@ export const DEMOS: readonly DemoEntry[] = [
   },
   {
     name: 'render-svg',
-    title: 'Slides and edits',
-    blurb: 'The string renderer, a shape moved, recoloured and retyped, and the SVG it emits.',
+    title: 'Editor',
+    blurb:
+      'Click a shape: drag it, colour it, type in it, delete it. Undo. Download a file PowerPoint opens.',
   },
   {
     name: 'model',

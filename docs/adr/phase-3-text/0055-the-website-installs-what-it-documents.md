@@ -230,26 +230,26 @@ import.meta.url), { type: 'module' })` under Turbopack becomes an 849-byte boots
 
 ## Measurements
 
-| claim                                           | measurement                                                                                                                                       |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| first-load script, gzipped: `/`                 | 218 kB (budget 230)                                                                                                                               |
-| `/docs/packages/opc/`                           | 239 kB (budget 250) — Fumadocs' shell and the MDX runtime over the same React                                                                     |
-| `/demos/render-dom/`                            | 202 kB (budget 230)                                                                                                                               |
-| `/playground/`                                  | 203 kB (budget 230)                                                                                                                               |
-| the largest chunks                              | Shiki's Oniguruma wasm, 623 kB raw / 232 kB gzipped, and its grammars, 199 kB gzipped — loaded by a code block, never in a first load             |
-| the Worker                                      | 849-byte bootstrap + 4 chunks, 70 kB gzipped                                                                                                      |
-| `out/`                                          | 35 MB, 893 files; `search.json` 758 kB; `rendered/` 144 SVGs for eleven decks                                                                     |
-| `next build`, this machine                      | 16.8 s to compile from a clean cache, 39 s end to end warm including `prebuild`; the walk 12 s                                                    |
-| `prerender/decks.mjs`                           | 11 decks, 144 slides, 6133 ms at 1280 px                                                                                                          |
-| the candidate gate, this machine                | 219 s end to end: pack, install, typecheck, lint, smoke, build                                                                                    |
-| the candidate gate in CI, before                | 59 s (run 34764116456, `the packages this commit would publish`, typecheck + smoke + build of the example)                                        |
-| the candidate gate in CI, after                 | 93 s (run 34779051444): lint, and a build that renders eleven decks and reads the reference                                                       |
-| the site's build job in CI, on the pull request | 130 s (run 34779051486): the registry answered every range in 5 s, install 34 s, typecheck 4, lint 10, smoke 3, build 27, Chromium 26, the walk 9 |
-| the canary in CI, before                        | 42 s (run 34763792565)                                                                                                                            |
-| the site's dependencies                         | 21 runtime (12 of them `@pptx-studio/*`), 15 dev; no lockfile                                                                                     |
-| the branch                                      | 215 files, +13232 −4043; 164 of them under `website/`                                                                                             |
-| Lighthouse on `/`, a docs page, `/playground/`  | not yet: not installed, and an install is a download                                                                                              |
-| publish to served, the first release after this | not yet: the first deploy ran on a push, not on a release                                                                                         |
+| claim                                                 | measurement                                                                                                                                                                                                                                                                                |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| first-load script, gzipped: `/`                       | 218 kB (budget 230)                                                                                                                                                                                                                                                                        |
+| `/docs/packages/opc/`                                 | 239 kB (budget 250) — Fumadocs' shell and the MDX runtime over the same React                                                                                                                                                                                                              |
+| `/demos/render-dom/`                                  | 202 kB (budget 230)                                                                                                                                                                                                                                                                        |
+| `/playground/`                                        | 203 kB (budget 230)                                                                                                                                                                                                                                                                        |
+| the largest chunks                                    | Shiki's Oniguruma wasm, 623 kB raw / 232 kB gzipped, and its grammars, 199 kB gzipped — loaded by a code block, never in a first load                                                                                                                                                      |
+| the Worker                                            | 849-byte bootstrap + 4 chunks, 70 kB gzipped                                                                                                                                                                                                                                               |
+| `out/`                                                | 35 MB, 893 files; `search.json` 758 kB; `rendered/` 144 SVGs for eleven decks                                                                                                                                                                                                              |
+| `next build`, this machine                            | 16.8 s to compile from a clean cache, 39 s end to end warm including `prebuild`; the walk 12 s                                                                                                                                                                                             |
+| `prerender/decks.mjs`                                 | 11 decks, 144 slides, 6133 ms at 1280 px                                                                                                                                                                                                                                                   |
+| the candidate gate, this machine                      | 219 s end to end: pack, install, typecheck, lint, smoke, build                                                                                                                                                                                                                             |
+| the candidate gate in CI, before                      | 59 s (run 34764116456, `the packages this commit would publish`, typecheck + smoke + build of the example)                                                                                                                                                                                 |
+| the candidate gate in CI, after                       | 93 s (run 34779051444): lint, and a build that renders eleven decks and reads the reference                                                                                                                                                                                                |
+| the site's build job in CI, on the pull request       | 130 s (run 34779051486): the registry answered every range in 5 s, install 34 s, typecheck 4, lint 10, smoke 3, build 27, Chromium 26, the walk 9                                                                                                                                          |
+| the canary in CI, before                              | 42 s (run 34763792565)                                                                                                                                                                                                                                                                     |
+| the site's dependencies                               | 21 runtime (12 of them `@pptx-studio/*`), 15 dev; no lockfile                                                                                                                                                                                                                              |
+| the branch                                            | 215 files, +13232 −4043; 164 of them under `website/`                                                                                                                                                                                                                                      |
+| Lighthouse 13.4.1, median of three, before the review | mobile `/` 76 · `/docs/packages/opc/` 71 · `/playground/` 56 for performance, 96–97 accessibility, 100 best practices, 100 SEO; desktop 100 / 92 / 85, 96 accessibility. What failed and what changed is under "What the review of the site found"; the numbers after are in the follow-up |
+| publish to served, the first release after this       | not yet: the first deploy ran on a push, not on a release                                                                                                                                                                                                                                  |
 
 ## Verification
 
@@ -340,9 +340,9 @@ was 66 130 bytes from a 67 962-byte source. `packages/cli/scripts/powerpoint-ora
 that download in the real PowerPoint with `OpenAndRepair` off: `ok: true, repair: false`, two
 slides, two shapes each.
 
-Not measured yet: Lighthouse, because it is not installed and installing it is a download; and
-the registry wait after a release, because the first deploy ran on a push whose ranges the
-registry already served — the first `workflow_run` deploy is phase 4's first release.
+Not measured yet: the registry wait after a release, because the first deploy ran on a push
+whose ranges the registry already served — the first `workflow_run` deploy is phase 4's first
+release. Lighthouse was measured once the run was allowed, below.
 
 **What Dependabot found.** The new `website/` entry opened four pull requests within the hour;
 the one that bumps TypeScript to 7 fails `npm install` with `ERESOLVE` on a peer range, which is
@@ -352,6 +352,134 @@ code; the step after it failed on a missing module instead. The loop now redirec
 and reads npm's own status, and `gate.test.ts` runs the step's script under bash with a fake `npm`:
 one that exits 0 passes the step, one that prints `ERESOLVE` and exits 1 fails it at once with no
 retry. With the pipe put back, that test is red.
+
+## What the review of the site found
+
+The site's first review, on the live page, found the editor unusable as one: a shape had to be
+selected and then edited through a form on the right, and a click on a colour swatch produced a
+box headed "Refused". Checked on the live page before anything changed: on the default deck's
+first slide the second shape — `Deck title`, which declares `<a:noFill/>` — answered the red
+swatch with "This shape declares no a:solidFill - its fill is inherited, from the placeholder
+chain or the theme style matrix. The Inheritance tool says which." That refusal was mine, at the
+demo level, on the theory that writing a local override onto a shape that inherits is a layout
+decision rather than a gesture. PowerPoint writes exactly that override when a placeholder is
+dragged or recoloured, and `SCOPE.md` names the target in one line: Canva's simplicity with
+PowerPoint's inheritance model. The page had the 0.6 primitive — three XML edits that know their
+inverse — behind a form, and called it an editor.
+
+### What the editor is now
+
+Direct manipulation on the slide, over four gestures, each an XML edit on the slide's own part:
+
+| gesture                                                           | what is written                                                                                                                                                                                                                                                                             | as PowerPoint writes it                                                                    |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| drag, arrow keys                                                  | `a:off/@x @y` on the shape's own `a:xfrm`; a shape that inherits its transform is given one at the frame it resolved to, `insertInOrder` placing it first in `p:spPr`; a group's child moves in the group's units (`ext / chExt`); a graphic frame through its own `p:xfrm`                 | a dragged placeholder gets a local `a:xfrm`; the layout keeps everything else              |
+| colour, from eight swatches or the native picker                  | an `a:srgbClr/@val` when the shape's own fill is already one; otherwise an `a:solidFill` inserted where the schema puts it and whichever fill was there — `noFill`, `gradFill`, `pattFill`, a scheme colour — removed, an `a:alpha` carried over; a connector's colour is its `a:ln`'s      | a recoloured placeholder gets a local `a:solidFill`; transparency survives a colour change |
+| double-click, Enter, or the toolbar: type where the text is drawn | one entry per paragraph, split at soft breaks; an unchanged paragraph is not touched; a changed one keeps its `a:pPr` and its first run's `a:rPr` and the rest of its runs collapse into that one; a new paragraph copies the last one's properties; an `a:br` carries the run's properties | typing over a selection that spans runs keeps the first run's formatting                   |
+| Delete                                                            | `removeChild` of the shape element; the inverse puts it back at the same index                                                                                                                                                                                                              | —                                                                                          |
+
+A plan is a generator of batches, and each batch is applied before the next is planned, because
+a later insertion has to see what an earlier removal did to the indices; `applyAll` rolls the
+earlier batches back when a later one is refused, so a refused gesture leaves the tree as it found
+it. A drag or a typing session is one undo step: the session opens a gesture, the edits' inverses
+accumulate into it, and `end` pushes it. After every edit the touched part is serialised into
+the store and that one sheet is parsed again with `parseSheet`, its `parent` and `theme`
+carried from the sheet it replaces, so a keystroke re-reads one slide's XML and not the package.
+
+The text box is a `contentEditable` in a `foreignObject` placed in the same transform as
+render-svg's text layer — points, rotated with the shape — with the face, size, weight and colour
+read off the first `<tspan>` the renderer emitted and the insets and anchor from the resolvers;
+the drawn text beneath it is hidden while it is open. Paragraphs are `<div>`s and soft breaks
+`<br>`s, which is what the browser's Enter and Shift+Enter write — except that under
+`white-space: pre-wrap` Chromium writes Shift+Enter as a newline character in the text node,
+which the first browser session caught as a literal newline inside `a:t` in the export; the
+reader splits text nodes on newlines as well. Escape puts the text back through the gesture's
+inverses.
+
+What is selectable is what the slide owns: a shape the layout or master draws answers a click with
+"comes from the layout; editing it there is phase 7", and when a layout shape carries the same
+`cNvPr/@id` as one of the slide's own the click is settled by a point-in-frame test on the
+slide's shape. render-svg draws nothing for a `p:graphicFrame`, so the stage draws every graphic
+frame the slide owns as a labelled dashed box — "Chart 1 · chart, preserved and not drawn yet" —
+that can be selected, moved and deleted, which is `SCOPE.md`'s frame-edit tier. A picture's
+colour control is off with "A picture keeps its image"; a group's with "colour the shapes inside
+it"; a frame's with "preserved as it is". The toolbar has three controls. The status line names
+the shape in every step: "Coloured Deck title #E8453C", "Undid: Deleted Accent panel".
+
+The FAQ's "Why is move refused on some shapes?" and the guide's "two refusals worth keeping" taught
+the same refusal and are rewritten to say what a gesture writes; the demo's name is "Editor";
+the export walk now selects the title shape and colours it from the toolbar on every deploy.
+
+### What the editor found in the packages
+
+**V028 mistook the extent of a transform for an extension.** The first placeholder dragged on
+`b02-layouts` exported nothing: `ERR_VALIDATION_FAILED`, `V028 at
+/p:sld/p:cSld/p:spTree/p:sp[1]/p:spPr/a:xfrm/a:ext - <a:ext> is not markup this part arrived
+with`. The rule holds `mc:AlternateContent` and every extension opaque, by local name so that
+vocabularies never read are covered too, and it matched any element spelled `ext` — the extent
+inside `a:xfrm` is spelled `ext` as well, and nothing had written a new `a:xfrm` before.
+An `ext` is now an extension only under an `extLst`; the new test writes a transform onto a
+placeholder that inherited one and holds V028 silent, and against the old rule it fails. Pull
+request #45, `@pptx-studio/validate` patch, released before this change to the site was merged,
+because the site installs from npm and a deploy carrying the new editor with the old rule would
+refuse that download.
+
+### Verification
+
+`npm test` in `website/` — `node --test` over Node 24's type stripping, so the planners are
+tested with no runner installed — runs every gesture over every slide the site ships: 144 slides,
+1181 shapes, 1088 text bodies, 1120 declared transforms and 61 inherited positions; 1090 `p:sp`
+whose declared fill is 165 inherited, 451 `noFill`, 190 solid, 183 gradient, 89 pattern, 9 blip
+and 3 group. Each test applies the plan, checks what it wrote — every touched element in schema
+order by `outOfOrderChildren`, the new `a:xfrm` first in `p:spPr`, the old fill gone, the
+transparency carried, the first run kept, an unchanged paragraph still clean — parses the sheet
+again, applies the inverses and holds the part to its original bytes. Eleven tests, 1.9 s.
+
+In Chromium over the served export, on the default deck: a click on `Deck title` shows its
+toolbar; the red swatch turns its `<a:noFill/>` into `#E8453C`; a double-click opens the text
+box with "Northwind Analytics", typing draws live, Enter makes a paragraph and Shift+Enter a soft
+break, Ctrl+Enter commits, and Escape after further typing puts the text back; a 100 × 20 px drag
+moves the subtitle 100 × 20 px; Delete removes the accent panel and Undo restores it;
+Shift+Arrow nudges ten points; Download hands over 164 225 bytes with one part rewritten and 220
+streamed untouched. Then the shapes the default deck lacks: `b02-layouts`'s title, which
+inherits its position, dragged, retyped and coloured; `a43-kitchen-sink`'s chart frame selected,
+moved 60 px, deleted and undone; `a06-lines`'s connector coloured through its line, `#44546A`
+to `#2FA869`; `a44-transforms`'s group child dragged 50 × 30 px on screen, which is the drag
+divided by the group's child scale; `b09-picture`'s picture moved with its colour control off.
+The seven downloads opened in the real PowerPoint through `powerpoint-oracle.ps1` with
+`OpenAndRepair` off: every one `ok: true, repair: false`, with its slide and shape counts.
+The moved placeholder's download was made on the candidate gate's build — the site from this
+commit's tarballs, the fixed rule inside — because the registry served the old one.
+
+### What Lighthouse said
+
+Measured before the review's changes, so that this is the baseline: 13.4.1, from the scratchpad
+against the live site with Playwright's Chromium, three runs per route and form factor, the
+median reported. Mobile is Lighthouse's default — a Moto G Power with a 4× CPU slowdown and
+simulated 3G.
+
+| route                 | mobile perf · a11y · best · SEO             | desktop              |
+| --------------------- | ------------------------------------------- | -------------------- |
+| `/`                   | 76 · 96 · 100 · 100 (TBT 1.08 s, LCP 2.2 s) | 100 · 96 · 100 · 100 |
+| `/docs/packages/opc/` | 71 · 96 · 100 · 100 (TBT 1.95 s)            | 92 · 96 · 100 · 100  |
+| `/playground/`        | 56 · 97 · 100 · 100 (LCP 4.8 s, TBT 1.4 s)  | 85 · 96 · 100 · 100  |
+
+Three defects behind the numbers, each with a change:
+
+- **Contrast.** `--fg-faint` was 3.29:1 on the dark surface and 3.75:1 on the light one, and
+  white on the accent `#3b8fd4` was 3.46:1 — small text needs 4.5:1. The tokens are now
+  `#5f6a7a` (light, 4.70:1 on the lightest surface it sits on) and `#7a8594` (dark, 4.89:1),
+  and what sits on a filled accent is a token of its own, `--on-accent`: white in light (6.20:1),
+  the canvas black in dark (5.75:1), which the Fumadocs primary foreground reads too.
+- **An unnamed image.** Fumadocs' built-in GitHub link is an `<svg role="img">` with no name;
+  the link is declared in the site's own navigation with a labelled mark.
+- **Main-thread blocking on the simulated phone.** The landing page opens the real 100-slide deck
+  on the main thread; the docs page hydrated its embedded demo eagerly, with the deck parse, on a
+  page whose reader has not scrolled to it. A docs-page embed now mounts when it is within a
+  screen of the viewport; the landing page's cost is the deck, and a Worker-side parse is
+  sub-phase 12.1's.
+
+The numbers after are measured on the deploy that carries these changes, in the follow-up.
 
 ## Deviations from the plan
 
@@ -373,6 +501,10 @@ retry. With the pipe put back, that test is red.
   rather than `execFileSync`, whose types do not carry `windowsVerbatimArguments`.
 - **The OG image is a checked-in PNG**, generated once from the icon; Next's
   `opengraph-image` route exported it without an extension.
+- **The editor is direct manipulation over four gestures**, not the plan's three edits behind a
+  panel, and a shape that inherits a property is given a local one rather than refused. Above.
+- **Graphic frames are drawn by the editor's stage**, as labelled boxes, because render-svg draws
+  nothing for them and the frame-edit tier needs something to select.
 
 ## Open questions
 
@@ -388,6 +520,10 @@ retry. With the pipe put back, that test is red.
 4. **What 12.6 still owes.** This is the docs site as far as phase 3's packages go. Gate 12 asks
    for 200 slides, first paint under 3 s and a published fidelity score; 12.6 owes those numbers,
    and the pages for phases 4 to 11's features as each lands.
-5. **Lighthouse and the registry wait after a release** are not measured yet, above.
-6. **The `pull_request` build has no Chromium cache.** `npx playwright install --with-deps
+5. **The registry wait after a release** is not measured yet, above; Lighthouse's numbers after
+   the review's changes are in the follow-up.
+6. **The text box approximates the line model.** Its line height is 1.2 × the size, which is
+   PowerPoint's single spacing for the common faces and not the renderer's measured lines; a
+   caret in the drawn text itself is phase 6's.
+7. **The `pull_request` build has no Chromium cache.** `npx playwright install --with-deps
 chromium` runs on every build; a cache keyed on the Playwright version would remove it.
