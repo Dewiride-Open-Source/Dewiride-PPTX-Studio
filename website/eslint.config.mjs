@@ -16,6 +16,7 @@ export default tseslint.config(
       'next-env.d.ts',
       'public/rendered/**',
       'src/reference/generated/**',
+      '.source/**',
     ],
   },
 

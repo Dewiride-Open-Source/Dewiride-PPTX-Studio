@@ -3,6 +3,8 @@
 import { DynamicCodeBlock } from 'fumadocs-ui/components/dynamic-codeblock';
 import type { ReactNode } from 'react';
 
+import { CODE_THEMES } from '@/site/code-themes';
+
 /** A part URI, a qname, an XPath - the identifiers this domain is written in. */
 export function Mono({
   children,
@@ -41,7 +43,12 @@ interface CodeProps {
 export function Code({ code, lang = 'ts', title }: CodeProps) {
   return (
     <div className="text-[12.5px] [&_figure]:my-0">
-      <DynamicCodeBlock lang={lang} code={code} codeblock={{ title }} />
+      <DynamicCodeBlock
+        lang={lang}
+        code={code}
+        codeblock={{ title }}
+        options={{ themes: CODE_THEMES, defaultColor: false }}
+      />
     </div>
   );
 }

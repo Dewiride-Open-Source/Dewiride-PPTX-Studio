@@ -249,7 +249,7 @@ import.meta.url), { type: 'module' })` under Turbopack becomes an 849-byte boots
 | the site's dependencies                               | 21 runtime (12 of them `@pptx-studio/*`), 15 dev; no lockfile                                                                                                                                                                                                                              |
 | the branch                                            | 215 files, +13232 −4043; 164 of them under `website/`                                                                                                                                                                                                                                      |
 | Lighthouse 13.4.1, median of three, before the review | mobile `/` 76 · `/docs/packages/opc/` 71 · `/playground/` 56 for performance, 96–97 accessibility, 100 best practices, 100 SEO; desktop 100 / 92 / 85, 96 accessibility. What failed and what changed is under "What the review of the site found"; the numbers after are in the follow-up |
-| publish to served, the first release after this       | not yet: the first deploy ran on a push, not on a release                                                                                                                                                                                                                                  |
+| publish to served, the first release after this       | 2 min 24 s: validate 0.1.2 published at 04:42:03Z, the `workflow_run` build started as the release finished, the registry answered every range on its first ask 22 s after the publish, the install needed no retry, and the site was live at 04:44:27Z (run 34807019459)                  |
 
 ## Verification
 
@@ -340,9 +340,8 @@ was 66 130 bytes from a 67 962-byte source. `packages/cli/scripts/powerpoint-ora
 that download in the real PowerPoint with `OpenAndRepair` off: `ok: true, repair: false`, two
 slides, two shapes each.
 
-Not measured yet: the registry wait after a release, because the first deploy ran on a push
-whose ranges the registry already served — the first `workflow_run` deploy is phase 4's first
-release. Lighthouse was measured once the run was allowed, below.
+This first deploy ran on a push whose ranges the registry already served; the registry wait
+after a release, and Lighthouse, are measured under "What the review of the site found", below.
 
 **What Dependabot found.** The new `website/` entry opened four pull requests within the hour;
 the one that bumps TypeScript to 7 fails `npm install` with `ERESOLVE` on a peer range, which is
@@ -479,7 +478,43 @@ Three defects behind the numbers, each with a change:
   screen of the viewport; the landing page's cost is the deck, and a Worker-side parse is
   sub-phase 12.1's.
 
-The numbers after are measured on the deploy that carries these changes, in the follow-up.
+The numbers after are measured on the deploy that carries these changes, below.
+
+### What the deploy said after the review
+
+Pull request #46 merged as `84c94a3`; its deploy, run 34807495414, built and walked in 129 s
+and deployed in 10 s. The live page, driven the same way as the export: the full session on the
+default deck, then `b02-layouts`'s title — the placeholder whose download V028 had refused —
+dragged, retyped, coloured and downloaded; both downloads opened in the real PowerPoint with no
+repair, 100 slides with four shapes on the first and eleven with two.
+
+The registry wait after a release, measured on the first `workflow_run` deploy: the release that
+published validate 0.1.2 finished at 04:42:13Z, the website run started at the same second, the
+registry step answered all twelve ranges in 5 s — validate 0.1.2 served 22 s after its publish, on
+the first ask — the install took 28 s with no retry, and the site was live 2 min 24 s after the
+publish. The 15-minute ceiling and the 20-second poll never came into it.
+
+Lighthouse on that deploy, same matrix as the baseline:
+
+| route                 | mobile perf · a11y · best · SEO                  | desktop                   |
+| --------------------- | ------------------------------------------------ | ------------------------- |
+| `/`                   | 76 · **100** · 100 · 100 (TBT 1.10 s, LCP 2.0 s) | 100 · **100** · 100 · 100 |
+| `/docs/packages/opc/` | **77** · 96 · 100 · 100 (TBT 1.02 s, from 1.95)  | **99** · 96 · 100 · 100   |
+| `/playground/`        | 55 · 97 · 100 · 100 (LCP 4.9 s, TBT 2.1 s)       | 88 · 97 · 100 · 100       |
+
+The landing page reached 100 for accessibility on both form factors and the docs page's blocking
+time halved. Three things were still under 4.5:1, each a token: Shiki's `github-dark` comment
+grey, Fumadocs' default, at 3.98:1 on the site's dark surface — the dark theme is now
+`github-dark-default`, whose comment grey clears 6:1 on the same surface, declared once in
+`src/site/code-themes.ts` for the MDX pipeline (`source.config.ts`) and the demos' code
+component alike; the purple `--info` badge colour at 4.2:1 on its own tint in dark, now
+`#bf7fd9` (6.4:1); and `--fg-faint` at 4.37:1 on the accent tint a selected row carries, now
+`#808b9a` (4.73:1). Against the local export with those three, Lighthouse's accessibility
+category is 100 on `/`, `/docs/packages/opc/`, `/playground/` and `/demos/render-svg/`;
+the live confirmation is the next deploy's. One docs-desktop run scored a layout shift of 0.103
+from the web font swapping in, where the baseline's three runs had 0.001; that is the font's
+`swap`, not this change, and it is open below. The playground's mobile score is the deck: the
+100-slide default opens on the main thread, and that is 12.1's.
 
 ## Deviations from the plan
 
@@ -520,8 +555,9 @@ The numbers after are measured on the deploy that carries these changes, in the 
 4. **What 12.6 still owes.** This is the docs site as far as phase 3's packages go. Gate 12 asks
    for 200 slides, first paint under 3 s and a published fidelity score; 12.6 owes those numbers,
    and the pages for phases 4 to 11's features as each lands.
-5. **The registry wait after a release** is not measured yet, above; Lighthouse's numbers after
-   the review's changes are in the follow-up.
+5. **The web font swaps in.** Fontsource's faces load with `font-display: swap`, and one
+   Lighthouse run measured a 0.103 layout shift from it on a docs page; a `size-adjust`ed
+   fallback face would hold the lines still until IBM Plex arrives.
 6. **The text box approximates the line model.** Its line height is 1.2 × the size, which is
    PowerPoint's single spacing for the common faces and not the renderer's measured lines; a
    caret in the drawn text itself is phase 6's.
