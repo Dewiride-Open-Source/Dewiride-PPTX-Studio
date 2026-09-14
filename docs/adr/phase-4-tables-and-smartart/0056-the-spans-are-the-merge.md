@@ -231,6 +231,20 @@ the 74 rather than a negative.
   the analysis emits the identical fixture without it.
 - **`pnpm check`** green before the commit that claims the sub-phase.
 
+## What the release said
+
+Pull request #50 merged as `a18533c` on CI run 34831065940 with every check registered and
+complete — `check`, the candidate gate, the round trip, both font jobs, CodeQL and the website
+build — and main's own run 34831676436 green on the merge. The canary before, 34832273581, was
+green against the fourth release. Release run 34832439003 published `@pptx-studio/model` 0.2.0,
+`@pptx-studio/validate` 0.2.0, `@pptx-studio/render-svg` 0.6.1, `@pptx-studio/render-dom` 0.3.3,
+`@pptx-studio/writer` 0.1.2 and `@pptx-studio/cli` 0.3.5, version commit `48e6fc7`. The deploy
+that followed, 34832701914, asked the registry for every range the site's manifest names and
+waited 2 min 47 s for `cli@^0.3.5` — `model@0.2.0` was the last to replicate from this machine's
+view too — then installed, built and walked the export in 4 min 48 s and deployed in 9 s. The
+canary after, 34833060592, installed the fifth release and was green. The live docs page for
+`validate` says thirty-one rules.
+
 ## Deviations from the plan
 
 - **Two firewall rules, not in the plan.** The measurement answered what PowerPoint rewrites and
