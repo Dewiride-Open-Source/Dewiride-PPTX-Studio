@@ -97,14 +97,13 @@ function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
   return true;
 }
 
-/** Local names of the containers held opaque, with the namespace-free test that finds them. */
+/** The containers held opaque, found by local name so that vocabularies never read are covered too. */
 function isOpaqueContainer(element: XElement): boolean {
-  // `mc:AlternateContent` by local name, because the `mc` prefix is only a
-  // convention; `a:ext` and `p:ext` likewise. The namespace is not checked
-  // because the point is to be *broader* than the schemas we know - an
-  // extension container from a vocabulary we have never read is exactly the
-  // thing this rule protects.
-  return element.local === 'AlternateContent' || element.local === 'ext';
+  // An extension is an `ext` inside an `extLst`; the extent inside `a:xfrm` is spelled `ext` as well.
+  return (
+    element.local === 'AlternateContent' ||
+    (element.local === 'ext' && element.parent?.local === 'extLst')
+  );
 }
 
 /** Every opaque container in a document, as its exact source text. */
