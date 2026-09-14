@@ -27,7 +27,7 @@
     "@pptx-studio/render-dom": "^0.3.2",
     "@pptx-studio/render-svg": "^0.6.0",
     "@pptx-studio/text": "^0.2.0",
-    "@pptx-studio/validate": "^0.1.1",
+    "@pptx-studio/validate": "^0.1.2",
     "@pptx-studio/writer": "^0.1.1",
     "@pptx-studio/xml": "^0.1.1",
     "fumadocs-core": "16.15.9",
