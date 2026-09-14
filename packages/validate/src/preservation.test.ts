@@ -143,6 +143,26 @@ describe('V028 containers held opaque', () => {
     );
   });
 
+  it('says nothing about the extent of a transform written onto a placeholder', () => {
+    // A dragged placeholder gets an `a:xfrm` of its own, whose `a:ext` is an
+    // extent, not an extension: only an `ext` inside an `extLst` is held opaque.
+    const parts = minimalDeck();
+    const XFRM =
+      '<a:xfrm><a:off x="838200" y="365125"/><a:ext cx="10515600" cy="1325563"/></a:xfrm>';
+    const inheriting = parts['ppt/slides/slide1.xml']!.replace(XFRM, '');
+    expect(inheriting).not.toBe(parts['ppt/slides/slide1.xml']);
+    const original = deckBytes({ parts: { 'ppt/slides/slide1.xml': inheriting } });
+    const store = PartStore.open(original);
+    store.replacePart(
+      '/ppt/slides/slide1.xml',
+      encoder.encode(inheriting.replace('<p:spPr>', '<p:spPr>' + XFRM)),
+    );
+
+    expect(firedBy(validatePackage({ store, baseline: PartStore.open(original) }), 'V028')).toEqual(
+      [],
+    );
+  });
+
   it('fires on an mc:AlternateContent branch that was rewritten', () => {
     const parts = minimalDeck();
     const MC =
