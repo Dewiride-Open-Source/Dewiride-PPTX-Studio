@@ -82,6 +82,41 @@ export function fileSpec(filename: string): string {
   return `file:${filename.replace(/\\/g, '/')}`;
 }
 
+/** What the consumer brings from its own manifest, none of it in scope. */
+export interface Consumer {
+  readonly dependencies: Readonly<Record<string, string>>;
+  readonly scripts: Readonly<Record<string, string>>;
+  /** Transitive pins the consumer needs to build at all. ADR 0057. */
+  readonly overrides: Readonly<Record<string, unknown>>;
+}
+
+/** The consumer's overrides, after refusing anything that would displace a candidate pin. */
+function overridesOf(consumer: Consumer, scope: string): Record<string, string> {
+  for (const name of Object.keys(consumer.dependencies)) {
+    if (name.startsWith(scope)) {
+      throw new Error(`the consumer depends on ${name} itself, where a candidate pin belongs`);
+    }
+  }
+  const out: Record<string, string> = {};
+  const byName = Object.entries(consumer.overrides).sort(([a], [b]) => (a < b ? -1 : 1));
+  for (const [name, spec] of byName) {
+    if (name.startsWith(scope)) {
+      throw new Error(`the consumer overrides ${name}, which only a candidate tarball may pin`);
+    }
+    if (typeof spec !== 'string') {
+      throw new Error(`the consumer overrides ${name} with a nested object, which is not carried`);
+    }
+    const direct = consumer.dependencies[name];
+    if (direct !== undefined && direct !== spec) {
+      throw new Error(
+        `the consumer depends on ${name}@${direct} and overrides it with ${spec}; npm refuses that`,
+      );
+    }
+    out[name] = spec;
+  }
+  return out;
+}
+
 /**
  * The scratch project that installs the candidates and nothing else.
  *
@@ -94,8 +129,8 @@ export function fileSpec(filename: string): string {
  */
 export function scratchManifest(
   packed: readonly Packed[],
-  extra: Readonly<Record<string, string>>,
-  scripts: Readonly<Record<string, string>> = {},
+  consumer: Consumer,
+  scope: string,
 ): ScratchManifest {
   const pinned: Record<string, string> = {};
   for (const entry of [...packed].sort((a, b) => (a.name < b.name ? -1 : 1))) {
@@ -106,9 +141,9 @@ export function scratchManifest(
     version: '0.0.0',
     private: true,
     type: 'module',
-    scripts,
-    dependencies: { ...pinned, ...extra },
-    overrides: pinned,
+    scripts: consumer.scripts,
+    dependencies: { ...pinned, ...consumer.dependencies },
+    overrides: { ...overridesOf(consumer, scope), ...pinned },
   };
 }
 

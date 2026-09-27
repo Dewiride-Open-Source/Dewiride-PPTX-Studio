@@ -102,6 +102,7 @@ const website = JSON.parse(readFileSync(repoPath('website/package.json'), 'utf8'
   scripts: Record<string, string>;
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
+  overrides?: Record<string, unknown>;
 };
 // `pnpm version-packages` writes these ranges; one it did not write is a
 // manifest that no longer says what it was proved against.
@@ -120,8 +121,12 @@ const offScope = Object.fromEntries(
 
 const manifest = scratchManifest(
   packed,
-  { ...offScope, ...website.devDependencies },
-  website.scripts,
+  {
+    dependencies: { ...offScope, ...website.devDependencies },
+    scripts: website.scripts,
+    overrides: website.overrides ?? {},
+  },
+  SCOPE,
 );
 writeFileSync(join(consumer, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
@@ -147,6 +152,7 @@ run('npm', ['run', 'typecheck'], consumer);
 console.log('typecheck: clean');
 run('npm', ['run', 'lint'], consumer);
 console.log('lint: clean');
+run('npm', ['test'], consumer);
 run('npm', ['run', 'smoke'], consumer);
 run('npm', ['run', 'build'], consumer);
 console.log('the packages this commit would publish work for a consumer');

@@ -15,6 +15,7 @@ import {
   provenanceFailures,
   scratchManifest,
   staleRanges,
+  type Consumer,
   type Lockfile,
   type LockEntry,
   type Packed,
@@ -100,8 +101,16 @@ describe('reading what pnpm packed', () => {
 });
 
 describe('the scratch manifest', () => {
+  const SCOPE = '@pptx-studio/';
+  const consumer = (over: Partial<Consumer> = {}): Consumer => ({
+    dependencies: {},
+    scripts: {},
+    overrides: {},
+    ...over,
+  });
+
   it('pins every candidate as both a dependency and an override', () => {
-    const manifest = scratchManifest(PACKED, {});
+    const manifest = scratchManifest(PACKED, consumer(), SCOPE);
     expect(manifest.dependencies['@pptx-studio/xml']).toBe(
       'file:/tmp/tgz/pptx-studio-xml-0.1.0.tgz',
     );
@@ -113,13 +122,12 @@ describe('the scratch manifest', () => {
   it('carries the consumer own scripts, so the gate can run them', () => {
     // The gate runs `npm run smoke`, which only exists if the scripts survive
     // replacing the website's manifest.
-    expect(scratchManifest(PACKED, {}, { smoke: 'node smoke.mjs' }).scripts).toEqual({
-      smoke: 'node smoke.mjs',
-    });
+    const scripts = { smoke: 'node smoke.mjs' };
+    expect(scratchManifest(PACKED, consumer({ scripts }), SCOPE).scripts).toEqual(scripts);
   });
 
   it('carries the consumer own dependencies through without pinning them', () => {
-    const manifest = scratchManifest(PACKED, { next: '16.3.4' });
+    const manifest = scratchManifest(PACKED, consumer({ dependencies: { next: '16.3.4' } }), SCOPE);
     expect(manifest.dependencies['next']).toBe('16.3.4');
     expect(manifest.overrides['next']).toBeUndefined();
   });
@@ -129,8 +137,63 @@ describe('the scratch manifest', () => {
   });
 
   it('orders the packages by name, so the manifest does not churn', () => {
-    const names = Object.keys(scratchManifest(PACKED, {}).overrides);
+    const names = Object.keys(scratchManifest(PACKED, consumer(), SCOPE).overrides);
     expect(names).toEqual(['@pptx-studio/cli', '@pptx-studio/xml']);
+  });
+
+  describe("the consumer's own overrides", () => {
+    const pin = { overrides: { 'mdast-util-to-markdown': '2.1.2' } };
+
+    it('carries a transitive pin as an override and never as a dependency', () => {
+      // Without it the website resolves a transitive range fresh and the gate
+      // builds a tree the website itself could not. ADR 0057.
+      const manifest = scratchManifest(PACKED, consumer(pin), SCOPE);
+      expect(manifest.overrides['mdast-util-to-markdown']).toBe('2.1.2');
+      expect(manifest.dependencies['mdast-util-to-markdown']).toBeUndefined();
+    });
+
+    it('still pins every candidate, with the same spec as its dependency', () => {
+      const manifest = scratchManifest(PACKED, consumer(pin), SCOPE);
+      for (const entry of PACKED) {
+        expect(manifest.overrides[entry.name], entry.name).toBe(fileSpec(entry.filename));
+        expect(manifest.overrides[entry.name]).toBe(manifest.dependencies[entry.name]);
+      }
+    });
+
+    it('refuses an override in scope, which would redirect a candidate', () => {
+      const redirect = consumer({ overrides: { '@pptx-studio/xml': '0.0.1' } });
+      expect(() => scratchManifest(PACKED, redirect, SCOPE)).toThrow(/only a candidate/);
+    });
+
+    it('refuses a dependency in scope, which would displace a candidate pin', () => {
+      const own = consumer({ dependencies: { '@pptx-studio/cli': '^0.1.0' } });
+      expect(() => scratchManifest(PACKED, own, SCOPE)).toThrow(/candidate pin belongs/);
+    });
+
+    it('refuses an override that disagrees with a direct dependency, as npm would', () => {
+      const clash = consumer({ dependencies: { next: '16.3.6' }, overrides: { next: '16.3.5' } });
+      expect(() => scratchManifest(PACKED, clash, SCOPE)).toThrow(/npm refuses that/);
+    });
+
+    it('carries an override that agrees with the direct dependency', () => {
+      const agree = consumer({ dependencies: { next: '16.3.6' }, overrides: { next: '16.3.6' } });
+      expect(scratchManifest(PACKED, agree, SCOPE).overrides['next']).toBe('16.3.6');
+    });
+
+    it('refuses a nested override rather than dropping it', () => {
+      const nested = consumer({ overrides: { foo: { bar: '1.0.0' } } });
+      expect(() => scratchManifest(PACKED, nested, SCOPE)).toThrow(/nested object/);
+    });
+
+    it('orders the consumer overrides by name, ahead of the candidates', () => {
+      const two = consumer({ overrides: { zod: '4.0.0', 'mdast-util-to-markdown': '2.1.2' } });
+      expect(Object.keys(scratchManifest(PACKED, two, SCOPE).overrides)).toEqual([
+        'mdast-util-to-markdown',
+        'zod',
+        '@pptx-studio/cli',
+        '@pptx-studio/xml',
+      ]);
+    });
   });
 });
 
