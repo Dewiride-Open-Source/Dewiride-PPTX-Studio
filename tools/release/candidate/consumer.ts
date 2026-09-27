@@ -62,6 +62,53 @@ export function packedFrom(raw: string): readonly Packed[] {
   return out;
 }
 
+/** A packed tarball as the release hands it on: a file in its directory, and its digest. */
+export interface PackedRecord {
+  readonly name: string;
+  readonly version: string;
+  readonly file: string;
+  readonly integrity: string;
+}
+
+/** `packed.json`, refusing a file name that could reach outside its directory. */
+export function readPackedRecord(raw: string): readonly PackedRecord[] {
+  const value: unknown = JSON.parse(raw);
+  if (!Array.isArray(value)) throw new Error('packed.json is not a list');
+  return value.map((entry: unknown, index) => {
+    const { name, version, file, integrity } = (entry ?? {}) as Record<string, unknown>;
+    if (
+      typeof name !== 'string' ||
+      typeof version !== 'string' ||
+      typeof file !== 'string' ||
+      typeof integrity !== 'string'
+    ) {
+      throw new Error(
+        `packed.json entry ${String(index)} lacks a name, version, file or integrity`,
+      );
+    }
+    if (!/^[\w.@-]+\.tgz$/.test(file)) {
+      throw new Error(
+        `packed.json entry ${String(index)} names ${JSON.stringify(file)}, not a tarball`,
+      );
+    }
+    return { name, version, file, integrity };
+  });
+}
+
+/** Every recorded tarball whose bytes are not the ones recorded. */
+export function tamperedTarballs(
+  packed: readonly PackedRecord[],
+  integrityOf: (file: string) => string,
+): readonly string[] {
+  const out: string[] = [];
+  for (const entry of packed) {
+    const actual = integrityOf(entry.file);
+    if (actual !== entry.integrity)
+      out.push(`${entry.file}: ${actual}, recorded ${entry.integrity}`);
+  }
+  return out;
+}
+
 export interface ScratchManifest {
   readonly name: string;
   readonly version: string;

@@ -6,14 +6,22 @@
  * the suite passes against the previous release. ADR 0046.
  */
 
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
+import { repoPath } from '../../repo/root.ts';
 import {
   websiteRanges,
   fileSpec,
   packedFrom,
   provenanceFailures,
+  readPackedRecord,
   scratchManifest,
+  tamperedTarballs,
   staleRanges,
   type Consumer,
   type Lockfile,
@@ -97,6 +105,97 @@ describe('reading what pnpm packed', () => {
 
   it('ignores anything that is not a packed tarball', () => {
     expect(packedFrom('{"lifecycle":"prepack"} not json at all [1,2,3]')).toEqual([]);
+  });
+});
+
+describe('both scripts refuse a tarball that moved after it was packed', () => {
+  // Each refuses before it installs or asks the registry anything, so a
+  // tampered directory is all either needs to show it. ADR 0059.
+  function tamperedDirectory(): string {
+    const dir = mkdtempSync(join(tmpdir(), 'release-'));
+    const tarballs = join(dir, 'tarballs');
+    mkdirSync(tarballs);
+    writeFileSync(join(tarballs, 'pptx-studio-xml-0.1.0.tgz'), 'these are not the packed bytes');
+    const record = [
+      {
+        name: '@pptx-studio/xml',
+        version: '0.1.0',
+        file: 'pptx-studio-xml-0.1.0.tgz',
+        integrity: 'sha512-AAAA',
+      },
+    ];
+    writeFileSync(join(tarballs, 'packed.json'), JSON.stringify(record));
+    return dir;
+  }
+
+  it.each([
+    [
+      'candidate.ts --packed',
+      (dir: string) => [repoPath('tools/release/candidate/candidate.ts'), dir, '--packed'],
+    ],
+    [
+      'publish.ts',
+      (dir: string) => [repoPath('tools/release/registry/publish.ts'), join(dir, 'tarballs')],
+    ],
+  ])(
+    '%s',
+    (_label, argv) => {
+      const dir = tamperedDirectory();
+      // No registry to reach, so a regression can fail this test but never publish from it.
+      const env = { ...process.env, npm_config_registry: 'http://127.0.0.1:1/' };
+      const result = spawnSync(process.execPath, argv(dir), { encoding: 'utf8', env });
+      rmSync(dir, { recursive: true, force: true });
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain('pptx-studio-xml-0.1.0.tgz');
+      expect(result.stderr).toMatch(/changed since they were packed|not the ones packed/);
+    },
+    30_000,
+  );
+});
+
+describe('what the release hands from prove to publish', () => {
+  const RECORD = [
+    {
+      name: '@pptx-studio/xml',
+      version: '0.1.0',
+      file: 'pptx-studio-xml-0.1.0.tgz',
+      integrity: 'sha512-XML',
+    },
+    {
+      name: '@pptx-studio/cli',
+      version: '0.2.0',
+      file: 'pptx-studio-cli-0.2.0.tgz',
+      integrity: 'sha512-CLI',
+    },
+  ];
+  const on = (file: string): string => INTEGRITY[`/tmp/tgz/${file}`] ?? 'sha512-UNKNOWN';
+
+  it('reads every recorded tarball back', () => {
+    expect(readPackedRecord(JSON.stringify(RECORD))).toEqual(RECORD);
+  });
+
+  it.each(['../evil.tgz', 'sub/dir.tgz', 'C:\\x.tgz', 'not-a-tarball.js', ''])(
+    'refuses a file name that is not a bare tarball: %j',
+    (file) => {
+      const bad = JSON.stringify([{ ...RECORD[0], file }]);
+      expect(() => readPackedRecord(bad)).toThrow(/not a tarball/);
+    },
+  );
+
+  it('refuses an entry that lacks a field', () => {
+    const { integrity: _, ...partial } = RECORD[0]!;
+    expect(() => readPackedRecord(JSON.stringify([partial]))).toThrow(/lacks/);
+  });
+
+  it('passes tarballs whose bytes are the ones recorded', () => {
+    expect(tamperedTarballs(RECORD, on)).toEqual([]);
+  });
+
+  it('names a tarball whose bytes changed after it was recorded', () => {
+    const swapped = [{ ...RECORD[0]!, integrity: 'sha512-BEFORE' }, RECORD[1]!];
+    expect(tamperedTarballs(swapped, on)).toEqual([
+      'pptx-studio-xml-0.1.0.tgz: sha512-XML, recorded sha512-BEFORE',
+    ]);
   });
 });
 

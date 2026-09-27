@@ -21,6 +21,7 @@ interface Step {
   readonly if?: string;
   readonly run?: string;
   readonly uses?: string;
+  readonly with?: Readonly<Record<string, unknown>>;
   readonly env?: Readonly<Record<string, string>>;
 }
 
@@ -51,9 +52,7 @@ const canary = workflow('canary.yml');
 const jobNames = (w: Workflow): string[] =>
   Object.entries(w.jobs).map(([id, job]) => job.name ?? id);
 
-const gateStep = release.jobs['release']?.steps?.find(
-  (step) => step.env?.['REQUIRED'] !== undefined,
-);
+const gateStep = release.jobs['prove']?.steps?.find((step) => step.env?.['REQUIRED'] !== undefined);
 const required = (gateStep?.env?.['REQUIRED'] ?? '')
   .split('\n')
   .map((line) => line.trim())
@@ -179,7 +178,7 @@ describe('the website', () => {
       types: ['completed'],
     });
     expect(JSON.stringify(release)).not.toContain('website.yml');
-    expect(release.jobs['release']?.permissions?.['actions']).toBe('read');
+    expect(release.jobs['prove']?.permissions?.['actions']).toBe('read');
   });
 
   it('holds the right to deploy where nothing from the registry runs', () => {
@@ -249,14 +248,14 @@ describe('the website', () => {
   });
 });
 
-const releaseSteps = release.jobs['release']?.steps ?? [];
+const releaseSteps = release.jobs['publish']?.steps ?? [];
 const ranBy = (steps: readonly Step[], pattern: RegExp): number =>
   steps.findIndex((step) => pattern.test(step.run ?? ''));
 
 describe('publishing over OIDC', () => {
   it('is proved for this release before anything is published', () => {
     const asked = ranBy(releaseSteps, /publishers[.]ts/);
-    const published = ranBy(releaseSteps, /changeset publish/);
+    const published = ranBy(releaseSteps, /registry[/]publish[.]ts/);
     expect(asked, 'the release never asks npm whether it may publish').toBeGreaterThan(-1);
     expect(published).toBeGreaterThan(asked);
   });
@@ -275,5 +274,54 @@ describe('publishing over OIDC', () => {
     for (const [id, job] of Object.entries(canary.jobs)) {
       expect(job.permissions?.['id-token'], id).toBeUndefined();
     }
+  });
+});
+
+describe('the release keeps the right to publish apart from the registry', () => {
+  const proving = release.jobs['prove'];
+  const publishing = release.jobs['publish'];
+  const provingSteps = proving?.steps ?? [];
+
+  it('gives the job that installs from the registry nothing to publish or push with', () => {
+    // It installs the website's tree unpinned and runs it. ADR 0048's rule, ADR 0059.
+    expect(runsATool(proving), 'the install detector no longer sees the install').toBe(true);
+    expect(proving?.permissions).toEqual({ contents: 'read', actions: 'read' });
+    const checkout = provingSteps.find((step) => /actions\/checkout/.test(step.uses ?? ''));
+    expect(checkout?.with?.['persist-credentials']).toBe(false);
+    expect(release.permissions).toEqual({ contents: 'read' });
+  });
+
+  it('holds the right to publish in a job that installs and runs nothing from the registry', () => {
+    expect(publishing?.permissions).toEqual({ contents: 'write', 'id-token': 'write' });
+    expect(publishing?.needs).toBe('prove');
+    expect(runsATool(publishing)).toBe(false);
+    const runs = JSON.stringify(publishing?.steps ?? []);
+    expect(runs).not.toContain('candidate.ts');
+    expect(runs).not.toContain('pnpm/action-setup');
+    for (const [id, job] of Object.entries(release.jobs)) {
+      if (id !== 'publish') expect(job.permissions?.['id-token'], id).toBeUndefined();
+    }
+  });
+
+  it('records and uploads the tarballs before the consumer installs anything', () => {
+    const packed = provingSteps.findIndex((step) => /--pack-only/.test(step.run ?? ''));
+    const uploaded = provingSteps.findIndex((step) =>
+      /actions\/upload-artifact/.test(step.uses ?? ''),
+    );
+    const consumed = provingSteps.findIndex((step) => /--packed\b/.test(step.run ?? ''));
+    expect(packed).toBeGreaterThan(-1);
+    expect(uploaded).toBeGreaterThan(packed);
+    expect(consumed).toBeGreaterThan(uploaded);
+    expect(provingSteps[packed]?.run).toMatch(/digest=/);
+    expect(provingSteps[packed]?.run).toMatch(/commit=/);
+  });
+
+  it('publishes only what it has held to the digests prove recorded', () => {
+    const held = ranBy(releaseSteps, /sha256sum --check/);
+    const asked = ranBy(releaseSteps, /publishers[.]ts/);
+    expect(held).toBeGreaterThan(-1);
+    expect(asked).toBeGreaterThan(held);
+    expect(releaseSteps[held]?.env?.['DIGEST']).toBe('${{ needs.prove.outputs.digest }}');
+    expect(releaseSteps[held]?.env?.['COMMIT']).toBe('${{ needs.prove.outputs.commit }}');
   });
 });
