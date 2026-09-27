@@ -1,6 +1,9 @@
 # Releases are dispatched by hand, never by a push. Every package with a
 # pending changeset goes out at once and the version commit lands on main
 # directly, so there is no release pull request to open or approve.
+#
+# `prove` installs from the registry and holds nothing to publish with; `publish` holds the
+# right to publish, installs nothing, and publishes only the tarballs `prove` recorded. ADR 0059.
 name: Release
 
 on:
@@ -19,14 +22,16 @@ permissions:
   contents: read
 
 jobs:
-  release:
-    name: release
+  prove:
+    name: prove
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: write # the version commit and its tags land on main directly
+      contents: read
       actions: read # to read whether CI passed on this commit
-      id-token: write # required for npm trusted publishing (OIDC)
+    outputs:
+      commit: ${{ steps.packed.outputs.commit }}
+      digest: ${{ steps.packed.outputs.digest }}
     steps:
       - name: Confirm
         if: inputs.confirm != 'publish' || github.ref_name != 'main'
@@ -37,6 +42,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       # Publishing cannot be undone, so a red commit must not reach the registry.
       #
@@ -95,7 +101,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-          registry-url: https://registry.npmjs.org
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
@@ -106,21 +111,13 @@ jobs:
 
       # A trusted publisher is a setting on an npm package and cannot be
       # attached to a name npm does not have yet, so a package's first publish
-      # cannot go out over OIDC. `changeset publish` goes one at a time, so
+      # cannot go out over OIDC. Publishing goes one package at a time, so
       # finding that out halfway leaves a half-published release. Ask first.
       - name: Refuse to create a package npm does not have yet
         run: node tools/release/registry/newcomers.ts
 
       - name: Version
         run: pnpm version-packages
-
-      # Only now are the versions the ones that will be published, and only now
-      # does `workspace:^` pack as the range a consumer will actually resolve.
-      # The last thing between the code and a registry that cannot be undone.
-      - name: Consume the exact tarballs that are about to be published
-        run: |
-          pnpm build
-          node tools/release/candidate/candidate.ts "$RUNNER_TEMP/candidate"
 
       - name: Commit
         run: |
@@ -129,19 +126,95 @@ jobs:
           git add -A
           git commit -m 'chore: release'
 
+      # Only now are the versions the ones that will be published, and only now
+      # does `workspace:^` pack as the range a consumer will actually resolve.
+      # Recorded and uploaded before the consumer installs anything, so nothing
+      # the registry serves it can reach what `publish` is handed.
+      - name: Pack the tarballs this release publishes
+        id: packed
+        run: |
+          pnpm build
+          node tools/release/candidate/candidate.ts "$RUNNER_TEMP/release" --pack-only
+          git bundle create "$RUNNER_TEMP/release/version.bundle" origin/main..HEAD
+          {
+            echo "commit=$(git rev-parse HEAD)"
+            echo "digest=$(sha256sum "$RUNNER_TEMP/release/tarballs/packed.json" | cut -d' ' -f1)"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release
+          path: |
+            ${{ runner.temp }}/release/tarballs/
+            ${{ runner.temp }}/release/version.bundle
+          if-no-files-found: error
+
+      # The last thing between the code and a registry that cannot be undone.
+      - name: Consume the exact tarballs that are about to be published
+        run: node tools/release/candidate/candidate.ts "$RUNNER_TEMP/release" --packed
+
+  publish:
+    name: publish
+    needs: prove
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write # the version commit and its tags land on main directly
+      id-token: write # required for npm trusted publishing (OIDC)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Refuse a main that moved while the release was proved
+        env:
+          PROVED: ${{ github.sha }}
+        run: |
+          if [ "$(git rev-parse HEAD)" != "$PROVED" ]; then
+            echo "::error::main is $(git rev-parse HEAD), the release was proved on $PROVED"
+            exit 1
+          fi
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release
+          path: ${{ runner.temp }}/release
+
+      - name: Hold the artifact to what prove recorded before any consumer code ran
+        env:
+          COMMIT: ${{ needs.prove.outputs.commit }}
+          DIGEST: ${{ needs.prove.outputs.digest }}
+        run: |
+          echo "$DIGEST  $RUNNER_TEMP/release/tarballs/packed.json" | sha256sum --check --strict
+          git bundle verify "$RUNNER_TEMP/release/version.bundle"
+          git fetch "$RUNNER_TEMP/release/version.bundle" HEAD
+          if [ "$(git rev-parse FETCH_HEAD)" != "$COMMIT" ]; then
+            echo "::error::the bundle holds $(git rev-parse FETCH_HEAD), prove committed $COMMIT"
+            exit 1
+          fi
+          git merge --ff-only "$COMMIT"
+
       # npm trades an ID token for a publish token one package at a time, so a
       # package whose trusted publisher is missing fails partway through and
       # leaves the release half shipped. Ask for all of them first. ADR 0048.
       - name: Prove every package this release publishes can publish over OIDC
         run: node tools/release/registry/publishers.ts
 
-      # npm rather than `pnpm publish` (pnpm/pnpm#11513), and NODE_AUTH_TOKEN
-      # stays unset: with a token the CLI takes the legacy path and skips both
-      # OIDC and the provenance attestation with it. ADR 0001.
-      - name: Publish
-        run: npm exec -- changeset publish
+      # NODE_AUTH_TOKEN stays unset: with a token the CLI takes the legacy path
+      # and skips both OIDC and the provenance attestation with it. ADR 0001.
+      - name: Publish the tarballs prove packed
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          node tools/release/registry/publish.ts "$RUNNER_TEMP/release/tarballs"
 
-      # After the registry, so a failed publish leaves the changesets in the
-      # tree and the next run is a clean retry.
+      # After the registry, so a failed publish leaves main untouched and the
+      # next run is a clean retry.
       - name: Push the version commit and its tags
         run: git push --follow-tags origin HEAD:main
