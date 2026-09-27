@@ -112,3 +112,26 @@ that, and nothing short of a separately built, reproducible artifact would.
 
 1. `npm publish <tarball> --provenance` over trusted publishing has not been exercised in this
    repository until that first run.
+
+## What the first two releases said
+
+- **Run 36335794009, on `9eb8555`.** Both jobs green.
+  - `publishers.ts`: 12 of 12 may publish over OIDC, 4 pending.
+  - `publish.ts` published opc 0.1.2, text 0.2.1, render-svg 0.6.2 and cli 0.4.0, each with a signed
+    provenance statement in the Sigstore log; it skipped the 8 already on npm.
+  - The version commit `a5e54ec` and its four tags reached `main`.
+- **Run 36336736598, on `f5fd529`.** 12 published, 0 skipped: [0060](0060-the-toolchain-moves-and-typescript-waits.md)'s
+  declaration shape, packed once and published from those bytes.
+- **Open question 1 is answered:** `npm publish <tarball> --provenance` over trusted publishing
+  attests. `attestations.ts` afterwards: 49 versions with provenance, 12 deprecated, 0 neither.
+- **npm now finishes a publish asynchronously.** It answers "Your package is being processed and may
+  take a few minutes to become available". Ten of the second release's twelve were served within a
+  minute or two. opc 0.1.3 was accepted at 17:26:18Z and served at 17:31:26Z; xml 0.1.2 at 17:26:32Z
+  and 17:31:41Z.
+
+  Two canaries dispatched inside that window failed with `ETARGET` for `@pptx-studio/opc@^0.1.3`
+  (issue #63). The one after it was green and closed #63. `website.yml`'s post-release run waits up
+  to 15 minutes per version and was green.
+
+  The canary does not wait. It is a daily monitor, and a version npm is not serving yet is a true
+  answer about the registry, not a defect.

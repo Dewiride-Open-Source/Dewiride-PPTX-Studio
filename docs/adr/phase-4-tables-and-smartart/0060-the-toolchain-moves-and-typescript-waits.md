@@ -177,3 +177,11 @@ open-PR limit is 5. Three stale PRs had kept next's security release from being 
 1. Vite stays at 8.2.2 until a vitest release is clean on 8.3.
 2. Playwright 1.63 moves Chromium 151 to 153 and every pixel baseline with it. That is the next
    change, on its own.
+
+## What Dependabot proposed next
+
+Within minutes of this landing, Dependabot opened #62: vite 8.2.2 → 8.3.1 in the `test` group. Its
+lockfile installed, and every job was green. dependabot-core#16317 is live, so a catalog bump from
+Dependabot can merge as written. #62 was closed on open question 1: the vitest warning is not a CI
+failure, which is why it has to be written down. A closed version-update PR is not reopened for the
+same version, so the next vite or vitest release is proposed and measured again.
