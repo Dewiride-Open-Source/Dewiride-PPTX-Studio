@@ -477,7 +477,9 @@ function ruleStretches(
     if (start !== null) out.push([start, text.length]);
     return out;
   }
-  const end = text.replace(TRAILING_SPACES, '').length;
+  // U+0020 only, scanned from the end so a long run of spaces costs one pass. ADR 0058.
+  let end = text.length;
+  while (end > 0 && text.charCodeAt(end - 1) === 0x20) end -= 1;
   return end === 0 ? [] : [[0, end]];
 }
 
@@ -508,9 +510,6 @@ function placeRules(
   }
   return out;
 }
-
-/** The spaces a run ends with, which no rule is drawn under. */
-const TRAILING_SPACES = / +$/;
 
 /**
  * Where a line starts inside its column, in points.

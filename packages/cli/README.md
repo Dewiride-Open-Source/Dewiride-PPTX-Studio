@@ -153,16 +153,16 @@ between the two packages, applied level by level down the tree.
     +  (nothing)
 ```
 
-| flag              | what it does                                       |
-| ----------------- | -------------------------------------------------- |
-| `--oracle <name>` | `validate` (default), `powerpoint`, or `command`   |
-| `--command <cmd>` | for `--oracle command`; `{}` becomes the candidate |
-| `--max-runs <n>`  | ceiling on oracle runs (default 2000)              |
-| `--timeout <ms>`  | per run, for the oracles that spawn something      |
-| `--progress`      | a line per oracle run; a bisection is not quick    |
-| `--write <file>`  | save the smallest package that still fails         |
-| `--json`          | the result as JSON                                 |
-| `--out <file>`    | write the report to a file instead of stdout       |
+| flag              | what it does                                                             |
+| ----------------- | ------------------------------------------------------------------------ |
+| `--oracle <name>` | `validate` (default), `powerpoint`, or `command`                         |
+| `--command <cmd>` | for `--oracle command`; `{}` becomes the candidate, quoted for the shell |
+| `--max-runs <n>`  | ceiling on oracle runs (default 2000)                                    |
+| `--timeout <ms>`  | per run, for the oracles that spawn something                            |
+| `--progress`      | a line per oracle run; a bisection is not quick                          |
+| `--write <file>`  | save the smallest package that still fails                               |
+| `--json`          | the result as JSON                                                       |
+| `--out <file>`    | write the report to a file instead of stdout                             |
 
 **`--oracle powerpoint` opens each candidate with `OpenAndRepair` switched off,
 and that is not a detail.** `Presentations.Open` has no repair parameter and

@@ -96,7 +96,7 @@ function usage(): string {
     '  are the original and the broken package, in that order.',
     '',
     '  --oracle <name>  validate (default), powerpoint, or command',
-    '  --command <cmd>  for --oracle command; {} becomes the candidate path',
+    '  --command <cmd>  for --oracle command; {} becomes the candidate path, quoted',
     '  --max-runs <n>   ceiling on oracle runs (default 2000)',
     '  --timeout <ms>   per run, for the oracles that spawn something',
     '  --progress       a line per oracle run; a bisection is not quick',

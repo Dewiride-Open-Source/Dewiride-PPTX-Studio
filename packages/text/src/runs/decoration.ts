@@ -210,6 +210,8 @@ export function decoratedStretches(
     if (start !== null) out.push([start, text.length]);
     return out;
   }
-  const end = text.replace(/ +$/, '').length;
+  // U+0020 only: a tab or a no-break space is a glyph the rule is drawn under. ADR 0058.
+  let end = text.length;
+  while (end > 0 && text.charCodeAt(end - 1) === 0x20) end -= 1;
   return end === 0 ? [] : [[0, end]];
 }

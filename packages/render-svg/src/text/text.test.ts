@@ -521,6 +521,41 @@ describe('layoutText', () => {
     expect(rules[1]?.leftPt).toBeCloseTo(3 * 32, 10);
   });
 
+  it('stops a strikethrough at the last glyph too, with no underline asked for', () => {
+    const block = laid(body([paragraph([run('ab  ', { strike: 'sngStrike' })])]));
+    const rules = block.lines[0]?.pieces[0]?.rules ?? [];
+    expect(rules.map((rule) => rule.widthPt)).toEqual([2 * 32]);
+  });
+
+  it.each([
+    ['a no-break space', 'ab '],
+    ['a tab', 'ab\t'],
+    ['an ideographic space', 'ab　'],
+  ])('keeps the rule under %s, which is a glyph', (_label, text) => {
+    const rule = laid(body([paragraph([run(text, { underline: 'sng' })])])).lines[0]?.pieces[0]
+      ?.rules[0];
+    expect(rule?.widthPt).toBeCloseTo(3 * 32, 10);
+  });
+
+  it('rules a long run of spaces before a glyph on one unwrapped line in linear time', () => {
+    // At 5 pt a character the whole run fits one line, so the rule's piece
+    // holds spaces with a glyph after them: the shape that is quadratic for / +$/.
+    const spaces = 1 << 17;
+    const text = 'a' + ' '.repeat(spaces) + 'b';
+    const small = { family: 'Arial', sz: 500 };
+    const started = performance.now();
+    const block = laid(
+      body([paragraph([run(text, { font: small, underline: 'sng', strike: 'sngStrike' })])], {
+        wrap: 'none',
+      }),
+    );
+    expect(performance.now() - started).toBeLessThan(2000);
+    expect(block.lines.length).toBe(1);
+    const piece = block.lines[0]?.pieces[0];
+    expect(piece?.text).toBe(text);
+    expect(piece?.rules.map((rule) => rule.widthPt)).toEqual([(spaces + 2) * 5, (spaces + 2) * 5]);
+  });
+
   it('draws every ST_TextVerticalType there is', () => {
     for (const vert of [
       'horz',

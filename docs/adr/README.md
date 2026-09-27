@@ -89,7 +89,8 @@ date.
 
 ## Phase 4 — tables and smartart
 
-| #                                                                   | decision                |
-| ------------------------------------------------------------------- | ----------------------- |
-| [0056](phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md) | The spans are the merge |
-| [0057](phase-4-tables-and-smartart/0057-transitive-ranges-float.md) | Transitive ranges float |
+| #                                                                    | decision                 |
+| -------------------------------------------------------------------- | ------------------------ |
+| [0056](phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md)  | The spans are the merge  |
+| [0057](phase-4-tables-and-smartart/0057-transitive-ranges-float.md)  | Transitive ranges float  |
+| [0058](phase-4-tables-and-smartart/0058-what-code-scanning-found.md) | What code scanning found |
