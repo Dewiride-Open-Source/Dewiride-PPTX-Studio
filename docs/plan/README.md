@@ -249,3 +249,9 @@ Open across sub-phases, and not owned by any of them.
 Four text sub-phases each identified rules that belong in the repair firewall and none were added: `p:kinsoku/@lang`, three `bodyPr` rules, `@panose` shape, and `@u`/`@strike` simple types. 4.1 added the two table rules; these are still owed.
 
 Raised in: ADR 0029, ADR 0032, ADR 0033, ADR 0034.
+
+### vite is held at 8.2.2
+
+With vite 8.3.1, vitest 5.0.2's own `vitest:mocks:interceptor` plugin warns that its `configureServer` hook will be ignored. The catalog holds vite at 8.2.2 until a vitest release is clean on 8.3; Dependabot proposes each newer vite, and #62 was declined on this ground.
+
+Raised in: ADR 0060.

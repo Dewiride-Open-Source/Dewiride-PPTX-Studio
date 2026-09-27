@@ -3,7 +3,7 @@
   "experiment": "T13",
   "subPhase": "3.10",
   "adr": "docs/adr/phase-3-text/0042-rendering-without-a-browser.md",
-  "chromium": "151.0.7922.34",
+  "chromium": "153.0.8010.12",
   "probes": [
     {
       "id": "plain",
