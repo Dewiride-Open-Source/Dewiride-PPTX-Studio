@@ -146,6 +146,9 @@ named `a b & $HOME %PATH% ;x-`.
     - a pnpm script spawned directly;
     - Windows treated as POSIX.
 - One inert control, an unused extra variable in the bisect spawn, survived as it must.
+- CI's Linux runner failed five of the injected-Windows cases that passed here. The resolver took
+  paths apart with the host's `node:path`, and on Linux `dirname` of a drive path is `.` and
+  `basename` does not split on `\`. It now uses `path.win32`, which is what the branch means on any host.
 
 ## Open questions
 
