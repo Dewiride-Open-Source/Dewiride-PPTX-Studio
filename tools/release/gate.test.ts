@@ -200,6 +200,14 @@ describe('the website', () => {
     expect(JSON.stringify(website)).not.toContain('NODE_AUTH_TOKEN');
   });
 
+  it("runs the website's own tests against what npm serves", () => {
+    const steps = website.jobs['build']?.steps ?? [];
+    const installed = steps.findIndex((step) => /npm install/.test(step.run ?? ''));
+    const tested = steps.findIndex((step) => /^npm test$/m.test(step.run ?? ''));
+    expect(tested).toBeGreaterThan(installed);
+    expect(installed).toBeGreaterThanOrEqual(0);
+  });
+
   // The retry loop must read npm's exit code, not that of whatever it is
   // piped through; a fake npm says which one the step is reading.
   describe('the install step', () => {

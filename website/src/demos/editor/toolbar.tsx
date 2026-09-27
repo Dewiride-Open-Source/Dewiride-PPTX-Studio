@@ -1,6 +1,6 @@
 'use client';
 
-import { Baseline, PaintBucket, Pencil, Trash2 } from 'lucide-react';
+import { Baseline, PaintBucket, Pencil, Trash } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import type { Frame, Placed } from '@pptx-studio/render-svg';
@@ -225,7 +225,7 @@ export function Toolbar({
         onClick={onDelete}
         className="inline-flex h-7 items-center rounded-control px-2 text-[12px] text-fg hover:bg-bad/10 hover:text-bad"
       >
-        <Trash2 size={15} aria-hidden />
+        <Trash size={15} aria-hidden />
       </button>
     </div>
   );
