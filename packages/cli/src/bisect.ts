@@ -54,15 +54,15 @@ import {
  * repairs silently by default and reports success.
  *
  * `--oracle command --command "..."` runs anything else. `{}` in the command is
- * replaced with the path to the candidate package; a non-zero exit means the
- * candidate fails.
+ * replaced with the path to the candidate package, already quoted for the shell,
+ * and the same path is in `PPTX_STUDIO_CANDIDATE`; exit 1 means it fails.
  */
 
 export type OracleName = 'validate' | 'powerpoint' | 'command';
 
 export interface BisectOptions {
   readonly oracle: OracleName;
-  /** The shell command for `--oracle command`. `{}` becomes the candidate path. */
+  /** The shell command for `--oracle command`. `{}` becomes the candidate path, quoted. */
   readonly command: string | null;
   readonly maxRuns: number;
   /** Per-run ceiling in milliseconds, for the oracles that spawn something. */
@@ -159,11 +159,23 @@ export function powerPointOracle(options: SpawnOracleOptions): Oracle {
   }, options);
 }
 
+/** Where the command oracle finds the candidate, so the path never becomes shell syntax. */
+export const CANDIDATE_VARIABLE = 'PPTX_STUDIO_CANDIDATE';
+
+/** A quoted reference to the candidate: cmd.exe expands it once, sh never word-splits it. */
+function candidateReference(platform: NodeJS.Platform): string {
+  return platform === 'win32' ? `"%${CANDIDATE_VARIABLE}%"` : `"$${CANDIDATE_VARIABLE}"`;
+}
+
 export function commandOracle(command: string, options: SpawnOracleOptions): Oracle {
+  const reference = candidateReference(process.platform);
+  const filled = command.includes('{}')
+    ? command.replaceAll('{}', reference)
+    : command + ' ' + reference;
   return spawningOracle((path) => {
-    const filled = command.includes('{}') ? command.replaceAll('{}', path) : command + ' ' + path;
     const result = spawnSync(filled, {
       shell: true,
+      env: { ...process.env, [CANDIDATE_VARIABLE]: path },
       timeout: options.timeout,
       encoding: 'utf8',
       windowsHide: true,

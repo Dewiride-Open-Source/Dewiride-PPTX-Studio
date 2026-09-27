@@ -236,6 +236,44 @@ describe('decoratedStretches', () => {
     expect(decoratedStretches('   ', 'sng')).toEqual([]);
   });
 
+  it('drops only U+0020, on every string of up to seven characters', () => {
+    const alphabet = [' ', 'a', ' ', '\t', '\n'];
+    let strings = [''];
+    for (let length = 0; length <= 7; length += 1) {
+      for (const text of strings) {
+        const end = text.replace(/ +$/, '').length;
+        expect(decoratedStretches(text, 'sng'), JSON.stringify(text)).toEqual(
+          end === 0 ? [] : [[0, end]],
+        );
+      }
+      strings = strings.flatMap((text) => alphabet.map((c) => text + c));
+    }
+  });
+
+  it.each([
+    ['a no-break space', 'Alpha '],
+    ['a tab', 'Alpha\t'],
+    ['an ideographic space', 'Alpha　'],
+    ['a line feed', 'Alpha\n'],
+  ])('keeps the rule under %s, which is a glyph PowerPoint draws', (_label, text) => {
+    expect(decoratedStretches(text, 'sng')).toEqual([[0, 6]]);
+  });
+
+  it('counts in UTF-16 code units, as the measurer does', () => {
+    expect(decoratedStretches('\u{1D49C} ', 'sng')).toEqual([[0, 2]]);
+  });
+
+  it.each([
+    ['a long space run before a glyph', 'a' + ' '.repeat(1 << 17) + 'b', [[0, (1 << 17) + 2]]],
+    ['a long space run at the end', 'x' + ' '.repeat(1 << 20), [[0, 1]]],
+    ['nothing but spaces', ' '.repeat(1 << 20), []],
+  ])('answers %s in linear time', (_label, text, expected) => {
+    const started = performance.now();
+    const stretches = decoratedStretches(text, 'sng');
+    expect(performance.now() - started).toBeLessThan(250);
+    expect(stretches).toEqual(expected);
+  });
+
   it('matches the width PowerPoint drew under a trailing space', () => {
     // The rule reached the last glyph and no further: the bare probe is the
     // same string with the spaces taken out of the file, and the two agree.

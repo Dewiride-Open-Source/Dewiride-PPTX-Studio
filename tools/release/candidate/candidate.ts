@@ -2,7 +2,7 @@
  * Prove the tarballs this commit would publish, before publishing them.
  *
  * ```
- * node tools/release/candidate/candidate.ts <work-dir>
+ * pnpm candidate <work-dir>
  * ```
  *
  * Packs every publishable package, installs the tarballs into a scratch project
@@ -12,7 +12,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import { repoPath } from '../../repo/root.ts';
@@ -24,6 +24,7 @@ import {
   type Lockfile,
   type Packed,
 } from './consumer.ts';
+import { toolCommand, type Tool } from './spawn.ts';
 
 const SCOPE = '@pptx-studio/';
 
@@ -38,22 +39,14 @@ const work = process.argv[2];
 if (work === undefined) throw new Error('usage: candidate.ts <work-dir>');
 const workDir = resolve(work);
 
-/** npm, npx and pnpm are .cmd shims on Windows, which only cmd.exe can start. */
-function command(name: string, args: readonly string[]): [string, string[]] {
-  if (process.platform !== 'win32') return [name, [...args]];
-  const quoted = [name, ...args].map((arg) =>
-    /[\s"]/.test(arg) ? `"${arg.replaceAll('"', String.raw`\"`)}"` : arg,
-  );
-  return ['cmd.exe', ['/d', '/s', '/c', `"${quoted.join(' ')}"`]];
-}
-
-function run(name: string, args: readonly string[], cwd: string): string {
-  const [file, argv] = command(name, args);
-  const result = spawnSync(file, argv, {
+function run(name: Tool, args: readonly string[], cwd: string): string {
+  const host = { platform: process.platform, execPath: process.execPath, env: process.env };
+  const command = toolCommand(name, args, { ...host, exists: existsSync });
+  const result = spawnSync(command.file, command.args, {
     cwd,
+    env: command.env,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'inherit'],
-    windowsVerbatimArguments: true,
     maxBuffer: 64 * 1024 * 1024,
   });
   if (result.error !== undefined) throw result.error;

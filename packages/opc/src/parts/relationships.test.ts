@@ -281,3 +281,82 @@ describe('writing a relationship part back', () => {
     expect(decoder.decode(rels.serialize())).toContain('&amp;');
   });
 });
+
+describe('naming, against hostile input', () => {
+  /** The grammar `sourcePartNameForRels` implements, as a pattern: correct, and quadratic. */
+  const GRAMMAR = /^(\/(?:[^]*\/)?)_rels\/([^]*)\.rels$/;
+
+  function byGrammar(name: string): string {
+    const m = GRAMMAR.exec(name);
+    if (m === null) return 'ERR_INVALID_PART_NAME';
+    const [, dir, base] = m;
+    return base === '' ? '/' : dir! + base!;
+  }
+
+  function actual(name: string): string {
+    try {
+      return sourcePartNameForRels(name);
+    } catch (error) {
+      return isOpcError(error) ? error.code : 'NOT_AN_OPC_ERROR';
+    }
+  }
+
+  it('agrees with the grammar on every name of up to five pieces', () => {
+    const pieces = ['/', '_rels/', '.rels', '_rels', 'a', '.', ' '];
+    let names = [''];
+    let checked = 0;
+    for (let length = 0; length <= 5; length += 1) {
+      for (const name of names) {
+        expect(actual(name), JSON.stringify(name)).toBe(byGrammar(name));
+        checked += 1;
+      }
+      names = names.flatMap((name) => pieces.map((piece) => name + piece));
+    }
+    expect(checked).toBe(19_608);
+  });
+
+  it.each([
+    ['/_rels/.rels', '/'],
+    ['/ppt/_rels/presentation.xml.rels', '/ppt/presentation.xml'],
+    ['/a/_rels/b/_rels/c.rels', '/a/_rels/b/c'],
+    ['/_rels/_rels/x.rels', '/_rels/x'],
+    ['/_rels/a/b.rels', '/a/b'],
+    ['/_rels/.rels.rels', '/.rels'],
+    ['//_rels/x.rels', '//x'],
+    ['/_rels//.rels', '//'],
+  ])('maps %s to %s, the last _rels/ being the one that names it', (name, part) => {
+    expect(sourcePartNameForRels(name)).toBe(part);
+  });
+
+  it.each([
+    '',
+    '/',
+    '_rels/.rels',
+    'x/_rels/a.rels',
+    '/x_rels/a.rels',
+    '/_rels/a.rel',
+    '/_rels.rels',
+    '/_rels/a.RELS',
+    '/_rels/',
+    '/_rels/a.rels\n',
+  ])('refuses %j, which is not a relationship part name', (name) => {
+    expect(codeOf(() => sourcePartNameForRels(name))).toBe('ERR_INVALID_PART_NAME');
+  });
+
+  it('maps a name with a line or paragraph separator, as isRelationshipPartName accepts it', () => {
+    // M1.6 only warns on these, so a deck can carry one and every caller has
+    // already said yes to it. ADR 0058.
+    expect(sourcePartNameForRels('/ppt/ /_rels/x.rels')).toBe('/ppt/ /x');
+    expect(sourcePartNameForRels('/_rels/a .rels')).toBe('/a ');
+  });
+
+  it.each([
+    ["CodeQL's witness", '/_rels/' + '/_rels/a'.repeat(1 << 15)],
+    ['a long refusal', '/' + '_rels/'.repeat(1 << 15) + '\n.rel'],
+    ['a long name', '/' + '_rels/'.repeat(1 << 15) + 'x.rels'],
+  ])('answers %s in linear time', (_label, name) => {
+    const started = performance.now();
+    actual(name);
+    expect(performance.now() - started).toBeLessThan(250);
+  });
+});

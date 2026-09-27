@@ -11,7 +11,13 @@ import {
 import type { BisectResult } from '@pptx-studio/writer';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../../../tools/repo/root.ts';
-import { formatBisect, oracleScriptPath, type BisectStats } from './bisect.js';
+import {
+  CANDIDATE_VARIABLE,
+  commandOracle,
+  formatBisect,
+  oracleScriptPath,
+  type BisectStats,
+} from './bisect.js';
 import { main, type Streams } from './main.js';
 
 /**
@@ -226,6 +232,25 @@ describe('choosing an oracle', () => {
     expect(main(['bisect', original, broken, '--oracle', 'vibes'], s.streams)).toBe(2);
     expect(s.err()).toContain('--oracle wants validate, powerpoint or command');
   });
+
+  it('hands the command a path the shell cannot split or expand', () => {
+    // The oracle writes the candidate under a directory it is given; one whose
+    // name is shell syntax must still arrive as one argument. ADR 0058.
+    // Exit 0 only for exactly one argument naming the candidate: a split or an
+    // expansion fails some other way, and a shell error must not pass for it.
+    const awkward = mkdtempSync(join(directory, 'a b & $HOME %PATH% ;x-'));
+    const intact =
+      'node -e "process.exit(process.argv.length === 2 && ' +
+      "require('fs').readFileSync(process.argv[1], 'utf8') === 'not a package' ? 0 : 1)\"";
+    const oracle = commandOracle(`${intact} {}`, { timeout: 30_000, directory: awkward });
+    expect(oracle(enc('not a package'), 'awkward directory')).toBe('passes');
+  }, 60_000);
+
+  it('names the candidate in PPTX_STUDIO_CANDIDATE too', () => {
+    const named = `node -e "process.exit(process.env.${CANDIDATE_VARIABLE}.endsWith('candidate.pptx') ? 1 : 0)"`;
+    const oracle = commandOracle(named, { timeout: 30_000, directory });
+    expect(oracle(enc('x'), 'named')).toBe('fails');
+  }, 60_000);
 
   it('refuses --oracle command with nothing to run', () => {
     const s = streams();

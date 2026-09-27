@@ -5,7 +5,9 @@ import { PartStore } from './part-store.js';
 import {
   buildPackage,
   contentTypesXml,
+  MINIMAL_CONTENT_TYPES,
   MINIMAL_PRESENTATION,
+  MINIMAL_ROOT_RELS,
   relsXml,
   relXml,
 } from '../testing/build-package.js';
@@ -370,6 +372,28 @@ describe('what write refuses to emit', () => {
     expect(reported.map((d) => d.relationship.id).sort()).toEqual(['rId1', 'rId2']);
     expect(reported[0]!.source).toBe('/ppt/_rels/presentation.xml.rels');
     expect(reported.every((d) => d.relationship.origin === 'archive')).toBe(true);
+  });
+
+  it('reports dangling relationships under a name holding a line separator, and never throws', () => {
+    // M1.6 only warns on U+2028, so the part opens and isRelationshipPartName
+    // says yes to its .rels; mapping that back must not throw. ADR 0058.
+    const dir = 'ppt/ ';
+    const store = PartStore.open(
+      buildZip([
+        { name: '[Content_Types].xml', data: encoder.encode(MINIMAL_CONTENT_TYPES) },
+        { name: '_rels/.rels', data: encoder.encode(MINIMAL_ROOT_RELS) },
+        { name: 'ppt/presentation.xml', data: encoder.encode(MINIMAL_PRESENTATION) },
+        { name: `${dir}/x.xml`, data: encoder.encode('<x/>') },
+        {
+          name: `${dir}/_rels/x.xml.rels`,
+          data: encoder.encode(relsXml(relXml('rId1', REL_TYPE.image, 'gone.png'))),
+        },
+      ]),
+    );
+    const reported = store.danglingRelationships();
+    expect(reported.map((d) => [d.source, d.target])).toEqual([
+      [`/${dir}/_rels/x.xml.rels`, `/${dir}/gone.png`],
+    ]);
   });
 
   it('still refuses a relationship we added ourselves that points at nothing', () => {

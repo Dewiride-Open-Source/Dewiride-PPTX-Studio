@@ -95,23 +95,28 @@ export function isValidRelationshipId(id: string): boolean {
 
 const R_ID = /^rId(\d+)$/;
 
+const RELS_DIR = '/_rels/';
+const RELS_EXT = '.rels';
+
 /**
  * The part whose relationships a `.rels` part describes.
  *
  * The inverse of `relsPartNameFor`. `/ppt/slides/_rels/slide1.xml.rels` ->
- * `/ppt/slides/slide1.xml`, and `/_rels/.rels` -> `/`, the package root.
+ * `/ppt/slides/slide1.xml`, and `/_rels/.rels` -> `/`, the package root. Linear in
+ * the name, which a caller may take from a hostile archive. ADR 0058.
  */
 export function sourcePartNameForRels(relsPartName: string): string {
-  const m = /^(\/(?:.*\/)?)_rels\/(.*)\.rels$/.exec(relsPartName);
-  if (m === null) {
+  // `relsPartNameFor` puts `_rels/` in the part's own, deepest directory; `.rels` holds no `/`.
+  const at = relsPartName.lastIndexOf(RELS_DIR);
+  if (at < 0 || !relsPartName.startsWith('/') || !relsPartName.endsWith(RELS_EXT)) {
     throw new OpcError(
       'ERR_INVALID_PART_NAME',
       JSON.stringify(relsPartName) + ' is not a relationship part name',
       { entry: relsPartName },
     );
   }
-  const [, dir, base] = m;
-  return base === '' ? '/' : dir! + base!;
+  const base = relsPartName.slice(at + RELS_DIR.length, -RELS_EXT.length);
+  return base === '' ? '/' : relsPartName.slice(0, at + 1) + base;
 }
 
 /**
