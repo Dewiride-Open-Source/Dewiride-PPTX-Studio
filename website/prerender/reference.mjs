@@ -6,10 +6,10 @@
  * ```
  *
  * For each package, `dist/index.d.ts` is parsed with the TypeScript compiler:
- * every name in its final `export { ... }` becomes one entry, grouped by the
- * `//#region src/<file>.d.ts` it sits in, with its declaration text and the
- * first sentence of its JSDoc. Written to `src/reference/generated/<name>.json`,
- * so the reference can never describe a version other than the one the site runs.
+ * every name it exports, in `export { ... }` or as `export declare ...`, becomes one
+ * entry, grouped by the `//#region src/<file>.d.ts` it sits in, with its declaration
+ * text and the first sentence of its JSDoc. Written to `src/reference/generated/<name>.json`,
+ * and held to the names the package exports at run time. ADR 0060.
  */
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -67,8 +67,16 @@ function kindOf(node) {
 function textOf(node, file) {
   return node
     .getText(file)
-    .replace(/^declare\s+/, '')
-    .replace(/^export\s+/, '');
+    .replace(/^export\s+/, '')
+    .replace(/^declare\s+/, '');
+}
+
+/** True for a declaration written `export declare ...`, which names itself as an export. @param {ts.Node} node */
+function exportsItself(node) {
+  return (
+    ts.canHaveModifiers(node) &&
+    (ts.getModifiers(node) ?? []).some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+  );
 }
 
 /** @param {ts.Node} node */
@@ -172,12 +180,14 @@ function scan(path) {
       for (const element of statement.exportClause.elements) {
         exported.push({
           name: element.name.text,
-          isType: element.isTypeOnly,
+          // `export { type A }` marks the element, `export type { A }` the whole clause.
+          isType: element.isTypeOnly || statement.isTypeOnly,
           local: element.propertyName?.text ?? element.name.text,
         });
       }
       continue;
     }
+    const inline = exportsItself(statement);
     for (const declaredName of namesOf(statement)) {
       const position = statement.getStart(file);
       declared.set(declaredName, {
@@ -188,6 +198,10 @@ function scan(path) {
         region: regionOf(position),
         position,
       });
+      if (inline) {
+        const isType = ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement);
+        exported.push({ name: declaredName, isType, local: declaredName });
+      }
       if (/_ERROR_CODES$/.test(declaredName) || /ErrorCode$/.test(declaredName)) {
         const literals = literalsIn(statement);
         if (literals.length > 0) codes.set(declaredName, literals);
@@ -254,22 +268,59 @@ function extract(name) {
     version: manifest.version,
     description: manifest.description,
     exported: exported.length,
+    // Bundle order, which is the same whichever way the declarations are exported.
     groups: [...groups.entries()]
       .map(([region, symbols]) => ({
-        file: region.replace(/\.d\.ts$/, '.ts'),
-        symbols: symbols
-          .sort((a, b) => a.position - b.position)
-          .map(({ position: _position, ...rest }) => rest),
+        region,
+        symbols: symbols.sort((a, b) => a.position - b.position),
       }))
-      .sort((a, b) => ((a.symbols[0]?.name ?? '') < (b.symbols[0]?.name ?? '') ? 0 : 0)),
+      .sort((a, b) => (a.symbols[0]?.position ?? 0) - (b.symbols[0]?.position ?? 0))
+      .map(({ region, symbols }) => ({
+        file: region.replace(/\.d\.ts$/, '.ts'),
+        symbols: symbols.map(({ position: _position, ...rest }) => rest),
+      })),
     errors: errorClass === null ? null : { className: errorClass, codes: errorCodes },
   };
+}
+
+/**
+ * Refuse a reference whose values are not the ones the package exports at run time, so a
+ * declaration shape this file cannot read fails the build instead of emptying the page.
+ */
+async function holdToRuntime(reference) {
+  const symbols = reference.groups.flatMap((group) => group.symbols);
+  const misread = symbols.filter(
+    (symbol) => !symbol.isType && (symbol.kind === 'interface' || symbol.kind === 'type'),
+  );
+  if (misread.length > 0) {
+    throw new Error(
+      `@pptx-studio/${reference.name}: types read as values: ${misread.map((one) => one.name).join(', ')}`,
+    );
+  }
+  const unstripped = symbols.filter((symbol) => /^(?:export|declare)\s/.test(symbol.signature));
+  if (unstripped.length > 0) {
+    throw new Error(
+      `@pptx-studio/${reference.name}: signatures still carry export or declare: ${unstripped.map((one) => one.name).join(', ')}`,
+    );
+  }
+  const values = symbols.filter((symbol) => !symbol.isType).map((symbol) => symbol.name);
+  const runtime = Object.keys(await import(`@pptx-studio/${reference.name}`));
+  const unread = runtime.filter((one) => !values.includes(one));
+  const phantom = values.filter((one) => !runtime.includes(one));
+  if (unread.length > 0 || phantom.length > 0) {
+    throw new Error(
+      `@pptx-studio/${reference.name}: the reference disagrees with the package at run time` +
+        (unread.length > 0 ? `; exported but not read: ${unread.join(', ')}` : '') +
+        (phantom.length > 0 ? `; read but not exported: ${phantom.join(', ')}` : ''),
+    );
+  }
 }
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 for (const name of PACKAGES) {
   const reference = extract(name);
+  await holdToRuntime(reference);
   writeFileSync(join(OUT, `${name}.json`), `${JSON.stringify(reference, null, 2)}\n`);
   console.log(
     `${name}@${reference.version}: ${String(reference.exported)} export(s) in ${String(reference.groups.length)} file(s)` +

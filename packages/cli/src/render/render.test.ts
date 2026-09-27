@@ -165,7 +165,7 @@ describe('drawing a deck', () => {
   });
 
   it('refuses a slide the deck does not have', () => {
-    expect(() => renderDeck(deck('a01-minimal.pptx'), options({ slide: 99 }))).toThrowError(
+    expect(() => renderDeck(deck('a01-minimal.pptx'), options({ slide: 99 }))).toThrow(
       /the deck has \d+ slide/,
     );
   });

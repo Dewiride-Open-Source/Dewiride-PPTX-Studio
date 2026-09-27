@@ -34,7 +34,6 @@ export default defineConfig({
         // The core packages ship to a browser. Under jsdom, `node:fs` resolves
         // and a Node API leak stays invisible until a user opens a tab; under
         // real Chromium it throws. That is the whole reason for browser mode.
-        extends: true,
         test: {
           name: 'core',
           include: ['packages/*/src/**/*.test.ts'],
@@ -53,7 +52,6 @@ export default defineConfig({
       {
         // The CLI is layer 6: Node, filesystem, streams. It is the only
         // package excluded from the browser project above.
-        extends: true,
         test: {
           name: 'cli',
           environment: 'node',
@@ -70,7 +68,6 @@ export default defineConfig({
         // which is the one thing a package test cannot do - browser mode has no
         // filesystem, so the writer's suite works on synthetic packages and the
         // committed corpus is only reachable from here.
-        extends: true,
         test: {
           name: 'apps',
           include: ['apps/*/src/**/*.test.ts'],
@@ -85,7 +82,6 @@ export default defineConfig({
       {
         // tools/ is Node-side by definition: it reads the filesystem and the
         // workspace manifests.
-        extends: true,
         test: {
           name: 'tools',
           environment: 'node',

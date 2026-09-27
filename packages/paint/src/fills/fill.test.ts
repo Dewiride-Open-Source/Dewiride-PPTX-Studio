@@ -437,7 +437,7 @@ describe('the stop list', () => {
       flip: 'none',
       rotWithShape: true,
     };
-    expect(() => resolveGradientStops(empty)).toThrowError(PaintError);
+    expect(() => resolveGradientStops(empty)).toThrow(PaintError);
     try {
       resolveGradientStops(empty);
     } catch (error) {
@@ -874,7 +874,7 @@ describe('the 54 pattern tiles', () => {
   it('reject a name outside the enumeration, as PowerPoint does', () => {
     expect(() =>
       resolvePattern({ type: 'pattern', prst: 'notAPattern', fg: null, bg: null }),
-    ).toThrowError(PaintError);
+    ).toThrow(PaintError);
   });
 });
 

@@ -9,10 +9,10 @@
     "type": "git",
     "url": "git+https://github.com/Dewiride-Open-Source/Dewiride-PPTX-Studio.git"
   },
-  "packageManager": "pnpm@11.6.0",
+  "packageManager": "pnpm@11.27.1",
   "engines": {
-    "node": ">=24.11.0",
-    "pnpm": ">=11.0.0"
+    "node": "^24.18.1 || >=26.5.1",
+    "pnpm": ">=11.11.0"
   },
   "scripts": {
     "build": "turbo run build",
@@ -49,7 +49,7 @@
     "@types/node": "catalog:",
     "@typescript-eslint/parser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "globals": "catalog:",
@@ -60,6 +60,7 @@
     "turbo": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:",
     "yaml": "catalog:"
   }

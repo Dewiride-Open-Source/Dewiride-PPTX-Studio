@@ -352,7 +352,7 @@ describe('hostile and merely broken input', () => {
       '<a n="' + 'x'.repeat(200_000), // unterminated attribute value
       '<![CDATA[' + 'x'.repeat(200_000), // unterminated CDATA
     ]) {
-      expect(() => parseXmlString(nasty)).toThrowError();
+      expect(() => parseXmlString(nasty)).toThrow();
       try {
         parseXmlString(nasty);
       } catch (error) {

@@ -129,12 +129,12 @@ describe('the reader refuses everything outside the profile', () => {
 
   it('rejects a comment, a DOCTYPE and a CDATA section alike', () => {
     for (const intruder of ['<!-- hello -->', '<!DOCTYPE x>', '<![CDATA[x]]>']) {
-      expect(() => readPresets(SHAPE(intruder))).toThrowError(PresetReadError);
+      expect(() => readPresets(SHAPE(intruder))).toThrow(PresetReadError);
     }
   });
 
   it('rejects an element it has never seen', () => {
-    expect(() => readPresets(SHAPE('<demo><surprise/></demo>'))).toThrowError(
+    expect(() => readPresets(SHAPE('<demo><surprise/></demo>'))).toThrow(
       /<surprise> is outside the profile/,
     );
   });
@@ -144,21 +144,21 @@ describe('the reader refuses everything outside the profile', () => {
       readPresets(
         SHAPE('<demo><cxnLst><cxn ang="0" tilt="3"><pos x="l" y="t"/></cxn></cxnLst></demo>'),
       ),
-    ).toThrowError(/unexpected attribute "tilt"/);
+    ).toThrow(/unexpected attribute "tilt"/);
   });
 
   it('rejects a formula operator that is not one of the seventeen', () => {
     expect(() =>
       readPresets(SHAPE('<demo><gdLst><gd name="a" fmla="frobnicate 1 2"/></gdLst></demo>')),
-    ).toThrowError(/unknown formula operator "frobnicate"/);
+    ).toThrow(/unknown formula operator "frobnicate"/);
   });
 
   it('rejects text content, which no preset definition has', () => {
-    expect(() => readPresets(SHAPE('<demo>text</demo>'))).toThrowError(/has text content/);
+    expect(() => readPresets(SHAPE('<demo>text</demo>'))).toThrow(/has text content/);
   });
 
   it('rejects a second definition of the same shape', () => {
-    expect(() => readPresets(SHAPE('<demo/><demo/>'))).toThrowError(/defined twice/);
+    expect(() => readPresets(SHAPE('<demo/><demo/>'))).toThrow(/defined twice/);
   });
 
   it('rejects a root element that is spelled correctly', () => {
@@ -166,7 +166,7 @@ describe('the reader refuses everything outside the profile', () => {
     // whose root is spelled properly is a different file than the one this was
     // written against.
     const correct = '<?xml version="1.0"?>\n<presetShapeDefinitions/>';
-    expect(() => readPresets(correct)).toThrowError(/the root is <presetShapeDefinitions>/);
+    expect(() => readPresets(correct)).toThrow(/the root is <presetShapeDefinitions>/);
   });
 
   it('reports a wrong operand count without refusing the file', () => {
@@ -256,6 +256,6 @@ describe('the encoder', () => {
 
   it('refuses a token carrying a separator rather than writing a corrupt bucket', () => {
     const bad: PresetShape = { ...shape, cxnLst: [{ ang: 'a,b', pos: { x: 'l', y: 't' } }] };
-    expect(() => encodeShape(bad)).toThrowError(/reserves/);
+    expect(() => encodeShape(bad)).toThrow(/reserves/);
   });
 });

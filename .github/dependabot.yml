@@ -17,13 +17,20 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(deps)'
+    ignore:
+      # TypeScript 7 waits for a typescript-eslint that admits it: ADR 0001's trigger, ADR 0060.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
     groups:
       # One PR per toolchain, so a lint bump and a test bump are not two
       # separate rounds of the same CI run.
       lint:
         patterns: ['eslint*', '@eslint/*', 'typescript-eslint', '@typescript-eslint/*', 'prettier*']
       test:
-        patterns: ['vitest', '@vitest/*', 'playwright', '@playwright/*']
+        patterns: ['vitest', '@vitest/*', 'vite']
+      # A Playwright bump moves Chromium and every pixel baseline with it, so it goes alone.
+      browser:
+        patterns: ['playwright', '@playwright/*']
       build:
         patterns: ['tsdown', 'turbo', 'typescript', 'publint', '@arethetypeswrong/*']
 
@@ -34,15 +41,31 @@ updates:
     directory: '/website'
     schedule:
       interval: weekly
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(website)'
     ignore:
       - dependency-name: '@pptx-studio/*'
+      # TypeScript 7 waits for a typescript-eslint that admits it: ADR 0001's trigger, ADR 0060.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
     groups:
       framework:
         patterns: ['next', 'react', 'react-dom', '@types/react', '@types/react-dom']
       docs:
-        patterns: ['fumadocs-*', '@types/mdx']
+        patterns: ['fumadocs-*', '@types/mdx', 'lucide-react']
+      tooling:
+        patterns:
+          [
+            'eslint*',
+            '@eslint/*',
+            'typescript-eslint',
+            '@next/eslint-plugin-next',
+            'globals',
+            '@types/node',
+            'typescript',
+          ]
+      browser:
+        patterns: ['playwright']
       styling:
         patterns: ['tailwindcss', '@tailwindcss/*', '@fontsource*']

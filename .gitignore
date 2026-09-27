@@ -6,6 +6,7 @@ coverage/
 
 # tooling
 .eslintcache
+.vitest/
 .vitest-reports/
 .vitest-attachments/
 playwright-report/

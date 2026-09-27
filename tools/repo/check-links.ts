@@ -21,7 +21,7 @@ const PROSE_PATH =
   /(?<![\w./-])((?:packages|tools|apps|corpus|docs)\/[A-Za-z0-9_./-]*\.[A-Za-z0-9]{2,5})(?![\w-])/g;
 
 /** Where a reference may name something generated rather than committed. */
-const GENERATED = [/\/dist\//, /\/node_modules\//, /__screenshots__/, /\.turbo\//];
+const GENERATED = [/\/dist\//, /\/node_modules\//, /__screenshots__/, /\.turbo\//, /\.vitest\//];
 
 /**
  * Files whose paths are not descriptions of the repository as it stands: an ADR

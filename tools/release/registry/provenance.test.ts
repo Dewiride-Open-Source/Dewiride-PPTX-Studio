@@ -59,7 +59,7 @@ describe('a package', () => {
   });
 
   it('refuses a packument with no latest tag rather than guessing one', () => {
-    expect(() => standings('@pptx-studio/xml', { versions: { '0.1.0': BARE } })).toThrowError(
+    expect(() => standings('@pptx-studio/xml', { versions: { '0.1.0': BARE } })).toThrow(
       /no latest tag/,
     );
   });
