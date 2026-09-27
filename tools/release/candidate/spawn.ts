@@ -5,7 +5,7 @@
  * (CVE-2024-27980), so this runs `node.exe` on the script the shim would run. ADR 0058.
  */
 
-import { basename, dirname, join } from 'node:path';
+import { win32 } from 'node:path';
 
 export type Tool = 'npm' | 'pnpm';
 
@@ -44,12 +44,18 @@ function withoutPnpmLifecycle(
 export function toolCommand(tool: Tool, args: readonly string[], host: Host): Command {
   if (host.platform !== 'win32') return { file: tool, args, env: host.env };
   if (tool === 'npm') {
-    const cli = join(dirname(host.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+    const cli = win32.join(
+      win32.dirname(host.execPath),
+      'node_modules',
+      'npm',
+      'bin',
+      'npm-cli.js',
+    );
     if (!host.exists(cli)) throw new Error(`no npm beside ${host.execPath}: expected ${cli}`);
     return { file: host.execPath, args: [cli, ...args], env: withoutPnpmLifecycle(host.env) };
   }
   const entry = host.env['npm_execpath'];
-  if (entry === undefined || !PNPM_ENTRY.test(basename(entry))) {
+  if (entry === undefined || !PNPM_ENTRY.test(win32.basename(entry))) {
     throw new Error(
       'Node will not start the pnpm shim without a shell on Windows; run this as ' +
         '`pnpm candidate <work-dir>` so npm_execpath names pnpm itself',

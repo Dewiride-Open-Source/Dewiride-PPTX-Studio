@@ -5,14 +5,14 @@
  * against an injected host. ADR 0058.
  */
 
-import { join } from 'node:path';
+import { win32 } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 import { toolCommand, type Host } from './spawn.ts';
 
 const NODE = 'C:\\Program Files\\nodejs\\node.exe';
-const NPM_CLI = join('C:\\Program Files\\nodejs', 'node_modules', 'npm', 'bin', 'npm-cli.js');
+const NPM_CLI = win32.join('C:\\Program Files\\nodejs', 'node_modules', 'npm', 'bin', 'npm-cli.js');
 
 function windows(env: Record<string, string | undefined> = {}, present = [NPM_CLI]): Host {
   return { platform: 'win32', execPath: NODE, env, exists: (path) => present.includes(path) };
