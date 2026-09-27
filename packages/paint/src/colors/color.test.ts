@@ -335,7 +335,7 @@ describe('2.6: the six bases', () => {
     const noLast: Color = { space: 'sys', name: 'btnFace', lastClr: null, transforms: [] };
     expect(toHexColor(resolveColor(noLast))).toBe(SYSTEM_COLORS['btnFace']);
     const unknown: Color = { space: 'sys', name: 'teapot', lastClr: null, transforms: [] };
-    expect(() => resolveColor(unknown)).toThrowError(PaintError);
+    expect(() => resolveColor(unknown)).toThrow(PaintError);
     try {
       resolveColor(unknown);
     } catch (error) {
@@ -540,9 +540,9 @@ describe('2.6: the percentage grammar', () => {
       }
     }
     expect(parseAngle('-3600000')).toBe(-3600000);
-    expect(() => parseAngle('60%')).toThrowError(PaintError);
+    expect(() => parseAngle('60%')).toThrow(PaintError);
     expect(parseSrgbValue('#4472c4')).toBe('4472C4');
-    expect(() => parseSrgbValue('4472C')).toThrowError(PaintError);
+    expect(() => parseSrgbValue('4472C')).toThrow(PaintError);
   });
 });
 

@@ -84,7 +84,7 @@ describe('the font library', () => {
   it('refuses a --font-dir that is not there', () => {
     expect(() =>
       indexFonts({ extra: [join(tmpdir(), 'no-such-font-dir-8d21')], system: false }),
-    ).toThrowError(/no such directory/);
+    ).toThrow(/no such directory/);
   });
 });
 
@@ -489,7 +489,7 @@ describe('what it says it did', () => {
       system: false,
     });
     const fonts = createFontMeasurer(empty);
-    expect(() => fonts.measurer.measure('A', { family: 'Nothing At All', sz: 1800 })).toThrowError(
+    expect(() => fonts.measurer.measure('A', { family: 'Nothing At All', sz: 1800 })).toThrow(
       /no face on this machine .* the font library is empty/s,
     );
   });
@@ -497,8 +497,6 @@ describe('what it says it did', () => {
   it('refuses a size the cascade could not have produced', () => {
     const fonts = createFontMeasurer(library);
     const family = FIXTURE.fonts.find((f) => f.id === 'plain')!.family;
-    expect(() => fonts.measurer.measure('A', { family, sz: 0 })).toThrowError(
-      /not a positive size/,
-    );
+    expect(() => fonts.measurer.measure('A', { family, sz: 0 })).toThrow(/not a positive size/);
   });
 });

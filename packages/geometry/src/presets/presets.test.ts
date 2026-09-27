@@ -334,7 +334,7 @@ describe('the lookup', () => {
 describe('the decoder refuses data it does not understand', () => {
   it('throws a typed error, never a bare TypeError', () => {
     const bucket = new PresetBucket('bad||||||- - - - -,W 1 2');
-    expect(() => bucket.get('bad')).toThrowError(GeometryError);
+    expect(() => bucket.get('bad')).toThrow(GeometryError);
     try {
       bucket.get('bad');
     } catch (error) {
@@ -345,15 +345,15 @@ describe('the decoder refuses data it does not understand', () => {
   });
 
   it('rejects a shape with the wrong number of fields', () => {
-    expect(() => new PresetBucket('short|||').get('short')).toThrowError(/expected 6 fields/);
+    expect(() => new PresetBucket('short|||').get('short')).toThrow(/expected 6 fields/);
   });
 
   it('rejects an entry with no name separator at all', () => {
-    expect(() => new PresetBucket('nameless')).toThrowError(GeometryError);
+    expect(() => new PresetBucket('nameless')).toThrow(GeometryError);
   });
 
   it('rejects a path fill that is not an ST_PathFillMode', () => {
     const bucket = new PresetBucket('bad||||||- - chartreuse - -');
-    expect(() => bucket.get('bad')).toThrowError(/not an ST_PathFillMode/);
+    expect(() => bucket.get('bad')).toThrow(/not an ST_PathFillMode/);
   });
 });

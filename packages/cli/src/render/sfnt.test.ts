@@ -98,7 +98,7 @@ describe('the font directory', () => {
 
   it('refuses bytes that carry no SFNT signature', () => {
     const notAFont = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0, 0, 0, 0, 0]);
-    expect(() => readFaces(notAFont, 'a.zip')).toThrowError(RenderError);
+    expect(() => readFaces(notAFont, 'a.zip')).toThrow(RenderError);
     try {
       readFaces(notAFont, 'a.zip');
     } catch (error) {
@@ -108,7 +108,7 @@ describe('the font directory', () => {
   });
 
   it('refuses a file too short to hold a directory', () => {
-    expect(() => readFaces(new Uint8Array(4), 'stub.ttf')).toThrowError(/too short/);
+    expect(() => readFaces(new Uint8Array(4), 'stub.ttf')).toThrow(/too short/);
   });
 
   it('exposes the same face through fontsIn and faceOf', () => {

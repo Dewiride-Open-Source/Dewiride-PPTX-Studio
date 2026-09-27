@@ -586,9 +586,9 @@ describe('input validation', () => {
   });
 
   it('refuses a hyphen advance that is not a width', () => {
-    expect(() =>
-      wrapText({ text: 'a', widthPt: 10, measure: mono, hyphenWidthPt: -1 }),
-    ).toThrowError(/hyphen width/);
+    expect(() => wrapText({ text: 'a', widthPt: 10, measure: mono, hyphenWidthPt: -1 })).toThrow(
+      /hyphen width/,
+    );
   });
 
   it('returns no lines for empty text', () => {
