@@ -1071,11 +1071,6 @@
       "title": "`packages/validate` carries none of the rules the text phase identified",
       "detail": "Four text sub-phases each identified rules that belong in the repair firewall and none were added: `p:kinsoku/@lang`, three `bodyPr` rules, `@panose` shape, and `@u`/`@strike` simple types. 4.1 added the two table rules; these are still owed.",
       "raisedIn": ["ADR 0029", "ADR 0032", "ADR 0033", "ADR 0034"]
-    },
-    {
-      "title": "The website pins `mdast-util-to-markdown` at 2.1.2",
-      "detail": "fumadocs-core's stringifier drops the `attention` a handler carries, which 2.1.3 relies on, so every page with bold or italic text overflows the stack. Remove the `overrides` entry in `website/package.json` once a fumadocs-core release keeps it (fuma-nama/fumadocs#3604).",
-      "raisedIn": ["ADR 0057"]
     }
   ]
 }

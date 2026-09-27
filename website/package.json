@@ -30,9 +30,9 @@
     "@pptx-studio/validate": "^0.2.0",
     "@pptx-studio/writer": "^0.1.2",
     "@pptx-studio/xml": "^0.1.1",
-    "fumadocs-core": "16.15.14",
+    "fumadocs-core": "16.15.15",
     "fumadocs-mdx": "15.4.5",
-    "fumadocs-ui": "16.15.14",
+    "fumadocs-ui": "16.15.15",
     "lucide-react": "1.48.0",
     "next": "16.3.6",
     "react": "19.3.0",
@@ -54,8 +54,5 @@
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
     "typescript-eslint": "8.70.1"
-  },
-  "overrides": {
-    "mdast-util-to-markdown": "2.1.2"
   }
 }
