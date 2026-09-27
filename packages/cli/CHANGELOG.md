@@ -1,5 +1,27 @@
 # @pptx-studio/cli
 
+## 0.4.1
+
+### Patch Changes
+
+- b58dd19: Built with tsdown 0.23. The declarations take a new shape, and the API is unchanged.
+
+  - Every value is exported where it is declared (`export declare function …`), not in a trailing
+    `export { … }`.
+  - The types are exported in one `export type { … }`.
+  - The JavaScript is byte-for-byte what 0.22 emitted.
+  - In geometry, opc, validate and xml, the source maps name fewer symbols.
+
+- Updated dependencies [b58dd19]
+  - @pptx-studio/opc@0.1.3
+  - @pptx-studio/xml@0.1.2
+  - @pptx-studio/census@0.1.2
+  - @pptx-studio/text@0.2.2
+  - @pptx-studio/model@0.2.1
+  - @pptx-studio/render-svg@0.6.3
+  - @pptx-studio/validate@0.2.1
+  - @pptx-studio/writer@0.1.3
+
 ## 0.4.0
 
 ### Minor Changes

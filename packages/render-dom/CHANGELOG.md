@@ -1,5 +1,23 @@
 # @pptx-studio/render-dom
 
+## 0.3.4
+
+### Patch Changes
+
+- b58dd19: Built with tsdown 0.23. The declarations take a new shape, and the API is unchanged.
+
+  - Every value is exported where it is declared (`export declare function …`), not in a trailing
+    `export { … }`.
+  - The types are exported in one `export type { … }`.
+  - The JavaScript is byte-for-byte what 0.22 emitted.
+  - In geometry, opc, validate and xml, the source maps name fewer symbols.
+
+- Updated dependencies [b58dd19]
+  - @pptx-studio/geometry@0.1.2
+  - @pptx-studio/paint@0.4.1
+  - @pptx-studio/model@0.2.1
+  - @pptx-studio/render-svg@0.6.3
+
 ## 0.3.3
 
 ### Patch Changes
