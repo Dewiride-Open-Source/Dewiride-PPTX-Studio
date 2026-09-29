@@ -27,13 +27,23 @@ Entries are added here at the moment the material lands, not at release time.
       presetShapeDefinitions.xml, 538970 bytes
       sha256 4a762444d8d85876881c02a5b1dedf6f73006fcd8acb7b4e393435615b37c780
 
+  * Microsoft PowerPoint output
+      Written by Microsoft PowerPoint, driven by this project's own scripts.
+
+    @pptx-studio/model contains PowerPoint's 74 built-in table styles: each is
+    the a:tblStyle element PowerPoint writes into ppt/tableStyles.xml, byte for
+    byte, enumerated through PowerPoint's Table Styles gallery and saved by
+    PowerPoint (LEGAL.md, ADR 0063). corpus/ground-truth/table-styles.json holds
+    the same 74.
+
+    The decks in corpus/authored are PowerPoint Blank Presentations, so each
+    carries the Microsoft-generated ppt/theme/theme1.xml and default layouts
+    PowerPoint writes into a new deck (ADR 0009).
+
 --------------------------------------------------------------------------------
 Attributions the plan commits us to, listed so the obligation is visible before
 the code arrives
 --------------------------------------------------------------------------------
-
-  * Pattern fill tiles (sub-phase 2.7) are generated from Mono libgdiplus.
-      libgdiplus - Copyright Novell, Inc. and contributors - MIT
 
   * Metric-compatible substitute fonts ship in a separate package,
     @pptx-studio/fonts-metric-compat, under SIL OFL 1.1 with its own

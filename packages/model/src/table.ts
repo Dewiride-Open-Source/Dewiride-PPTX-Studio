@@ -1,12 +1,13 @@
 /**
- * A `p:graphicFrame`'s `a:tbl` as its part wrote it, and the grid PowerPoint reads from it.
- * Every rule here is measured in C7 (`corpus/ground-truth/tables.json`); ADR 0056 has the evidence.
+ * A `p:graphicFrame`'s `a:tbl` as its part wrote it, the grid PowerPoint reads from it, and the
+ * shape of a table style. Measured in C7 and C8; ADRs 0056 and 0063 have the evidence.
  */
 
-import type { Effect, Fill, Line } from '@pptx-studio/paint';
+import type { Color, Effect, Fill, Line } from '@pptx-studio/paint';
 import type { XElement } from '@pptx-studio/xml';
 
 import type { HorzOverflow, TextAnchor, TextBody, VerticalText } from './text.js';
+import type { FontCollection, FontRef, StyleRef } from './types.js';
 
 /** `a:graphicData/@uri` of a table. */
 export const TABLE_URI = 'http://schemas.openxmlformats.org/drawingml/2006/table';
@@ -29,10 +30,10 @@ export interface TableProps {
   readonly node: XElement;
 }
 
-/** `a:tableStyleId`, a GUID resolved in 4.2, or an inline `a:tableStyle`, parsed in 4.3. */
+/** `a:tableStyleId`, or an inline `a:tableStyle`, which PowerPoint resolves by its `@styleId` alone. */
 export type TableStyleRef =
   | { readonly kind: 'id'; readonly id: string }
-  | { readonly kind: 'inline'; readonly node: XElement };
+  | { readonly kind: 'inline'; readonly id: string; readonly node: XElement };
 
 /** `a:gridCol`. */
 export interface TableColumn {
@@ -176,4 +177,80 @@ export function tableGrid(table: Table): TableGrid {
     positions: grid.map((line) => line.map((owner) => owner!)),
     anchors,
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/* table styles                                                               */
+/* -------------------------------------------------------------------------- */
+
+/** `ST_OnOffStyleType`. */
+export type OnOffStyle = 'on' | 'off' | 'def';
+
+/** A value written out, or a reference into the theme: the `EG_Themeable*` choices. */
+export type Themeable<T, Ref = StyleRef> =
+  { readonly kind: 'value'; readonly value: T } | { readonly kind: 'ref'; readonly ref: Ref };
+
+/** `a:tcTxStyle`. */
+export interface TableStyleText {
+  readonly b: OnOffStyle | undefined;
+  readonly i: OnOffStyle | undefined;
+  readonly font: Themeable<FontCollection, FontRef> | undefined;
+  readonly color: Color | undefined;
+}
+
+/** `a:tcBdr`; `tl2br` and `tr2bl` take the names `TableCellBorders` gives the diagonals. */
+export interface TableStyleBorders {
+  readonly left: Themeable<Line> | undefined;
+  readonly right: Themeable<Line> | undefined;
+  readonly top: Themeable<Line> | undefined;
+  readonly bottom: Themeable<Line> | undefined;
+  readonly insideH: Themeable<Line> | undefined;
+  readonly insideV: Themeable<Line> | undefined;
+  readonly tlToBr: Themeable<Line> | undefined;
+  readonly blToTr: Themeable<Line> | undefined;
+}
+
+/** `a:tcStyle`. */
+export interface TableStyleCell {
+  readonly borders: TableStyleBorders | undefined;
+  readonly fill: Themeable<Fill> | undefined;
+  /** `a:cell3D`, kept as written. */
+  readonly cell3D: XElement | undefined;
+}
+
+/** One of a style's thirteen parts. */
+export interface TableStylePart {
+  readonly text: TableStyleText | undefined;
+  readonly cell: TableStyleCell | undefined;
+}
+
+/** `a:tblBg`. An `a:effect` holding an `a:effectDag` reads as `undefined`, as `parseEffects` does. */
+export interface TableBackground {
+  readonly fill: Themeable<Fill> | undefined;
+  readonly effect: Themeable<readonly Effect[] | undefined> | undefined;
+}
+
+/** The thirteen parts in schema order, which is not the order they compose in. */
+export type TableStylePartName =
+  | 'wholeTbl'
+  | 'band1H'
+  | 'band2H'
+  | 'band1V'
+  | 'band2V'
+  | 'lastCol'
+  | 'firstCol'
+  | 'lastRow'
+  | 'seCell'
+  | 'swCell'
+  | 'firstRow'
+  | 'neCell'
+  | 'nwCell';
+
+/** `CT_TableStyle`: an `a:tblStyle`, or an inline `a:tableStyle`. Nothing absent is defaulted. */
+export interface TableStyle {
+  readonly id: string;
+  readonly name: string;
+  readonly background: TableBackground | undefined;
+  readonly parts: Readonly<Partial<Record<TableStylePartName, TableStylePart>>>;
+  readonly node: XElement;
 }

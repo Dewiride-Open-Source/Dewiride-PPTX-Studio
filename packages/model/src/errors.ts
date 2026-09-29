@@ -66,6 +66,8 @@ export type ModelErrorCode =
   | 'MODEL_TEXT_TYPEFACE'
   /** A table attribute missing where the schema requires it, or not of the type it names. */
   | 'MODEL_TABLE_ATTR'
+  /** A table-style edge with neither `a:ln` nor `a:lnRef`, or an `a:fill` holding no fill. */
+  | 'MODEL_TABLE_STYLE'
   | 'BLIP_NO_EMBED'
   | 'BLIP_DUOTONE'
   | 'BLIP_CLR_CHANGE'
@@ -97,7 +99,7 @@ export function isModelError(value: unknown): value is ModelError {
   return value instanceof ModelError;
 }
 
-export const MODEL_ERROR_CODES: readonly ModelErrorCode[] = [
+export const MODEL_ERROR_CODES = [
   'MODEL_PART_MISSING',
   'MODEL_PART_KIND',
   'MODEL_NO_PRESENTATION',
@@ -117,6 +119,17 @@ export const MODEL_ERROR_CODES: readonly ModelErrorCode[] = [
   'MODEL_TEXT_ATTR',
   'MODEL_TEXT_FIELD',
   'MODEL_TEXT_LEVEL',
+  'MODEL_TEXT_BULLET',
   'MODEL_TEXT_TYPEFACE',
   'MODEL_TABLE_ATTR',
-];
+  'MODEL_TABLE_STYLE',
+  'BLIP_NO_EMBED',
+  'BLIP_DUOTONE',
+  'BLIP_CLR_CHANGE',
+  'BLIP_TILE_ALIGN',
+  'BLIP_TILE_FLIP',
+] as const satisfies readonly ModelErrorCode[];
+
+/** Fails to compile while a code in the union is missing from the list. */
+type Unlisted = Exclude<ModelErrorCode, (typeof MODEL_ERROR_CODES)[number]>;
+export const MODEL_ERROR_CODES_COMPLETE: [Unlisted] extends [never] ? true : Unlisted = true;
