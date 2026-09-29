@@ -714,21 +714,17 @@ describe('V030 and V031 tables, against what PowerPoint wrote back in C7', () =>
 });
 
 describe('V032 and V033 table styles, against what PowerPoint drew and wrote back in C8', () => {
-  interface StyleProbe {
-    readonly id: string;
-    readonly theme: string;
-    readonly repaired: boolean | null;
-    readonly markup: {
-      readonly tblPr: string | null;
-      readonly tableStyles: string | null;
-      readonly partName: string | null;
-      readonly rel: boolean;
-    };
-    readonly drawn: { readonly matches: readonly string[] } | null;
-  }
-  const single = (tableStyles.probes as readonly (StyleProbe & { slides?: unknown })[]).filter(
-    (p) => typeof p.markup.tblPr !== 'string' || !p.markup.tblPr.includes('slides, one per'),
+  type StyleProbe = (typeof tableStyles.probes)[number];
+  const single = tableStyles.probes.filter(
+    (p) => !(p.markup.tblPr ?? '').includes('slides, one per'),
   );
+  /** The controls a single-table probe's picture matched. */
+  const matchesOf = (probe: StyleProbe): readonly string[] => {
+    const drawn: unknown = probe.drawn;
+    if (typeof drawn !== 'object' || drawn === null || !('matches' in drawn)) return [];
+    const matches: unknown = drawn.matches;
+    return Array.isArray(matches) ? matches.filter((m): m is string => typeof m === 'string') : [];
+  };
   /** The minimal deck with the probe's table on its slide and its table-style part beside it. */
   const withStyles = (probe: StyleProbe): Record<string, string> => {
     const parts = minimalDeck();
@@ -779,7 +775,7 @@ describe('V032 and V033 table styles, against what PowerPoint drew and wrote bac
     const disagreements: string[] = [];
     for (const probe of clean) {
       const names = /<a:tableStyle(Id>|\s)/.test(probe.markup.tblPr ?? '');
-      const grid = probe.drawn?.matches.includes(DEFAULT_GRID[probe.theme] ?? '') ?? false;
+      const grid = matchesOf(probe).includes(DEFAULT_GRID[probe.theme] ?? '');
       const fired = broken('V032', withStyles(probe)).length > 0;
       if (fired !== (names && grid)) disagreements.push(probe.id + (fired ? ' fired' : ' silent'));
     }
