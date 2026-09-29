@@ -10,7 +10,7 @@
  * console error fails the check, before anything is uploaded.
  */
 
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
@@ -22,6 +22,11 @@ const BASE_PATH = process.env['BASE_PATH'] ?? '';
 const TIMEOUT = 30_000;
 const OUT = join(import.meta.dirname, '..', 'out');
 
+/** The page-view counter every page carries (ADR 0062); the walk answers it itself and counts nothing. */
+const ANALYTICS = 'https://analytics.dewiride.com';
+const ANALYTICS_TAG =
+  '<script defer="" src="https://analytics.dewiride.com/dw.js" data-site="01a0eb67-0b50-77a3-b07c-1acb8c3256f6"></script>';
+
 /** Gzipped kilobytes of first-load script per page, set just above what the build measured. */
 const BUDGET_KB = {
   '/': 230,
@@ -30,11 +35,11 @@ const BUDGET_KB = {
   '/playground/': 230,
 };
 
-/** The gzipped bytes of every module script a page loads; the nomodule polyfill never reaches a modern browser. */
+/** The gzipped bytes of every module script a page loads from this site; the nomodule polyfill never reaches a modern browser. */
 function firstLoadKb(path) {
   const html = readFileSync(join(OUT, path, 'index.html'), 'utf8');
   const scripts = [...html.matchAll(/<script[^>]*src="([^"]+.js)"[^>]*>/g)]
-    .filter((match) => !/noModule/.test(match[0]))
+    .filter((match) => !/noModule/.test(match[0]) && !/^https?:/.test(match[1]))
     .map((match) => match[1].replace(BASE_PATH, ''));
   let bytes = 0;
   for (const script of new Set(scripts)) bytes += gzipSync(readFileSync(join(OUT, script))).length;
@@ -58,9 +63,26 @@ const SEGMENT_PREFETCH = /\/__next\.[^/]*__PAGE__\.txt/;
 /** @param {string} url */
 const knownWindowsDefect = (url) => process.platform === 'win32' && SEGMENT_PREFETCH.test(url);
 
+const pages = readdirSync(OUT, { recursive: true, encoding: 'utf8' }).filter((file) =>
+  /(^|[\\/])index\.html$/.test(file),
+);
+const untagged = pages.filter((file) => {
+  const html = readFileSync(join(OUT, file), 'utf8');
+  return html.split(ANALYTICS_TAG).length !== 2;
+});
+if (pages.length === 0) fail('the export has no index.html');
+else if (untagged.length > 0)
+  fail(`${String(untagged.length)} page(s) without the analytics tag exactly once: ${untagged[0]}`);
+else ok(`all ${String(pages.length)} pages carry the analytics tag once`);
+
 const { origin, close } = await serveOut();
 const browser = await chromium.launch();
 const page = await browser.newPage();
+let counterRequests = 0;
+await page.route(`${ANALYTICS}/**`, (route) => {
+  counterRequests += 1;
+  return route.fulfill({ status: 200, contentType: 'text/javascript', body: '' });
+});
 page.on('console', (message) => {
   if (message.type() !== 'error') return;
   if (knownWindowsDefect(message.location().url)) return;
@@ -153,6 +175,10 @@ try {
         `${path} loads ${kb.toFixed(0)} kB of script gzipped, over the ${String(budget)} kB budget`,
       );
   }
+
+  if (counterRequests > 0)
+    ok(`the page-view counter was requested ${String(counterRequests)} times`);
+  else fail('no page asked for the page-view counter');
 
   const missing = await page.request.get(at('/no-such-page/'));
   if (missing.status() === 404 && (await missing.text()).includes('<html'))

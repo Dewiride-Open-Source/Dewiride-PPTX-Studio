@@ -97,3 +97,4 @@ date.
 | [0059](phase-4-tables-and-smartart/0059-the-publish-job-installs-nothing.md)         | The publish job installs nothing          |
 | [0060](phase-4-tables-and-smartart/0060-the-toolchain-moves-and-typescript-waits.md) | The toolchain moves, and TypeScript waits |
 | [0061](phase-4-tables-and-smartart/0061-chromium-153-draws-what-151-drew.md)         | Chromium 153 draws what 151 drew          |
+| [0062](phase-4-tables-and-smartart/0062-the-site-counts-its-visitors.md)             | The site counts its visitors              |
