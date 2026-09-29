@@ -697,6 +697,19 @@ describe('the 74 built-in table styles, as PowerPoint enumerated and wrote them 
       ).toThrow(ModelError);
       expect(probe(id).repaired, id).toBe(true);
     }
+    // ST_Guid wants both braces; the nobrace probe measured the pair, this holds each alone.
+    for (const id of [
+      'E8034E78-7F5D-4C2E-B375-FC64B27BC917}',
+      '{E8034E78-7F5D-4C2E-B375-FC64B27BC917',
+    ]) {
+      expect(
+        () =>
+          tableFrom(
+            `<a:tbl><a:tblPr><a:tableStyleId>${id}</a:tableStyleId></a:tblPr>${grid(1)}</a:tbl>`,
+          ),
+        id,
+      ).toThrow(ModelError);
+    }
     expect(
       tableFrom(`<a:tbl>${probe('lex-lower-G2').markup.tblPr ?? ''}${grid(1)}</a:tbl>`).props?.style
         ?.id,

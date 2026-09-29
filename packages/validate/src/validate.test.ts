@@ -810,6 +810,21 @@ describe('V032 and V033 table styles, against what PowerPoint drew and wrote bac
       expect(found, id).toHaveLength(1);
       expect(found[0], id).toContain(text);
     }
+    // ST_Guid wants both braces; the nobrace probe measured the pair, this holds each alone.
+    const g2 = probe('lex-nobrace-G2');
+    for (const id of [
+      'E8034E78-7F5D-4C2E-B375-FC64B27BC917}',
+      '{E8034E78-7F5D-4C2E-B375-FC64B27BC917',
+    ]) {
+      const oneBrace = {
+        ...g2,
+        markup: {
+          ...g2.markup,
+          tblPr: `<a:tblPr><a:tableStyleId>${id}</a:tableStyleId></a:tblPr>`,
+        },
+      };
+      expect(broken('V033', withStyles(oneBrace)), id).toHaveLength(1);
+    }
     for (const p of clean) expect(broken('V033', withStyles(p)), p.id).toEqual([]);
   });
 
