@@ -2,10 +2,9 @@
 #
 #   powershell -File tools/ground-truth/model/tables/styles/read.ps1 -Dir <work-dir>
 #
-# Opens each package (repair refused first, then allowed, so REPAIRED and REFUSED differ), exports
-# every slide as a 960 x 540 BMP (twice, except the sweeps, so a nondeterministic draw is caught),
-# saves a copy under resaved/, then opens that copy, exports it once and saves it under resaved2/.
-# The controls are exported again at the end, so a style that leaked between packages shows.
+# Opens each package (repair refused, then allowed), exports each slide as a BMP - twice unless a
+# sweep - saves a copy and reopens it, re-applies every style of the reapply sweeps and saves them,
+# then exports the controls again so a style leaked between packages shows.
 param([Parameter(Mandatory = $true)][string]$Dir)
 
 $ErrorActionPreference = 'Stop'

@@ -4,10 +4,9 @@
 #   powershell -File tools/ground-truth/model/tables/styles/author.ps1 -Dir <out-dir> -Discover
 #   powershell -File tools/ground-truth/model/tables/styles/author.ps1 -Dir <out-dir>
 #
-# -Discover dumps the gallery's UI Automation subtree to uia-tree.json, expanding it once. The full
-# run invokes every gallery item on a selected table and reads the style back over COM, then applies
-# each GUID it found and saves the decks. Refuses to start while any presentation is open, touches
-# only PowerPoint's own window, and never quits a PowerPoint it did not start.
+# -Discover dumps the gallery's UI Automation subtree. The full run invokes each gallery item on a
+# selected table and reads it back over COM, then saves decks of every GUID. It refuses to start
+# while a deck is open, touches only PowerPoint's window and never quits one it did not start.
 param(
     [Parameter(Mandatory = $true)][string]$Dir,
     [switch]$Discover
