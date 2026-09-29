@@ -725,8 +725,16 @@ describe('V032 and V033 table styles, against what PowerPoint drew and wrote bac
     const matches: unknown = drawn.matches;
     return Array.isArray(matches) ? matches.filter((m): m is string => typeof m === 'string') : [];
   };
+  interface Markup {
+    readonly markup: {
+      readonly tblPr: string | null;
+      readonly tableStyles: string | null;
+      readonly partName: string | null;
+      readonly rel: boolean;
+    };
+  }
   /** The minimal deck with the probe's table on its slide and its table-style part beside it. */
-  const withStyles = (probe: StyleProbe): Record<string, string> => {
+  const withStyles = (probe: Markup): Record<string, string> => {
     const parts = minimalDeck();
     const table =
       '<a:tbl>' +
