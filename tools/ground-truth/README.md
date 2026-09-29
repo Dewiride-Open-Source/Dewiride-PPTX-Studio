@@ -306,6 +306,33 @@ scored against the markup PowerPoint's own writer produces — including its can
 block merge, which puts `rowSpan` on every horizontally covered cell of the anchor's row and
 `gridSpan` on every vertically covered cell of its column.
 
+### C8 — the built-in table styles, and which one a table draws _(added in 4.2)_
+
+```bash
+powershell -File tools/ground-truth/model/tables/styles/author.ps1 -Dir <dir> -Discover
+powershell -File tools/ground-truth/model/tables/styles/author.ps1 -Dir <dir>
+node tools/ground-truth/model/tables/styles/build-deck.ts <dir>
+powershell -File tools/ground-truth/model/tables/styles/read.ps1 -Dir <dir>
+node tools/ground-truth/model/tables/styles/analyse.ts <dir> --fixture corpus/ground-truth/table-styles.json
+npx prettier --write corpus/ground-truth/table-styles.json
+node tools/ground-truth/model/tables/styles/write-tables.ts
+npx prettier --write packages/model/src/builtin/table-styles.ts packages/validate/src/rules/table-style-ids.ts
+```
+
+PowerPoint's object model applies a table style by GUID and cannot list them, so `author.ps1` drives
+the Table Styles gallery itself through UI Automation: a visible window, a selected table, each of
+the gallery's items invoked in turn and the style read back over COM. It refuses to start while any
+deck is open and touches only PowerPoint's own window. Then it applies every GUID it found and saves
+the decks, so `ppt/tableStyles.xml` carries PowerPoint's serialisation of all 74. `read.ps1` must run
+in a second PowerPoint process: it re-applies every style in two sweeps, which is the second
+serialisation the analysis compares against.
+
+The probes are one table per package in three themes of our own, each drawn at one pixel per point
+and compared region for region with a control: a built-in's own definition, or direct borders for
+the grid. Every question has one winner and every rival misses: a table draws the built-in its GUID
+names, in any case, whatever the package's part says (230/230, 7/7); anything else draws a 1-pt
+black grid (3/3 against the theme's `dk1` and `tx1`); an inline style resolves by its `@styleId`.
+
 ### F2 — what the export does at another width _(added in 3.11)_
 
 Every stroke rule the renderer holds was measured at one or two export widths, and one width cannot
@@ -467,6 +494,7 @@ paint/                   -> packages/paint
 model/                   -> packages/model
   sheets/                C5  - 114 probes: matching, inheritance
   tables/grid/           C7  - 82 probes: the occupancy grid, row heights, column widths
+  tables/styles/         C8  - the 74 built-in styles, and 84 probes: which one a table draws
 render/                  -> packages/render-*
   transforms/            C6  - 65 probes: group maps, turns, compositing
   text/                  T8  - 160 probes: the turn, the baseline, alignment, rules
