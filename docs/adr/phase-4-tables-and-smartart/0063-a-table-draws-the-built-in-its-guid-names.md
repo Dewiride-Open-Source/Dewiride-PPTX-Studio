@@ -202,6 +202,19 @@ on it, pinned beside the two placeholder warnings.
   `a:tblStyle` is reachable only through a corrupted catalogue, which the drift test forbids.
 - **`pnpm check`** green before the commit that claims the sub-phase.
 
+## What the release said
+
+Pull request #66 merged as `e02129c` on CI run 36534856875 with every check registered and complete —
+`check`, the candidate gate, the round trip, both font jobs, CodeQL and the website build — and
+main's own run 36535538484 green on the merge. The canary before, 36534876056, was green against the
+previous release. Release run 36536202313 published `@pptx-studio/model` 0.3.0,
+`@pptx-studio/validate` 0.3.0, `@pptx-studio/render-svg` 0.6.4, `@pptx-studio/render-dom` 0.3.5,
+`@pptx-studio/writer` 0.1.4 and `@pptx-studio/cli` 0.4.2 in 3 min 34 s, version commit `5e57de5`.
+The deploy that followed, 36536560614, waited 40 s for `cli@^0.4.2` and was live 4 min 58 s after
+it started; the site's validate page lists thirty-three rules with `V032` and `V033`, and its model
+reference lists `tableStyleOf`, `builtinTableStyle` and `BUILTIN_TABLE_STYLES`. The canary after,
+36536825726, installed the release and was green.
+
 ## Deviations from the plan
 
 - **The inline `a:tableStyle` is resolved here, not in 4.3.** C8 measured that PowerPoint reads only
