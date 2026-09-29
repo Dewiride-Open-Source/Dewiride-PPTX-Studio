@@ -34,8 +34,8 @@ export function Footer() {
             <Mark /> PPTX Studio
           </p>
           <p>
-            No cookies, no analytics, no third-party requests. A deck you open here never leaves
-            your browser.
+            Page views are counted by analytics.dewiride.com. A deck you open here never leaves your
+            browser.
           </p>
           <p>
             Pre-alpha. Built against <VersionBadge /> and eleven siblings; the site is rebuilt after
