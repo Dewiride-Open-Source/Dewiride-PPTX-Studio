@@ -1,26 +1,20 @@
 import { CONTENT_TYPE, isRelationshipPartName } from '@pptx-studio/opc';
 import {
   attribute,
+  attributeValue,
   childElements,
   descendantElements,
   namespaceOf,
   NS,
+  textContent,
   type XElement,
 } from '@pptx-studio/xml';
 import type { Context } from '../context.js';
 import { elementLocation } from '../report/location.js';
 
 /**
- * `V013` … `V017`, `V030` and `V031`: children and attributes that are not optional.
- *
- * Every one of these is a `minOccurs` the schema states plainly, and every one
- * is broken the same way: by an editor deleting the last of something. The last
- * paragraph goes and a `p:txBody` is left with no `a:p`; a shape is dragged out
- * of a group and the group's `p:grpSpPr` is dropped with it. That is why these
- * are separate rules from the ordering ones even though a missing child and a
- * misplaced child are both "the sequence is wrong": the messages have to say
- * *add this*, not *move this*, and they have to fire on the parent rather than
- * on a child that is not there to point at.
+ * `V013` … `V017`, `V030`, `V031` and `V033`: children and attributes that are not optional.
+ * Each is a `minOccurs` or a type the schema states, reported on the element that lacks it.
  */
 
 /** The twelve attributes of `CT_ColorMapping`. All required, no defaults. */
@@ -212,6 +206,104 @@ export function v031TableAttributes(ctx: Context): void {
           '. C7 measured gridSpan="2.0" and hMerge="on": a repair prompt each; the span is ' +
           'dropped with the merge it named and the flag comes back as "1" under its span.',
       );
+    }
+  });
+}
+
+/** `ST_Guid`, in any case: C8 measured lower case opening clean. */
+const TABLE_STYLE_GUID = /^\{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}$/i;
+const ON_OFF_STYLES = new Set(['on', 'off', 'def']);
+const TABLE_STYLE_EDGES = new Set([
+  'left',
+  'right',
+  'top',
+  'bottom',
+  'insideH',
+  'insideV',
+  'tl2br',
+  'tr2bl',
+]);
+const FILL_PROPERTIES = new Set([
+  'noFill',
+  'solidFill',
+  'gradFill',
+  'blipFill',
+  'pattFill',
+  'grpFill',
+]);
+
+const drawingChildren = (element: XElement, local: string): XElement[] =>
+  childElements(element).filter((child) => child.local === local && namespaceOf(child) === NS.a);
+
+/** A table-style id is a braced GUID, and a table style has the parts C8 measured as required. */
+export function v033TableStyles(ctx: Context): void {
+  for (const part of ctx.parts()) {
+    if (ctx.contentType(part) !== CONTENT_TYPE.tableStyles) continue;
+    const root = ctx.document(part)?.root;
+    if (root === undefined || (root.local === 'tblStyleLst' && namespaceOf(root) === NS.a))
+      continue;
+    ctx.add(
+      'V033',
+      elementLocation(part, root),
+      `The table-style part's root is <${root.qname}>, not <a:tblStyleLst>. ` +
+        'C8 measured this as a repair prompt.',
+    );
+  }
+  forEachElement(ctx, (part, element) => {
+    if (namespaceOf(element) !== NS.a) return;
+    const report = (at: XElement, what: string): void => {
+      ctx.add('V033', elementLocation(part, at), what + ' C8 measured this as a repair prompt.');
+    };
+    if (
+      element.local === 'tblPr' &&
+      drawingChildren(element, 'tableStyleId').length > 0 &&
+      drawingChildren(element, 'tableStyle').length > 0
+    ) {
+      report(element, '<a:tblPr> names its style twice, by <a:tableStyleId> and <a:tableStyle>.');
+    }
+    const guid = (raw: string, what: string): void => {
+      if (!TABLE_STYLE_GUID.test(raw))
+        report(element, `${what} is "${raw}", which is not a GUID in braces.`);
+    };
+    switch (element.local) {
+      case 'tableStyleId':
+        guid(textContent(element), '<a:tableStyleId>');
+        return;
+      case 'tableStyle':
+      case 'tblStyle': {
+        const id = attributeValue(element, 'styleId');
+        if (id === undefined) report(element, `<a:${element.local}> has no @styleId.`);
+        else guid(id, `<a:${element.local}>/@styleId`);
+        return;
+      }
+      case 'tblStyleLst':
+        if (attributeValue(element, 'def') === undefined)
+          report(element, '<a:tblStyleLst> has no @def.');
+        return;
+      case 'tcTxStyle':
+        for (const name of ['b', 'i']) {
+          const raw = attributeValue(element, name);
+          if (raw !== undefined && !ON_OFF_STYLES.has(raw)) {
+            report(element, `<a:tcTxStyle>/@${name} is "${raw}", not on, off or def.`);
+          }
+        }
+        return;
+      case 'tcBdr':
+        for (const edge of childElements(element)) {
+          if (!TABLE_STYLE_EDGES.has(edge.local) || namespaceOf(edge) !== NS.a) continue;
+          if (drawingChildren(edge, 'ln').length + drawingChildren(edge, 'lnRef').length === 0) {
+            report(edge, `<a:${edge.local}> has neither <a:ln> nor <a:lnRef>.`);
+          }
+        }
+        return;
+      case 'tcStyle':
+      case 'tblBg':
+        for (const fill of drawingChildren(element, 'fill')) {
+          if (!childElements(fill).some((child) => FILL_PROPERTIES.has(child.local))) {
+            report(fill, '<a:fill> holds no fill.');
+          }
+        }
+        return;
     }
   });
 }

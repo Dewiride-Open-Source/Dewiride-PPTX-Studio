@@ -298,11 +298,8 @@ export const ENTRY_KEYS: readonly string[] = [
   'slides',
   'zipEntries',
   'format',
-  // `corpus/reject` only, and load-bearing there: `C-REJECT` reads `rule` to
-  // know which of the validator's twenty-nine each fixture has to trip, and
-  // `refusal` is the sentence PowerPoint gave when the markup was measured -
-  // the only diagnostic that exists, and the thing somebody will want if the
-  // rule ever has to be argued with.
+  // `corpus/reject` only: `rule` is the validator rule a fixture must trip, and `refusal`
+  // the sentence PowerPoint gave when the markup was measured.
   'rule',
   'refusal',
 ];

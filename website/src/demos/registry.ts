@@ -64,7 +64,7 @@ export const DEMOS: readonly DemoEntry[] = [
   {
     name: 'validate',
     title: 'Validate',
-    blurb: 'The 29 checks that keep PowerPoint from asking to repair a file, run on this deck.',
+    blurb: 'The 33 checks that keep PowerPoint from asking to repair a file, run on this deck.',
     tryThis:
       'Open a rule to read its evidence, then drop a deck of your own and see what it finds.',
   },

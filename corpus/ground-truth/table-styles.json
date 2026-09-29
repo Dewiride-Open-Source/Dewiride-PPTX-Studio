@@ -3934,7 +3934,7 @@
       "opened": true,
       "repaired": false,
       "markup": {
-        "tblPr": "<a:tblPr><a:tableStyle styleId=\"{C8000000-0000-4000-8000-00000000A001}\" styleName=\"C8 Inline\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8A001\"/>",
+        "tblPr": "<a:tblPr><a:tableStyle styleId=\"{C8000000-0000-4000-8000-00000000A001}\" styleName=\"C8 Inline\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8A001\"/></a:solidFill></a:fill></a:tcStyle></a:wholeTbl></a:tableStyle></a:tblPr>",
         "tableStyles": null,
         "partName": null,
         "rel": false
@@ -3966,7 +3966,7 @@
       "opened": true,
       "repaired": false,
       "markup": {
-        "tblPr": "<a:tblPr><a:tableStyle styleId=\"{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}\" styleName=\"C8 Inline\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8B002\"/>",
+        "tblPr": "<a:tblPr><a:tableStyle styleId=\"{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}\" styleName=\"C8 Inline\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8B002\"/></a:solidFill></a:fill></a:tcStyle></a:wholeTbl></a:tableStyle></a:tblPr>",
         "tableStyles": null,
         "partName": null,
         "rel": false
@@ -3998,7 +3998,7 @@
       "opened": true,
       "repaired": false,
       "markup": {
-        "tblPr": "<a:tblPr><a:tableStyle styleId=\"{E8034E78-7F5D-4C2E-B375-FC64B27BC917}\" styleName=\"C8 Inline\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8B002\"/>",
+        "tblPr": "<a:tblPr><a:tableStyle styleId=\"{E8034E78-7F5D-4C2E-B375-FC64B27BC917}\" styleName=\"C8 Inline\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8B002\"/></a:solidFill></a:fill></a:tcStyle></a:wholeTbl></a:tableStyle></a:tblPr>",
         "tableStyles": null,
         "partName": null,
         "rel": false
@@ -4030,7 +4030,7 @@
       "opened": true,
       "repaired": false,
       "markup": {
-        "tblPr": "<a:tblPr><a:tableStyle styleId=\"{C8000000-0000-4000-8000-00000000A001}\" styleName=\"C8 Inline\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8A001\"/>",
+        "tblPr": "<a:tblPr><a:tableStyle styleId=\"{C8000000-0000-4000-8000-00000000A001}\" styleName=\"C8 Inline\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8A001\"/></a:solidFill></a:fill></a:tcStyle></a:wholeTbl></a:tableStyle></a:tblPr>",
         "tableStyles": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n<a:tblStyleLst xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" def=\"{C8000000-0000-4000-8000-00000000A001}\"><a:tblStyle styleId=\"{C8000000-0000-4000-8000-00000000A001}\" styleName=\"C8 Part\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8C003\"/></a:solidFill></a:fill></a:tcStyle></a:wholeTbl></a:tblStyle></a:tblStyleLst>",
         "partName": "/ppt/tableStyles.xml",
         "rel": true
@@ -4062,7 +4062,7 @@
       "opened": true,
       "repaired": true,
       "markup": {
-        "tblPr": "<a:tblPr><a:tableStyleId>{E8034E78-7F5D-4C2E-B375-FC64B27BC917}</a:tableStyleId><a:tableStyle styleId=\"{C8000000-0000-4000-8000-00000000A001}\" styleName=\"C8 Inline\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8A001\"/>",
+        "tblPr": "<a:tblPr><a:tableStyleId>{E8034E78-7F5D-4C2E-B375-FC64B27BC917}</a:tableStyleId><a:tableStyle styleId=\"{C8000000-0000-4000-8000-00000000A001}\" styleName=\"C8 Inline\"><a:wholeTbl><a:tcStyle><a:fill><a:solidFill><a:srgbClr val=\"C8A001\"/></a:solidFill></a:fill></a:tcStyle></a:wholeTbl></a:tableStyle></a:tblPr>",
         "tableStyles": null,
         "partName": null,
         "rel": false

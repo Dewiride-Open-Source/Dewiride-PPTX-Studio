@@ -2,33 +2,9 @@ import type { Location } from './location.js';
 import { ruleById, type RuleCategory, type RuleId, type Severity } from '../rules/rules.js';
 
 /**
- * What validation produces.
- *
- * ## Origin, and why it is computed rather than guessed
- *
- * The hardest question this package has to answer is not "is this file valid".
- * It is **"did we break it"**, and those are different questions with different
- * consequences. A fatal finding in a deck the user imported ten seconds ago is
- * information; the same finding in a deck they just edited is a bug in us, and
- * handing over the bytes would give them a repair prompt with no explanation.
- *
- * Refusing both would be the strict-looking choice and it is the wrong one. It
- * would mean that a deck with one pre-existing defect - a dangling image
- * relationship, say, which PowerPoint tolerates and which is common in files
- * that have been through three other tools - could be opened in this editor and
- * never saved again. The editor would be refusing to give the user back their
- * own file over a problem it did not cause and cannot fix. `PartStore.write`
- * already made exactly this call for dangling relationships, and this is the
- * same call generalised to all thirty-one rules.
- *
- * So `origin` is not a per-rule judgement call. It is computed by running the
- * rules a second time against the package **as it was opened** and differencing
- * the two reports: a finding that is in both is `inherited`, one that is only in
- * the new report is `introduced`. That is exact, it needs no rule to reason
- * about history, and it cannot drift from what the rules actually do.
- *
- * The second pass only happens when the first found something fatal, so a clean
- * export - the overwhelmingly common case - pays nothing for it.
+ * A finding is `inherited` when the package as it was opened already had it, `introduced` when it
+ * did not, computed by running the rules on both and differencing. Only an introduced fatal refuses
+ * an export, so a deck with a defect it arrived with can still be saved.
  */
 
 export type Origin =

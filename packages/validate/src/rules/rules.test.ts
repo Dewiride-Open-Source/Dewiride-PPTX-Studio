@@ -14,13 +14,13 @@ import { deck } from '../testing/deck.js';
  */
 
 describe('the rule table', () => {
-  it('has thirty-one rules: the twenty-nine the plan says, and the two tables measured', () => {
-    expect(RULES).toHaveLength(31);
+  it('has thirty-three rules: the twenty-nine the plan says, two for tables and two for their styles', () => {
+    expect(RULES).toHaveLength(33);
   });
 
-  it('numbers them V001…V031 with no gaps', () => {
+  it('numbers them V001…V033 with no gaps', () => {
     expect(RULE_IDS).toEqual(
-      Array.from({ length: 31 }, (_, i) => 'V' + String(i + 1).padStart(3, '0')),
+      Array.from({ length: 33 }, (_, i) => 'V' + String(i + 1).padStart(3, '0')),
     );
   });
 
@@ -73,19 +73,15 @@ describe('the rule table', () => {
     }
   });
 
-  it('has two warnings, and they are the ones PowerPoint opens', () => {
-    // Everything else is a refusal or a repair. `V021` is one odd one: an
-    // unmatched placeholder inherits nothing and the file still opens, so
-    // blocking an export over it would stop a user saving a deck that already
-    // works everywhere. `V030` is the other: a table that disagrees with itself
-    // opens without a word and is silently rewritten on the next save.
+  it('has three warnings, and they are the ones PowerPoint opens without a word', () => {
+    // An unmatched placeholder, a table that disagrees with itself, a table naming no built-in style.
     const warnings = RULES.filter((rule) => rule.severity === 'warning').map((rule) => rule.id);
-    expect(warnings).toEqual(['V021', 'V030']);
+    expect(warnings).toEqual(['V021', 'V030', 'V032']);
   });
 
   it('resolves by id, and only by an id that exists', () => {
     expect(ruleById('V001')?.category).toBe('package');
-    expect(ruleById('V032')).toBeUndefined();
+    expect(ruleById('V034')).toBeUndefined();
     expect(ruleById('')).toBeUndefined();
   });
 

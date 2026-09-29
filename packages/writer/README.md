@@ -44,7 +44,7 @@ something explicitly replaced are re-encoded.
 | Media collection   | Runs after the hooks, because a hook is what orphans things      |
 | `PartStore.write`  | Untouched parts stream through still compressed                  |
 | Preservation check | The emitted archive against the source archive, entry by entry   |
-| `assertValid`      | The 29 rules; refuses to return the bytes if we broke one        |
+| `assertValid`      | The 33 rules; refuses to return the bytes if we broke one        |
 
 The two checks come **after** the write, which is the one ordering that looks
 backwards. It is right because a check that runs first is checking an intention,

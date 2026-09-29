@@ -472,7 +472,7 @@ function markupOf(path: string): {
     const slide = entry(entries, `ppt/slides/slide${String(n)}.xml`);
     if (slide === undefined) break;
     const text = utf8(slide);
-    tblPr.push(/<a:tblPr[\s\S]*?(?:\/>|<\/a:tblPr>)/.exec(text)?.[0] ?? null);
+    tblPr.push(/<a:tblPr\b[^>]*\/>|<a:tblPr\b[^>]*>[\s\S]*?<\/a:tblPr>/.exec(text)?.[0] ?? null);
   }
   const rels = utf8(entry(entries, 'ppt/_rels/presentation.xml.rels') ?? new Uint8Array());
   const target = /Type="[^"]*\/tableStyles"[^>]*Target="([^"]+)"/.exec(rels)?.[1];
