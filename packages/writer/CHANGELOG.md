@@ -1,5 +1,12 @@
 # @pptx-studio/writer
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [ae2e566]
+  - @pptx-studio/validate@0.3.0
+
 ## 0.1.3
 
 ### Patch Changes
