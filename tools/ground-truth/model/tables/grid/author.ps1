@@ -1,7 +1,7 @@
 # Experiment C7, step 0 - ask PowerPoint to AUTHOR merges, splits and row growth, then read
 # what it wrote.
 #
-#   powershell -File tools/ground-truth/model/tables/author.ps1 -Dir <out-dir>
+#   powershell -File tools/ground-truth/model/tables/grid/author.ps1 -Dir <out-dir>
 #
 # Writes `pp-merges.pptx` and `pp-sizes.pptx` plus `author-tables-log.json`: per slide, the
 # operation and the grid the object model reported after it. Creates and saves into <out-dir>,

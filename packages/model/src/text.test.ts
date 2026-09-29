@@ -20,7 +20,7 @@ import { describe, expect, it } from 'vitest';
 
 import fixture from '../../../corpus/ground-truth/text-cascade.json' with { type: 'json' };
 
-import { BUILTIN_TEXT_STYLES, TEXT_FLOOR } from './builtin-text-styles.js';
+import { BUILTIN_TEXT_STYLES, TEXT_FLOOR } from './builtin/text-styles.js';
 import { ModelError } from './errors.js';
 import { parseSheet, parseTheme } from './parse/sheet.js';
 import { parseListStyle } from './parse/text.js';

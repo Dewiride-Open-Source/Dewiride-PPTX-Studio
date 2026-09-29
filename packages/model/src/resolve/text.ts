@@ -50,7 +50,7 @@ import { ModelError } from '../errors.js';
 import { inheritanceChain, normalizePlaceholder } from './placeholder.js';
 import { themeOf } from './resolve.js';
 import { resolveTypeface } from './typeface.js';
-import { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from '../builtin-text-styles.js';
+import { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from '../builtin/text-styles.js';
 import {
   type BulletAutoNum,
   type BulletColor,

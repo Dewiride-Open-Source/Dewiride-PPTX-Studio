@@ -273,10 +273,10 @@ Four things worth copying:
 ### C7 — which cells a merge covers _(added in 4.1)_
 
 ```bash
-powershell -File tools/ground-truth/model/tables/author.ps1 -Dir <dir>
-node tools/ground-truth/model/tables/build-deck.ts <dir>
-powershell -File tools/ground-truth/model/tables/read.ps1 -Dir <dir>
-node tools/ground-truth/model/tables/analyse.ts <dir> --fixture corpus/ground-truth/tables.json
+powershell -File tools/ground-truth/model/tables/grid/author.ps1 -Dir <dir>
+node tools/ground-truth/model/tables/grid/build-deck.ts <dir>
+powershell -File tools/ground-truth/model/tables/grid/read.ps1 -Dir <dir>
+node tools/ground-truth/model/tables/grid/analyse.ts <dir> --fixture corpus/ground-truth/tables.json
 npx prettier --write corpus/ground-truth/tables.json
 ```
 
@@ -466,7 +466,7 @@ paint/                   -> packages/paint
 
 model/                   -> packages/model
   sheets/                C5  - 114 probes: matching, inheritance
-  tables/                C7  - 82 probes: the occupancy grid, row heights, column widths
+  tables/grid/           C7  - 82 probes: the occupancy grid, row heights, column widths
 render/                  -> packages/render-*
   transforms/            C6  - 65 probes: group maps, turns, compositing
   text/                  T8  - 160 probes: the turn, the baseline, alignment, rules

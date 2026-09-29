@@ -2,7 +2,7 @@
  * Experiment C7, step 1 - write the probe packages.
  *
  * ```
- * node tools/ground-truth/model/tables/build-deck.ts <out-dir>
+ * node tools/ground-truth/model/tables/grid/build-deck.ts <out-dir>
  * ```
  *
  * One `.pptx` per probe, so a refusal or a repair names its cause, plus `table-inputs.json`
@@ -12,12 +12,12 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { buildPptx } from '../../lib/pptx.ts';
+import { buildPptx } from '../../../lib/pptx.ts';
 import { allProbes, EMU_PER_POINT, FRAME, frameXml, tableXml } from './probes.ts';
 
 const outDir = process.argv[2];
 if (outDir === undefined)
-  throw new Error('usage: tools/ground-truth/model/tables/build-deck.ts <out-dir>');
+  throw new Error('usage: tools/ground-truth/model/tables/grid/build-deck.ts <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 const probes = allProbes();

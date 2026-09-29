@@ -160,7 +160,7 @@ export {
   parseTextStyles,
 } from './parse/text.js';
 
-export { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from './builtin-text-styles.js';
+export { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from './builtin/text-styles.js';
 
 export {
   bucketOf,

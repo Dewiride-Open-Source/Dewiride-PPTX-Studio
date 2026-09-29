@@ -15,7 +15,7 @@ disagree, what fixes a row's height and a column's width, and what it writes bac
 
 Code: `packages/model/src/{table,parse/table}.ts`, `Shape.table` in `packages/model/src/types.ts`,
 `MODEL_TABLE_ATTR`, `V030` and `V031` in `packages/validate/src/rules/{required,rules}.ts`,
-`tools/ground-truth/model/tables/`, `tools/corpus/suites/tables.test.ts`. Fixture:
+`tools/ground-truth/model/tables/grid/`, `tools/corpus/suites/tables.test.ts`. Fixture:
 `corpus/ground-truth/tables.json`. Changeset: `.changeset/the-spans-are-the-merge.md`.
 
 ---
