@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
+import tableStyles from '../../../../corpus/ground-truth/table-styles.json' with { type: 'json' };
+
 import { RULES, RULE_IDS, BASELINE_RULES, ruleById } from './rules.js';
 import { validatePackage } from '../validate.js';
 import { deck } from '../testing/deck.js';
+import { BUILTIN_TABLE_STYLE_IDS } from './table-style-ids.js';
 
 /**
  * The table itself.
@@ -98,5 +102,11 @@ describe('the rule table', () => {
   it('refuses a rule id that does not exist rather than ignoring it', () => {
     const { bytes } = deck();
     expect(() => validatePackage({ bytes, rules: ['V099' as 'V001'] })).toThrow(/no rule V099/);
+  });
+});
+
+describe('the built-in table style ids V032 knows', () => {
+  it('are the 74 GUIDs PowerPoint gave its gallery in C8, in its order', () => {
+    expect(BUILTIN_TABLE_STYLE_IDS).toEqual(tableStyles.roster.styles.map((s) => s.id));
   });
 });

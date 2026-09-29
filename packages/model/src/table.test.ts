@@ -15,7 +15,14 @@ import { ModelError } from './errors.js';
 import { parseSheet } from './parse/sheet.js';
 import { parseTableStyle } from './parse/table.js';
 import { builtinTableStyle, tableStyleOf } from './resolve/table.js';
-import { INVENTED_COLUMN_WIDTH, TABLE_URI, tableGrid, type GridCell, type Table } from './table.js';
+import {
+  INVENTED_COLUMN_WIDTH,
+  TABLE_URI,
+  tableGrid,
+  type GridCell,
+  type Table,
+  type TableStyle,
+} from './table.js';
 
 /* -------------------------------------------------------------------------- */
 /* building slides by hand                                                    */
@@ -476,6 +483,17 @@ function matchesOf(probe: (typeof styles.probes)[number]): readonly string[] {
   return matches;
 }
 
+/** A style written here, with a custom id, parsed as a part's would be. */
+function crafted(inner: string): TableStyle {
+  const root = parseXmlString(
+    `<a:tblStyleLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" def="{C8000000-0000-4000-8000-00000000A001}">` +
+      `<a:tblStyle styleId="{C8000000-0000-4000-8000-00000000A001}" styleName="crafted">${inner}</a:tblStyle></a:tblStyleLst>`,
+  ).root;
+  const element = root.children.find((n) => n.type === 'element');
+  if (element?.type !== 'element') throw new Error('no a:tblStyle');
+  return parseTableStyle(element, '/ppt/tableStyles.xml');
+}
+
 /** The part names a built-in's XML carries, straight from the string. */
 const partsWritten = (xml: string): string[] =>
   [
@@ -702,5 +720,61 @@ describe('the 74 built-in table styles, as PowerPoint enumerated and wrote them 
       expect(thrown, id).toMatchObject({ code });
       expect(probe(id).repaired, id).toBe(true);
     }
+  });
+
+  it('maps each of the eight edges to its own key, and reads a font collection and an effect', () => {
+    const edges = ['left', 'right', 'top', 'bottom', 'insideH', 'insideV', 'tl2br', 'tr2bl'];
+    const style = crafted(
+      '<a:tblBg><a:fill><a:noFill/></a:fill><a:effect><a:effectLst/></a:effect></a:tblBg>' +
+        '<a:wholeTbl><a:tcTxStyle i="off"><a:font><a:latin typeface="Georgia"/><a:ea typeface=""/><a:cs typeface=""/></a:font>' +
+        '<a:srgbClr val="C8A001"/></a:tcTxStyle><a:tcStyle><a:tcBdr>' +
+        edges.map((e, k) => `<a:${e}><a:ln w="${String(12700 * (k + 1))}"/></a:${e}>`).join('') +
+        '</a:tcBdr><a:fillRef idx="3"/><a:cell3D/></a:tcStyle></a:wholeTbl>',
+    );
+    const borders = style.parts.wholeTbl?.cell?.borders;
+    const widths = [
+      borders?.left,
+      borders?.right,
+      borders?.top,
+      borders?.bottom,
+      borders?.insideH,
+      borders?.insideV,
+      borders?.tlToBr,
+      borders?.blToTr,
+    ].map((edge) => (edge?.kind === 'value' ? edge.value.w : null));
+    expect(widths).toEqual(edges.map((_, k) => 12700 * (k + 1)));
+    expect(style.parts.wholeTbl?.text).toMatchObject({
+      i: 'off',
+      b: undefined,
+      font: { kind: 'value', value: { latin: 'Georgia', ea: '', cs: '' } },
+      color: { space: 'srgb', hex: 'C8A001' },
+    });
+    expect(style.parts.wholeTbl?.cell?.fill).toEqual({ kind: 'ref', ref: { idx: 3, color: null } });
+    expect(style.parts.wholeTbl?.cell?.cell3D?.qname).toBe('a:cell3D');
+    expect(style.background).toEqual({
+      fill: { kind: 'value', value: { type: 'none' } },
+      effect: { kind: 'value', value: [] },
+    });
+  });
+
+  it('refuses a style reference the schema requires an index on, or an index of the wrong kind', () => {
+    const codeOf = (inner: string): unknown => {
+      try {
+        crafted(inner);
+      } catch (error) {
+        return error instanceof ModelError ? error.code : error;
+      }
+      return 'parsed';
+    };
+    expect(codeOf('<a:tblBg><a:fillRef/></a:tblBg>')).toBe('MODEL_TABLE_ATTR');
+    expect(codeOf('<a:tblBg><a:fillRef idx="x"/></a:tblBg>')).toBe('MODEL_STYLE_IDX');
+    expect(codeOf('<a:wholeTbl><a:tcTxStyle><a:fontRef idx="1"/></a:tcTxStyle></a:wholeTbl>')).toBe(
+      'MODEL_FONT_COLLECTION',
+    );
+    expect(codeOf('<a:wholeTbl><a:tcTxStyle><a:fontRef/></a:tcTxStyle></a:wholeTbl>')).toBe(
+      'MODEL_TABLE_ATTR',
+    );
+    expect(codeOf('<a:wholeTbl><a:tcTxStyle i="yes"/></a:wholeTbl>')).toBe('MODEL_TABLE_ATTR');
+    expect(codeOf('<a:wholeTbl/>')).toBe('parsed');
   });
 });
