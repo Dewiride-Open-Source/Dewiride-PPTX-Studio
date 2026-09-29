@@ -74,7 +74,7 @@ Read [`SCOPE.md`](./SCOPE.md) for what this deliberately is not.
 | Ground truth: embedded fonts, colour transforms         | ✅ 0.7         |
 | Feature census, `cli inspect`, the Worker boundary      | ✅ 0.8         |
 | The corpus: 55 licensed decks, three producers          | ✅ 1.1         |
-| The repair firewall: 29 rules, `cli validate`           | ✅ 1.2         |
+| The repair firewall: 33 rules, `cli validate`           | ✅ 1.2         |
 | Writer: dirty-part export, media GC, prepare hooks      | ✅ 1.3         |
 | The round-trip oracle and `cli roundtrip`               | ✅ 1.4         |
 | `cli bisect` and the PowerPoint oracle                  | ✅ 1.5         |
@@ -129,7 +129,7 @@ packages/
   model/   sheets, the inheritance chain, and the resolver everything else reads
   render-svg/ slides to SVG: group transforms, flip order, grpFill, as a string
   render-dom/ the live renderer, over the same node tree as render-svg
-  validate/ the repair firewall: the 29 rules a .pptx must not break
+  validate/ the repair firewall: the 33 rules a .pptx must not break
   writer/  export: dirty-part-only serialization, media GC, prepare hooks
   cli/     the Node entry point — inspect, validate, roundtrip, bisect, render
 apps/
@@ -258,7 +258,7 @@ To look inside a deck:
 
 ```sh
 node packages/cli/dist/cli.js inspect deck.pptx        # after pnpm build
-node packages/cli/dist/cli.js validate deck.pptx       # the 29 must-not-break rules
+node packages/cli/dist/cli.js validate deck.pptx       # the 33 must-not-break rules
 node packages/cli/dist/cli.js render deck.pptx --out svg/   # every slide as SVG, no browser
 node packages/cli/dist/cli.js roundtrip deck.pptx      # is it still the same deck
 node packages/cli/dist/cli.js bisect a.pptx b.pptx     # which change broke it

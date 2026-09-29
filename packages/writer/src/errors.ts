@@ -1,16 +1,6 @@
 /**
- * The writer's own failures.
- *
- * There are only three, and the smallness is deliberate. Almost everything that
- * can go wrong on an export already has an owner: `OpcError` for the container
- * (a part with no content type, a relationship pointing at nothing), and
- * `ValidateError` for the twenty-nine rules. Re-wrapping either would throw away
- * the detail a caller needs - `ValidateError` carries the whole `Report` on its
- * `detail` - in exchange for a uniform class name nobody dispatches on.
- *
- * So this file holds what is genuinely the writer's: a hook that threw, a
- * garbage collection that could not be shown to be safe, and the one assertion
- * the writer makes on its own output.
+ * The writer's own failures: a hook that threw, a collection not shown to be safe, and its one
+ * assertion on its own output. Container and rule failures stay `OpcError` and `ValidateError`.
  */
 
 export const WRITER_ERROR_CODES = [

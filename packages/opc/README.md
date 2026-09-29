@@ -133,7 +133,7 @@ get to choose. Checked against FIPS 180-4's own vectors, not against itself.
 - **0.4–0.6** `@pptx-studio/xml`: the tokenizer, `XNode`, byte-identical re-serialization, and
   `XmlEdit` with exact inverses.
 - **1.3** Dirty-part-only export and media mark-and-sweep. "Dirty" here currently means "replaced".
-- **1.2** The 29 validation rules. This package asserts only the OPC layer.
+- **1.2** The validation rules. This package asserts only the OPC layer.
 
 ## Licence
 

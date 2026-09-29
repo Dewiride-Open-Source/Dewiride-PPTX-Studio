@@ -147,16 +147,20 @@ export interface ThemeSpec {
   readonly minorLatin?: string | undefined;
   /** A whole `a:objectDefaults`, written after `a:themeElements`. */
   readonly objectDefaults?: string | undefined;
+  /** `dk1` and `lt1` as `a:srgbClr` rather than the system colours PowerPoint's themes use. */
+  readonly rgbDarkLight?: boolean | undefined;
 }
 
 function themeXml(spec: ThemeSpec, name: string): string {
   const scheme = spec.scheme;
   const slot = (k: keyof Scheme): string =>
-    k === 'dk1'
-      ? `<a:dk1><a:sysClr val="windowText" lastClr="${scheme.dk1}"/></a:dk1>`
-      : k === 'lt1'
-        ? `<a:lt1><a:sysClr val="window" lastClr="${scheme.lt1}"/></a:lt1>`
-        : `<a:${k}><a:srgbClr val="${scheme[k]}"/></a:${k}>`;
+    spec.rgbDarkLight === true
+      ? `<a:${k}><a:srgbClr val="${scheme[k]}"/></a:${k}>`
+      : k === 'dk1'
+        ? `<a:dk1><a:sysClr val="windowText" lastClr="${scheme.dk1}"/></a:dk1>`
+        : k === 'lt1'
+          ? `<a:lt1><a:sysClr val="window" lastClr="${scheme.lt1}"/></a:lt1>`
+          : `<a:${k}><a:srgbClr val="${scheme[k]}"/></a:${k}>`;
 
   const clrScheme = (
     [
@@ -407,6 +411,20 @@ export interface SheetPackage {
    * name without one throws.
    */
   readonly media?: readonly { readonly name: string; readonly bytes: Uint8Array }[];
+  /** A table-style part; absent writes no part, no relationship and no override. */
+  readonly tableStyles?: TableStylesPart | undefined;
+}
+
+/** `ppt/tableStyles.xml`, or a part a hostile probe misplaces, misroots or leaves unrelated. */
+export interface TableStylesPart {
+  /** The whole part, declaration included. */
+  readonly xml: string;
+  /** Defaults to `/ppt/tableStyles.xml`. */
+  readonly partName?: string | undefined;
+  /** The presentation's `tableStyles` relationship. Defaults to true. */
+  readonly rel?: boolean | undefined;
+  /** Write the part itself. Defaults to true; false leaves a relationship to nothing. */
+  readonly part?: boolean | undefined;
 }
 
 function relsXml(entries: readonly RelSpec[]): string {
@@ -605,6 +623,15 @@ export function buildSheetPackage(pkg: SheetPackage): Uint8Array {
   // masters say. It is written here precisely so the resolver has the chance to
   // read the wrong one.
   presRels.push({ id: nextId(), type: `${REL}/theme`, target: 'theme/theme1.xml' });
+  const styles = pkg.tableStyles;
+  const stylesPart = styles?.partName ?? '/ppt/tableStyles.xml';
+  if (styles !== undefined && styles.rel !== false) {
+    presRels.push({
+      id: nextId(),
+      type: `${REL}/tableStyles`,
+      target: stylesPart.slice('/ppt/'.length),
+    });
+  }
 
   const presentation =
     DECLARATION +
@@ -633,6 +660,11 @@ export function buildSheetPackage(pkg: SheetPackage): Uint8Array {
     part: '/ppt/presentation.xml',
     type: `${CT}.presentationml.presentation.main+xml`,
   });
+
+  if (styles !== undefined && styles.part !== false) {
+    entries.push({ name: stylesPart.slice(1), bytes: utf8(styles.xml) });
+    overrides.push({ part: stylesPart, type: `${CT}.presentationml.tableStyles+xml` });
+  }
 
   // ---- media --------------------------------------------------------------
   const mediaTypes = new Map<string, string>();

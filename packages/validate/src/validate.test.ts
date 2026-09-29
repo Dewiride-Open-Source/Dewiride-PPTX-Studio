@@ -1,25 +1,17 @@
 import { attributeValue, childElements, parseXmlString, type XElement } from '@pptx-studio/xml';
 import { describe, expect, it } from 'vitest';
 
+import tableStyles from '../../../corpus/ground-truth/table-styles.json' with { type: 'json' };
 import tables from '../../../corpus/ground-truth/tables.json' with { type: 'json' };
 
 import { formatReport, type Report } from './report/report.js';
-import type { RuleId } from './rules/rules.js';
+import { RULES, type RuleId } from './rules/rules.js';
 import { deck, minimalDeck, relsPart, rel, shape, IDENTITY_CLR_MAP } from './testing/deck.js';
 import { validatePackage, type ValidateOptions } from './validate.js';
 
 /**
- * Every rule, broken once.
- *
- * The plan's verification for this sub-phase is "hand-corrupt a deck 29 ways,
- * assert each rule fires with part URI and XPath", and that is literally what
- * this file is. One fixture per rule, each a copy of a deck that passes with
- * exactly one thing changed.
- *
- * Two assertions on every one of them, and the second is the one that keeps the
- * suite honest over time. The rule fires - and the *clean* deck does not fire
- * it, checked once for all twenty-nine below. A test that only ever showed the
- * broken case would still pass if a rule started firing on everything.
+ * Every rule, broken once: a deck that passes, with exactly one thing changed per rule.
+ * The clean deck is checked once for every rule too, so a rule that fires on everything fails.
  */
 
 const OD = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/';
@@ -65,10 +57,9 @@ describe('a deck that passes', () => {
     const { bytes, store } = deck();
     const clean = report({ bytes, store });
 
-    // No baseline was given, so the three preservation rules cannot run. A
-    // report that omitted them would look like thirty-one passes.
+    // No baseline was given, so the three preservation rules are named as skipped, not passed.
     expect(clean.skipped.map((entry) => entry.rule)).toEqual(['V027', 'V028', 'V029']);
-    expect(clean.checked).toHaveLength(28);
+    expect(clean.checked).toHaveLength(RULES.length - 3);
     for (const entry of clean.skipped) expect(entry.why).toContain('package as it was opened');
   });
 
@@ -719,6 +710,141 @@ describe('V030 and V031 tables, against what PowerPoint wrote back in C7', () =>
     expect(broken('V017', withTable(probe('frame-missing').markup, false)).join('\n')).toContain(
       'no <p:xfrm>',
     );
+  });
+});
+
+describe('V032 and V033 table styles, against what PowerPoint drew and wrote back in C8', () => {
+  type StyleProbe = (typeof tableStyles.probes)[number];
+  const single = tableStyles.probes.filter(
+    (p) => !(p.markup.tblPr ?? '').includes('slides, one per'),
+  );
+  /** The controls a single-table probe's picture matched. */
+  const matchesOf = (probe: StyleProbe): readonly string[] => {
+    const drawn: unknown = probe.drawn;
+    if (typeof drawn !== 'object' || drawn === null || !('matches' in drawn)) return [];
+    const matches: unknown = drawn.matches;
+    return Array.isArray(matches) ? matches.filter((m): m is string => typeof m === 'string') : [];
+  };
+  interface Markup {
+    readonly markup: {
+      readonly tblPr: string | null;
+      readonly tableStyles: string | null;
+      readonly partName: string | null;
+      readonly rel: boolean;
+    };
+  }
+  /** The minimal deck with the probe's table on its slide and its table-style part beside it. */
+  const withStyles = (probe: Markup): Record<string, string> => {
+    const parts = minimalDeck();
+    const table =
+      '<a:tbl>' +
+      (probe.markup.tblPr ?? '') +
+      '<a:tblGrid><a:gridCol w="1371600"/></a:tblGrid><a:tr h="457200"><a:tc><a:txBody>' +
+      '<a:bodyPr/><a:lstStyle/><a:p/></a:txBody><a:tcPr/></a:tc></a:tr></a:tbl>';
+    const out: Record<string, string> = {
+      'ppt/slides/slide1.xml': parts['ppt/slides/slide1.xml']!.replace(
+        '</p:spTree>',
+        '<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="3" name="table"/>' +
+          '<p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/>' +
+          '</p:nvGraphicFramePr><p:xfrm><a:off x="914400" y="914400"/>' +
+          '<a:ext cx="1371600" cy="457200"/></p:xfrm><a:graphic>' +
+          '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">' +
+          table +
+          '</a:graphicData></a:graphic></p:graphicFrame></p:spTree>',
+      ),
+    };
+    const name = (probe.markup.partName ?? '/ppt/tableStyles.xml').slice(1);
+    if (probe.markup.tableStyles !== null) {
+      out[name] = probe.markup.tableStyles;
+      out['[Content_Types].xml'] = parts['[Content_Types].xml']!.replace(
+        '</Types>',
+        '<Override PartName="/' + name + '" ContentType="' + PML + 'tableStyles+xml"/></Types>',
+      );
+    }
+    if (probe.markup.rel) {
+      out['ppt/_rels/presentation.xml.rels'] = relsPart(
+        rel('rId1', OD + 'slideMaster', 'slideMasters/slideMaster1.xml') +
+          rel('rId2', OD + 'slide', 'slides/slide1.xml') +
+          rel('rId3', OD + 'tableStyles', name.slice('ppt/'.length)),
+      );
+    }
+    return out;
+  };
+  /** What PowerPoint drew for a table naming no built-in, in each theme C8 drew in. */
+  const DEFAULT_GRID: Readonly<Record<string, string>> = {
+    s1: 'sweep-ctl#7',
+    s2: 'ctl2-black-grid',
+    s3: 'ctl3-black-grid',
+  };
+  const clean = single.filter((p) => p.repaired === false);
+  const repaired = single.filter((p) => p.repaired === true);
+
+  it('V032 fires on exactly the tables that name an id and draw the default grid', () => {
+    const disagreements: string[] = [];
+    for (const probe of clean) {
+      const names = /<a:tableStyle(Id>|\s)/.test(probe.markup.tblPr ?? '');
+      const grid = matchesOf(probe).includes(DEFAULT_GRID[probe.theme] ?? '');
+      const fired = broken('V032', withStyles(probe)).length > 0;
+      if (fired !== (names && grid)) disagreements.push(probe.id + (fired ? ' fired' : ' silent'));
+    }
+    expect(disagreements).toEqual([]);
+    expect(clean.filter((p) => broken('V032', withStyles(p)).length > 0).length).toBeGreaterThan(
+      20,
+    );
+  });
+
+  it('V032 names the id, and is silent on a built-in written in lower case', () => {
+    const probe = (id: string) => single.find((p) => p.id === id)!;
+    expect(broken('V032', withStyles(probe('custom-X'))).join('\n')).toContain(
+      "names {C8000000-0000-4000-8000-00000000A001}, none of PowerPoint's 74 built-in table styles",
+    );
+    expect(broken('V032', withStyles(probe('lex-lower-G2')))).toEqual([]);
+    expect(broken('V032', withStyles(probe('inline-X'))).join('\n')).toContain('<a:tableStyle>');
+  });
+
+  it('V033 fires on the table-style forms PowerPoint repaired, and on nothing it opened as written', () => {
+    const probe = (id: string) => single.find((p) => p.id === id)!;
+    for (const [id, text] of [
+      ['lex-nobrace-G2', 'which is not a GUID in braces'],
+      ['lex-space-G2', 'which is not a GUID in braces'],
+      ['lex-newline-G2', 'which is not a GUID in braces'],
+      ['def-missing', '<a:tblStyleLst> has no @def'],
+      ['styleid-missing', '<a:tblStyle> has no @styleId'],
+      ['b-yes', '<a:tcTxStyle>/@b is "yes", not on, off or def'],
+      ['edge-empty', '<a:left> has neither <a:ln> nor <a:lnRef>'],
+      ['fill-empty', '<a:fill> holds no fill'],
+    ] as const) {
+      const found = broken('V033', withStyles(probe(id)));
+      expect(found, id).toHaveLength(1);
+      expect(found[0], id).toContain(text);
+    }
+    // ST_Guid wants both braces; the nobrace probe measured the pair, this holds each alone.
+    const g2 = probe('lex-nobrace-G2');
+    for (const id of [
+      'E8034E78-7F5D-4C2E-B375-FC64B27BC917}',
+      '{E8034E78-7F5D-4C2E-B375-FC64B27BC917',
+    ]) {
+      const oneBrace = {
+        ...g2,
+        markup: {
+          ...g2.markup,
+          tblPr: `<a:tblPr><a:tableStyleId>${id}</a:tableStyleId></a:tblPr>`,
+        },
+      };
+      expect(broken('V033', withStyles(oneBrace)), id).toHaveLength(1);
+    }
+    for (const p of clean) expect(broken('V033', withStyles(p)), p.id).toEqual([]);
+  });
+
+  it('refuses every package PowerPoint repaired', () => {
+    const unrefused: string[] = [];
+    for (const probe of repaired) {
+      const { bytes, store } = deck({ parts: withStyles(probe) });
+      const fatal = report({ bytes, store }).findings.filter((f) => f.severity === 'fatal');
+      if (fatal.length === 0) unrefused.push(probe.id);
+    }
+    expect(unrefused).toEqual([]);
+    expect(repaired.length).toBe(11);
   });
 });
 

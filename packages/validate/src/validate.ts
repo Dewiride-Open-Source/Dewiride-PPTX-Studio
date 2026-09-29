@@ -23,8 +23,15 @@ import {
   v017GraphicFrame,
   v030TableGrid,
   v031TableAttributes,
+  v033TableStyles,
 } from './rules/required.js';
-import { v018SlideIds, v019SheetIds, v020ShapeIds, v021PlaceholderIndices } from './rules/id.js';
+import {
+  v018SlideIds,
+  v019SheetIds,
+  v020ShapeIds,
+  v021PlaceholderIndices,
+  v032TableStyleIds,
+} from './rules/id.js';
 import {
   v022PlaceholderType,
   v023GeometryGuides,
@@ -47,12 +54,7 @@ import {
 import { ruleById, RULE_IDS, type RuleId } from './rules/rules.js';
 
 /**
- * The thirty-one, wired to their implementations.
- *
- * A plain table, so that "is every rule reachable" is a thing a test can ask
- * rather than a thing a reader has to believe. `rules.test.ts` asserts that the
- * keys here are exactly `RULE_IDS` - a rule with a definition and no function
- * would otherwise sit in the table looking enforced.
+ * Every rule wired to its implementation; `rules.test.ts` holds the keys to `RULE_IDS`.
  */
 const IMPLEMENTATIONS: Readonly<Record<RuleId, (ctx: Context) => void>> = {
   V001: v001ContentTypeCoverage,
@@ -86,6 +88,8 @@ const IMPLEMENTATIONS: Readonly<Record<RuleId, (ctx: Context) => void>> = {
   V029: v029TextAndFieldIdentity,
   V030: v030TableGrid,
   V031: v031TableAttributes,
+  V032: v032TableStyleIds,
+  V033: v033TableStyles,
 };
 
 /** Rules that cannot run without the archive bytes. See `Context.archive`. */
@@ -111,11 +115,11 @@ export interface ValidateOptions {
    * those are skipped and the report says so.
    */
   readonly bytes?: Uint8Array;
-  /** The package as it was opened. The six preservation rules need it. */
+  /** The package as it was opened. The preservation rules need it. */
   readonly baseline?: PartStore;
   /** The baseline's archive, so an inherited `V003` can be recognised as inherited. */
   readonly baselineBytes?: Uint8Array;
-  /** A subset to run. Defaults to all twenty-nine. */
+  /** A subset to run. Defaults to every rule. */
   readonly rules?: readonly RuleId[];
   /** Passed to `readZip` when `bytes` are given. */
   readonly zip?: ReadZipOptions;
@@ -225,20 +229,9 @@ function run(ctx: RuntimeContext, rules: readonly RuleId[]): void {
 }
 
 /**
- * Decide, for each finding, whether we introduced it.
- *
- * The second pass is the whole of it: run the same rules against the package as
- * it was opened and difference the two sets. A finding in both was already
- * there. See `report.ts` for why that question is the one that decides whether
- * an export is refused, and why answering it by differencing beats answering it
- * per rule.
- *
- * Three properties make it cheap enough to be unconditional in the only case
- * that matters. It runs **only when something fatal was found**, so a clean
- * export - which is nearly all of them - pays nothing. It runs **only the rules
- * that fired**, not all twenty-nine. And it skips the preservation rules, which
- * would be comparing the baseline against itself and would find nothing by
- * construction.
+ * Which findings were already in the package as it was opened: the fired rules run again on
+ * the baseline and the two sets are differenced. Only when something fatal was found, only the
+ * rules that fired, and never the preservation rules. `report.ts` has why.
  */
 function attributeOrigins(
   ctx: RuntimeContext,

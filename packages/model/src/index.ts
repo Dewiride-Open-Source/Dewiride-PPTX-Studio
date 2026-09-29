@@ -160,7 +160,8 @@ export {
   parseTextStyles,
 } from './parse/text.js';
 
-export { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from './builtin-text-styles.js';
+export { BUILTIN_TEXT_STYLES, TEXT_FLOOR, type BuiltinLevel } from './builtin/text-styles.js';
+export { BUILTIN_TABLE_STYLES, type BuiltinTableStyle } from './builtin/table-styles.js';
 
 export {
   bucketOf,
@@ -208,10 +209,20 @@ export {
   type TableGrid,
   type TableProps,
   type TableRow,
+  type OnOffStyle,
+  type TableBackground,
+  type TableStyle,
+  type TableStyleBorders,
+  type TableStyleCell,
+  type TableStylePart,
+  type TableStylePartName,
   type TableStyleRef,
+  type TableStyleText,
+  type Themeable,
 } from './table.js';
 
-export { parseTable, parseTableChild } from './parse/table.js';
+export { parseTable, parseTableChild, parseTableStyle } from './parse/table.js';
+export { builtinTableStyle, tableStyleOf } from './resolve/table.js';
 
 export {
   requestedTypefaces,

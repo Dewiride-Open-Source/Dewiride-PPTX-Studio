@@ -9,27 +9,18 @@ import {
   descendantElements,
   namespaceOf,
   NS,
+  textContent,
   type XElement,
 } from '@pptx-studio/xml';
 import type { Context } from '../context.js';
 import { attributeLocation, elementLocation } from '../report/location.js';
 import { bySource, readRelsParts, resolveTarget } from '../rels.js';
+import { forEachElement } from './required.js';
+import { BUILTIN_TABLE_STYLE_IDS } from './table-style-ids.js';
 
 /**
- * `V018` … `V021`: four identifier spaces, and never one allocator.
- *
- * A presentation has four kinds of id and they do not share a rule between
- * them. Slide ids start at 256 and stop at 2147483647. Master and layout ids
- * start at 2147483648, and - the part no schema says - come out of **one**
- * counter shared between them. Shape ids are unique inside a part and free to
- * repeat across parts. Placeholder indices are not identifiers at all; they are
- * a join key against another part.
- *
- * Every one of those is a way to break a file that looks like a way to be
- * tidy. Renumbering shape ids to be unique across the deck is the obvious
- * example: it is more consistent, it is what a database would do, and it
- * detaches every `p:custDataLst`, VML `@spid` and animation target that names
- * the old number.
+ * `V018` … `V021` and `V032`: identifier spaces and the ids that name into them. Slide, sheet and
+ * shape ids never share an allocator, and a table style id names one of PowerPoint's built-ins.
  */
 
 const SLIDE_ID_MIN = 256;
@@ -371,4 +362,29 @@ export function v021PlaceholderIndices(ctx: Context): void {
       );
     }
   }
+}
+
+const BUILTIN_TABLE_STYLES = new Set(BUILTIN_TABLE_STYLE_IDS);
+/** A well-formed id; V033 reports the rest. */
+const TABLE_STYLE_GUID = /^\{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}$/i;
+
+/** A table's `a:tableStyleId`, or its inline `a:tableStyle/@styleId`, names a built-in (C8). */
+export function v032TableStyleIds(ctx: Context): void {
+  forEachElement(ctx, (part, element) => {
+    if (namespaceOf(element) !== NS.a) return;
+    const named =
+      element.local === 'tableStyleId'
+        ? textContent(element)
+        : element.local === 'tableStyle'
+          ? attributeValue(element, 'styleId')
+          : undefined;
+    if (named === undefined || !TABLE_STYLE_GUID.test(named)) return;
+    if (BUILTIN_TABLE_STYLES.has(named.toUpperCase())) return;
+    ctx.add(
+      'V032',
+      elementLocation(part, element),
+      `<a:${element.local}> names ${named}, none of PowerPoint's 74 built-in table styles. ` +
+        'PowerPoint draws a 1-pt black grid instead, whatever ppt/tableStyles.xml defines (C8).',
+    );
+  });
 }

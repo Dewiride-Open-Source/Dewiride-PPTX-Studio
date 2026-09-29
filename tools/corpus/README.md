@@ -297,7 +297,7 @@ read a census or unzip an archive and this checker deliberately does none of tho
 - **`C-REJECT`** ✔ — in `reject/reject.test.ts`, and it is the only one of the five that is
   about files that are **wrong**. Seventeen minimal packages, each reproducing one refusal
   `ROSTER.md` measured, each asserted to be caught by the validator rule its manifest names. It
-  exists because four of the validator's twenty-nine rules have no instance anywhere in the fifty-five
+  exists because four of the validator's rules have no instance anywhere in the fifty-five
   good decks — every file containing a `p:control`, a `c:strLit` in a series title, a `hdr`
   placeholder or a short `cs:chartStyle` is a file PowerPoint refuses — so without these they
   would be enforced entirely on trust. Arrived with sub-phase 1.2; see

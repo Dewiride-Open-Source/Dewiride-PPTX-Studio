@@ -9,25 +9,9 @@ import { packageBytes } from './deck.ts';
 import { outputName, REJECT_FIXTURES } from './fixtures.ts';
 
 /**
- * `C-REJECT`: every fixture in `corpus/reject/` is refused, by the rule that
- * claims it.
- *
- * The fifth corpus rule, and the only one that runs the other direction.
- * `C-CENSUS`, `C-REGEN`, `C-LEX` and `C-COV` are all about files that are
- * right. This one is about files that are wrong, and it exists because the
- * other direction cannot be checked with real decks at all: every deck in
- * `corpus/decks`, `corpus/authored` and `corpus/written` opens in PowerPoint,
- * so none of them contains a `p:control`, a `c:strLit` in a series title or a
- * placeholder typed `hdr`. Four of the validator's twenty-nine rules have
- * nothing in the good corpus to be quiet about, and without these fixtures
- * they would be enforced entirely on trust.
- *
- * Three assertions, and the third is the one that stops the collection rotting:
- *
- * 1. the fixture is refused - `report.ok` is false;
- * 2. by the rule its manifest entry names, fatally;
- * 3. and the manifest on disk still matches what the recipe builds, which is
- *    `C-REGEN` for this collection.
+ * `C-REJECT`: every fixture in `corpus/reject/` is refused, fatally, by the rule its manifest
+ * names, and still matches what its recipe builds. The good corpus holds none of these refusals,
+ * so without them the rules they test would be enforced on trust.
  */
 
 const DIR = join(ROOT, 'corpus', 'reject');

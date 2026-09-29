@@ -7,11 +7,22 @@
 import { parseXmlString } from '@pptx-studio/xml';
 import { describe, expect, it } from 'vitest';
 
+import styles from '../../../corpus/ground-truth/table-styles.json' with { type: 'json' };
 import fixture from '../../../corpus/ground-truth/tables.json' with { type: 'json' };
 
+import { BUILTIN_TABLE_STYLES } from './builtin/table-styles.js';
 import { ModelError } from './errors.js';
 import { parseSheet } from './parse/sheet.js';
-import { INVENTED_COLUMN_WIDTH, TABLE_URI, tableGrid, type GridCell, type Table } from './table.js';
+import { parseTableStyle } from './parse/table.js';
+import { builtinTableStyle, tableStyleOf } from './resolve/table.js';
+import {
+  INVENTED_COLUMN_WIDTH,
+  TABLE_URI,
+  tableGrid,
+  type GridCell,
+  type Table,
+  type TableStyle,
+} from './table.js';
 
 /* -------------------------------------------------------------------------- */
 /* building slides by hand                                                    */
@@ -336,7 +347,10 @@ describe('parsing', () => {
     const inline = tableFrom(
       `<a:tbl><a:tblPr><a:tableStyle styleId="{1B1D64F0-0000-4000-8000-0000000A200A}" styleName="x"/></a:tblPr>${grid(1)}</a:tbl>`,
     );
-    expect(inline.props?.style?.kind).toBe('inline');
+    expect(inline.props?.style).toMatchObject({
+      kind: 'inline',
+      id: '{1B1D64F0-0000-4000-8000-0000000A200A}',
+    });
     expect(tableFrom(`<a:tbl>${grid(1)}</a:tbl>`).props).toBeUndefined();
   });
 
@@ -450,5 +464,330 @@ describe('the grid', () => {
       [1, 0, 1, 1],
       [1, 3, 1, 1],
     ]);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* table styles: C8                                                           */
+/* -------------------------------------------------------------------------- */
+
+const isStrings = (value: unknown): value is readonly string[] =>
+  Array.isArray(value) && value.every((v) => typeof v === 'string');
+
+/** A single-table probe's measured picture: the controls its region matched. */
+function matchesOf(probe: (typeof styles.probes)[number]): readonly string[] {
+  const drawn: unknown = probe.drawn;
+  if (typeof drawn !== 'object' || drawn === null || !('matches' in drawn)) return [];
+  const { matches } = drawn;
+  if (!isStrings(matches)) throw new Error(`${probe.id} is a sweep`);
+  return matches;
+}
+
+/** A style written here, with a custom id, parsed as a part's would be. */
+function crafted(inner: string): TableStyle {
+  const root = parseXmlString(
+    `<a:tblStyleLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" def="{C8000000-0000-4000-8000-00000000A001}">` +
+      `<a:tblStyle styleId="{C8000000-0000-4000-8000-00000000A001}" styleName="crafted">${inner}</a:tblStyle></a:tblStyleLst>`,
+  ).root;
+  const element = root.children.find((n) => n.type === 'element');
+  if (element?.type !== 'element') throw new Error('no a:tblStyle');
+  return parseTableStyle(element, '/ppt/tableStyles.xml');
+}
+
+/** The part names a built-in's XML carries, straight from the string. */
+const partsWritten = (xml: string): string[] =>
+  [
+    ...xml.matchAll(
+      /<a:(wholeTbl|band[12][HV]|lastCol|firstCol|lastRow|seCell|swCell|firstRow|neCell|nwCell)>/g,
+    ),
+  ].map((m) => m[1] ?? '');
+
+const styleNamed = (name: string): string => {
+  const entry = styles.roster.styles.find((s) => s.name === name);
+  if (entry === undefined) throw new Error(`no ${name}`);
+  return entry.id;
+};
+const REFERENCE: Readonly<Record<string, string>> = {
+  [styleNamed('Medium Style 2 - Accent 1')]: 'G1',
+  [styleNamed('Dark Style 1')]: 'G2',
+  [styleNamed('Medium Style 3 - Accent 2')]: 'G3',
+};
+/** What PowerPoint drew for a table that resolves to no built-in, in each theme C8 drew in. */
+const DEFAULT_GRID: Readonly<Record<string, string>> = {
+  s1: 'sweep-ctl#7',
+  s2: 'ctl2-black-grid',
+  s3: 'ctl3-black-grid',
+};
+
+/** The control whose pixels a resolved style predicts for a single-table probe. */
+function predictedControl(probe: (typeof styles.probes)[number], table: Table): string {
+  const style = tableStyleOf(table);
+  if (style === null) return DEFAULT_GRID[probe.theme] ?? '';
+  const g = REFERENCE[style.id] ?? style.id;
+  const banded = (probe.markup.tblPr ?? '').includes('bandRow="1"') ? '-banded' : '';
+  return (probe.theme === 's2' ? 'ctl2-' : 'ctl-') + g + banded;
+}
+
+/** Every single-table probe PowerPoint opened as written; the sweeps are asked separately. */
+const cleanStyleProbes = styles.probes.filter(
+  (p) => p.repaired === false && !p.control && !(p.markup.tblPr ?? '').includes('slides, one per'),
+);
+
+describe('the 74 built-in table styles, as PowerPoint enumerated and wrote them (C8)', () => {
+  it('ships the gallery PowerPoint offers, in its order, byte for byte as it writes each', () => {
+    expect(BUILTIN_TABLE_STYLES).toHaveLength(74);
+    expect(BUILTIN_TABLE_STYLES.map((s) => [s.id, s.name])).toEqual(
+      styles.roster.styles.map((s) => [s.id, s.name]),
+    );
+    const definitions: Readonly<Record<string, string>> = styles.definitions;
+    for (const style of BUILTIN_TABLE_STYLES)
+      expect(style.xml, style.name).toBe(definitions[style.id]);
+    expect(new Set(styles.roster.styles.map((s) => s.key)).size).toBe(74);
+  });
+
+  it('parses every one of them with the parser a package part would get', () => {
+    for (const entry of BUILTIN_TABLE_STYLES) {
+      const style = builtinTableStyle(entry.id);
+      expect(style?.id, entry.name).toBe(entry.id);
+      expect(style?.name, entry.name).toBe(entry.name);
+      expect(Object.keys(style?.parts ?? {}).sort(), entry.name).toEqual(
+        partsWritten(entry.xml).sort(),
+      );
+      expect(style?.background !== undefined, entry.name).toBe(entry.xml.includes('<a:tblBg>'));
+    }
+  });
+
+  it('looks a GUID up in any case, and nothing else up at all', () => {
+    const id = styleNamed('Dark Style 1');
+    expect(builtinTableStyle(id.toLowerCase())?.name).toBe('Dark Style 1');
+    expect(builtinTableStyle('{00000000-0000-0000-0000-00000000C700}')).toBeUndefined();
+    expect(builtinTableStyle(id.slice(1, -1))).toBeUndefined();
+  });
+
+  it('reads a style into its parts, defaulting nothing the XML did not say', () => {
+    const medium = builtinTableStyle(styleNamed('Medium Style 2 - Accent 1'))!;
+    expect(medium.background).toBeUndefined();
+    expect(medium.parts.wholeTbl?.cell?.fill).toEqual({
+      kind: 'value',
+      value: {
+        type: 'solid',
+        color: { space: 'scheme', name: 'accent1', transforms: [{ op: 'tint', val: 20000 }] },
+      },
+    });
+    expect(medium.parts.wholeTbl?.cell?.borders?.insideV).toMatchObject({
+      kind: 'value',
+      value: { w: 12700, fill: { type: 'solid', color: { space: 'scheme', name: 'lt1' } } },
+    });
+    expect(medium.parts.wholeTbl?.cell?.borders?.tlToBr).toBeUndefined();
+    expect(medium.parts.wholeTbl?.text).toEqual({
+      b: undefined,
+      i: undefined,
+      font: {
+        kind: 'ref',
+        ref: { idx: 'minor', color: { space: 'prst', name: 'black', transforms: [] } },
+      },
+      color: { space: 'scheme', name: 'dk1', transforms: [] },
+    });
+    expect(medium.parts.firstRow?.text?.b).toBe('on');
+    expect(medium.parts.band2H?.cell).toEqual({
+      borders: {
+        left: undefined,
+        right: undefined,
+        top: undefined,
+        bottom: undefined,
+        insideH: undefined,
+        insideV: undefined,
+        tlToBr: undefined,
+        blToTr: undefined,
+      },
+      fill: undefined,
+      cell3D: undefined,
+    });
+    expect(medium.parts.seCell).toBeUndefined();
+
+    const themed = builtinTableStyle(styleNamed('Themed Style 1 - Accent 1'))!;
+    expect(themed.background).toEqual({
+      fill: {
+        kind: 'ref',
+        ref: { idx: 2, color: { space: 'scheme', name: 'accent1', transforms: [] } },
+      },
+      effect: {
+        kind: 'ref',
+        ref: { idx: 1, color: { space: 'scheme', name: 'accent1', transforms: [] } },
+      },
+    });
+    expect(themed.parts.wholeTbl?.cell?.borders?.left).toEqual({
+      kind: 'ref',
+      ref: { idx: 1, color: { space: 'scheme', name: 'accent1', transforms: [] } },
+    });
+    expect(themed.parts.wholeTbl?.cell?.fill).toEqual({ kind: 'value', value: { type: 'none' } });
+  });
+
+  it('resolves every table to the style PowerPoint drew, or to none where it drew its grid', () => {
+    const misfits: string[] = [];
+    for (const probe of cleanStyleProbes) {
+      const table = tableFrom(`<a:tbl>${probe.markup.tblPr ?? ''}${grid(1)}</a:tbl>`);
+      const expected = predictedControl(probe, table);
+      if (!matchesOf(probe).includes(expected))
+        misfits.push(`${probe.id}: ${expected} against ${matchesOf(probe).join(', ')}`);
+    }
+    expect(misfits).toEqual([]);
+    expect(cleanStyleProbes.length).toBeGreaterThan(55);
+  });
+
+  it('resolves each of the 74 by GUID with no definition in the package, in two themes', () => {
+    for (const sweep of ['sweep-nopart', 'sweep-empty', 'sweep2-nopart']) {
+      const probe = styles.probes.find((p) => p.id === sweep)!;
+      const drawn: unknown = probe.drawn;
+      if (typeof drawn !== 'object' || drawn === null || !('matches' in drawn))
+        throw new Error(sweep);
+      const matches: unknown = drawn.matches;
+      if (!Array.isArray(matches) || !matches.every(isStrings)) throw new Error(sweep);
+      const control = sweep.startsWith('sweep2') ? 'sweep2-ctl' : 'sweep-ctl';
+      styles.roster.styles.forEach((entry, k) => {
+        const table = tableFrom(
+          `<a:tbl><a:tblPr firstRow="1" bandRow="1"><a:tableStyleId>${entry.id}</a:tableStyleId></a:tblPr>${grid(1)}</a:tbl>`,
+        );
+        expect(tableStyleOf(table)?.id, `${sweep} ${entry.name}`).toBe(entry.id);
+        expect(matches[k], `${sweep} ${entry.name}`).toContain(`${control}#${String(k)}`);
+      });
+    }
+  });
+
+  it('is right where every rival reading is wrong', () => {
+    const findings: Readonly<Record<string, unknown>> = styles.findings;
+    for (const [question, winner] of [
+      ['undefined-builtin', 'builtin'],
+      ['modified-builtin', 'builtin'],
+      ['custom-id', 'defaultGrid'],
+      ['unknown-id', 'defaultGrid'],
+      ['no-id', 'defaultGrid'],
+      ['lexical-case', 'matched'],
+      ['duplicate', 'ignored'],
+      ['inline', 'byStyleId'],
+      ['fallback-colour', 'black'],
+    ] as const) {
+      const finding = findings[question];
+      if (
+        typeof finding !== 'object' ||
+        finding === null ||
+        !('candidates' in finding) ||
+        !('winner' in finding)
+      ) {
+        throw new Error(question);
+      }
+      expect(finding.winner, question).toBe(winner);
+      const candidates: unknown = finding.candidates;
+      if (!Array.isArray(candidates)) throw new Error(question);
+      for (const c of candidates) {
+        if (typeof c !== 'object' || c === null || !('name' in c) || !('fits' in c) || !('of' in c))
+          throw new Error(question);
+        if (c.name === winner) expect(c.fits, question).toBe(c.of);
+        else expect(c.fits, `${question}: ${String(c.name)}`).toBeLessThan(Number(c.of));
+      }
+    }
+  });
+
+  it('refuses the id forms and the style forms PowerPoint repaired', () => {
+    const probe = (id: string) => styles.probes.find((p) => p.id === id)!;
+    for (const id of ['lex-nobrace-G2', 'lex-space-G2', 'lex-newline-G2']) {
+      expect(
+        () => tableFrom(`<a:tbl>${probe(id).markup.tblPr ?? ''}${grid(1)}</a:tbl>`),
+        id,
+      ).toThrow(ModelError);
+      expect(probe(id).repaired, id).toBe(true);
+    }
+    // ST_Guid wants both braces; the nobrace probe measured the pair, this holds each alone.
+    for (const id of [
+      'E8034E78-7F5D-4C2E-B375-FC64B27BC917}',
+      '{E8034E78-7F5D-4C2E-B375-FC64B27BC917',
+    ]) {
+      expect(
+        () =>
+          tableFrom(
+            `<a:tbl><a:tblPr><a:tableStyleId>${id}</a:tableStyleId></a:tblPr>${grid(1)}</a:tbl>`,
+          ),
+        id,
+      ).toThrow(ModelError);
+    }
+    expect(
+      tableFrom(`<a:tbl>${probe('lex-lower-G2').markup.tblPr ?? ''}${grid(1)}</a:tbl>`).props?.style
+        ?.id,
+    ).toBe(styleNamed('Dark Style 1').toLowerCase());
+    for (const [id, code] of [
+      ['styleid-missing', 'MODEL_TABLE_ATTR'],
+      ['b-yes', 'MODEL_TABLE_ATTR'],
+      ['edge-empty', 'MODEL_TABLE_STYLE'],
+      ['fill-empty', 'MODEL_TABLE_STYLE'],
+    ] as const) {
+      const part = parseXmlString(probe(id).markup.tableStyles ?? '').root;
+      const element = part.children.find((n) => n.type === 'element');
+      if (element?.type !== 'element') throw new Error(id);
+      let thrown: unknown;
+      try {
+        parseTableStyle(element, '/ppt/tableStyles.xml');
+      } catch (error) {
+        thrown = error;
+      }
+      expect(thrown, id).toBeInstanceOf(ModelError);
+      expect(thrown, id).toMatchObject({ code });
+      expect(probe(id).repaired, id).toBe(true);
+    }
+  });
+
+  it('maps each of the eight edges to its own key, and reads a font collection and an effect', () => {
+    const edges = ['left', 'right', 'top', 'bottom', 'insideH', 'insideV', 'tl2br', 'tr2bl'];
+    const style = crafted(
+      '<a:tblBg><a:fill><a:noFill/></a:fill><a:effect><a:effectLst/></a:effect></a:tblBg>' +
+        '<a:wholeTbl><a:tcTxStyle i="off"><a:font><a:latin typeface="Georgia"/><a:ea typeface=""/><a:cs typeface=""/></a:font>' +
+        '<a:srgbClr val="C8A001"/></a:tcTxStyle><a:tcStyle><a:tcBdr>' +
+        edges.map((e, k) => `<a:${e}><a:ln w="${String(12700 * (k + 1))}"/></a:${e}>`).join('') +
+        '</a:tcBdr><a:fillRef idx="3"/><a:cell3D/></a:tcStyle></a:wholeTbl>',
+    );
+    const borders = style.parts.wholeTbl?.cell?.borders;
+    const widths = [
+      borders?.left,
+      borders?.right,
+      borders?.top,
+      borders?.bottom,
+      borders?.insideH,
+      borders?.insideV,
+      borders?.tlToBr,
+      borders?.blToTr,
+    ].map((edge) => (edge?.kind === 'value' ? edge.value.w : null));
+    expect(widths).toEqual(edges.map((_, k) => 12700 * (k + 1)));
+    expect(style.parts.wholeTbl?.text).toMatchObject({
+      i: 'off',
+      b: undefined,
+      font: { kind: 'value', value: { latin: 'Georgia', ea: '', cs: '' } },
+      color: { space: 'srgb', hex: 'C8A001' },
+    });
+    expect(style.parts.wholeTbl?.cell?.fill).toEqual({ kind: 'ref', ref: { idx: 3, color: null } });
+    expect(style.parts.wholeTbl?.cell?.cell3D?.qname).toBe('a:cell3D');
+    expect(style.background).toEqual({
+      fill: { kind: 'value', value: { type: 'none' } },
+      effect: { kind: 'value', value: [] },
+    });
+  });
+
+  it('refuses a style reference the schema requires an index on, or an index of the wrong kind', () => {
+    const codeOf = (inner: string): unknown => {
+      try {
+        crafted(inner);
+      } catch (error) {
+        return error instanceof ModelError ? error.code : error;
+      }
+      return 'parsed';
+    };
+    expect(codeOf('<a:tblBg><a:fillRef/></a:tblBg>')).toBe('MODEL_TABLE_ATTR');
+    expect(codeOf('<a:tblBg><a:fillRef idx="x"/></a:tblBg>')).toBe('MODEL_STYLE_IDX');
+    expect(codeOf('<a:wholeTbl><a:tcTxStyle><a:fontRef idx="1"/></a:tcTxStyle></a:wholeTbl>')).toBe(
+      'MODEL_FONT_COLLECTION',
+    );
+    expect(codeOf('<a:wholeTbl><a:tcTxStyle><a:fontRef/></a:tcTxStyle></a:wholeTbl>')).toBe(
+      'MODEL_TABLE_ATTR',
+    );
+    expect(codeOf('<a:wholeTbl><a:tcTxStyle i="yes"/></a:wholeTbl>')).toBe('MODEL_TABLE_ATTR');
+    expect(codeOf('<a:wholeTbl/>')).toBe('parsed');
   });
 });

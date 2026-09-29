@@ -1,7 +1,7 @@
 import { PartStore } from '@pptx-studio/opc';
 import { describe, expect, it } from 'vitest';
 import type { Report } from './report/report.js';
-import type { RuleId } from './rules/rules.js';
+import { RULES, type RuleId } from './rules/rules.js';
 import { deck, deckBytes, minimalDeck } from './testing/deck.js';
 import { validatePackage } from './validate.js';
 
@@ -268,6 +268,6 @@ describe('the preservation rules on a deck nobody touched', () => {
     // V003 is the one rule that reads the archive rather than the store, and
     // no bytes were passed here. It is named in `skipped`, not counted as a pass.
     expect(report.skipped.map((entry) => entry.rule)).toEqual(['V003']);
-    expect(report.checked).toHaveLength(30);
+    expect(report.checked).toHaveLength(RULES.length - 1);
   });
 });

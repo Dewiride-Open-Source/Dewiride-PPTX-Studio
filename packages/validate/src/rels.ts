@@ -8,24 +8,8 @@ import { attributeValue, childElements, type XElement } from '@pptx-studio/xml';
 import type { Context } from './context.js';
 
 /**
- * Relationship parts, read as XML rather than through `Relationships`.
- *
- * This is not duplication for its own sake, and the reason is worth stating
- * because the obvious code - call `store.relationships(part)` - is wrong here in
- * a way that is invisible until a rule fails to fire.
- *
- * `Relationships.parse` **refuses** a duplicate `Id`, an `Id` that is not an
- * `xsd:ID`, and an empty `Target`. It has to: it is the type the rest of the
- * codebase uses to look relationships up, and a collection with two `rId3`s
- * cannot answer the only question anyone asks it. But three of the thirty-one
- * rules are *about* exactly those defects, and a rule that can only see files
- * its own parser already accepted can never report them. Going through that
- * parser would turn every one of those findings into "this part could not be
- * read", which is true and useless.
- *
- * So the rules read the markup. That also buys the thing the plan asks for: a
- * finding gets an XPath into the `.rels` part - `/Relationships/Relationship[4]`
- * - instead of a part name and an apology.
+ * Relationships read from the markup, not through `Relationships.parse`: that parser refuses the
+ * duplicate and malformed ids some rules exist to report, and the markup gives each finding an XPath.
  */
 
 const REL_NS = 'http://schemas.openxmlformats.org/package/2006/relationships';
@@ -67,14 +51,7 @@ export function readRelsParts(ctx: Context): readonly RelsPart[] {
 }
 
 /**
- * Memoised above, because five of the thirty-one rules want this list and each
- * would otherwise re-walk every `.rels` part in the package. The parsed trees
- * are already cached on the context; what is saved here is the element scan and
- * the allocation, which on a three-hundred-slide deck is five passes over a
- * thousand relationship parts for one answer that cannot have changed.
- *
- * Keyed by context rather than by store, so nothing survives one validation run
- * into the next.
+ * Memoised per context: several rules want every relationship part, and this walks them once.
  */
 function scanRelsParts(ctx: Context): readonly RelsPart[] {
   const out: RelsPart[] = [];

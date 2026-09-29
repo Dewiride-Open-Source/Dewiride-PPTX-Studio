@@ -17,65 +17,9 @@ import {
 } from '@pptx-studio/xml';
 
 /**
- * Narrowing a package PowerPoint refuses down to the change that causes it.
- *
- * ## Why this is the debugger for this project
- *
- * PowerPoint emits no diagnostic log. A file it will not open produces one
- * sentence - "PowerPoint found a problem with content in deck.pptx" - naming no
- * part, no element and no reason, and a file it *repairs* produces a sentence
- * that does not even say what was repaired. `@pptx-studio/validate` covers the
- * twenty-nine failures we know how to describe; this covers the rest, which is
- * the interesting ones. The plan's own caveat: passing the rules is necessary
- * and not sufficient, because PowerPoint rejects some schema-legal markup for
- * reasons nobody has written down.
- *
- * So the only way to find out what a refusal is about is to ask PowerPoint
- * again with less of the change present, and keep asking. That is delta
- * debugging: Zeller and Hildebrandt's `ddmin` over a set of changes
- * (*Simplifying and Isolating Failure-Inducing Input*, IEEE TSE 2002), applied
- * level by level down a tree, which is Misherghi and Su's HDD (*HDD:
- * Hierarchical Delta Debugging*, ICSE 2006).
- *
- * ## This is the isolation problem, not the simplification one
- *
- * The distinction is Zeller's and it decides the whole design. Simplification
- * starts from one failing input and cuts it down; it has to guess what a
- * smaller input looks like, and most of its guesses are not even well formed.
- * Isolation starts from a **passing** configuration and a **failing** one and
- * reduces the *difference* between them.
- *
- * We are always in the second case. A deck that PowerPoint repairs came from a
- * deck that it opened, and we have both. So the atoms here are not elements of
- * the document: they are the **changes** between the two packages, and a
- * configuration is a subset of them applied to the original. That buys three
- * things a simplifier cannot have:
- *
- *   - Every configuration is well formed by construction. The splice unit is a
- *     whole node replaced by the whole node the other package has in that
- *     position, so no configuration can invent unbalanced markup.
- *   - The empty configuration is known to pass and the full one to fail, which
- *     is exactly `ddmin`'s precondition - and both are *checked* here rather
- *     than assumed, because when they do not hold the reason is the most useful
- *     thing this command can say.
- *   - The answer is "these two changes, out of ninety-one", which is a sentence
- *     about your edit rather than about PowerPoint's file format.
- *
- * ## Entries, not parts
- *
- * The delta is taken over **ZIP entries**, not over `PartStore` parts, and the
- * difference is not academic: `[Content_Types].xml` is not a part. It is a
- * package-level stream, `PartStore.partNames` deliberately excludes it, and a
- * missing `<Default Extension="fntdata"/>` in it is the canonical cause of
- * "PowerPoint found a problem with content" - the one this project's own plan
- * cites. A bisector that could only vary parts would be blind to the single
- * best-documented repair prompt there is.
- *
- * Working at the entry level also means nothing has to know what an entry
- * holds. Anything that parses as XML is descended into - parts, `.rels`,
- * `docProps` and the content-type stream alike - and anything that does not is
- * one atom, whether it is a PNG, an OLE2 compound file, or markup too damaged
- * to read. There is no content-type table to keep in step.
+ * Narrowing a package PowerPoint refuses to the smallest change that causes it: hierarchical delta
+ * debugging (Zeller's `ddmin`, Misherghi and Su's HDD) over the changes between a package that
+ * opens and one that does not. ADR 0013 has the design.
  */
 
 // -------------------------------------------------------------------- the delta
@@ -172,13 +116,8 @@ export function leafChanges(changes: readonly Change[]): Change[] {
 export type Verdict = 'fails' | 'passes' | 'unresolved';
 
 /**
- * Does this package still show the problem?
- *
- * Synchronous on purpose. Every oracle we have is either pure computation - the
- * twenty-nine rules, the round-trip comparison - or a subprocess the caller
- * blocks on anyway, and `spawnSync` blocks perfectly well. Making the reducer
- * asynchronous to serve a caller that does not exist would put a Promise in the
- * middle of a browser package for nothing.
+ * Does this package still show the problem? Synchronous: every oracle is pure computation or a
+ * subprocess its caller blocks on anyway.
  */
 export type Oracle = (bytes: Uint8Array, label: string) => Verdict;
 

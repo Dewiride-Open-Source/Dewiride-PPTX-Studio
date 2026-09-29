@@ -3,7 +3,7 @@
  * fixes a row's height. One table per package, so a repair names its cause; ADR 0056.
  */
 
-import { escapeText } from '../../lib/pptx.ts';
+import { escapeText } from '../../../lib/pptx.ts';
 
 /* -------------------------------------------------------------------------- */
 /* the grid                                                                   */

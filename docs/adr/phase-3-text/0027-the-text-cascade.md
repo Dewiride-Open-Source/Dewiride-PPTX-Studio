@@ -3,7 +3,7 @@
 **Sub-phase 3.1.** Status: accepted. Opens Phase 3. Supersedes nothing; corrects one member of a
 type 2.9 declared in advance, and refutes four claims the plan makes.
 
-Code: `packages/model/src/{text.ts, parse-text.ts, resolve-text.ts, builtin-text-styles.ts}`.
+Code: `packages/model/src/{text.ts, parse/text.ts, resolve/text.ts, builtin/text-styles.ts}`.
 Measurement: `corpus/ground-truth/text-cascade.json`, from
 `tools/ground-truth/{text-cascade.ts, tools/ground-truth/text/cascade/build-deck.ts, tools/ground-truth/text/cascade/read.ps1, tools/ground-truth/text/cascade/analyse.ts}`.
 

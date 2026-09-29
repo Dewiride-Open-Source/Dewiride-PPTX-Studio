@@ -5,14 +5,13 @@
  * node tools/ground-truth/text/cascade/write-tables.ts
  * ```
  *
- * Writes `packages/model/src/builtin-text-styles.ts` from
- * `corpus/ground-truth/text-cascade.json`. The table is not hand-written and may
- * not be hand-edited: `text.test.ts` re-derives it from the same fixture and
- * fails if the two have drifted, which is the only thing standing between a
- * measured constant and somebody's memory of one.
+ * Writes `packages/model/src/builtin/text-styles.ts` from `corpus/ground-truth/text-cascade.json`;
+ * `text.test.ts` re-derives it, so it is never edited by hand.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
+
+import { repoPath } from '../../../repo/root.ts';
 
 interface BuiltinLevel {
   level: number;
@@ -41,7 +40,7 @@ interface Fixture {
 }
 
 const fixture = JSON.parse(
-  readFileSync('corpus/ground-truth/text-cascade.json', 'utf8'),
+  readFileSync(repoPath('corpus/ground-truth/text-cascade.json'), 'utf8'),
 ) as Fixture;
 
 const { floor, builtinTextStyles } = fixture.model;
@@ -176,5 +175,5 @@ export const TEXT_FLOOR: BuiltinLevel = {
 };
 `;
 
-writeFileSync('packages/model/src/builtin-text-styles.ts', source);
-console.log('wrote packages/model/src/builtin-text-styles.ts');
+writeFileSync(repoPath('packages/model/src/builtin/text-styles.ts'), source);
+console.log('wrote packages/model/src/builtin/text-styles.ts');

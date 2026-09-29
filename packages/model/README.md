@@ -171,15 +171,36 @@ built to disagree with themselves:
   a column is never narrower than its cells' side margins plus 2 pt; and the frame's `a:ext` says
   nothing about the drawn size, which is the grid's sums (76/76 against 62/76).
 
-Cell text is a `TextBody` like any other. The table style a `tableStyleId` names is 4.2; the
-thirteen-part cascade is 4.3; drawing the grid is 4.4.
+Cell text is a `TextBody` like any other.
+
+## A table draws the built-in its GUID names, or none
+
+`BUILTIN_TABLE_STYLES` is PowerPoint's own Table Styles gallery: the 74 styles, in gallery order,
+each with its GUID, its name and the `a:tblStyle` PowerPoint writes for it, byte for byte. They were
+enumerated by driving the gallery itself and read back as PowerPoint serialised them (C8,
+`corpus/ground-truth/table-styles.json`); nothing was transcribed from another implementation.
+
+`tableStyleOf(table)` is the style PowerPoint draws a table with, and C8 found one rule for it
+across 84 packages in three themes:
+
+- The `a:tableStyleId` - or an inline `a:tableStyle`'s `@styleId` - names one of the 74, in any
+  case, and that built-in is drawn (230/230 across every style in two themes).
+- Nothing in `ppt/tableStyles.xml` changes the drawing: a redefined built-in draws PowerPoint's own
+  (7/7), a custom style defined there draws nothing of itself, and `@def` is never applied.
+- Any other id, or none, returns `null`: PowerPoint draws a 1-pt black grid with no fill, whatever
+  the theme (3/3 against the theme's `dk1` and `tx1`).
+
+`builtinTableStyle(id)` parses one of the 74 afresh; `parseTableStyle` reads any `CT_TableStyle`,
+defaulting nothing the file did not say. A GUID without braces or with padding, an edge with neither
+`a:ln` nor `a:lnRef`, and an empty `a:fill` throw: PowerPoint repairs each. The thirteen-part
+cascade is 4.3; drawing the grid is 4.4.
 
 ## What is not here
 
 - Nothing is painted. The renderers are 2.10.
 - The ten-source **text** cascade is 3.1. `Origin` already declares the five members only that
   cascade can produce, so 3.1 adds cases rather than widening a type every consumer has switched on.
-- Table styles, their cascade and their drawing are 4.2 to 4.4; SmartArt is 4.5.
+- The table-style cascade and table drawing are 4.3 and 4.4; SmartArt is 4.5.
 - Commands, undo and history are Phase 5; Change Layout is 7.4. What PowerPoint rewrites when a
   layout changes is recorded in the fixture and not acted on.
 - `a:effectDag` is not modelled — a directed graph of effect primitives PowerPoint has never been
@@ -190,6 +211,7 @@ thirteen-part cascade is 4.3; drawing the grid is 4.4.
 
 `corpus/ground-truth/sheets.json` — 114 probes in 37 packages, sub-phase 2.9.
 `corpus/ground-truth/tables.json` — 82 tables, one package each, and 21 slides PowerPoint authored, sub-phase 4.1.
+`corpus/ground-truth/table-styles.json` — the 74 built-in table styles and 84 probe packages, sub-phase 4.2.
 
 The measurement is a **position**, and PowerPoint reports it directly. C3 and C4 sampled bitmaps
 because a fill and a stroke are pictures; an inheritance is not. A placeholder with no `a:xfrm` of
@@ -205,4 +227,5 @@ against a summary of them, so a rule that drifts fails on the measurements.
 
 See `docs/adr/phase-0-foundation/0007-ground-truth.md`, `docs/adr/phase-2-geometry-and-paint/0021-colour.md`, `docs/adr/phase-2-geometry-and-paint/0022-fills.md`,
 `docs/adr/phase-2-geometry-and-paint/0023-lines.md`, `docs/adr/phase-2-geometry-and-paint/0024-model-parse-and-resolve.md`
-and `docs/adr/phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md`.
+`docs/adr/phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md` and
+`docs/adr/phase-4-tables-and-smartart/0063-a-table-draws-the-built-in-its-guid-names.md`.

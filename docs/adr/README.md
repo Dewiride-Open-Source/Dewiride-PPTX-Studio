@@ -89,12 +89,13 @@ date.
 
 ## Phase 4 — tables and smartart
 
-| #                                                                                    | decision                                  |
-| ------------------------------------------------------------------------------------ | ----------------------------------------- |
-| [0056](phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md)                  | The spans are the merge                   |
-| [0057](phase-4-tables-and-smartart/0057-transitive-ranges-float.md)                  | Transitive ranges float                   |
-| [0058](phase-4-tables-and-smartart/0058-what-code-scanning-found.md)                 | What code scanning found                  |
-| [0059](phase-4-tables-and-smartart/0059-the-publish-job-installs-nothing.md)         | The publish job installs nothing          |
-| [0060](phase-4-tables-and-smartart/0060-the-toolchain-moves-and-typescript-waits.md) | The toolchain moves, and TypeScript waits |
-| [0061](phase-4-tables-and-smartart/0061-chromium-153-draws-what-151-drew.md)         | Chromium 153 draws what 151 drew          |
-| [0062](phase-4-tables-and-smartart/0062-the-site-counts-its-visitors.md)             | The site counts its visitors              |
+| #                                                                                     | decision                                  |
+| ------------------------------------------------------------------------------------- | ----------------------------------------- |
+| [0056](phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md)                   | The spans are the merge                   |
+| [0057](phase-4-tables-and-smartart/0057-transitive-ranges-float.md)                   | Transitive ranges float                   |
+| [0058](phase-4-tables-and-smartart/0058-what-code-scanning-found.md)                  | What code scanning found                  |
+| [0059](phase-4-tables-and-smartart/0059-the-publish-job-installs-nothing.md)          | The publish job installs nothing          |
+| [0060](phase-4-tables-and-smartart/0060-the-toolchain-moves-and-typescript-waits.md)  | The toolchain moves, and TypeScript waits |
+| [0061](phase-4-tables-and-smartart/0061-chromium-153-draws-what-151-drew.md)          | Chromium 153 draws what 151 drew          |
+| [0062](phase-4-tables-and-smartart/0062-the-site-counts-its-visitors.md)              | The site counts its visitors              |
+| [0063](phase-4-tables-and-smartart/0063-a-table-draws-the-built-in-its-guid-names.md) | A table draws the built-in its GUID names |

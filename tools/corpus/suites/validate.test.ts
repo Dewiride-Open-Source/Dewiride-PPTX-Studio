@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 /**
  * The other half of sub-phase 1.2's verification, and the harder half to fake.
  *
- * `packages/validate/src/validate.test.ts` breaks a deck thirty-one ways and
+ * `packages/validate/src/validate.test.ts` breaks a deck once per rule and
  * checks that each rule fires. That proves the rules can detect. It cannot
  * prove the thing a validator actually has to be: **quiet on good files.**
  *
@@ -92,22 +92,10 @@ describe('the validator against the corpus', () => {
     expect(failures).toEqual([]);
   });
 
-  it('warns exactly twice, and both are placeholders a deck meant to leave orphaned', () => {
-    // Pinned rather than driven to zero, because both are correct - and the
-    // first is the nicest result in this file. `a02-placeholders` exists to
-    // probe the five-tier matcher, and its fifth shape is commented in the
-    // generator as "Tier 5: orphan. Nothing to inherit". The rule found it and
-    // described it in the deck's own words, without being told it was there.
-    //
-    // The second is the same thing incidentally: `a19-decorative` needed a
-    // placeholder to hang `@descr` and `@title` on, gave it explicit geometry,
-    // and never added a counterpart to the layout. It renders correctly because
-    // it carries its own transform, which is exactly the case where a warning
-    // is right and a refusal would not be.
-    //
-    // Zero fatal findings above and two accounted-for warnings here is the
-    // whole claim of this file. Any third warning is a matcher bug or a new
-    // deck, and either way somebody has to look.
+  it('warns three times, each a deck built to say one thing and draw another', () => {
+    // Two placeholders with nothing to inherit (a02's tier-5 orphan, a19's decorative shape) and
+    // a20's inline table style, which names no built-in and so draws the default grid (C8).
+    // Pinned rather than driven to zero: a fourth warning is a rule bug or a new deck.
     const warnings = DECKS.flatMap((deck) =>
       REPORTS.get(deck.id)!.findings.map(
         (finding) => deck.id + ' ' + finding.rule + ' ' + finding.where.xpath,
@@ -117,6 +105,7 @@ describe('the validator against the corpus', () => {
     expect(warnings).toEqual([
       'a02-placeholders V021 /p:sld/p:cSld/p:spTree/p:sp[5]/p:nvSpPr/p:nvPr/p:ph',
       'a19-decorative V021 /p:sld/p:cSld/p:spTree/p:sp[2]/p:nvSpPr/p:nvPr/p:ph',
+      'a20-tables V032 /p:sld/p:cSld/p:spTree/p:graphicFrame[2]/a:graphic/a:graphicData/a:tbl/a:tblPr/a:tableStyle',
     ]);
     for (const deck of DECKS) {
       for (const finding of REPORTS.get(deck.id)!.findings) {
@@ -138,10 +127,10 @@ describe('the validator against the corpus', () => {
     expect(unreadable).toEqual([]);
   });
 
-  it('ran twenty-eight rules on each; the other three want a baseline', () => {
+  it('ran every rule on each but the three that want a baseline', () => {
     for (const deck of DECKS) {
       const report = REPORTS.get(deck.id)!;
-      expect(report.checked, deck.id).toHaveLength(28);
+      expect(report.checked, deck.id).toHaveLength(RULES.length - 3);
       expect(
         report.skipped.map((entry) => entry.rule),
         deck.id,

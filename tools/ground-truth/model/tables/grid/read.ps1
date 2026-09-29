@@ -1,6 +1,6 @@
 # Experiment C7, step 2 - ask PowerPoint which cell each grid position belongs to.
 #
-#   powershell -File tools/ground-truth/model/tables/read.ps1 -Dir <work-dir> [-Only <glob>]
+#   powershell -File tools/ground-truth/model/tables/grid/read.ps1 -Dir <work-dir> [-Only <glob>]
 #
 # Opens each probe package (repair refused first, then allowed, so REPAIRED and REFUSED differ)
 # and records the frame, the column widths, the row heights and every position's rectangle from
@@ -22,7 +22,7 @@ $ppSaveAsOpenXMLPresentation = 24
 $root = (Resolve-Path -LiteralPath $Dir).Path
 $inputsPath = Join-Path $root 'table-inputs.json'
 if (-not (Test-Path -LiteralPath $inputsPath)) {
-    throw "no table-inputs.json in $root - run tools/ground-truth/model/tables/build-deck.ts first"
+    throw "no table-inputs.json in $root - run tools/ground-truth/model/tables/grid/build-deck.ts first"
 }
 $resavedDir = Join-Path $root 'resaved'
 New-Item -ItemType Directory -Force -Path $resavedDir | Out-Null

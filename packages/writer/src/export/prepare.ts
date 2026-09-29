@@ -2,43 +2,9 @@ import type { PartStore } from '@pptx-studio/opc';
 import { WriterError } from '../errors.js';
 
 /**
- * Work that has to happen at save time, contributed by whoever owns it.
- *
- * Several later sub-phases need to touch the package on the way out, and each
- * of them is somebody else's subject:
- *
- * - **8.7, embedded fonts.** Six artifacts that must all be present or
- *   PowerPoint reports a problem: the `fntdata` parts, the `fntdata` content-type
- *   `Default`, the font relationships on `presentation.xml`, the
- *   `p:embeddedFont` entries, their PANOSE and charset attributes, and
- *   `@embedTrueTypeFonts`. Plus a collection pass, because PowerPoint requires
- *   every listed typeface to actually be used.
- * - **3.4, autofit.** A `txBody` whose text changed needs its computed
- *   `@fontScale` and `@lnSpcReduction` written back - and one whose text did
- *   not must be left exactly alone, or a view-only deck stops round-tripping.
- * - **10.8, media.** The `p14:media` and `a:videoFile` relationships are a
- *   deliberate pair in the file and a duplicate on the way out.
- *
- * None of that is the writer's subject. Written inline it would become a list
- * of special cases in `export.ts` that grows by one every phase, that the
- * writer's own tests would have to know about, and that could not be tested
- * without standing up a font stack or a text engine. As hooks, each lands in
- * the package that owns it, ships with the sub-phase that needs it, and this
- * package keeps knowing nothing about fonts.
- *
- * ## Where they run, and why there
- *
- * Before collection and before validation, both deliberately.
- *
- * Before collection, because a hook is exactly the thing that changes what is
- * referenced - 8.7 both adds font parts and drops the ones nothing uses - and a
- * sweep that ran first would be answering a question about the wrong package.
- *
- * Before validation, because a hook writes markup, and markup this session
- * wrote is precisely what the twenty-nine rules exist to check. A hook that ran
- * after validation would be the one part of an export nothing checked, which is
- * the opposite of how it should be: it is newly synthesized markup, the
- * riskiest kind there is.
+ * Work that has to happen at save time, contributed by the sub-phase that owns it - 8.7's fonts,
+ * 3.4's autofit, 10.8's media - so the writer knows none of it. Hooks run before collection, which
+ * they change, and before validation, which must check the markup they write. ADR 0011.
  */
 
 export interface PrepareContext {

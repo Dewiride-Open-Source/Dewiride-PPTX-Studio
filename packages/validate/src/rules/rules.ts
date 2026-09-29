@@ -1,44 +1,7 @@
 /**
- * The thirty-one rules, and the evidence for each.
- *
- * ## Why a table and not thirty-one functions
- *
- * The functions are in the files beside this one. What lives here is the part a
- * person reads: what each rule claims, how sure we are, and *how we know*. A
- * validator whose rules exist only as code is a validator nobody can audit, and
- * this one has to be audited, because roughly half of it enforces things no
- * schema says.
- *
- * That is the fact that shapes the whole package. ECMA-376 is a description of
- * a file format; PowerPoint is an implementation that refuses files the
- * description permits. Sub-phase 0.7 and the corpus bisections in
- * `tools/corpus/ROSTER.md` found nineteen such refusals by building a package
- * with one change in it and watching PowerPoint decline to open it - no
- * diagnostic, no log, no part named, just "PowerPoint could not open the file"
- * or `0x80070570`. Every rule below whose `evidence` says `measured` came from
- * that loop and from nowhere else.
- *
- * So each rule carries three things beyond its check:
- *
- * - `evidence` - `schema` (ECMA-376 says so), `measured` (we watched PowerPoint
- *   refuse it), or `both`.
- * - `why` - the sentence that justifies the rule to somebody who is about to
- *   delete it because it fired on their file.
- * - `severity` - `fatal` refuses an export; `warning` is reported and does not.
- *
- * ## On being wrong in the safe direction
- *
- * A false positive here blocks an export a user wanted. A false negative hands
- * them a file PowerPoint will not open, with no way to find out why. Those are
- * not symmetric, but the first is not free either - a validator that fires on
- * good files gets turned off, and then it catches nothing.
- *
- * The resolution is `origin`, which lives on the finding rather than here: a
- * fatal a caller *introduced* refuses the export, and the identical fatal that
- * was already in the file when it was opened is reported and does not. That is
- * the same split `PartStore.write` already makes for dangling relationships,
- * and for the same reason - refusing to re-export a file we did not break makes
- * the file unopenable in this editor and does not fix anything.
+ * The rules, and the evidence for each: `schema`, `measured` (PowerPoint refused or repaired it),
+ * or `both`. A fatal a caller introduced refuses an export; the same fatal inherited from the
+ * opened file is reported and does not. The README lists every rule.
  */
 
 export type RuleCategory =
@@ -59,25 +22,14 @@ export interface Rule {
   /** Why the rule exists, for whoever is about to argue with it. */
   readonly why: string;
   /**
-   * True when the rule needs the package as it was opened as well as the
-   * package about to be written.
-   *
-   * Six rules do. They are skipped rather than passed when no baseline is
-   * given, and the report says so - a preservation rule that silently reports
-   * nothing because it had nothing to compare against is worse than one that
-   * did not run, because it looks like a pass.
+   * True when the rule needs the package as it was opened; without a baseline it is reported as
+   * skipped, never as passed.
    */
   readonly needsBaseline?: true;
 }
 
 /**
- * The shape each entry is checked against.
- *
- * `RULES` is `as const satisfies readonly RuleShape[]` rather than typed
- * `readonly Rule[]`, so that `RuleId` below can be the union of the thirty-one
- * literal ids written here instead of `string`. Annotating the array would
- * widen `id`, and then a caller could ask for a rule that does not exist and be
- * told so only at run time.
+ * Checked with `satisfies` rather than annotated, so `RuleId` stays the union of the literal ids.
  */
 interface RuleShape {
   readonly id: string;
@@ -559,6 +511,37 @@ export const RULES = [
       '`hMerge="on"` are a repair prompt apiece; PowerPoint saves the column at ' +
       'its minimum width, the row at zero, the span gone and the flag as "1". ' +
       '`w="108pt"`, the universal-measure spelling, opens clean and is not this rule.',
+  },
+  {
+    id: 'V032',
+    category: 'ids',
+    severity: 'warning',
+    evidence: 'measured',
+    title: "a table names one of PowerPoint's 74 built-in table styles, or none",
+    why:
+      'C8 drew 84 probe packages in three themes. A table whose `a:tableStyleId`, or ' +
+      'inline `a:tableStyle`, names one of the 74 built-ins draws that built-in, in ' +
+      'any case, whatever `ppt/tableStyles.xml` says about it; any other id - ' +
+      'defined in the part or not - draws a 1-pt black grid with no fill, and an ' +
+      'id nothing defines is dropped on the next save. The deck opens without a ' +
+      'word, which is why this is a warning: the file names one style and ' +
+      'PowerPoint draws another.',
+  },
+  {
+    id: 'V033',
+    category: 'required',
+    severity: 'fatal',
+    evidence: 'both',
+    title: 'a table style id is a braced GUID, and the table-style part is one PowerPoint keeps',
+    why:
+      '`ST_Guid` is a GUID in braces, `CT_TableStyleList/@def` and ' +
+      '`CT_TableStyle/@styleId` are required, `b` and `i` are `ST_OnOffStyleType` ' +
+      'and a border or fill must hold one. C8 measured each as a repair prompt: an ' +
+      'id without braces or with padding, a `tblPr` naming its style twice, a part ' +
+      'whose root is not `a:tblStyleLst`, a list without `@def`, a style without ' +
+      '`@styleId`, `b="yes"`, an edge with neither `a:ln` nor `a:lnRef`, and an ' +
+      'empty `a:fill`. PowerPoint writes the all-zero GUID for the id and empties ' +
+      'the part.',
   },
 ] as const satisfies readonly RuleShape[];
 

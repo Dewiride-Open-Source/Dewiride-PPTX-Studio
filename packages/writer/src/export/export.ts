@@ -10,24 +10,9 @@ import { assertPreserved, type PreservationCheck } from './preserve.js';
 import { runPrepare, type PrepareHook, type PrepareRecord } from './prepare.js';
 
 /**
- * Handing the package back.
- *
- * Four things happen, in an order that is load-bearing rather than tidy:
- *
- * 1. **Prepare hooks**, so that whatever later phases owe the file is in it.
- * 2. **Collect**, because a hook is the thing most likely to have orphaned
- *    something.
- * 3. **Write**, which streams every untouched part still compressed.
- * 4. **Check**, twice: that nothing we did not edit changed, and that the
- *    twenty-nine rules pass. Only then do the bytes leave the function.
- *
- * The check comes after the write and not before it, which is the one ordering
- * that might look backwards. It is the right way round because a check that
- * runs first is checking an intention, and what a user opens is an archive. All
- * three of `V003`, the duplicate half of `V002`, and the preservation check
- * below are questions about the emitted container that no amount of inspecting
- * the store can answer. Bytes are produced, then judged, then either returned
- * or thrown away - never returned unjudged.
+ * Handing the package back: prepare hooks, collect, write, then check that nothing unedited
+ * changed and that the rules pass. The check judges the emitted archive, so bytes are never
+ * returned unjudged. ADR 0011.
  */
 
 export interface ExportOptions {
@@ -60,7 +45,7 @@ export interface ExportOptions {
    * can emit the intermediate packages whose whole purpose is to be rejected.
    */
   readonly validate?: boolean;
-  /** A subset of rules to run. Defaults to all twenty-nine. */
+  /** A subset of rules to run. Defaults to every rule. */
   readonly rules?: readonly RuleId[];
   /** Set false to skip comparing the output against the source archive. */
   readonly verifyPreservation?: boolean;

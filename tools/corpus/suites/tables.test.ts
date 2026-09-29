@@ -3,13 +3,22 @@ import { join } from 'node:path';
 
 import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import { PartStore } from '@pptx-studio/opc';
-import { loadDocument, tableGrid, type Shape, type TableGrid } from '@pptx-studio/model';
+import {
+  BUILTIN_TABLE_STYLES,
+  loadDocument,
+  tableGrid,
+  tableStyleOf,
+  type Shape,
+  type TableGrid,
+  type TableStyle,
+  type TableStyleRef,
+} from '@pptx-studio/model';
 import { describe, expect, it } from 'vitest';
 
 /**
- * Sub-phase 4.1's honest check: every table in every committed deck, through the parser and the
- * grid, and the two decks that carry tables held to what PowerPoint drew. The census counts each
- * manifest records are the floor, so a table the parser silently skipped would show here.
+ * Every table in every committed deck through the parser, the grid (4.1) and the style (4.2), and
+ * the two decks that carry tables held to what PowerPoint drew and wrote. The census counts are the
+ * floor, so a table the parser silently skipped would show here.
  */
 
 const COLLECTIONS = ['decks', 'authored', 'written'];
@@ -59,6 +68,8 @@ interface Found {
   readonly part: string;
   readonly name: string;
   readonly grid: TableGrid;
+  readonly ref: TableStyleRef | undefined;
+  readonly style: TableStyle | null;
 }
 
 const found: Found[] = [];
@@ -75,6 +86,8 @@ for (const deck of DECKS) {
           part: sheet.partName,
           name: shape.name,
           grid: tableGrid(shape.table),
+          ref: shape.table.props?.style,
+          style: tableStyleOf(shape.table),
         });
       }
     }
@@ -171,5 +184,40 @@ describe('every table in every committed deck', () => {
       text: 'tableStyleId',
     });
     expect(merged!.grid.anchors[0]!.cell?.props?.marL).toBeUndefined();
+  });
+
+  it('resolves every table to the built-in its GUID names, or to none', () => {
+    const builtins = new Set(BUILTIN_TABLE_STYLES.map((s) => s.id));
+    for (const { deck, name, ref, style } of found) {
+      const named = ref !== undefined && builtins.has(ref.id.toUpperCase());
+      expect(style?.id.toUpperCase(), `${deck} ${name}`).toBe(
+        named ? ref.id.toUpperCase() : undefined,
+      );
+    }
+    expect(found.filter((f) => f.style !== null).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("finds b04-table's Medium Style 2 - Accent 1 written byte for byte as C8 has it", () => {
+    // Two PowerPoint sessions weeks apart, one through the gallery and one through AddTable.
+    const b04 = DECKS.find((d) => d.id === 'b04-table')!;
+    const part = new TextDecoder().decode(PartStore.open(b04.bytes).read('/ppt/tableStyles.xml'));
+    const medium = BUILTIN_TABLE_STYLES.find((s) => s.name === 'Medium Style 2 - Accent 1')!;
+    expect(part).toContain(medium.xml);
+    expect(found.find((f) => f.deck === 'b04-table')?.style?.name).toBe(
+      'Medium Style 2 - Accent 1',
+    );
+  });
+
+  it("reads a20-tables' two style sources as PowerPoint draws them", () => {
+    const byId = found.find((f) => f.deck === 'a20-tables' && f.name === 'Styled by id')!;
+    const inline = found.find((f) => f.deck === 'a20-tables' && f.name === 'Styled inline')!;
+    expect(byId.ref?.kind).toBe('id');
+    expect(byId.style?.name).toBe('Medium Style 2 - Accent 1');
+    // Its own a:tableStyle is kept in the file and never drawn: the GUID is no built-in (C8).
+    expect(inline.ref).toMatchObject({
+      kind: 'inline',
+      id: '{1B1D64F0-0000-4000-8000-0000000A200A}',
+    });
+    expect(inline.style).toBeNull();
   });
 });

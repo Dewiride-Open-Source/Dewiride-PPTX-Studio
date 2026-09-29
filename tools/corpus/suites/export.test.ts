@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { REPO_ROOT as ROOT } from '../../repo/root.ts';
 import { isRelationshipPartName, readZip, REL_TYPE, type PartStore } from '@pptx-studio/opc';
-import { isValidateError } from '@pptx-studio/validate';
+import { isValidateError, RULES } from '@pptx-studio/validate';
 import { exportPackage, openPackage } from '@pptx-studio/writer';
 import { describe, expect, it } from 'vitest';
 
@@ -110,14 +110,10 @@ describe('a no-op export of every committed deck', () => {
     }
   });
 
-  it('runs all thirty-one rules, because a baseline was supplied', () => {
-    // The contrast with `validate.test.ts`, which runs twenty-six: a file on
-    // the command line has no history, so the three preservation rules are
-    // skipped there and named as skipped. Here there is a baseline, and they
-    // run against real markup - which is the first time in the project that
-    // they have.
+  it('runs every rule, because a baseline was supplied', () => {
+    // A file on the command line has no history and skips the preservation rules; an export does not.
     for (const { deck, result } of results) {
-      expect(result.report?.checked, deck.id).toHaveLength(31);
+      expect(result.report?.checked, deck.id).toHaveLength(RULES.length);
       expect(result.report?.skipped, deck.id).toEqual([]);
     }
   });

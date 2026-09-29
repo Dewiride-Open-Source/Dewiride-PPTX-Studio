@@ -13,28 +13,9 @@ import type { Finding, ReadProblem } from './report/report.js';
 import { ruleById, type RuleId } from './rules/rules.js';
 
 /**
- * The state a rule reads, and the one method it writes.
- *
- * Every rule is `(ctx: Context) => void`. That is a deliberately small
- * interface, and it is the same shape `checkLayering({manifests, catalog})` and
- * `checkCorpus({manifests, files, ...})` already have in this repository, for
- * the same reason: a rule that takes a context and returns nothing is a rule
- * that can be run against a package assembled in a test, with no temporary
- * directory, no archive on disk and no other twenty-eight rules running beside
- * it obscuring which one fired.
- *
- * ## Everything is lazy, and everything is cached
- *
- * Twelve of the rules want the parsed tree of every XML part. Parsing each part
- * once per rule would be twelve passes over a deck that can be two hundred
- * megabytes. Parsing all of them up front would be one pass too many for the
- * package-level rules, which need no trees at all.
- *
- * So `document()` parses on first ask and remembers. A part that is not XML
- * returns `null` and is not asked again. A part that will not *parse* also
- * returns `null` - and records a `ReadProblem`, because a rule that silently
- * saw nothing is indistinguishable from a rule that found nothing, and those
- * are opposite answers.
+ * The state a rule reads, and the one method it writes. Every rule is `(ctx: Context) => void`,
+ * so one runs alone against a package built in a test. Trees parse on first ask and are cached;
+ * a part that will not parse returns `null` and records a `ReadProblem`.
  */
 export interface Context {
   /** The package about to be handed over, or the one being inspected. */
