@@ -919,7 +919,6 @@ describe('dashes, diagonals and the table background’s effect', () => {
       const { deck, slide } = slideAt(record.key);
       const palette = PALETTES[deck.theme];
       const table = tableOf(slide);
-      const grid = tableGrid(table);
       const { cells } = decode(deck, slide);
       const strokes = diagonalStrokes(slide, table, palette);
       for (const point of record.points.split(' ')) {
