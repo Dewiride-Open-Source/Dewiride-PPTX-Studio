@@ -416,7 +416,7 @@ export function themedFill(
   };
 }
 
-/** A style effect list with an `effectRef` followed into the theme, and the colour `phClr` takes in it. */
+/** A style effect list with an `effectRef` followed into the theme, and the colour `phClr` takes. */
 export function themedEffects(
   effects: Themeable<readonly Effect[] | undefined>,
   theme: Theme,

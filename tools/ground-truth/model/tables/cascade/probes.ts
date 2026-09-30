@@ -203,7 +203,7 @@ export interface TableSpec {
   readonly extScale?: number;
   /** Keyed `"r,c"`, zero-based. */
   readonly cells?: Readonly<Record<string, CellSpec>>;
-  /** Rows written with fewer `a:tc` than the grid has columns, keyed by row: PowerPoint pads them (ADR 0056). */
+  /** Rows written with fewer `a:tc` than the grid has columns, by row: PowerPoint pads them (ADR 0056). */
   readonly short?: Readonly<Record<string, number>>;
 }
 
@@ -1150,7 +1150,7 @@ export function allDecks(): DeckSpec[] {
     ],
   });
 
-  decks.push(...laterDecks(floor));
+  decks.push(...lineAndEffectDecks(floor));
   for (const pkg of TEXT_PACKAGES) decks.push(textDeck(pkg));
   return decks;
 }
@@ -1160,8 +1160,8 @@ const dashed = (tag: string, pt: number, hex: string, dash: string): string =>
 const shadowList = (degrees: number): string =>
   `<a:effectLst><a:outerShdw blurRad="0" dist="76200" dir="${String(degrees * 60000)}" algn="tl" rotWithShape="0"><a:srgbClr val="C9C004"/></a:outerShdw></a:effectLst>`;
 
-/** Dashes, a padded row, diagonals and the background's effect: read in a session of their own. */
-function laterDecks(floor: Pick<DeckSpec, 'defaultTextStyle' | 'txStyles'>): DeckSpec[] {
+/** Dashed lines, a padded row, diagonals, the background's effect, and a deck PowerPoint saves. */
+function lineAndEffectDecks(floor: Pick<DeckSpec, 'defaultTextStyle' | 'txStyles'>): DeckSpec[] {
   const styled = (key: keyof typeof REFERENCE | null): string | null =>
     key === null ? null : idOf(key);
   const table = (

@@ -839,7 +839,7 @@ function diagonalStrokes(slide: SlideRecord, table: Table, palette: Palette): St
   });
 }
 
-/** Whether a diagonal crosses the pixels a grid edge's profile reads: that profile reads the diagonal. */
+/** Whether a diagonal crosses the pixels a grid edge's profile reads, which then read the diagonal. */
 function crossesProfile(strokes: readonly Stroke[], edge: TableEdge): boolean {
   const [x, y] =
     edge.axis === 'h'

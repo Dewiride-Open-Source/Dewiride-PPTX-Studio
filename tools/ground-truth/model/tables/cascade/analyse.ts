@@ -484,7 +484,7 @@ export interface Pixels {
   readonly samples: Record<string, unknown> | null;
   /** The centre pixels along each grid edge a written line dashes, end to end, by visual edge. */
   readonly along: Readonly<Record<string, readonly string[]>>;
-  /** The colour at each candidate point on a diagonal a written line could draw, keyed `x,y` in pixels. */
+  /** The colour at each candidate point on a diagonal a written line could draw, by `x,y` in pixels. */
   readonly diagonal: Readonly<Record<string, string>>;
 }
 
@@ -638,7 +638,7 @@ function load(dir: string): {
       const png = readFileSync(join(dir, read.png));
       const source = createHash('sha256').update(png).digest('hex');
       const kept = cached?.[slide];
-      // A slide cached before dashes and diagonals were sampled stands where it has neither.
+      // A cached slide without dash or diagonal samples stands where its table has neither.
       const sampled =
         (kept?.along !== undefined && kept.diagonal !== undefined) ||
         (!edgesOf(table).some((edge) => dashedAt(table, edge)) &&
@@ -1949,7 +1949,7 @@ export function dashRows(slides: readonly Observed[]): (Row<Dash> & { runs: stri
   return rows;
 }
 
-/** A diagonal a written line could draw: its rectangle in pixels, which way it runs, half its width. */
+/** A diagonal a written line could draw: its rectangle in pixels, its direction, half its width. */
 interface Stroke {
   readonly x0: number;
   readonly y0: number;
@@ -2016,7 +2016,7 @@ function strokesOf(table: TableSpec, reading: DiagonalReading | 'all'): Stroke[]
   return out;
 }
 
-/** A table's grid edges but those whose profile a written diagonal crosses: that profile reads the diagonal. */
+/** A table's grid edges, less those whose profile a written diagonal crosses and so reads instead. */
 export function edgesClear(table: TableSpec): Edge[] {
   const strokes = strokesOf(table, 'all');
   return edgesOf(table).filter(
@@ -2220,7 +2220,7 @@ export function backgroundRows(slides: readonly Observed[]): Row<BackgroundReadi
   return rows;
 }
 
-/** A `a:tcPr`'s lines and fill, as `tag:RRGGBB` in document order; empty for none. */
+/** An `a:tcPr`'s lines and fill, as `tag:RRGGBB` in document order; empty for none. */
 export function tcPrSummary(tcPr: string): string {
   return [
     ...tcPr.matchAll(
@@ -2650,7 +2650,7 @@ function diagonalFindings(): Finding[] {
   ];
 }
 
-/** The table background's effect: over every combination, then each axis around the one that fits. */
+/** The background's effect: over every combination, then each axis around the one that fits. */
 function backgroundFindings(): Finding[] {
   const rows = backgroundRows(slides);
   const axes = {
