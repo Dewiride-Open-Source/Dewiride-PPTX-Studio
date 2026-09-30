@@ -259,6 +259,18 @@ export interface TableStyle {
 /* the cascade                                                                */
 /* -------------------------------------------------------------------------- */
 
+/** What paints under a table's cells, each layer with where it came from. */
+export interface TableBackgroundLayers {
+  readonly fill: TableSourced<Themeable<Fill>> | null;
+  readonly effects: TableSourced<Themeable<readonly Effect[] | undefined>> | null;
+}
+
+/** A cell's diagonals as drawn: `down` from its visual top left, `up` from its visual bottom left. */
+export interface TableDiagonals {
+  readonly down: Line | null;
+  readonly up: Line | null;
+}
+
 /** A grid edge: `h` is the top of row `row` at column `col` (`row = rows` is the bottom); `v` the left of column `col`. */
 export interface TableEdge {
   readonly axis: 'h' | 'v';

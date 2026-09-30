@@ -262,6 +262,7 @@ const inputs = {
     group: deck.group,
     theme: deck.theme,
     read: deck.read,
+    resave: deck.resave === true,
     slides: deck.slides.map((s) => ({
       rows: s.rows,
       cols: s.cols,

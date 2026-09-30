@@ -28,12 +28,14 @@ import { parseDefaultTextStyle } from './parse/text.js';
 import { colorContextOf } from './resolve/resolve.js';
 import {
   tableBackground,
+  tableCellDiagonals,
   tableCellFill,
   TABLE_PART_ORDER,
   tableEdgeLine,
   tablePartsAt,
   tableStyleOf,
   tableTextLayer,
+  themedEffects,
   themedFill,
   themedLine,
 } from './resolve/table.js';
@@ -78,6 +80,8 @@ interface SlideRecord {
   readonly extScale?: number;
   readonly ph?: string;
   readonly cells?: Readonly<Record<string, CellRecord>>;
+  /** Rows written with fewer `a:tc` than the grid has columns, keyed by row. */
+  readonly short?: Readonly<Record<string, number>>;
   /** The slide's observations, one value per unit, in the fixture's order. */
   readonly units: readonly string[];
 }
@@ -239,7 +243,7 @@ function slideOf(slide: SlideRecord): Omit<Sheet, 'parent' | 'theme'> {
     (slide.style === undefined ? '' : `<a:tableStyleId>${slide.style}</a:tableStyleId>`);
   const tblPr = inner === '' ? `<a:tblPr${attrs}/>` : `<a:tblPr${attrs}>${inner}</a:tblPr>`;
   const rows = Array.from({ length: slide.rows }, (_, r) => {
-    const cells = Array.from({ length: slide.cols }, (_, c) => {
+    const cells = Array.from({ length: slide.short?.[String(r)] ?? slide.cols }, (_, c) => {
       const cell = slide.cells?.[`${String(r)},${String(c)}`] ?? {};
       return `<a:tc${cell.attrs ?? ''}>${cell.body ?? TEXT_BODY}${cell.tcPr ?? '<a:tcPr/>'}</a:tc>`;
     });
@@ -455,9 +459,9 @@ function forEachSlide(
 }
 
 describe('the table-style cascade, against every table C9 asked PowerPoint about', () => {
-  it('scores every group of the fixture but theme C’s background samples, which 4.4 answers', () => {
+  it('scores every group of the fixture: dashes and theme C’s samples below, by their own tests', () => {
     expect(new Set(DECKS.map((deck) => deck.group))).toEqual(
-      new Set([...STYLED, 'text', 'background']),
+      new Set([...STYLED, 'text', 'background', 'dash']),
     );
   });
 
@@ -486,18 +490,24 @@ describe('the table-style cascade, against every table C9 asked PowerPoint about
 
   it('draws every grid edge PowerPoint drew, pixel for pixel across it', () => {
     let edges = 0;
+    let crossed = 0;
     const wrong: string[] = [];
     forEachSlide(STYLED, (deck, slide, index) => {
       const table = tableOf(slide);
       const style = styleOf(table);
       const grid = tableGrid(table);
       const { edges: observed } = decode(deck, slide);
+      const strokes = diagonalStrokes(slide, table, PALETTES[deck.theme]);
       edgesOf(slide.rows, slide.cols).forEach((edge, k) => {
         // The fixture lists edges as drawn; an rtl table is drawn mirrored (C9).
         const logical = slide.rtl === true ? visual(edge, slide.cols) : edge;
         const [a = '', b = '', ...rest] = (observed[k] ?? '').split('|');
         const described = rest.join('|');
         edges += 1;
+        if (crossesProfile(strokes, edge)) {
+          crossed += 1;
+          return;
+        }
         const predicted = describeLine(
           drawn(tableEdgeLine(table, style, grid, logical), PALETTES[deck.theme]),
           a,
@@ -513,6 +523,9 @@ describe('the table-style cascade, against every table C9 asked PowerPoint about
     });
     expect(wrong.slice(0, 5)).toEqual([]);
     expect(edges).toBe(countOf(STYLED, 'edges'));
+    // In each of the two tall merged cells, the diagonal runs through the profile of the line it
+    // covers and of the line on its left.
+    expect(crossed).toBe(4);
   });
 
   it('paints every cell over the page, the table background under it, as PowerPoint composited them', () => {
@@ -523,7 +536,7 @@ describe('the table-style cascade, against every table C9 asked PowerPoint about
       const style = styleOf(table);
       const grid = tableGrid(table);
       const palette = PALETTES[deck.theme];
-      const background = fillText(tableBackground(table, style), palette);
+      const background = fillText(tableBackground(table, style).fill, palette);
       const { cells: observed } = decode(deck, slide);
       observed.forEach((row, r) =>
         row.forEach((cell, c) => {
@@ -649,9 +662,18 @@ describe('a table cell’s text, through the text cascade', () => {
       const table = tableOf(slide);
       const style = styleOf(table);
       const { sheet, defaultTextStyle } = contextOf(deck, slide);
+      const grid = tableGrid(table);
       decode(deck, slide).cells.forEach((row, r) =>
         row.forEach((cell, c) => {
           cells += 1;
+          // A position no `a:tc` reached is padded empty (ADR 0056): COM finds no text in it.
+          if (grid.positions[r]?.[c]?.cell === null) {
+            if (cell.text !== 'empty')
+              wrong.push(
+                `${deck.id}#${String(index)}@${String(r)},${String(c)}: text ${cell.text}`,
+              );
+            return;
+          }
           const got = textOf(table, style, sheet, defaultTextStyle, r, c);
           const predicted = `${got.rgb}/${got.bold ? 'b' : '-'}/${got.face}`;
           const observed = cell.text.split('/').slice(0, 3).join('/');
@@ -736,6 +758,225 @@ interface Finding {
     readonly of: number;
   }[];
 }
+
+/* -------------------------------------------------------------------------- */
+/* dashes, diagonals and the background's effect                              */
+/* -------------------------------------------------------------------------- */
+
+const { origin: ORIGIN, cell_pt: CELL } = main.encoding;
+const PAGE = 'FFFFFF';
+const px = (pt: number): number => Math.round(pt * SCALE);
+
+/** A fixture key's deck and slide: `deck#slide`. */
+function slideAt(key: string): { deck: TextDeck; slide: SlideRecord } {
+  const [id = '', index = ''] = key.split('#');
+  const deck = DECKS.find((d) => d.id === id);
+  const slide = deck?.slides[Number(index)];
+  if (deck === undefined || slide === undefined) throw new Error(`no slide ${key}`);
+  return { deck, slide };
+}
+
+/** Pixels from their run-length form, `RRGGBB*n`. */
+const unrun = (runs: string): string[] =>
+  runs.split(',').flatMap((run) => {
+    const [hex = '', n = '0'] = run.split('*');
+    return Array.from({ length: Number(n) }, () => hex);
+  });
+
+/** What an edge's centre line shows: `line` and the paints in turn, `line` alone, or no line. */
+function dashClass(
+  pixels: readonly string[],
+  line: string | null,
+  paints: readonly string[],
+): string {
+  const lit = pixels.filter((p) => p === line).length;
+  const bare = pixels.filter((p) => paints.includes(p)).length;
+  if (lit + bare < pixels.length * 0.8) return 'mixed';
+  if (lit === 0) return 'nothing';
+  return bare === 0 ? 'solid' : 'dashed';
+}
+
+interface Stroke {
+  /** Left, top, right, bottom, in pixels. */
+  readonly rect: readonly [number, number, number, number];
+  readonly down: boolean;
+  readonly rgb: string;
+  /** Half the line's width, in pixels. */
+  readonly half: number;
+}
+
+/** The diagonals the model draws on a probe, in the export's pixels: mirrored with an rtl table. */
+function diagonalStrokes(slide: SlideRecord, table: Table, palette: Palette): Stroke[] {
+  const grid = tableGrid(table);
+  return grid.anchors.flatMap((anchor): Stroke[] => {
+    const { down, up } = tableCellDiagonals(table, grid, anchor.row, anchor.col);
+    const left = slide.rtl === true ? slide.cols - anchor.col - anchor.cols : anchor.col;
+    const rect = [
+      px(ORIGIN.x + left * CELL.w),
+      px(ORIGIN.y + anchor.row * CELL.h),
+      px(ORIGIN.x + (left + anchor.cols) * CELL.w),
+      px(ORIGIN.y + (anchor.row + anchor.rows) * CELL.h),
+    ] as const;
+    const lines: readonly (readonly [Line | null, boolean])[] = [
+      [down, true],
+      [up, false],
+    ];
+    return lines.flatMap(([line, isDown]) => {
+      const look =
+        line === null
+          ? null
+          : drawn({ value: { kind: 'value', value: line }, source: 'tcPr' }, palette);
+      return look === null
+        ? []
+        : [{ rect, down: isDown, rgb: look.rgb, half: (look.weight * SCALE) / 2 }];
+    });
+  });
+}
+
+/** Whether a diagonal crosses the pixels a grid edge's profile reads: that profile reads the diagonal. */
+function crossesProfile(strokes: readonly Stroke[], edge: TableEdge): boolean {
+  const [x, y] =
+    edge.axis === 'h'
+      ? [px(ORIGIN.x + edge.col * CELL.w + 36), px(ORIGIN.y + edge.row * CELL.h)]
+      : [px(ORIGIN.x + edge.col * CELL.w), px(ORIGIN.y + edge.row * CELL.h + 30)];
+  return Array.from({ length: 2 * REACH }, (_, k) => k - REACH).some((k) =>
+    strokes.some((s) =>
+      edge.axis === 'h'
+        ? distance(x, y + k, s) < s.half + 2.5
+        : distance(x + k, y, s) < s.half + 2.5,
+    ),
+  );
+}
+
+/** How far a pixel's centre lies from a diagonal's centre line. */
+function distance(x: number, y: number, s: Stroke): number {
+  const [x0, y0, x1, y1] = s.rect;
+  const [ax, ay, bx, by] = s.down ? [x0, y0, x1, y1] : [x0, y1, x1, y0];
+  const [dx, dy] = [bx - ax, by - ay];
+  const t = Math.max(
+    0,
+    Math.min(1, ((x + 0.5 - ax) * dx + (y + 0.5 - ay) * dy) / (dx * dx + dy * dy)),
+  );
+  return Math.hypot(x + 0.5 - (ax + t * dx), y + 0.5 - (ay + t * dy));
+}
+
+describe('dashes, diagonals and the table background’s effect', () => {
+  it('dashes the dashed line an edge’s owner writes, and draws none it writes without a fill', () => {
+    const rows = main.dashes as readonly { key: string; runs: string; observed: string }[];
+    const seen = new Set<string>();
+    for (const row of rows) {
+      const [where = '', at = ''] = row.key.split('@');
+      const { deck, slide } = slideAt(where);
+      const palette = PALETTES[deck.theme];
+      const table = tableOf(slide);
+      const [r = 0, c = 0] = at.slice(1).split(',').map(Number);
+      const edge: TableEdge = { axis: at.startsWith('h') ? 'h' : 'v', row: r, col: c };
+      const sourced = tableEdgeLine(table, styleOf(table), tableGrid(table), edge);
+      const colour = drawn(sourced, palette)?.rgb ?? null;
+      const dash =
+        sourced === null
+          ? null
+          : themedLine(sourced.value, palette.theme, palette.colors).line?.dash;
+      let predicted = 'dashed';
+      if (colour === null) predicted = 'nothing';
+      else if (
+        dash === null ||
+        dash === undefined ||
+        (dash.kind === 'preset' && dash.val === 'solid')
+      )
+        predicted = 'solid';
+      const k = edgesOf(slide.rows, slide.cols).findIndex(
+        (e) => e.axis === edge.axis && e.row === edge.row && e.col === edge.col,
+      );
+      const [a = '', b = ''] = (decode(deck, slide).edges[k] ?? '').split('|');
+      expect([dashClass(unrun(row.runs), colour, [a, b]), predicted], row.key).toEqual([
+        row.observed,
+        row.observed,
+      ]);
+      seen.add(row.observed);
+    }
+    expect([...seen].sort()).toEqual(['dashed', 'nothing']);
+  });
+
+  it('draws every diagonal PowerPoint drew, at every point clear of the rest', () => {
+    const records = main.diagonals as readonly {
+      key: string;
+      colours: readonly string[];
+      points: string;
+    }[];
+    expect(new Set(records.map((r) => slideAt(r.key).deck.group))).toEqual(
+      new Set(['direct', 'merge', 'rtl']),
+    );
+    let points = 0;
+    const wrong: string[] = [];
+    for (const record of records) {
+      const { deck, slide } = slideAt(record.key);
+      const palette = PALETTES[deck.theme];
+      const table = tableOf(slide);
+      const grid = tableGrid(table);
+      const { cells } = decode(deck, slide);
+      const strokes = diagonalStrokes(slide, table, palette);
+      for (const point of record.points.split(' ')) {
+        const [x = 0, y = 0, k = 0] = point.split(',').map(Number);
+        const seen = record.colours[k];
+        const r = Math.floor((y - px(ORIGIN.y)) / px(CELL.h));
+        const v = Math.floor((x - px(ORIGIN.x)) / px(CELL.w));
+        const c = slide.rtl === true ? slide.cols - 1 - v : v;
+        const on = strokes.findLast((s) => distance(x, y, s) <= 1.5);
+        const predicted = on?.rgb ?? cells[r]?.[c]?.paint;
+        points += 1;
+        if (predicted !== seen)
+          wrong.push(`${record.key} ${point}: ${String(predicted)} for ${String(seen)}`);
+      }
+    }
+    expect(wrong.slice(0, 5)).toEqual([]);
+    expect(points).toBeGreaterThan(300);
+  });
+
+  it('casts the shadow of the effect a:tblPr or else tblBg gives, from the grid and not the frame', () => {
+    const samples = main.background as readonly {
+      deck: string;
+      slide: number;
+      right: string;
+      below: string;
+      beyondGrid: string;
+    }[];
+    for (const sample of samples) {
+      const { deck, slide } = slideAt(`${sample.deck}#${String(sample.slide)}`);
+      const palette = PALETTES[deck.theme];
+      const table = tableOf(slide);
+      const { effects } = tableBackground(table, styleOf(table));
+      const shadows =
+        effects === null
+          ? []
+          : themedEffects(effects.value, palette.theme, palette.colors).effects.filter(
+              (e) => e.kind === 'outerShdw',
+            );
+      const [w, h] = [slide.cols * CELL.w, slide.rows * CELL.h];
+      const middle = ORIGIN.y + 2 * CELL.h + 30;
+      const places: readonly (readonly ['right' | 'below' | 'beyondGrid', number, number])[] = [
+        ['right', ORIGIN.x + w + 3, middle],
+        ['below', ORIGIN.x + 36, ORIGIN.y + h + 3],
+        ['beyondGrid', ORIGIN.x + w + 20, middle],
+      ];
+      for (const [name, x, y] of places) {
+        const hit = shadows.findLast((s) => {
+          const angle = (s.dir / 60000 / 180) * Math.PI;
+          const [dx, dy] = [(s.dist / EMU) * Math.cos(angle), (s.dist / EMU) * Math.sin(angle)];
+          return (
+            x >= ORIGIN.x + dx &&
+            x < ORIGIN.x + dx + w &&
+            y >= ORIGIN.y + dy &&
+            y < ORIGIN.y + dy + h
+          );
+        });
+        const predicted = hit === undefined ? PAGE : hexOf(resolveColor(hit.color, palette.colors));
+        expect(predicted, `${sample.deck}#${String(sample.slide)} ${name}`).toBe(sample[name]);
+      }
+    }
+    expect(samples.some((s) => s.right !== PAGE || s.below !== PAGE)).toBe(true);
+  });
+});
 
 describe('a position the table does not have', () => {
   const codeOf = (resolve: () => unknown): string => {
@@ -978,7 +1219,7 @@ describe('the readings PowerPoint refuted', () => {
       if (style === null) return;
       const grid = tableGrid(table);
       const palette = PALETTES[deck.theme];
-      const background = fillText(tableBackground(table, style), palette);
+      const background = fillText(tableBackground(table, style).fill, palette);
       decode(deck, slide).cells.forEach((row, r) =>
         row.forEach((cell, c) => {
           const stack = [...tablePartsAt(table.props, grid.rows, grid.cols, r, c)]
