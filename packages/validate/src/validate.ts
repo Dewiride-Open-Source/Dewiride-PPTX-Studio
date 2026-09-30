@@ -24,6 +24,7 @@ import {
   v030TableGrid,
   v031TableAttributes,
   v033TableStyles,
+  v034TableBorders,
 } from './rules/required.js';
 import {
   v018SlideIds,
@@ -90,6 +91,7 @@ const IMPLEMENTATIONS: Readonly<Record<RuleId, (ctx: Context) => void>> = {
   V031: v031TableAttributes,
   V032: v032TableStyleIds,
   V033: v033TableStyles,
+  V034: v034TableBorders,
 };
 
 /** Rules that cannot run without the archive bytes. See `Context.archive`. */

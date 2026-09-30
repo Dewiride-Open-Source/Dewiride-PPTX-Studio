@@ -344,16 +344,7 @@ export interface Sheet {
 /* resolution                                                                 */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Where a resolved value came from.
- *
- * 2.9 declared this union in advance, guessing at the members the text cascade
- * would need. 3.1 measured them, and the guess was wrong in one place:
- * `themeObjDefaults` is gone, because `a:objectDefaults/a:spDef/a:lstStyle` is
- * not a source. A package declaring a size there and nowhere else resolves to
- * the built-in default, so the member named a level that never fires - see
- * `corpus/ground-truth/text-cascade.json`.
- */
+/** Where a resolved value came from: each member is a level the text cascade reads (ADR 0027, 0064). */
 export type Origin =
   /** The run's own `a:rPr`. */
   | 'run'
@@ -361,9 +352,13 @@ export type Origin =
   | 'paragraph'
   /** The shape itself: its `p:spPr`, or its own `a:lstStyle`. */
   | 'shape'
+  /** A table cell's own `a:txBody/a:lstStyle`. */
+  | 'cell'
+  /** What a table's style, or PowerPoint's default grid, gives a cell's text. */
+  | 'tableStyle'
   | 'layoutPh'
   | 'masterPh'
-  /** The master's `p:txStyles`, in the bucket the chain's last type selects. */
+  /** The master's `p:txStyles`: the bucket a shape's chain selects, `p:otherStyle` for a cell. */
   | 'txStyles'
   /** `p:defaultTextStyle`, which only a shape with no bucket reaches. */
   | 'defaultTextStyle'

@@ -92,10 +92,10 @@ describe('the validator against the corpus', () => {
     expect(failures).toEqual([]);
   });
 
-  it('warns three times, each a deck built to say one thing and draw another', () => {
-    // Two placeholders with nothing to inherit (a02's tier-5 orphan, a19's decorative shape) and
-    // a20's inline table style, which names no built-in and so draws the default grid (C8).
-    // Pinned rather than driven to zero: a fourth warning is a rule bug or a new deck.
+  it('warns four times, each a deck built to say one thing and draw another', () => {
+    // Two placeholders with nothing to inherit (a02's tier-5 orphan, a19's decorative shape), a20's
+    // inline style naming no built-in (C8), and a20's lnL its left neighbour does not draw (C9).
+    // Pinned rather than driven to zero: a fifth warning is a rule bug or a new deck.
     const warnings = DECKS.flatMap((deck) =>
       REPORTS.get(deck.id)!.findings.map(
         (finding) => deck.id + ' ' + finding.rule + ' ' + finding.where.xpath,
@@ -105,6 +105,7 @@ describe('the validator against the corpus', () => {
     expect(warnings).toEqual([
       'a02-placeholders V021 /p:sld/p:cSld/p:spTree/p:sp[5]/p:nvSpPr/p:nvPr/p:ph',
       'a19-decorative V021 /p:sld/p:cSld/p:spTree/p:sp[2]/p:nvSpPr/p:nvPr/p:ph',
+      'a20-tables V034 /p:sld/p:cSld/p:spTree/p:graphicFrame/a:graphic/a:graphicData/a:tbl/a:tr[1]/a:tc[4]/a:tcPr/a:lnL',
       'a20-tables V032 /p:sld/p:cSld/p:spTree/p:graphicFrame[2]/a:graphic/a:graphicData/a:tbl/a:tblPr/a:tableStyle',
     ]);
     for (const deck of DECKS) {

@@ -13,8 +13,8 @@ import type { Context } from '../context.js';
 import { elementLocation } from '../report/location.js';
 
 /**
- * `V013` … `V017`, `V030`, `V031` and `V033`: children and attributes that are not optional.
- * Each is a `minOccurs` or a type the schema states, reported on the element that lacks it.
+ * `V013` … `V017`, `V030`, `V031`, `V033` and `V034`: children and attributes that are not optional,
+ * and tables PowerPoint reads otherwise than they say.
  */
 
 /** The twelve attributes of `CT_ColorMapping`. All required, no defaults. */
@@ -485,6 +485,117 @@ export function v030TableGrid(ctx: Context): void {
         }
       });
     });
+  });
+}
+
+/** Two elements alike but for their own names: the same attributes and the same children. */
+function sameMarkup(a: XElement, b: XElement): boolean {
+  const attrs = (e: XElement): string =>
+    [...e.attributes]
+      .map((x) => `${x.qname}=${x.value}`)
+      .sort()
+      .join(' ');
+  const ka = childElements(a);
+  const kb = childElements(b);
+  return (
+    attrs(a) === attrs(b) &&
+    textContent(a).trim() === textContent(b).trim() &&
+    ka.length === kb.length &&
+    ka.every((child, i) => child.qname === kb[i]?.qname && sameMarkup(child, kb[i]))
+  );
+}
+
+/** Whether a line draws nothing: an `a:noFill`, or no fill at all (C9). */
+function drawsNothing(line: XElement): boolean {
+  const fills = childElements(line).filter((c) =>
+    ['noFill', 'solidFill', 'gradFill', 'pattFill'].includes(c.local),
+  );
+  return fills.length === 0 || fills.some((c) => c.local === 'noFill');
+}
+
+/** Two lines that draw alike: both draw nothing, or they are the same markup. */
+function alike(a: XElement, b: XElement): boolean {
+  return (drawsNothing(a) && drawsNothing(b)) || sameMarkup(a, b);
+}
+
+/** A cell's own `a:tcPr` line, by its local name. */
+function lineOf(cell: XElement, local: string): XElement | undefined {
+  const tcPr = childElements(cell).find((child) => child.local === 'tcPr');
+  return tcPr === undefined
+    ? undefined
+    : childElements(tcPr).find((child) => child.local === local);
+}
+
+/** The grid position across segment `k` of a cell's `side`, the cell anchored at (r, c). */
+function acrossOf(
+  side: 'lnT' | 'lnL' | 'lnB' | 'lnR',
+  r: number,
+  c: number,
+  owner: Owner,
+  k: number,
+): readonly [number, number] {
+  if (side === 'lnT') return [r - 1, c + k];
+  if (side === 'lnL') return [r + k, c - 1];
+  if (side === 'lnB') return [r + owner.rows, c + k];
+  return [r + k, c + owner.cols];
+}
+
+/** Each side a cell writes, the side facing it across the edge, and how a segment of it is named. */
+const SIDES = [
+  { side: 'lnT', facing: 'lnB', across: 'cols', after: true, where: 'above column' },
+  { side: 'lnL', facing: 'lnR', across: 'rows', after: true, where: 'left of row' },
+  { side: 'lnB', facing: 'lnT', across: 'cols', after: false, where: 'below column' },
+  { side: 'lnR', facing: 'lnL', across: 'rows', after: false, where: 'right of row' },
+] as const;
+
+/**
+ * A border a cell writes that PowerPoint draws from the cell across the edge: the cell before owns a
+ * segment where its anchor is level with it, else the cell after where its is, else the cell before
+ * (C9, ADR 0064). PowerPoint's own writer writes every side alike, so this never fires on its output.
+ */
+export function v034TableBorders(ctx: Context): void {
+  forEachElement(ctx, (part, element) => {
+    if (element.local !== 'tbl' || namespaceOf(element) !== NS.a) return;
+    const tblGrid = childElements(element).find((child) => child.local === 'tblGrid');
+    const cols =
+      tblGrid === undefined
+        ? 0
+        : childElements(tblGrid).filter((c) => c.local === 'gridCol').length;
+    const cells = childElements(element)
+      .filter((child) => child.local === 'tr')
+      .map((row) => childElements(row).filter((child) => child.local === 'tc'));
+    const grid = owners(cells, cols);
+    for (const [r, line] of cells.entries()) {
+      for (const [c, cell] of line.entries()) {
+        const owner = grid[r]?.[c];
+        if (owner?.row !== r || owner.col !== c) continue;
+        for (const s of SIDES) {
+          const written = lineOf(cell, s.side);
+          if (written === undefined) continue;
+          const reach = s.across === 'cols' ? owner.cols : owner.rows;
+          for (let k = 0; k < reach; k++) {
+            const [nr, nc] = acrossOf(s.side, r, c, owner, k);
+            const other = grid[nr]?.[nc];
+            // The table's own edge, or a position no a:tc reached: nothing across to draw instead.
+            if (other === null || other === undefined) continue;
+            const otherLevel = s.across === 'cols' ? other.col === nc : other.row === nr;
+            const ownedAcross = s.after ? otherLevel || k > 0 : k > 0 && otherLevel;
+            if (!ownedAcross) continue;
+            const drawn = lineOf(cells[other.row]![other.col]!, s.facing);
+            if (drawn !== undefined && alike(drawn, written)) continue;
+            ctx.add(
+              'V034',
+              elementLocation(part, written),
+              `cell (${String(r + 1)}, ${String(c + 1)}) writes <a:${s.side}>, but ${s.where} ` +
+                `${String((s.across === 'cols' ? nc : nr) + 1)} PowerPoint draws the ` +
+                `<a:${s.facing}> of cell (${String(other.row + 1)}, ${String(other.col + 1)}), ` +
+                `which writes ${drawn === undefined ? 'none' : 'a different one'} - measured in C9.`,
+            );
+            break;
+          }
+        }
+      }
+    }
   });
 }
 

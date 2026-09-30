@@ -18,13 +18,13 @@ import { BUILTIN_TABLE_STYLE_IDS } from './table-style-ids.js';
  */
 
 describe('the rule table', () => {
-  it('has thirty-three rules: the twenty-nine the plan says, two for tables and two for their styles', () => {
-    expect(RULES).toHaveLength(33);
+  it('has thirty-four rules: the twenty-nine the plan says, three for tables and two for their styles', () => {
+    expect(RULES).toHaveLength(34);
   });
 
-  it('numbers them V001…V033 with no gaps', () => {
+  it('numbers them V001…V034 with no gaps', () => {
     expect(RULE_IDS).toEqual(
-      Array.from({ length: 33 }, (_, i) => 'V' + String(i + 1).padStart(3, '0')),
+      Array.from({ length: 34 }, (_, i) => 'V' + String(i + 1).padStart(3, '0')),
     );
   });
 
@@ -77,15 +77,16 @@ describe('the rule table', () => {
     }
   });
 
-  it('has three warnings, and they are the ones PowerPoint opens without a word', () => {
-    // An unmatched placeholder, a table that disagrees with itself, a table naming no built-in style.
+  it('has four warnings, and they are the ones PowerPoint opens without a word', () => {
+    // An unmatched placeholder, a table that disagrees with itself, one naming no built-in style, and
+    // a border the cell that draws the edge does not write.
     const warnings = RULES.filter((rule) => rule.severity === 'warning').map((rule) => rule.id);
-    expect(warnings).toEqual(['V021', 'V030', 'V032']);
+    expect(warnings).toEqual(['V021', 'V030', 'V032', 'V034']);
   });
 
   it('resolves by id, and only by an id that exists', () => {
     expect(ruleById('V001')?.category).toBe('package');
-    expect(ruleById('V034')).toBeUndefined();
+    expect(ruleById('V035')).toBeUndefined();
     expect(ruleById('')).toBeUndefined();
   });
 

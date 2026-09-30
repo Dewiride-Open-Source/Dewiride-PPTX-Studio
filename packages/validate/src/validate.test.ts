@@ -1,6 +1,7 @@
 import { attributeValue, childElements, parseXmlString, type XElement } from '@pptx-studio/xml';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
+import cascade from '../../../corpus/ground-truth/table-cascade.json' with { type: 'json' };
 import tableStyles from '../../../corpus/ground-truth/table-styles.json' with { type: 'json' };
 import tables from '../../../corpus/ground-truth/tables.json' with { type: 'json' };
 
@@ -1100,5 +1101,251 @@ describe('V026 chart styles', () => {
     expect(found).toHaveLength(1);
     expect(found[0]).toContain('4 of its 31 entries');
     expect(found[0]).toContain('Four entries were refused and thirty-one opened');
+  });
+});
+
+describe('V034 table borders, against what PowerPoint drew and wrote in C9', () => {
+  type Cells = Readonly<Record<string, { readonly attrs?: string; readonly tcPr?: string }>>;
+  interface Slide {
+    readonly name?: string;
+    readonly rows: number;
+    readonly cols: number;
+    readonly cells?: Cells;
+    readonly codes: string;
+  }
+  interface Deck {
+    readonly id: string;
+    readonly group: string;
+    readonly read: string;
+    readonly width: number;
+    readonly values: readonly string[];
+    readonly slides: readonly Slide[];
+  }
+  interface Extras {
+    readonly name?: string;
+    readonly cells?: Cells;
+  }
+  interface Packed extends Omit<Deck, 'slides'> {
+    readonly shapes: string;
+    /** What else each slide says, by index: a key of the file's `templates`, or inline. */
+    readonly extras?: Readonly<Record<string, Extras | string>>;
+    readonly codes: string;
+  }
+  const templates = cascade.templates as unknown as Readonly<Record<string, Extras>>;
+  const said = (extras: Extras | string | undefined): Extras | undefined => {
+    if (typeof extras !== 'string') return extras;
+    const found = templates[extras];
+    if (found === undefined) throw new Error(`no template ${extras}`);
+    return found;
+  };
+  /** The fixture's decks, each slide's codes cut from the deck's raw DEFLATE stream by its shape. */
+  const unpack = async (deck: Packed): Promise<Deck> => {
+    const bytes = Uint8Array.from(atob(deck.codes), (ch) => ch.charCodeAt(0));
+    const inflated = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    const codes = await new Response(inflated).text();
+    let at = 0;
+    const slides = deck.shapes.split(' ').map((shape, k): Slide => {
+      const [, rows = 0, cols = 0] = (/^(\d+)x(\d+)\//.exec(shape) ?? []).map(Number);
+      const units =
+        rows * cols * (deck.read === 'full' ? 4 : 3) + (rows + 1) * cols + rows * (cols + 1);
+      const own = codes.slice(at, at + units * deck.width);
+      at += units * deck.width;
+      return { ...said(deck.extras?.[String(k)]), rows, cols, codes: own };
+    });
+    if (at !== codes.length) throw new Error(`${deck.id}: ${String(codes.length - at)} codes over`);
+    return { ...deck, slides };
+  };
+  let decks: readonly Deck[] = [];
+  let direct: readonly Deck[] = [];
+  beforeAll(async () => {
+    decks = await Promise.all((cascade.decks as unknown as readonly Packed[]).map(unpack));
+    direct = decks.filter((d) => d.group === 'direct');
+  });
+  const TABLE_URI = 'http://schemas.openxmlformats.org/drawingml/2006/table';
+
+  /** The minimal deck with a table of `rows` x `cols` whose cells carry `cells`' markup. */
+  const withTable = (
+    rows: number,
+    cols: number,
+    cells: Readonly<Record<string, { readonly attrs?: string; readonly tcPr?: string }>>,
+  ): Record<string, string> => {
+    const body = '<a:txBody><a:bodyPr/><a:lstStyle/><a:p/></a:txBody>';
+    const trs = Array.from({ length: rows }, (_, r) => {
+      const tcs = Array.from({ length: cols }, (_, c) => {
+        const cell = cells[`${String(r)},${String(c)}`] ?? {};
+        return `<a:tc${cell.attrs ?? ''}>${body}${cell.tcPr ?? '<a:tcPr/>'}</a:tc>`;
+      });
+      return `<a:tr h="457200">${tcs.join('')}</a:tr>`;
+    });
+    const tbl =
+      `<a:tbl><a:tblPr/><a:tblGrid>${'<a:gridCol w="914400"/>'.repeat(cols)}</a:tblGrid>` +
+      `${trs.join('')}</a:tbl>`;
+    const parts = minimalDeck();
+    return {
+      'ppt/slides/slide1.xml': parts['ppt/slides/slide1.xml']!.replace(
+        '</p:spTree>',
+        '<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="3" name="table"/><p:cNvGraphicFramePr/>' +
+          '<p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="914400" y="914400"/>' +
+          '<a:ext cx="4572000" cy="2286000"/></p:xfrm><a:graphic>' +
+          `<a:graphicData uri="${TABLE_URI}">${tbl}</a:graphicData></a:graphic></p:graphicFrame></p:spTree>`,
+      ),
+    };
+  };
+
+  /** Each grid edge's pixels, as the fixture holds them: `a|b|descriptor`, horizontal edges first. */
+  const edgesOf = (deck: Deck, slide: Slide): Map<string, string> => {
+    const perCell = deck.read === 'full' ? 4 : 3;
+    const digits = cascade.encoding.digits;
+    const valueAt = (k: number): string => {
+      const code = slide.codes.slice(k * deck.width, (k + 1) * deck.width);
+      const n = [...code].reduce((acc, ch) => acc * digits.length + digits.indexOf(ch), 0);
+      return deck.values[n] ?? '';
+    };
+    const keys: string[] = [];
+    for (let r = 0; r <= slide.rows; r++)
+      for (let c = 0; c < slide.cols; c++) keys.push(`h${String(r)},${String(c)}`);
+    for (let r = 0; r < slide.rows; r++)
+      for (let c = 0; c <= slide.cols; c++) keys.push(`v${String(r)},${String(c)}`);
+    const first = slide.rows * slide.cols * perCell;
+    return new Map(keys.map((k, i) => [k, valueAt(first + i)]));
+  };
+
+  /**
+   * Every coloured side an anchor cell writes, and whether PowerPoint drew its colour on every segment
+   * of it. A covered cell's own `a:tcPr` is never read (C9), and `V034` does not look at it.
+   */
+  const writtenLines = (
+    deck: Deck,
+    slide: Slide,
+  ): { readonly key: string; readonly drawn: boolean }[] => {
+    const edges = edgesOf(deck, slide);
+    const out: { key: string; drawn: boolean }[] = [];
+    for (const [at, cell] of Object.entries(slide.cells ?? {})) {
+      if (/Merge=/.test(cell.attrs ?? '')) continue;
+      const [r, c] = at.split(',').map(Number) as [number, number];
+      const span = (name: string): number =>
+        Number(new RegExp(`${name}="(\\d+)"`).exec(cell.attrs ?? '')?.[1] ?? 1);
+      const [rows, cols] = [span('rowSpan'), span('gridSpan')];
+      for (const tag of ['lnT', 'lnL', 'lnB', 'lnR'] as const) {
+        const line = new RegExp(`<a:${tag}\\b[^>]*>.*?</a:${tag}>`).exec(cell.tcPr ?? '')?.[0];
+        const colour =
+          line === undefined ? undefined : /<a:srgbClr val="([0-9A-F]{6})"/.exec(line)?.[1];
+        if (colour === undefined) continue;
+        const across = tag === 'lnT' || tag === 'lnB' ? cols : rows;
+        const segments = Array.from({ length: across }, (_, k) => {
+          if (tag === 'lnT') return `h${String(r)},${String(c + k)}`;
+          if (tag === 'lnB') return `h${String(r + rows)},${String(c + k)}`;
+          if (tag === 'lnL') return `v${String(r + k)},${String(c)}`;
+          return `v${String(r + k)},${String(c + cols)}`;
+        });
+        out.push({
+          key: `cell (${String(r + 1)}, ${String(c + 1)}) writes <a:${tag}>`,
+          drawn: segments.every((s) =>
+            (edges.get(s) ?? '').split('|').slice(2).join('|').includes(colour),
+          ),
+        });
+      }
+    }
+    return out;
+  };
+
+  it('fires on exactly the lines PowerPoint did not draw, in direct and merged cells alike', () => {
+    const disagreements: string[] = [];
+    let fired = 0;
+    let silent = 0;
+    for (const deck of decks.filter((d) => d.group === 'direct' || d.group === 'merge')) {
+      for (const slide of deck.slides) {
+        const findings = broken('V034', withTable(slide.rows, slide.cols, slide.cells ?? {}));
+        const found = findings.join('\n');
+        const lines = writtenLines(deck, slide);
+        for (const { key, drawn } of lines) {
+          if (drawn) silent += 1;
+          else fired += 1;
+          if (found.includes(key) === drawn)
+            disagreements.push(`${deck.id} ${String(slide.name)}: ${key}, drawn ${String(drawn)}`);
+        }
+        // One finding per line not drawn, and nothing else.
+        if (findings.length !== lines.filter((l) => !l.drawn).length)
+          disagreements.push(
+            `${deck.id} ${String(slide.name)}: ${String(findings.length)} findings`,
+          );
+      }
+    }
+    expect(disagreements).toEqual([]);
+    expect(fired).toBeGreaterThan(20);
+    expect(silent).toBeGreaterThan(0);
+  });
+
+  it('is silent beside a merged neighbour’s segment that is not level with its anchor', () => {
+    const merged = decks.filter((d) => d.group === 'merge');
+    expect(merged).toHaveLength(4);
+    for (const deck of merged) {
+      const slide = deck.slides.find((s) => s.name === 'right-authored')!;
+      const lines = writtenLines(deck, slide);
+      expect(lines).toEqual([
+        { key: 'cell (2, 2) writes <a:lnR>', drawn: false },
+        { key: 'cell (2, 3) writes <a:lnL>', drawn: false },
+        { key: 'cell (3, 3) writes <a:lnL>', drawn: true },
+      ]);
+      const found = broken('V034', withTable(5, 5, slide.cells ?? {})).join('\n');
+      expect(found).toContain('cell (2, 3) writes <a:lnL>');
+      expect(found).not.toContain('cell (3, 3) writes <a:lnL>');
+    }
+  });
+
+  it('is silent where both sides draw nothing, however each says so', () => {
+    // A line with no fill draws nothing, as an a:noFill does (C9's partial lines).
+    const cells = {
+      '1,1': { tcPr: '<a:tcPr><a:lnB w="12700"><a:noFill/></a:lnB></a:tcPr>' },
+      '2,1': { tcPr: '<a:tcPr><a:lnT w="38100" cmpd="dbl"/></a:tcPr>' },
+    };
+    expect(broken('V034', withTable(4, 4, cells))).toEqual([]);
+    const drawnAbove = {
+      ...cells,
+      '1,1': {
+        tcPr:
+          '<a:tcPr><a:lnB w="12700">' +
+          '<a:solidFill><a:srgbClr val="FF0000"/></a:solidFill></a:lnB></a:tcPr>',
+      },
+    };
+    expect(broken('V034', withTable(4, 4, drawnAbove))).toHaveLength(1);
+  });
+
+  it('names the cell, the segment, and the cell whose line PowerPoint draws there', () => {
+    const lower = direct[0]!.slides.find((s) => s.name === 'lower-only')!;
+    expect(broken('V034', withTable(5, 5, lower.cells ?? {})).join('\n')).toContain(
+      'cell (3, 3) writes <a:lnT>, but above column 3 PowerPoint draws the <a:lnB> of cell (2, 3), ' +
+        'which writes none - measured in C9.',
+    );
+    const wide = decks
+      .find((d) => d.group === 'merge')!
+      .slides.find((s) => s.name === 'wide-bottom')!;
+    expect(broken('V034', withTable(5, 5, wide.cells ?? {})).join('\n')).toContain(
+      'cell (2, 2) writes <a:lnB>, but below column 3 PowerPoint draws the <a:lnT> of cell (3, 3), ' +
+        'which writes none - measured in C9.',
+    );
+  });
+
+  it('is silent on the markup PowerPoint wrote when it set each border itself', () => {
+    const authored = cascade.authored as unknown as readonly {
+      readonly name: string;
+      readonly rows: readonly (readonly { readonly attrs: string; readonly tcPr: string }[])[];
+    }[];
+    expect(authored.length).toBe(12);
+    for (const op of authored) {
+      const cells: Record<string, { attrs: string; tcPr: string }> = {};
+      op.rows.forEach((row, r) =>
+        row.forEach((cell, c) => {
+          cells[`${String(r)},${String(c)}`] = {
+            attrs: cell.attrs === '' ? '' : ` ${cell.attrs}`,
+            tcPr: cell.tcPr,
+          };
+        }),
+      );
+      expect(
+        broken('V034', withTable(op.rows.length, op.rows[0]?.length ?? 0, cells)),
+        op.name,
+      ).toEqual([]);
+    }
   });
 });

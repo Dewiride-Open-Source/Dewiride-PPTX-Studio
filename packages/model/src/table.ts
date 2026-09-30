@@ -230,7 +230,7 @@ export interface TableBackground {
   readonly effect: Themeable<readonly Effect[] | undefined> | undefined;
 }
 
-/** The thirteen parts in schema order, which is not the order they compose in. */
+/** The thirteen parts in schema order, which is the order they compose in, lowest first (C9). */
 export type TableStylePartName =
   | 'wholeTbl'
   | 'band1H'
@@ -253,4 +253,23 @@ export interface TableStyle {
   readonly background: TableBackground | undefined;
   readonly parts: Readonly<Partial<Record<TableStylePartName, TableStylePart>>>;
   readonly node: XElement;
+}
+
+/* -------------------------------------------------------------------------- */
+/* the cascade                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** A grid edge: `h` is the top of row `row` at column `col` (`row = rows` is the bottom); `v` the left of column `col`. */
+export interface TableEdge {
+  readonly axis: 'h' | 'v';
+  readonly row: number;
+  readonly col: number;
+}
+
+/** Where a table's format came from: a style part, `tblBg`, a cell's `a:tcPr`, `a:tblPr`, or the default grid. */
+export type TableSource = TableStylePartName | 'tblBg' | 'tcPr' | 'tblPr' | 'grid';
+
+export interface TableSourced<T> {
+  readonly value: T;
+  readonly source: TableSource;
 }

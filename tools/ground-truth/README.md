@@ -333,6 +333,46 @@ the grid. Every question has one winner and every rival misses: a table draws th
 names, in any case, whatever the package's part says (230/230, 7/7); anything else draws a 1-pt
 black grid (3/3 against the theme's `dk1` and `tx1`); an inline style resolves by its `@styleId`.
 
+### C9 — the thirteen-part cascade, cell by cell and edge by edge _(added in 4.3)_
+
+```bash
+powershell -File tools/ground-truth/model/tables/cascade/author.ps1 -Dir <dir>
+node tools/ground-truth/model/tables/cascade/build-deck.ts <dir>
+powershell -File tools/ground-truth/model/tables/cascade/read.ps1 -Dir <dir>
+powershell -File tools/ground-truth/model/tables/cascade/read.ps1 -Dir <dir> -Tag <tag> -Decks <id>,<id>
+node tools/ground-truth/model/tables/cascade/analyse.ts <dir> --fixture
+npx prettier --write "corpus/ground-truth/table-cascade*.json"
+```
+
+Every built-in over all 64 flag sets on a 5×5 table, on the four shapes a 5×5 cannot show, and in a
+second theme; then direct `a:tcPr` fills and borders, merged cells, right-to-left tables, an
+`a:tblPr` fill, a third theme of gradients and shadows, and nine decks that put a table's text on
+each rung of the text cascade, three of them in placeholders. `build-deck.ts` first searches every table from 1×1 to 6×6 under
+every flag set for one that would tell each pair of readings apart, and throws if it finds one the
+probes miss; the pairs no table can separate are recorded as indistinguishable.
+
+Two instruments, each checked against the other. COM reports every cell's fill and text, and in full
+decks each of its six sides, read through a fresh `Borders` object per side: one object answers
+every side with the first it was asked for. Every slide is also exported as a PNG at 4 px a point,
+the first of each named deck as a BMP too, and the PNG decoder is held to its twin pixel for pixel.
+Across each grid edge's midpoint the analysis reads 32 pixels and compares them, run for run, with
+what each reading's lines would paint there. A partly covered pixel counts when it is a blend of its
+line over what lies beneath, strictly between the two, because how much of it is covered is the
+rasteriser's question (4.4). Decoded pixels are cached under the hash of their PNG.
+
+A session reads the control deck first and last. `-Tag` and `-Decks` read only the decks that
+changed, in a session of their own, and the analysis holds every read of the control, in every
+session, to the first, COM and export byte for byte.
+
+The parts compose in the schema's own order, property by property, for fills (10,519/10,519), text
+(49/49) and edges alike. A grid edge draws its owner's line or the highest part's claim on it, and a
+translucent part paints alone over `tblBg`, each channel's terms rounded on their own. Direct borders
+belong to the cell above or left where its anchor is level with the edge, else to the cell below or
+right where its is; a merged cell's bands are its anchor's. A table's text reads the style between
+its own list style and `p:otherStyle`, never `p:defaultTextStyle`. `author.ps1` has PowerPoint set
+borders, fills and flags itself, so the analysis also knows which cells PowerPoint's own writer puts
+them in. Two full reads in separate sessions agreed byte for byte on the 10,370 slides both read.
+
 ### F2 — what the export does at another width _(added in 3.11)_
 
 Every stroke rule the renderer holds was measured at one or two export widths, and one width cannot
@@ -479,6 +519,7 @@ lib/                     the harness every experiment shares
   pptx.ts                writes a minimal PresentationML package by hand
   sheet-pptx.ts          a package builder with more than one master and layout
   bmp.ts                 sample a pixel out of PowerPoint own bitmap export
+  png.ts                 the same out of its PNG export, palette images included
   emf.ts                 enough of EMF to read what PowerPoint drew, in text
 
 fonts/                   -> packages/fonts (phase 8)
@@ -495,6 +536,7 @@ model/                   -> packages/model
   sheets/                C5  - 114 probes: matching, inheritance
   tables/grid/           C7  - 82 probes: the occupancy grid, row heights, column widths
   tables/styles/         C8  - the 74 built-in styles, and 84 probes: which one a table draws
+  tables/cascade/        C9  - 10,480 slides: which parts reach a cell, and which wins
 render/                  -> packages/render-*
   transforms/            C6  - 65 probes: group maps, turns, compositing
   text/                  T8  - 160 probes: the turn, the baseline, alignment, rules

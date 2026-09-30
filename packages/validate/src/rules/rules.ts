@@ -543,6 +543,23 @@ export const RULES = [
       'empty `a:fill`. PowerPoint writes the all-zero GUID for the id and empties ' +
       'the part.',
   },
+  {
+    id: 'V034',
+    category: 'required',
+    severity: 'warning',
+    evidence: 'measured',
+    title: 'a border a cell writes is the one PowerPoint draws on that edge',
+    why:
+      'A grid edge belongs to two cells, and each may write a line for it. C9 drew ' +
+      'direct borders, on plain and merged cells, under seven built-ins and the ' +
+      'default grid: PowerPoint draws an edge from the cell above or to the left - its ' +
+      '`a:lnB` or `a:lnR`, or the style where it writes none - where that cell, merged ' +
+      'or not, has its anchor level with the edge. Otherwise the cell below or to the ' +
+      'right draws its own `a:lnT` or `a:lnL` where its anchor is level with the edge, ' +
+      'and elsewhere the cell above or to the left keeps it. When PowerPoint sets a ' +
+      'border itself it writes every side alike. The deck opens without a word, which ' +
+      'is why this is a warning: the file says one border and PowerPoint draws another.',
+  },
 ] as const satisfies readonly RuleShape[];
 
 export type RuleId = (typeof RULES)[number]['id'];

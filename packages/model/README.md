@@ -192,15 +192,38 @@ across 84 packages in three themes:
 
 `builtinTableStyle(id)` parses one of the 74 afresh; `parseTableStyle` reads any `CT_TableStyle`,
 defaulting nothing the file did not say. A GUID without braces or with padding, an edge with neither
-`a:ln` nor `a:lnRef`, and an empty `a:fill` throw: PowerPoint repairs each. The thirteen-part
-cascade is 4.3; drawing the grid is 4.4.
+`a:ln` nor `a:lnRef`, and an empty `a:fill` throw: PowerPoint repairs each.
+
+## The thirteen parts compose in schema order, property by property
+
+Which part of a style reaches a cell, and which wins, was measured in C9 on 10,480 slides of every
+built-in in three themes (`corpus/ground-truth/table-cascade*.json`), against what PowerPoint's
+object model reported for each cell and what it drew at 4 px a point:
+
+- `tablePartsAt(props, rows, cols, row, col)` is ECMA-376's reading: the end rows and columns where
+  their flags are on, bands counted past a first row or column, a corner where both of its ends
+  apply. `TABLE_PART_ORDER` is the schema's order, `wholeTbl` lowest and `nwCell` highest, and it
+  is the order they compose in for fills, text and edges alike.
+- Every property is found on its own: the highest part that states a fill, a colour, bold or
+  italic wins it, whatever that part leaves unsaid.
+- `tableCellFill`: the cell's own `a:tcPr` fill, else the style's. `tableBackground`: `a:tblPr`'s
+  fill in place of the style's `tblBg`, painted under the cells.
+- `tableEdgeLine`: an edge's owner writes the line it draws, replacing the style's whole; a line no
+  owner writes is the highest part's claim on that edge. The cell above or left owns a segment where
+  its anchor is level with it, in the anchor's column or row; else the cell below or right, where
+  its anchor is; else the cell above or left. An unmerged cell is always level. A table that
+  resolves to no style draws `DEFAULT_GRID_LINE`, 1 pt black.
+- A merged cell takes its anchor's parts and every covered position's end and corner parts; its
+  bands are the anchor's. A covered cell's `a:tcPr` is never read.
+- `tableTextLayer` is what the style gives a cell's text, and the text cascade reads it between the
+  cell's own list style and the master's `p:otherStyle`; `p:defaultTextStyle` is never read, and
+  under a master with no `p:txStyles` a cell takes the built-in `other` style whatever its frame.
+- A position or edge the table does not have throws `MODEL_TABLE_POSITION`.
 
 ## What is not here
 
 - Nothing is painted. The renderers are 2.10.
-- The ten-source **text** cascade is 3.1. `Origin` already declares the five members only that
-  cascade can produce, so 3.1 adds cases rather than widening a type every consumer has switched on.
-- The table-style cascade and table drawing are 4.3 and 4.4; SmartArt is 4.5.
+- Table drawing and editing are 4.4; SmartArt is 4.5.
 - Commands, undo and history are Phase 5; Change Layout is 7.4. What PowerPoint rewrites when a
   layout changes is recorded in the fixture and not acted on.
 - `a:effectDag` is not modelled — a directed graph of effect primitives PowerPoint has never been
@@ -212,6 +235,8 @@ cascade is 4.3; drawing the grid is 4.4.
 `corpus/ground-truth/sheets.json` — 114 probes in 37 packages, sub-phase 2.9.
 `corpus/ground-truth/tables.json` — 82 tables, one package each, and 21 slides PowerPoint authored, sub-phase 4.1.
 `corpus/ground-truth/table-styles.json` — the 74 built-in table styles and 84 probe packages, sub-phase 4.2.
+`corpus/ground-truth/table-cascade.json` and its five `table-cascade-*.json` siblings — 250 packages of
+tables in three themes, every cell and edge PowerPoint reported and drew, sub-phase 4.3.
 
 The measurement is a **position**, and PowerPoint reports it directly. C3 and C4 sampled bitmaps
 because a fill and a stroke are pictures; an inheritance is not. A placeholder with no `a:xfrm` of
@@ -227,5 +252,6 @@ against a summary of them, so a rule that drifts fails on the measurements.
 
 See `docs/adr/phase-0-foundation/0007-ground-truth.md`, `docs/adr/phase-2-geometry-and-paint/0021-colour.md`, `docs/adr/phase-2-geometry-and-paint/0022-fills.md`,
 `docs/adr/phase-2-geometry-and-paint/0023-lines.md`, `docs/adr/phase-2-geometry-and-paint/0024-model-parse-and-resolve.md`
-`docs/adr/phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md` and
-`docs/adr/phase-4-tables-and-smartart/0063-a-table-draws-the-built-in-its-guid-names.md`.
+`docs/adr/phase-4-tables-and-smartart/0056-the-spans-are-the-merge.md`,
+`docs/adr/phase-4-tables-and-smartart/0063-a-table-draws-the-built-in-its-guid-names.md` and
+`docs/adr/phase-4-tables-and-smartart/0064-the-parts-compose-in-schema-order.md`.

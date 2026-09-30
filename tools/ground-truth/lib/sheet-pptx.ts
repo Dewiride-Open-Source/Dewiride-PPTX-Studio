@@ -149,10 +149,22 @@ export interface ThemeSpec {
   readonly objectDefaults?: string | undefined;
   /** `dk1` and `lt1` as `a:srgbClr` rather than the system colours PowerPoint's themes use. */
   readonly rgbDarkLight?: boolean | undefined;
+  /** Whole entries of the four style lists, in place of the solid, effect-free defaults. */
+  readonly formatScheme?: FormatSchemeSpec | undefined;
 }
 
-function themeXml(spec: ThemeSpec, name: string): string {
+export interface FormatSchemeSpec {
+  readonly fills: readonly string[];
+  readonly lines: readonly string[];
+  /** Each a whole `a:effectStyle`. */
+  readonly effects: readonly string[];
+  readonly bgFills: readonly string[];
+}
+
+/** The theme part `buildSheetPackage` writes for `spec`, so an analysis can parse the same bytes. */
+export function themeXml(spec: ThemeSpec, name: string): string {
   const scheme = spec.scheme;
+  const format = spec.formatScheme;
   const slot = (k: keyof Scheme): string =>
     spec.rgbDarkLight === true
       ? `<a:${k}><a:srgbClr val="${scheme[k]}"/></a:${k}>`
@@ -195,12 +207,12 @@ function themeXml(spec: ThemeSpec, name: string): string {
     `<a:clrScheme name="${name}">${clrScheme}</a:clrScheme>` +
     `<a:fontScheme name="${name}">${font('major', spec.majorLatin ?? 'Calibri Light')}${font('minor', spec.minorLatin ?? 'Calibri')}</a:fontScheme>` +
     `<a:fmtScheme name="${name}">` +
-    `<a:fillStyleLst>${FILL_STYLES.join('')}</a:fillStyleLst>` +
-    `<a:lnStyleLst>${LINE_STYLE_WIDTHS.map(line).join('')}</a:lnStyleLst>` +
+    `<a:fillStyleLst>${(format?.fills ?? FILL_STYLES).join('')}</a:fillStyleLst>` +
+    `<a:lnStyleLst>${(format?.lines ?? LINE_STYLE_WIDTHS.map(line)).join('')}</a:lnStyleLst>` +
     '<a:effectStyleLst>' +
-    '<a:effectStyle><a:effectLst/></a:effectStyle>'.repeat(3) +
+    (format?.effects.join('') ?? '<a:effectStyle><a:effectLst/></a:effectStyle>'.repeat(3)) +
     '</a:effectStyleLst>' +
-    `<a:bgFillStyleLst>${BG_FILL_STYLES.join('')}</a:bgFillStyleLst>` +
+    `<a:bgFillStyleLst>${(format?.bgFills ?? BG_FILL_STYLES).join('')}</a:bgFillStyleLst>` +
     '</a:fmtScheme>' +
     '</a:themeElements>' +
     (spec.objectDefaults ?? '') +

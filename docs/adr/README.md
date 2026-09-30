@@ -99,3 +99,4 @@ date.
 | [0061](phase-4-tables-and-smartart/0061-chromium-153-draws-what-151-drew.md)          | Chromium 153 draws what 151 drew          |
 | [0062](phase-4-tables-and-smartart/0062-the-site-counts-its-visitors.md)              | The site counts its visitors              |
 | [0063](phase-4-tables-and-smartart/0063-a-table-draws-the-built-in-its-guid-names.md) | A table draws the built-in its GUID names |
+| [0064](phase-4-tables-and-smartart/0064-the-parts-compose-in-schema-order.md)         | The parts compose in schema order         |
