@@ -1,5 +1,12 @@
 # @pptx-studio/render-svg
 
+## 0.6.6
+
+### Patch Changes
+
+- Updated dependencies [db00af0]
+  - @pptx-studio/model@0.5.0
+
 ## 0.6.5
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @pptx-studio/cli
 
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [db00af0]
+  - @pptx-studio/model@0.5.0
+  - @pptx-studio/validate@0.5.0
+  - @pptx-studio/render-svg@0.6.6
+  - @pptx-studio/writer@0.1.6
+
 ## 0.4.3
 
 ### Patch Changes

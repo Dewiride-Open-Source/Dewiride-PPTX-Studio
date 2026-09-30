@@ -1,5 +1,13 @@
 # @pptx-studio/render-dom
 
+## 0.3.7
+
+### Patch Changes
+
+- Updated dependencies [db00af0]
+  - @pptx-studio/model@0.5.0
+  - @pptx-studio/render-svg@0.6.6
+
 ## 0.3.6
 
 ### Patch Changes
