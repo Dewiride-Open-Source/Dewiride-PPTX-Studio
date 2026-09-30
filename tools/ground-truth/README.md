@@ -347,7 +347,10 @@ npx prettier --write "corpus/ground-truth/table-cascade*.json"
 Every built-in over all 64 flag sets on a 5×5 table, on the four shapes a 5×5 cannot show, and in a
 second theme; then direct `a:tcPr` fills and borders, merged cells, right-to-left tables, an
 `a:tblPr` fill, a third theme of gradients and shadows, and nine decks that put a table's text on
-each rung of the text cascade, three of them in placeholders. `build-deck.ts` first searches every table from 1×1 to 6×6 under
+each rung of the text cascade, three of them in placeholders. Five more ask what the first reads
+left unscored: dashed direct lines, a short row, diagonals on merged and rtl cells, the table's own
+effect list beside `tblBg`'s, and a deck PowerPoint saves again so the analysis can read what it
+kept of a covered cell's `a:tcPr`. `build-deck.ts` first searches every table from 1×1 to 6×6 under
 every flag set for one that would tell each pair of readings apart, and throws if it finds one the
 probes miss; the pairs no table can separate are recorded as indistinguishable.
 
@@ -358,7 +361,9 @@ the first of each named deck as a BMP too, and the PNG decoder is held to its tw
 Across each grid edge's midpoint the analysis reads 32 pixels and compares them, run for run, with
 what each reading's lines would paint there. A partly covered pixel counts when it is a blend of its
 line over what lies beneath, strictly between the two, because how much of it is covered is the
-rasteriser's question (4.4). Decoded pixels are cached under the hash of their PNG.
+rasteriser's question (4.4). A dashed edge is also read end to end along its centre, a diagonal at
+points each wholly on one candidate line or clear of all, and an edge whose profile a diagonal
+crosses is left out. Decoded pixels are cached under the hash of their PNG.
 
 A session reads the control deck first and last. `-Tag` and `-Decks` read only the decks that
 changed, in a session of their own, and the analysis holds every read of the control, in every
@@ -371,7 +376,10 @@ belong to the cell above or left where its anchor is level with the edge, else t
 right where its is; a merged cell's bands are its anchor's. A table's text reads the style between
 its own list style and `p:otherStyle`, never `p:defaultTextStyle`. `author.ps1` has PowerPoint set
 borders, fills and flags itself, so the analysis also knows which cells PowerPoint's own writer puts
-them in. Two full reads in separate sessions agreed byte for byte on the 10,370 slides both read.
+them in. A dash is drawn dashed; a padded position owns its edges as an empty cell does; a diagonal
+is the anchor's own, across its span, mirrored in rtl; `a:tblPr`'s effect list replaces `tblBg`'s,
+and both follow the grid. Two full reads in separate sessions agreed byte for byte on the 10,370
+slides both read.
 
 ### F2 — what the export does at another width _(added in 3.11)_
 
@@ -536,7 +544,7 @@ model/                   -> packages/model
   sheets/                C5  - 114 probes: matching, inheritance
   tables/grid/           C7  - 82 probes: the occupancy grid, row heights, column widths
   tables/styles/         C8  - the 74 built-in styles, and 84 probes: which one a table draws
-  tables/cascade/        C9  - 10,480 slides: which parts reach a cell, and which wins
+  tables/cascade/        C9  - 10,505 slides: which parts reach a cell, and which wins
 render/                  -> packages/render-*
   transforms/            C6  - 65 probes: group maps, turns, compositing
   text/                  T8  - 160 probes: the turn, the baseline, alignment, rules

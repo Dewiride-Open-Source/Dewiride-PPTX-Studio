@@ -582,9 +582,9 @@ const SIDES = [
 ] as const;
 
 /**
- * A border a cell writes that PowerPoint draws from the cell across the edge: the cell before owns a
- * segment where its anchor is level with it, else the cell after where its is, else the cell before
- * (C9, ADR 0064). PowerPoint's own writer writes every side alike, so this never fires on its output.
+ * A border a cell writes that PowerPoint draws from the cell or empty position across the edge, and
+ * any line a covered cell writes (C9, ADR 0064). PowerPoint's own writer writes every side alike and
+ * leaves a covered cell's `a:tcPr` empty, so this never fires on its output.
  */
 export function v034TableBorders(ctx: Context): void {
   forEachElement(ctx, (part, element) => {
