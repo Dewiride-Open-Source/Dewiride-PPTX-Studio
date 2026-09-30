@@ -805,11 +805,16 @@ interface Stroke {
   readonly half: number;
 }
 
-/** The diagonals the model draws on a probe, in the export's pixels: mirrored with an rtl table. */
+/**
+ * The diagonals the model gives every grid position, in the export's pixels, each drawn across its
+ * owner's span; mirrored with an rtl table.
+ */
 function diagonalStrokes(slide: SlideRecord, table: Table, palette: Palette): Stroke[] {
   const grid = tableGrid(table);
-  return grid.anchors.flatMap((anchor): Stroke[] => {
-    const { down, up } = tableCellDiagonals(table, grid, anchor.row, anchor.col);
+  const seen = new Set<string>();
+  return grid.positions.flat().flatMap((anchor, k): Stroke[] => {
+    const [row, col] = [Math.floor(k / grid.cols), k % grid.cols];
+    const { down, up } = tableCellDiagonals(table, grid, row, col);
     const left = slide.rtl === true ? slide.cols - anchor.col - anchor.cols : anchor.col;
     const rect = [
       px(ORIGIN.x + left * CELL.w),
@@ -826,9 +831,10 @@ function diagonalStrokes(slide: SlideRecord, table: Table, palette: Palette): St
         line === null
           ? null
           : drawn({ value: { kind: 'value', value: line }, source: 'tcPr' }, palette);
-      return look === null
-        ? []
-        : [{ rect, down: isDown, rgb: look.rgb, half: (look.weight * SCALE) / 2 }];
+      const key = `${rect.join(',')} ${String(isDown)} ${look?.rgb ?? ''}`;
+      if (look === null || seen.has(key)) return [];
+      seen.add(key);
+      return [{ rect, down: isDown, rgb: look.rgb, half: (look.weight * SCALE) / 2 }];
     });
   });
 }
