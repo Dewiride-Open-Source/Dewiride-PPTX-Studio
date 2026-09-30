@@ -392,6 +392,18 @@ length, once per line and never otherwise, and it is silent on all twelve author
   probe added. Each session now brackets itself with the control, and the analysis holds every
   control read to the first.
 
+## What the release said
+
+Pull request #68 merged as `6af8840` on CI run 36659447337 with every check green, and main's own
+run 36659975990 and CodeQL 36659976060 green on the merge. The canary before, 36659438059, was green
+against the previous release. Release run 36665151240 published `@pptx-studio/model` 0.4.0,
+`@pptx-studio/validate` 0.4.0, `@pptx-studio/render-svg` 0.6.5, `@pptx-studio/render-dom` 0.3.6,
+`@pptx-studio/writer` 0.1.5 and `@pptx-studio/cli` 0.4.3 in 3 min 32 s, version commit `15ba41d`.
+The deploy that followed, 36665409908, waited 67 s for the registry and was live 3 min 23 s after it
+started. The site's validate page and firewall guide name `V034`, and its model reference lists
+`tableCellFill`, `tableEdgeLine`, `tableTextLayer` and `MODEL_TABLE_POSITION`. The canary after,
+36665686053, installed `model` and `validate` 0.4.0 from npm, found both attested, and was green.
+
 ## Deviations from the plan
 
 - **`V034`**, not in the plan. The owner rule makes a written border one PowerPoint may not draw.
