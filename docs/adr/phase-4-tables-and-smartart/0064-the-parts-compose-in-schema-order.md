@@ -470,6 +470,17 @@ started. The site's validate page and firewall guide name `V034`, and its model 
 `tableCellFill`, `tableEdgeLine`, `tableTextLayer` and `MODEL_TABLE_POSITION`. The canary after,
 36665686053, installed `model` and `validate` 0.4.0 from npm, found both attested, and was green.
 
+The second read shipped the same way. Pull request #71 merged as `f97c34f` on CI run 36674889771
+with every check green, and main's own run 36675434327 and CodeQL 36675433574 green on the merge.
+The canary before, 36674891163, was green against 0.4.0. Release run 36675960730 published
+`@pptx-studio/model` 0.5.0, `@pptx-studio/validate` 0.5.0, `@pptx-studio/render-svg` 0.6.6,
+`@pptx-studio/render-dom` 0.3.7, `@pptx-studio/writer` 0.1.6 and `@pptx-studio/cli` 0.4.4 in 3 min
+41 s, version commit `114afcb`. The deploy that followed, 36676276861, waited 2 min 28 s for the
+registry and was live 4 min 55 s after it started; the site's status page shows 4.3 done with
+nothing on the record, and its model reference lists `tableCellDiagonals` and `themedEffects`. The
+canary after, 36676723582, installed `model` and `validate` 0.5.0, found both attested, and was
+green.
+
 ## Deviations from the plan
 
 - **A second read, after the release.** The first release left seven questions open on this
