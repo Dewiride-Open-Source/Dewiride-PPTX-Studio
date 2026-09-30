@@ -43,11 +43,13 @@ resolveSize({ sheet, shape, defaultTextStyle }, paragraph, run).origin;   // 'ma
 // Change Layout, provenance and theme swapping are all built on.
 shape.xfrm === undefined;`;
 
-/** Where a value came from, said in words rather than in the enum's spelling. */
-const ORIGINS: Record<Origin, { label: string; tone: Tone }> = {
+/** Where a value came from, in words; the table origins are named because the site builds from npm. */
+const ORIGINS: Record<Origin | 'cell' | 'tableStyle', { label: string; tone: Tone }> = {
   run: { label: 'the run', tone: 'good' },
   paragraph: { label: 'the paragraph', tone: 'good' },
   shape: { label: 'the shape', tone: 'good' },
+  cell: { label: 'the table cell', tone: 'good' },
+  tableStyle: { label: 'the table style', tone: 'info' },
   layoutPh: { label: 'the layout placeholder', tone: 'info' },
   masterPh: { label: 'the master placeholder', tone: 'info' },
   txStyles: { label: 'the master text styles', tone: 'info' },

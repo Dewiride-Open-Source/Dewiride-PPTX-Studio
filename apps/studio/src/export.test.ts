@@ -75,7 +75,7 @@ describe('a deck with all five features, handed back unchanged', () => {
     const { outcome } = exportDeck(kitchenSink);
     expect(outcome.report?.ok).toBe(true);
     expect(outcome.report?.blocking).toBe(0);
-    expect(outcome.report?.checked).toHaveLength(33);
+    expect(outcome.report?.checked).toHaveLength(34);
     // Not "no findings": six rules need a baseline and this path supplies one,
     // so a skipped rule here would mean the baseline went missing.
     expect(outcome.report?.skipped).toEqual([]);

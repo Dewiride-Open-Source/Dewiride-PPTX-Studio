@@ -180,6 +180,7 @@ export {
   resolveRun,
   resolveSize,
   textLevels,
+  type TableCellText,
   type TextContext,
 } from './resolve/text.js';
 
@@ -219,10 +220,25 @@ export {
   type TableStyleRef,
   type TableStyleText,
   type Themeable,
+  type TableEdge,
+  type TableSource,
+  type TableSourced,
 } from './table.js';
 
 export { parseTable, parseTableChild, parseTableStyle } from './parse/table.js';
-export { builtinTableStyle, tableStyleOf } from './resolve/table.js';
+export {
+  builtinTableStyle,
+  DEFAULT_GRID_LINE,
+  TABLE_PART_ORDER,
+  tableBackground,
+  tableCellFill,
+  tableEdgeLine,
+  tablePartsAt,
+  tableStyleOf,
+  tableTextLayer,
+  themedFill,
+  themedLine,
+} from './resolve/table.js';
 
 export {
   requestedTypefaces,

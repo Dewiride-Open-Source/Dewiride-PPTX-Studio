@@ -68,6 +68,8 @@ export type ModelErrorCode =
   | 'MODEL_TABLE_ATTR'
   /** A table-style edge with neither `a:ln` nor `a:lnRef`, or an `a:fill` holding no fill. */
   | 'MODEL_TABLE_STYLE'
+  /** A grid position or grid edge asked of a table that has no such position or edge. */
+  | 'MODEL_TABLE_POSITION'
   | 'BLIP_NO_EMBED'
   | 'BLIP_DUOTONE'
   | 'BLIP_CLR_CHANGE'
@@ -123,6 +125,7 @@ export const MODEL_ERROR_CODES = [
   'MODEL_TEXT_TYPEFACE',
   'MODEL_TABLE_ATTR',
   'MODEL_TABLE_STYLE',
+  'MODEL_TABLE_POSITION',
   'BLIP_NO_EMBED',
   'BLIP_DUOTONE',
   'BLIP_CLR_CHANGE',

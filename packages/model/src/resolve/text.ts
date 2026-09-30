@@ -95,23 +95,28 @@ export function bucketOf(type: string): 'title' | 'body' | null {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Everything the cascade needs that is not on the shape.
- *
- * `defaultTextStyle` comes from `ppt/presentation.xml` and is therefore a
- * property of the package rather than of any sheet, which is why it is passed
- * in rather than walked to. A caller that has a `Document` has it already;
- * `undefined` means the package declared none, which is a state PowerPoint
- * distinguishes and this must too.
+ * Everything the cascade needs that is not on the shape. `defaultTextStyle` is the package's, from
+ * `ppt/presentation.xml`; `undefined` is a package that declares none, which PowerPoint tells apart.
  */
 export interface TextContext {
   readonly sheet: Sheet;
   readonly shape: Shape;
   readonly defaultTextStyle: ListStyle | undefined;
+  /** Set for the text of a table cell, whose walk is its own (C9, ADR 0064). */
+  readonly cell?: TableCellText;
 }
 
-/** One level of the walk: a list style, and what to call it if it answers. */
+/** A table cell's two levels of its own: its `a:lstStyle`, and what the table's style gives it. */
+export interface TableCellText {
+  readonly lstStyle: ListStyle | undefined;
+  /** `tableTextLayer`'s answer for the cell. */
+  readonly layer: RunProps;
+}
+
+/** One level of the walk: a list style, or run properties at every level, and what to call it. */
 interface Level {
   readonly style: ListStyle | undefined;
+  readonly run?: RunProps;
   readonly origin: Origin;
   readonly sheet: Sheet | null;
   readonly shape: Shape | null;
@@ -142,15 +147,11 @@ function terminusOf(context: TextContext): Terminus {
 }
 
 /**
- * The list styles a shape reads, nearest first, ending at whichever terminus it
- * reaches.
- *
- * Exported because it *is* the finding: a caller that wants to show the user
- * where a value could have come from - the inspector's Overrides panel, layout
- * compatibility scoring - needs the same list the resolver walks, not a second
- * opinion about it.
+ * The list styles a shape or a table cell reads, nearest first, ending at whichever terminus it
+ * reaches. Exported so a caller that shows where a value could come from walks the same list.
  */
 export function textLevels(context: TextContext): readonly Level[] {
+  if (context.cell !== undefined) return cellLevels(context, context.cell);
   const levels: Level[] = inheritanceChain(context.shape, context.sheet).map((link, index) => ({
     style: link.shape.text?.lstStyle,
     origin: index === 0 ? 'shape' : link.origin,
@@ -182,18 +183,32 @@ export function textLevels(context: TextContext): readonly Level[] {
 }
 
 /**
- * The values left when every level has been asked and none of them said.
- *
- * Two quite different things, and which applies turns on one question: does the
- * master declare `p:txStyles` at all? If it does not, PowerPoint substitutes its
- * whole built-in set, and a body placeholder is 28 points with a hanging bullet
- * indent. If it does, there is no per-property backstop underneath it and what
- * remains is the floor - 18 points, no margin, no indent. Measured as two
- * separate probes precisely because the two are easy to conflate and differ on
- * every partially-specified master.
+ * A table cell's walk (C9): its own list style, the table's style, then the master's `p:otherStyle`.
+ * `p:defaultTextStyle` and the frame's placeholder chain are never read, as a shape's walk is.
+ */
+function cellLevels(context: TextContext, cell: TableCellText): Level[] {
+  const { master } = terminusOf(context);
+  return [
+    { style: cell.lstStyle, origin: 'cell', sheet: context.sheet, shape: context.shape },
+    {
+      style: undefined,
+      run: cell.layer,
+      origin: 'tableStyle',
+      sheet: context.sheet,
+      shape: context.shape,
+    },
+    { style: master?.txStyles?.other, origin: 'txStyles', sheet: master, shape: null },
+  ];
+}
+
+/**
+ * The values left when every level has been asked and none of them said (ADR 0027).
+ * A master with `p:txStyles` leaves `TEXT_FLOOR`; one without substitutes PowerPoint's built-ins.
  */
 export function floorOf(context: TextContext, level: number): BuiltinLevel {
-  const { bucket, master } = terminusOf(context);
+  const { bucket: frame, master } = terminusOf(context);
+  // A table cell never reads its frame's placeholder bucket (C9).
+  const bucket = context.cell === undefined ? frame : null;
   if (master?.txStyles !== undefined) return TEXT_FLOOR;
   return BUILTIN_TEXT_STYLES[bucket ?? 'other'][clampLevel(level)] ?? TEXT_FLOOR;
 }
@@ -209,7 +224,9 @@ function clampLevel(level: number): number {
 /* resolving                                                                  */
 /* -------------------------------------------------------------------------- */
 
-function resolvedAt<T>(value: T, level: Level, explicit: boolean): Resolved<T> {
+/** A value found at `level`: explicit when the text's own shape or table cell wrote that level. */
+function resolvedAt<T>(value: T, level: Level): Resolved<T> {
+  const explicit = level.origin === 'shape' || level.origin === 'cell';
   return { value, origin: level.origin, explicit, sheet: level.sheet, shape: level.shape };
 }
 
@@ -243,7 +260,7 @@ export function resolveParagraph<T>(
     const props = entry.style?.levels[level];
     if (props === undefined) continue;
     const value = pick(props);
-    if (value !== undefined) return resolvedAt(value, entry, entry.origin === 'shape');
+    if (value !== undefined) return resolvedAt(value, entry);
   }
   return undefined;
 }
@@ -287,10 +304,10 @@ export function resolveRun<T>(
   }
   const level = clampLevel(paragraph.level);
   for (const entry of textLevels(context)) {
-    const defRPr = entry.style?.levels[level]?.defRPr;
+    const defRPr = entry.run ?? entry.style?.levels[level]?.defRPr;
     if (defRPr === undefined) continue;
     const value = pick(defRPr);
-    if (value !== undefined) return resolvedAt(value, entry, entry.origin === 'shape');
+    if (value !== undefined) return resolvedAt(value, entry);
   }
   return undefined;
 }

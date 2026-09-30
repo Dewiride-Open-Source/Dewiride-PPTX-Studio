@@ -1,5 +1,5 @@
 {
-  "recorded": 42,
+  "recorded": 43,
   "total": 111,
   "gatesClosed": 4,
   "gates": 13,
@@ -383,7 +383,7 @@
     {
       "number": 4,
       "title": "Tables and SmartArt",
-      "done": 2,
+      "done": 3,
       "total": 6,
       "gate": {
         "title": "Banded tables with merges edit cell by cell; SmartArt renders with real content",
@@ -410,10 +410,10 @@
         {
           "id": "4.3",
           "title": "The 13-layer table cascade",
-          "state": "todo",
-          "adr": null,
-          "result": null,
-          "note": null
+          "state": "caveat",
+          "adr": "phase-4-tables-and-smartart/0064-the-parts-compose-in-schema-order.md",
+          "result": "C9 read 10,480 slides of tables in three themes through COM and at 4 px a point, 250 packages across three PowerPoint sessions that agreed byte for byte on every control read, and scored every reading of the cascade against them. ECMA-376 says which parts reach a cell; the parts compose in the schema's own order, property by property (fills 10,519/10,519, text 49/49, edges 2,693/2,693; SpreadsheetML's order 10,023, 0 and 2,305); a grid edge draws the highest claim of either cell (86,372/86,372); a translucent fill paints alone over tblBg, each term rounded on its own (25,494/25,494). A direct border belongs to its edge's owner (92/92): the cell above or left where its anchor is level with the edge, else the cell below or right where its is (52/52, 24/24). A merged cell takes its anchor's bands and every covered end (126/126). A cell's text reads the style below its own list style and above p:otherStyle, never p:defaultTextStyle, and takes the built-in other floor whatever its frame (78/78). @pptx-studio/model gains tablePartsAt, TABLE_PART_ORDER, tableCellFill, tableBackground, tableEdgeLine, tableTextLayer, themedFill, themedLine, DEFAULT_GRID_LINE and TextContext.cell; validate gains V034, warning on a border PowerPoint draws from the other cell. A four-agent review, each finding put to a skeptic, found seventeen problems, among them three unmeasured cases, and each was probed or fixed. 33/34 mutants killed; the survivor, bold from the lowest part, is equivalent because every b the built-ins state is on.",
+          "note": "The corpus is at 15.9 of its 16 MiB cap after C9's fixture was packed to 787 KB; 4.4's rendering fixtures will need a decision on the cap. Vertical double-line coverage, tblBg effects and gradient extent, dashed direct lines and diagonals are recorded, not scored, for 4.4."
         },
         {
           "id": "4.4",
