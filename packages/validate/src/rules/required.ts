@@ -526,6 +526,39 @@ function lineOf(cell: XElement, local: string): XElement | undefined {
     : childElements(tcPr).find((child) => child.local === local);
 }
 
+/** Each line a covered cell's own `a:tcPr` writes that would draw something: none is drawn (C9). */
+function reportCovered(
+  ctx: Context,
+  part: string,
+  cell: XElement,
+  [r, c]: readonly [number, number],
+  owner: Owner,
+): void {
+  const tcPr = childElements(cell).find((child) => child.local === 'tcPr');
+  const lines =
+    tcPr === undefined
+      ? []
+      : childElements(tcPr).filter((child) => LINE_TAGS.has(child.local) && !drawsNothing(child));
+  for (const written of lines) {
+    ctx.add(
+      'V034',
+      elementLocation(part, written),
+      `cell (${String(r + 1)}, ${String(c + 1)}) writes <a:${written.local}>, but it is covered ` +
+        `by the span of cell (${String(owner.row + 1)}, ${String(owner.col + 1)}), and ` +
+        'PowerPoint never draws a covered cell’s own lines - measured in C9.',
+    );
+  }
+}
+
+const LINE_TAGS: ReadonlySet<string> = new Set([
+  'lnL',
+  'lnR',
+  'lnT',
+  'lnB',
+  'lnTlToBr',
+  'lnBlToTr',
+]);
+
 /** The grid position across segment `k` of a cell's `side`, the cell anchored at (r, c). */
 function acrossOf(
   side: 'lnT' | 'lnL' | 'lnB' | 'lnR',
@@ -549,9 +582,9 @@ const SIDES = [
 ] as const;
 
 /**
- * A border a cell writes that PowerPoint draws from the cell across the edge: the cell before owns a
- * segment where its anchor is level with it, else the cell after where its is, else the cell before
- * (C9, ADR 0064). PowerPoint's own writer writes every side alike, so this never fires on its output.
+ * A border a cell writes that PowerPoint draws from the cell or empty position across the edge, and
+ * any line a covered cell writes (C9, ADR 0064). PowerPoint's own writer writes every side alike and
+ * leaves a covered cell's `a:tcPr` empty, so this never fires on its output.
  */
 export function v034TableBorders(ctx: Context): void {
   forEachElement(ctx, (part, element) => {
@@ -568,7 +601,11 @@ export function v034TableBorders(ctx: Context): void {
     for (const [r, line] of cells.entries()) {
       for (const [c, cell] of line.entries()) {
         const owner = grid[r]?.[c];
-        if (owner?.row !== r || owner.col !== c) continue;
+        if (owner === null || owner === undefined) continue;
+        if (owner.row !== r || owner.col !== c) {
+          reportCovered(ctx, part, cell, [r, c], owner);
+          continue;
+        }
         for (const s of SIDES) {
           const written = lineOf(cell, s.side);
           if (written === undefined) continue;
@@ -576,20 +613,26 @@ export function v034TableBorders(ctx: Context): void {
           for (let k = 0; k < reach; k++) {
             const [nr, nc] = acrossOf(s.side, r, c, owner, k);
             const other = grid[nr]?.[nc];
-            // The table's own edge, or a position no a:tc reached: nothing across to draw instead.
-            if (other === null || other === undefined) continue;
-            const otherLevel = s.across === 'cols' ? other.col === nc : other.row === nr;
+            // The table's own edge: nothing across to draw instead.
+            if (other === undefined) continue;
+            // A position no a:tc reached owns its edges as a cell writing nothing does (C9).
+            const at = other ?? { row: nr, col: nc, rows: 1, cols: 1 };
+            const otherLevel = s.across === 'cols' ? at.col === nc : at.row === nr;
             const ownedAcross = s.after ? otherLevel || k > 0 : k > 0 && otherLevel;
             if (!ownedAcross) continue;
-            const drawn = lineOf(cells[other.row]![other.col]!, s.facing);
+            const drawn = other === null ? undefined : lineOf(cells[at.row]![at.col]!, s.facing);
             if (drawn !== undefined && alike(drawn, written)) continue;
+            const whose =
+              other === null
+                ? `position (${String(nr + 1)}, ${String(nc + 1)}), which no <a:tc> reached`
+                : `cell (${String(at.row + 1)}, ${String(at.col + 1)}), which writes ` +
+                  (drawn === undefined ? 'none' : 'a different one');
             ctx.add(
               'V034',
               elementLocation(part, written),
               `cell (${String(r + 1)}, ${String(c + 1)}) writes <a:${s.side}>, but ${s.where} ` +
                 `${String((s.across === 'cols' ? nc : nr) + 1)} PowerPoint draws the ` +
-                `<a:${s.facing}> of cell (${String(other.row + 1)}, ${String(other.col + 1)}), ` +
-                `which writes ${drawn === undefined ? 'none' : 'a different one'} - measured in C9.`,
+                `<a:${s.facing}> of ${whose} - measured in C9.`,
             );
             break;
           }

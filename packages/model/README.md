@@ -196,7 +196,7 @@ defaulting nothing the file did not say. A GUID without braces or with padding, 
 
 ## The thirteen parts compose in schema order, property by property
 
-Which part of a style reaches a cell, and which wins, was measured in C9 on 10,480 slides of every
+Which part of a style reaches a cell, and which wins, was measured in C9 on 10,505 slides of every
 built-in in three themes (`corpus/ground-truth/table-cascade*.json`), against what PowerPoint's
 object model reported for each cell and what it drew at 4 px a point:
 
@@ -207,14 +207,20 @@ object model reported for each cell and what it drew at 4 px a point:
 - Every property is found on its own: the highest part that states a fill, a colour, bold or
   italic wins it, whatever that part leaves unsaid.
 - `tableCellFill`: the cell's own `a:tcPr` fill, else the style's. `tableBackground`: `a:tblPr`'s
-  fill in place of the style's `tblBg`, painted under the cells.
+  fill and effect list, each in place of the style's `tblBg` one, an empty list included, painted
+  under the cells over the grid and never the frame as written. `themedEffects` follows an
+  `effectRef` into the theme.
 - `tableEdgeLine`: an edge's owner writes the line it draws, replacing the style's whole; a line no
   owner writes is the highest part's claim on that edge. The cell above or left owns a segment where
   its anchor is level with it, in the anchor's column or row; else the cell below or right, where
   its anchor is; else the cell above or left. An unmerged cell is always level. A table that
-  resolves to no style draws `DEFAULT_GRID_LINE`, 1 pt black.
+  resolves to no style draws `DEFAULT_GRID_LINE`, 1 pt black. A position no `a:tc` reached owns its
+  edges as a cell writing nothing does, and a dashed line is drawn dashed.
 - A merged cell takes its anchor's parts and every covered position's end and corner parts; its
-  bands are the anchor's. A covered cell's `a:tcPr` is never read.
+  bands are the anchor's. A covered cell's `a:tcPr` is never read, though PowerPoint keeps it on
+  save.
+- `tableCellDiagonals`: the anchor's own `a:lnTlToBr` and `a:lnBlToTr`, across its whole span, as
+  drawn: mirrored in an rtl table. No built-in states a diagonal.
 - `tableTextLayer` is what the style gives a cell's text, and the text cascade reads it between the
   cell's own list style and the master's `p:otherStyle`; `p:defaultTextStyle` is never read, and
   under a master with no `p:txStyles` a cell takes the built-in `other` style whatever its frame.

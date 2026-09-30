@@ -203,7 +203,13 @@ export interface TableSpec {
   readonly extScale?: number;
   /** Keyed `"r,c"`, zero-based. */
   readonly cells?: Readonly<Record<string, CellSpec>>;
+  /** Rows written with fewer `a:tc` than the grid has columns, by row: PowerPoint pads them (ADR 0056). */
+  readonly short?: Readonly<Record<string, number>>;
 }
+
+/** How many `a:tc` row `r` of `spec` writes. */
+export const cellsInRow = (spec: TableSpec, r: number): number =>
+  spec.short?.[String(r)] ?? spec.cols;
 
 export const TEXT_BODY =
   '<a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US" sz="1200"/><a:t>X</a:t></a:r></a:p></a:txBody>';
@@ -223,7 +229,7 @@ const emu = (pt: number): string => String(Math.round(pt * EMU_PER_POINT));
 
 export function tableFrame(name: string, spec: TableSpec): string {
   const rows = Array.from({ length: spec.rows }, (_, r) => {
-    const cells = Array.from({ length: spec.cols }, (_, c) => {
+    const cells = Array.from({ length: cellsInRow(spec, r) }, (_, c) => {
       const cell = spec.cells?.[`${String(r)},${String(c)}`] ?? {};
       return `<a:tc${cell.attrs ?? ''}>${cell.body ?? TEXT_BODY}${cell.tcPr ?? '<a:tcPr/>'}</a:tc>`;
     });
@@ -330,6 +336,7 @@ export type Group =
   | 'rtl'
   | 'tblpr'
   | 'background'
+  | 'dash'
   | 'text';
 
 /** `sweep` reads a cell's fill and text; `full` adds every side, the text's size and bullet, and the rect. */
@@ -347,6 +354,8 @@ export interface DeckSpec {
   /** Whole shapes on the master and on the layout, for the placeholder ladder. */
   readonly masterShapes?: readonly string[];
   readonly layoutShapes?: readonly string[];
+  /** PowerPoint also saves a copy, so the analysis can read what it keeps. */
+  readonly resave?: boolean;
   readonly slides: readonly TableSpec[];
 }
 
@@ -457,8 +466,15 @@ export const DIRECT = {
   rightEdgeTall: 'C9A015',
   rightEdgeCovered: 'C9A016',
   wideBottomAlike: 'C9A017',
+  dashed: 'C9A018',
+  padded: 'C9A019',
+  paddedBeside: 'C9A01A',
+  diagonalAnchor: 'C9A01B',
+  diagonalCovered: 'C9A01C',
   rtlLeft: 'C9B001',
   rtlRight: 'C9B002',
+  rtlDown: 'C9B003',
+  rtlUp: 'C9B004',
 } as const;
 
 export const line = (tag: string, pt: number, hex: string): string =>
@@ -1134,8 +1150,140 @@ export function allDecks(): DeckSpec[] {
     ],
   });
 
+  decks.push(...lineAndEffectDecks(floor));
   for (const pkg of TEXT_PACKAGES) decks.push(textDeck(pkg));
   return decks;
+}
+
+const dashed = (tag: string, pt: number, hex: string, dash: string): string =>
+  `<a:${tag} w="${emu(pt)}" cap="flat" cmpd="sng" algn="ctr">${solid(hex)}<a:prstDash val="${dash}"/><a:round/></a:${tag}>`;
+const shadowList = (degrees: number): string =>
+  `<a:effectLst><a:outerShdw blurRad="0" dist="76200" dir="${String(degrees * 60000)}" algn="tl" rotWithShape="0"><a:srgbClr val="C9C004"/></a:outerShdw></a:effectLst>`;
+
+/** Dashed lines, a padded row, diagonals, the background's effect, and a deck PowerPoint saves. */
+function lineAndEffectDecks(floor: Pick<DeckSpec, 'defaultTextStyle' | 'txStyles'>): DeckSpec[] {
+  const styled = (key: keyof typeof REFERENCE | null): string | null =>
+    key === null ? null : idOf(key);
+  const table = (
+    name: string,
+    style: string | null,
+    cells: Record<string, CellSpec>,
+    extra: Partial<TableSpec> = {},
+  ): TableSpec => ({
+    name,
+    rows: 5,
+    cols: 5,
+    style,
+    flags: flagsOf(HEADER_BANDED),
+    cells,
+    ...extra,
+  });
+  return [
+    {
+      id: 'dash',
+      group: 'dash',
+      theme: 'A',
+      read: 'full',
+      ...floor,
+      slides: (['medium2', 'dark1', null] as const).flatMap((key) =>
+        (
+          [
+            ['dash', `<a:tcPr>${dashed('lnB', 1, DIRECT.dashed, 'dash')}</a:tcPr>`],
+            ['long-dash', `<a:tcPr>${dashed('lnR', 2, DIRECT.dashed, 'lgDash')}</a:tcPr>`],
+            ['dot-only', '<a:tcPr><a:lnB><a:prstDash val="sysDot"/></a:lnB></a:tcPr>'],
+          ] as const
+        ).map(([name, tcPr]) => table(name, styled(key), { '2,2': { tcPr } })),
+      ),
+    },
+    {
+      id: 'direct-padded',
+      group: 'direct',
+      theme: 'A',
+      read: 'full',
+      ...floor,
+      slides: (['medium2', 'dark1', null] as const).map((key) =>
+        table(
+          'padded-above',
+          styled(key),
+          {
+            '2,3': { tcPr: `<a:tcPr>${line('lnT', 2, DIRECT.padded)}</a:tcPr>` },
+            '2,1': { tcPr: `<a:tcPr>${line('lnT', 2, DIRECT.paddedBeside)}</a:tcPr>` },
+          },
+          { short: { '1': 3 } },
+        ),
+      ),
+    },
+    {
+      id: 'merge-diagonals',
+      group: 'merge',
+      theme: 'A',
+      read: 'full',
+      resave: true,
+      ...floor,
+      slides: (['medium2', 'dark1'] as const).flatMap((key) => [
+        table('diagonal-wide', styled(key), {
+          '1,1': {
+            attrs: ' gridSpan="2"',
+            tcPr: `<a:tcPr>${line('lnTlToBr', 2, DIRECT.diagonalAnchor)}</a:tcPr>`,
+          },
+          '1,2': covered(
+            true,
+            false,
+            `<a:tcPr>${line('lnBlToTr', 2, DIRECT.diagonalCovered)}</a:tcPr>`,
+          ),
+        }),
+        table('diagonal-tall', styled(key), {
+          '1,1': {
+            attrs: ' rowSpan="2"',
+            tcPr: `<a:tcPr>${line('lnBlToTr', 2, DIRECT.diagonalAnchor)}</a:tcPr>`,
+          },
+          '2,1': covered(
+            false,
+            true,
+            `<a:tcPr>${line('lnTlToBr', 2, DIRECT.diagonalCovered)}</a:tcPr>`,
+          ),
+        }),
+        table('covered-saved', styled(key), {
+          '1,1': { attrs: ' rowSpan="2"' },
+          '2,1': covered(
+            false,
+            true,
+            `<a:tcPr>${line('lnB', 1, DIRECT.covered)}${solid(DIRECT.coveredFill)}</a:tcPr>`,
+          ),
+        }),
+      ]),
+    },
+    {
+      id: 'rtl-diagonals',
+      group: 'rtl',
+      theme: 'A',
+      read: 'full',
+      ...floor,
+      slides: (['dark1', 'medium2'] as const).map((key) => ({
+        ...table('rtl-diagonals', styled(key), {
+          '2,1': { tcPr: `<a:tcPr>${line('lnTlToBr', 2, DIRECT.rtlDown)}</a:tcPr>` },
+          '2,4': { tcPr: `<a:tcPr>${line('lnBlToTr', 2, DIRECT.rtlUp)}</a:tcPr>` },
+        }),
+        cols: 6,
+        flags: flagsOf(0),
+        rtl: true,
+      })),
+    },
+    {
+      id: 'background-effects',
+      group: 'background',
+      theme: 'C',
+      read: 'full',
+      ...floor,
+      slides: [
+        table('shadow-right', styled('themed2'), {}, { tblPrEffects: shadowList(0) }),
+        table('shadow-below', styled('themed1'), {}, { tblPrEffects: shadowList(90) }),
+        table('no-effects', styled('themed1'), {}, { tblPrEffects: '<a:effectLst/>' }),
+        table('frame-wider', styled('themed1'), {}, { flags: flagsOf(ALL), extScale: 1.25 }),
+        table('frame-wider', styled('themed2'), {}, { flags: flagsOf(ALL), extScale: 1.25 }),
+      ],
+    },
+  ];
 }
 
 /* -------------------------------------------------------------------------- */

@@ -1111,6 +1111,8 @@ describe('V034 table borders, against what PowerPoint drew and wrote in C9', () 
     readonly rows: number;
     readonly cols: number;
     readonly cells?: Cells;
+    /** Rows written with fewer `a:tc` than the grid has columns, keyed by row. */
+    readonly short?: Readonly<Record<string, number>>;
     readonly codes: string;
   }
   interface Deck {
@@ -1124,6 +1126,7 @@ describe('V034 table borders, against what PowerPoint drew and wrote in C9', () 
   interface Extras {
     readonly name?: string;
     readonly cells?: Cells;
+    readonly short?: Readonly<Record<string, number>>;
   }
   interface Packed extends Omit<Deck, 'slides'> {
     readonly shapes: string;
@@ -1168,10 +1171,11 @@ describe('V034 table borders, against what PowerPoint drew and wrote in C9', () 
     rows: number,
     cols: number,
     cells: Readonly<Record<string, { readonly attrs?: string; readonly tcPr?: string }>>,
+    short: Readonly<Record<string, number>> = {},
   ): Record<string, string> => {
     const body = '<a:txBody><a:bodyPr/><a:lstStyle/><a:p/></a:txBody>';
     const trs = Array.from({ length: rows }, (_, r) => {
-      const tcs = Array.from({ length: cols }, (_, c) => {
+      const tcs = Array.from({ length: short[String(r)] ?? cols }, (_, c) => {
         const cell = cells[`${String(r)},${String(c)}`] ?? {};
         return `<a:tc${cell.attrs ?? ''}>${body}${cell.tcPr ?? '<a:tcPr/>'}</a:tc>`;
       });
@@ -1210,9 +1214,18 @@ describe('V034 table borders, against what PowerPoint drew and wrote in C9', () 
     return new Map(keys.map((k, i) => [k, valueAt(first + i)]));
   };
 
+  /** The colours PowerPoint drew at the clear points on a slide's diagonals (C9). */
+  const diagonalColours = (deck: Deck, slide: Slide): Set<string> => {
+    const key = `${deck.id}#${String(deck.slides.indexOf(slide))}`;
+    const record = (
+      cascade.diagonals as readonly { key: string; colours: readonly string[] }[]
+    ).find((d) => d.key === key);
+    return new Set(record?.colours ?? []);
+  };
+
   /**
-   * Every coloured side an anchor cell writes, and whether PowerPoint drew its colour on every segment
-   * of it. A covered cell's own `a:tcPr` is never read (C9), and `V034` does not look at it.
+   * Every coloured line a cell writes, and whether PowerPoint drew its colour: on every segment of an
+   * anchor's side, on a covered cell's own edge, and at the clear points of a covered cell's diagonal.
    */
   const writtenLines = (
     deck: Deck,
@@ -1221,11 +1234,20 @@ describe('V034 table borders, against what PowerPoint drew and wrote in C9', () 
     const edges = edgesOf(deck, slide);
     const out: { key: string; drawn: boolean }[] = [];
     for (const [at, cell] of Object.entries(slide.cells ?? {})) {
-      if (/Merge=/.test(cell.attrs ?? '')) continue;
+      const covered = /Merge=/.test(cell.attrs ?? '');
       const [r, c] = at.split(',').map(Number) as [number, number];
       const span = (name: string): number =>
-        Number(new RegExp(`${name}="(\\d+)"`).exec(cell.attrs ?? '')?.[1] ?? 1);
+        covered ? 1 : Number(new RegExp(`${name}="(\\d+)"`).exec(cell.attrs ?? '')?.[1] ?? 1);
       const [rows, cols] = [span('rowSpan'), span('gridSpan')];
+      for (const tag of covered ? (['lnTlToBr', 'lnBlToTr'] as const) : []) {
+        const line = new RegExp(`<a:${tag}\\b[^>]*>.*?</a:${tag}>`).exec(cell.tcPr ?? '')?.[0];
+        const colour = /<a:srgbClr val="([0-9A-F]{6})"/.exec(line ?? '')?.[1];
+        if (colour === undefined) continue;
+        out.push({
+          key: `cell (${String(r + 1)}, ${String(c + 1)}) writes <a:${tag}>`,
+          drawn: diagonalColours(deck, slide).has(colour),
+        });
+      }
       for (const tag of ['lnT', 'lnL', 'lnB', 'lnR'] as const) {
         const line = new RegExp(`<a:${tag}\\b[^>]*>.*?</a:${tag}>`).exec(cell.tcPr ?? '')?.[0];
         const colour =
@@ -1255,7 +1277,10 @@ describe('V034 table borders, against what PowerPoint drew and wrote in C9', () 
     let silent = 0;
     for (const deck of decks.filter((d) => d.group === 'direct' || d.group === 'merge')) {
       for (const slide of deck.slides) {
-        const findings = broken('V034', withTable(slide.rows, slide.cols, slide.cells ?? {}));
+        const findings = broken(
+          'V034',
+          withTable(slide.rows, slide.cols, slide.cells ?? {}, slide.short),
+        );
         const found = findings.join('\n');
         const lines = writtenLines(deck, slide);
         for (const { key, drawn } of lines) {
@@ -1277,7 +1302,7 @@ describe('V034 table borders, against what PowerPoint drew and wrote in C9', () 
   });
 
   it('is silent beside a merged neighbour’s segment that is not level with its anchor', () => {
-    const merged = decks.filter((d) => d.group === 'merge');
+    const merged = decks.filter((d) => d.slides.some((s) => s.name === 'right-authored'));
     expect(merged).toHaveLength(4);
     for (const deck of merged) {
       const slide = deck.slides.find((s) => s.name === 'right-authored')!;

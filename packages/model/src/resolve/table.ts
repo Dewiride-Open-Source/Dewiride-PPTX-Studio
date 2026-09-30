@@ -6,6 +6,7 @@
 import {
   resolveColor,
   type ColorContext,
+  type Effect,
   type Fill,
   type Line,
   type Rgba,
@@ -15,10 +16,12 @@ import { firstChild, parseXmlString } from '@pptx-studio/xml';
 import { BUILTIN_TABLE_STYLES } from '../builtin/table-styles.js';
 import { ModelError } from '../errors.js';
 import { parseTableStyle } from '../parse/table.js';
-import { styleMatrixFill, styleMatrixLine } from '../style.js';
+import { styleMatrixEffects, styleMatrixFill, styleMatrixLine } from '../style.js';
 import type {
   GridCell,
   Table,
+  TableBackgroundLayers,
+  TableDiagonals,
   TableEdge,
   TableGrid,
   TableProps,
@@ -186,15 +189,47 @@ export function tableCellFill(
   return null;
 }
 
-/** What paints under the cells: `a:tblPr`'s own fill in place of the style's `tblBg` (C9). */
-export function tableBackground(
+/**
+ * What paints under the cells, over the grid and never the frame as written: `a:tblPr`'s own fill
+ * and effect list, each in place of the style's `tblBg` one, an empty list included (C9).
+ */
+export function tableBackground(table: Table, style: TableStyle | null): TableBackgroundLayers {
+  const ownFill = table.props?.fill;
+  const ownEffects = table.props?.effects;
+  return {
+    fill:
+      ownFill === undefined
+        ? fromBackground(style?.background?.fill)
+        : { value: { kind: 'value', value: ownFill }, source: 'tblPr' },
+    effects:
+      ownEffects === undefined
+        ? fromBackground(style?.background?.effect)
+        : { value: { kind: 'value', value: ownEffects }, source: 'tblPr' },
+  };
+}
+
+const fromBackground = <T>(value: T | undefined): TableSourced<T> | null =>
+  value === undefined ? null : { value, source: 'tblBg' };
+
+/* -------------------------------------------------------------------------- */
+/* diagonals                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The diagonals of the cell at (row, col) as drawn across its whole span: `down` from its visual top
+ * left, `up` from its visual bottom left. Only the anchor's own lines draw, mirrored in an rtl
+ * table; no built-in states a diagonal (C8) and a covered position's own are never read (C9).
+ */
+export function tableCellDiagonals(
   table: Table,
-  style: TableStyle | null,
-): TableSourced<Themeable<Fill>> | null {
-  const own = table.props?.fill;
-  if (own !== undefined) return { value: { kind: 'value', value: own }, source: 'tblPr' };
-  const background = style?.background?.fill;
-  return background === undefined ? null : { value: background, source: 'tblBg' };
+  grid: TableGrid,
+  row: number,
+  col: number,
+): TableDiagonals {
+  const borders = cellOf(grid, row, col).cell?.props?.borders;
+  const tlToBr = borders?.tlToBr ?? null;
+  const blToTr = borders?.blToTr ?? null;
+  return table.props?.rtl === true ? { down: blToTr, up: tlToBr } : { down: tlToBr, up: blToTr };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -378,6 +413,19 @@ export function themedFill(
   return {
     fill: found,
     phClr: fill.ref.color === null ? null : resolveColor(fill.ref.color, colors),
+  };
+}
+
+/** A style effect list with an `effectRef` followed into the theme, and the colour `phClr` takes. */
+export function themedEffects(
+  effects: Themeable<readonly Effect[] | undefined>,
+  theme: Theme,
+  colors: ColorContext,
+): { readonly effects: readonly Effect[]; readonly phClr: Rgba | null } {
+  if (effects.kind === 'value') return { effects: effects.value ?? [], phClr: null };
+  return {
+    effects: styleMatrixEffects(effects.ref, theme),
+    phClr: effects.ref.color === null ? null : resolveColor(effects.ref.color, colors),
   };
 }
 

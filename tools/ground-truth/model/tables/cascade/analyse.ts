@@ -30,6 +30,7 @@ import { entry, readZip } from '../../../lib/zip.ts';
 import {
   allDecks,
   APPLICABILITY,
+  cellsInRow,
   BASELINE,
   CELL,
   EDGE_MODELS,
@@ -106,7 +107,7 @@ interface DeckReading {
 export interface ComCell {
   readonly fill: string;
   readonly sides: Readonly<Record<string, string>> | null;
-  /** `rgb/b/face`, plus `/italic/size/bullet` in `full` mode. */
+  /** `rgb/b/face`, plus `/italic/size/bullet` in `full` mode; `empty` for a cell with no text. */
   readonly text: string;
   readonly rect: readonly number[] | null;
 }
@@ -176,18 +177,19 @@ export function interiorOf(image: PackedBitmap, r: number, c: number, where: str
 }
 
 /** The pixels across a grid edge at its midpoint, from outside-up/left to inside-down/right. */
-export function profileOf(image: PackedBitmap, edge: Edge): string[] {
-  const out: string[] = [];
-  if (edge.axis === 'h') {
-    const x = at(ORIGIN.x + edge.c * CELL.w + 36);
-    const y = at(ORIGIN.y + edge.r * CELL.h);
-    for (let k = -PROFILE_REACH; k < PROFILE_REACH; k++) out.push(hexOf(image.rgb(x, y + k)));
-  } else {
-    const x = at(ORIGIN.x + edge.c * CELL.w);
-    const y = at(ORIGIN.y + edge.r * CELL.h + 30);
-    for (let k = -PROFILE_REACH; k < PROFILE_REACH; k++) out.push(hexOf(image.rgb(x + k, y)));
-  }
+function profilePixels(edge: Edge): [number, number][] {
+  const out: [number, number][] = [];
+  const [x, y] =
+    edge.axis === 'h'
+      ? [at(ORIGIN.x + edge.c * CELL.w + 36), at(ORIGIN.y + edge.r * CELL.h)]
+      : [at(ORIGIN.x + edge.c * CELL.w), at(ORIGIN.y + edge.r * CELL.h + 30)];
+  for (let k = -PROFILE_REACH; k < PROFILE_REACH; k++)
+    out.push(edge.axis === 'h' ? [x, y + k] : [x + k, y]);
   return out;
+}
+
+export function profileOf(image: PackedBitmap, edge: Edge): string[] {
+  return profilePixels(edge).map(([x, y]) => hexOf(image.rgb(x, y)));
 }
 
 /**
@@ -480,13 +482,18 @@ export interface Pixels {
   /** By visual grid edge, `h0,0`. */
   readonly profiles: ReadonlyMap<string, readonly string[]>;
   readonly samples: Record<string, unknown> | null;
+  /** The centre pixels along each grid edge a written line dashes, end to end, by visual edge. */
+  readonly along: Readonly<Record<string, readonly string[]>>;
+  /** The colour at each candidate point on a diagonal a written line could draw, by `x,y` in pixels. */
+  readonly diagonal: Readonly<Record<string, string>>;
 }
 
 /** A slide's pixels as cached, with the hash of the PNG they were decoded from. */
-type CachedPixels = Omit<Pixels, 'profiles'> & {
-  readonly source: string;
-  readonly profiles: [string, readonly string[]][];
-};
+type CachedPixels = Omit<Pixels, 'profiles' | 'along' | 'diagonal'> &
+  Partial<Pick<Pixels, 'along' | 'diagonal'>> & {
+    readonly source: string;
+    readonly profiles: [string, readonly string[]][];
+  };
 
 function pixelsOf(image: PackedBitmap, deck: DeckSpec, table: TableSpec): Pixels {
   const where = deck.id;
@@ -514,7 +521,15 @@ function pixelsOf(image: PackedBitmap, deck: DeckSpec, table: TableSpec): Pixels
       beyondGrid: hexOf(image.rgb(at(ORIGIN.x + table.cols * CELL.w + 20), y)),
     };
   }
-  return { paints, glyphs, profiles, samples };
+  const along: Record<string, string[]> = {};
+  for (const edge of edgesOf(table)) {
+    if (dashedAt(table, edge))
+      along[`${edge.axis}${String(edge.r)},${String(edge.c)}`] = alongOf(image, edge);
+  }
+  const diagonal: Record<string, string> = {};
+  for (const [x, y] of diagonalPoints(table))
+    diagonal[`${String(x)},${String(y)}`] = hexOf(image.rgb(x, y));
+  return { paints, glyphs, profiles, samples, along, diagonal };
 }
 
 /** The paint at visual position (r, c). */
@@ -623,10 +638,20 @@ function load(dir: string): {
       const png = readFileSync(join(dir, read.png));
       const source = createHash('sha256').update(png).digest('hex');
       const kept = cached?.[slide];
-      const reuse = kept !== undefined && kept.source === source;
-      if (!reuse) stale = true;
-      const pixels = reuse
-        ? { ...kept, profiles: new Map(kept.profiles) }
+      // A cached slide without dash or diagonal samples stands where its table has neither.
+      const sampled =
+        (kept?.along !== undefined && kept.diagonal !== undefined) ||
+        (!edgesOf(table).some((edge) => dashedAt(table, edge)) &&
+          diagonalPoints(table).length === 0);
+      const reuse = kept !== undefined && kept.source === source && sampled;
+      if (!reuse || kept.along === undefined) stale = true;
+      const pixels: Pixels = reuse
+        ? {
+            ...kept,
+            along: kept.along ?? {},
+            diagonal: kept.diagonal ?? {},
+            profiles: new Map(kept.profiles),
+          }
         : pixelsOf(readPng(png), deck, table);
       fresh.push({ ...pixels, source, profiles: [...pixels.profiles] });
       slides.push({ deck, slide, table, com, pixels });
@@ -681,6 +706,8 @@ function guards(
       for (let c = 0; c < o.table.cols; c++) {
         const cell = o.com.cells[r]?.[c];
         if (cell === undefined) throw new Error(`${where}: no COM cell ${String(r)},${String(c)}`);
+        if ((cell.text === 'empty') !== c >= cellsInRow(o.table, r))
+          throw new Error(`${where}: cell ${String(r)},${String(c)} is ${cell.text} to COM`);
         // An rtl table is drawn mirrored: logical column c at visual column cols - 1 - c.
         const v = o.table.rtl === true ? o.table.cols - 1 - c : c;
         const paint = paintAt(o, r, v);
@@ -694,6 +721,8 @@ function guards(
         // A diagonal crosses the text's box, and a covered position draws no text of its own.
         if (/lnTlToBr|lnBlToTr/.test(spec?.tcPr ?? '') || /Merge=/.test(spec?.attrs ?? ''))
           continue;
+        // A position no `a:tc` reached is padded empty (ADR 0056): it has no text to draw.
+        if (c >= cellsInRow(o.table, r)) continue;
         const glyph = o.pixels.glyphs[r]?.[v] ?? { rgb: null, ink: 0 };
         const text = cell.text.split('/')[0];
         if (glyph.rgb === null ? text !== paint : glyph.rgb !== text) {
@@ -1048,7 +1077,7 @@ export function gridEdgeRows(slides: readonly Observed[]): Row<'black' | 'tx1' |
   )) {
     const palette = paletteOf(o.deck.theme);
     const tx1 = colorHex({ space: 'scheme', name: 'tx1', transforms: [] }, palette);
-    for (const edge of edgesOf(o.table)) {
+    for (const edge of edgesClear(o.table)) {
       const profile = profileAt(o, edge);
       const [a, b] = [profile[0] ?? '', profile.at(-1) ?? ''];
       const observed = describe(profile);
@@ -1314,7 +1343,7 @@ export function directRows(slides: readonly Observed[], double: Compound): Row<D
       (rc[1] ?? 0) < o.table.cols;
     const tcPr = (rc: readonly number[]): string =>
       o.table.cells?.[`${String(rc[0])},${String(rc[1])}`]?.tcPr ?? '';
-    for (const edge of edgesOf(o.table)) {
+    for (const edge of edgesClear(o.table)) {
       const before = edge.axis === 'h' ? [edge.r - 1, edge.c] : [edge.r, edge.c - 1];
       const after = [edge.r, edge.c];
       const [tagA, tagB] = edge.axis === 'h' ? ['lnB', 'lnT'] : ['lnR', 'lnL'];
@@ -1489,7 +1518,7 @@ export function mergeRows(
       }
     }
     if (!plain || which === 'paint') continue;
-    for (const edge of edgesOf(o.table)) {
+    for (const edge of edgesClear(o.table)) {
       const profile = profileAt(o, edge);
       const [a, b] = [profile[0] ?? '', profile.at(-1) ?? ''];
       const [br, bc] = edge.axis === 'h' ? [edge.r - 1, edge.c] : [edge.r, edge.c - 1];
@@ -1559,7 +1588,7 @@ export function mergedLineRows(
     const tcPr = (r: number, c: number): string => cells[`${String(r)},${String(c)}`]?.tcPr ?? '';
     const isCovered = (r: number, c: number): boolean =>
       /Merge=/.test(cells[`${String(r)},${String(c)}`]?.attrs ?? '');
-    for (const edge of edgesOf(o.table)) {
+    for (const edge of edgesClear(o.table)) {
       const profile = profileAt(o, edge);
       const [a, b] = [profile[0] ?? '', profile.at(-1) ?? ''];
       const [br, bc] = edge.axis === 'h' ? [edge.r - 1, edge.c] : [edge.r, edge.c - 1];
@@ -1672,7 +1701,7 @@ export function rtlRows(slides: readonly Observed[], double: Compound): Row<Mirr
         });
       }
     }
-    for (const edge of edgesOf(o.table)) {
+    for (const edge of edgesClear(o.table)) {
       const profile = profileAt(o, edge);
       const [a, b] = [profile[0] ?? '', profile.at(-1) ?? ''];
       const observed = describe(profile);
@@ -1713,7 +1742,7 @@ export function rtlDirectRows(slides: readonly Observed[], double: Compound): Ro
     const tcPr = (r: number, c: number): string =>
       o.table.cells?.[`${String(r)},${String(c)}`]?.tcPr ?? '';
     const inside = (r: number, c: number): boolean => r >= 0 && c >= 0 && r < height && c < cols;
-    for (const edge of edgesOf(o.table)) {
+    for (const edge of edgesClear(o.table)) {
       const profile = profileAt(o, edge);
       const [a, b] = [profile[0] ?? '', profile.at(-1) ?? ''];
       const observed = describe(profile);
@@ -1788,6 +1817,7 @@ export function backgroundSamples(slides: readonly Observed[]): Record<string, u
   return slides
     .filter((o) => o.deck.group === 'background')
     .map((o) => ({
+      deck: o.deck.id,
       slide: o.slide,
       style: o.table.style,
       mask: maskOf(o.table.flags),
@@ -1796,6 +1826,443 @@ export function backgroundSamples(slides: readonly Observed[]): Record<string, u
       com: o.com.background,
       ...o.pixels.samples,
     }));
+}
+
+/* -------------------------------------------------------------------------- */
+/* dashes, diagonals, the background's effect, and what a save keeps          */
+/* -------------------------------------------------------------------------- */
+
+/** Clear of any line across an edge's ends: more than half the widest line a probe draws. */
+const ALONG_CLEAR = 12;
+
+/** Whether a cell either side of edge `edge` writes a dashed line facing it. */
+function dashedAt(table: TableSpec, edge: Edge): boolean {
+  const tcPr = (r: number, c: number): string =>
+    table.cells?.[`${String(r)},${String(c)}`]?.tcPr ?? '';
+  const [before, after] =
+    edge.axis === 'h'
+      ? [written(tcPr(edge.r - 1, edge.c), 'lnB'), written(tcPr(edge.r, edge.c), 'lnT')]
+      : [written(tcPr(edge.r, edge.c - 1), 'lnR'), written(tcPr(edge.r, edge.c), 'lnL')];
+  const dashed = before?.dash === true || after?.dash === true;
+  if (dashed && table.rtl === true) throw new Error('a dashed line on an rtl probe');
+  return dashed;
+}
+
+/** The pixels on grid edge `edge`'s centre line, from one end to the other. */
+export function alongOf(image: PackedBitmap, edge: Edge): string[] {
+  const out: string[] = [];
+  const [fixed, from, to] =
+    edge.axis === 'h'
+      ? [ORIGIN.y + edge.r * CELL.h, ORIGIN.x + edge.c * CELL.w, ORIGIN.x + (edge.c + 1) * CELL.w]
+      : [ORIGIN.x + edge.c * CELL.w, ORIGIN.y + edge.r * CELL.h, ORIGIN.y + (edge.r + 1) * CELL.h];
+  for (let k = at(from) + ALONG_CLEAR; k < at(to) - ALONG_CLEAR; k++) {
+    out.push(hexOf(edge.axis === 'h' ? image.rgb(k, at(fixed)) : image.rgb(at(fixed), k)));
+  }
+  return out;
+}
+
+/** A run-length form of a pixel row: `RRGGBB*n`, comma-separated. */
+export function runsOf(pixels: readonly string[]): string {
+  const runs: string[] = [];
+  for (let k = 0; k < pixels.length;) {
+    let n = 1;
+    while (k + n < pixels.length && pixels[k + n] === pixels[k]) n++;
+    runs.push(`${pixels[k] ?? ''}*${String(n)}`);
+    k += n;
+  }
+  return runs.join(',');
+}
+
+export type Dash = 'dashed' | 'solid' | 'nothing';
+
+/** What an edge's centre line shows: the line and the paints in turn, the line alone, or no line. */
+export function dashClass(
+  pixels: readonly string[],
+  line: string | null,
+  paints: readonly string[],
+): string {
+  const lit = line === null ? 0 : pixels.filter((p) => p === line).length;
+  const bare = pixels.filter((p) => paints.includes(p)).length;
+  if (lit + bare < pixels.length * 0.8) return 'mixed';
+  if (lit === 0) return 'nothing';
+  return bare === 0 ? 'solid' : 'dashed';
+}
+
+/**
+ * Edges a written dashed line faces, under the owner rule and whole replacement C9 measured: is the
+ * dash drawn, dropped for a solid line, or the line not drawn at all.
+ */
+export function dashRows(slides: readonly Observed[]): (Row<Dash> & { runs: string })[] {
+  const rows: (Row<Dash> & { runs: string })[] = [];
+  for (const o of slides) {
+    for (const [key, pixels] of Object.entries(o.pixels.along)) {
+      const axis = key[0] === 'h' ? 'h' : 'v';
+      const [r, c] = key.slice(1).split(',').map(Number) as [number, number];
+      const edge: Edge = { axis, r, c };
+      const palette = paletteOf(o.deck.theme);
+      const style = o.table.style === null ? null : styleById(o.table.style);
+      const grid = partsGrid('spec', o.table);
+      const tcPr = (rr: number, cc: number): string =>
+        o.table.cells?.[`${String(rr)},${String(cc)}`]?.tcPr ?? '';
+      const [before, after] =
+        axis === 'h'
+          ? [
+              [r - 1, c],
+              [r, c],
+            ]
+          : [
+              [r, c - 1],
+              [r, c],
+            ];
+      const inside = (rc: readonly number[]): boolean =>
+        (rc[0] ?? -1) >= 0 &&
+        (rc[1] ?? -1) >= 0 &&
+        (rc[0] ?? 0) < o.table.rows &&
+        (rc[1] ?? 0) < o.table.cols;
+      const styleLines =
+        style === null
+          ? [{ rgb: '000000', weight: 1, cmpd: 'sng' }]
+          : edgeLinesBetween(
+              style,
+              inside(before) ? (grid[before[0] ?? 0]?.[before[1] ?? 0] ?? null) : null,
+              inside(after) ? (grid[after[0] ?? 0]?.[after[1] ?? 0] ?? null) : null,
+              axis,
+              BASELINE.reading,
+              palette,
+            );
+      const owner = inside(before)
+        ? written(tcPr(before[0] ?? 0, before[1] ?? 0), axis === 'h' ? 'lnB' : 'lnR')
+        : written(tcPr(after[0] ?? 0, after[1] ?? 0), axis === 'h' ? 'lnT' : 'lnL');
+      // Only the owner's line draws (C9): a dash its neighbour writes is not this question's.
+      if (owner?.dash !== true) continue;
+      const line = completed(owner, styleLines[0], 'replace');
+      const profile = profileAt(o, edge);
+      const paints = [profile[0] ?? '', profile.at(-1) ?? ''];
+      rows.push({
+        key: edgeKey(o.deck.id, o.slide, edge),
+        observed: dashClass(pixels, line?.rgb ?? null, paints),
+        runs: runsOf(pixels),
+        predict: (d) => (line === null || d === 'nothing' ? 'nothing' : d),
+      });
+    }
+  }
+  return rows;
+}
+
+/** A diagonal a written line could draw: its rectangle in pixels, its direction, half its width. */
+interface Stroke {
+  readonly x0: number;
+  readonly y0: number;
+  readonly x1: number;
+  readonly y1: number;
+  /** From the rectangle's top left to its bottom right, as drawn. */
+  readonly down: boolean;
+  readonly half: number;
+  readonly rgb: string;
+}
+
+const DIAGONAL_TAGS = ['lnTlToBr', 'lnBlToTr'] as const;
+
+export interface DiagonalReading {
+  /** The written direction, the other one, or no diagonal at all. */
+  readonly drawn: 'asWritten' | 'swapped' | 'none';
+  /** Across a merged cell's whole span, or its anchor's position only. */
+  readonly extent: 'merged' | 'position';
+  /** A covered position's own diagonal. */
+  readonly covered: 'ignored' | 'drawn';
+  /** In an rtl table: mirrored with the table, or drawn as written in the mirrored position. */
+  readonly rtl: 'mirrored' | 'logical';
+}
+
+/** The diagonals a table's written lines draw under `reading`, in pixels. */
+function strokesOf(table: TableSpec, reading: DiagonalReading | 'all'): Stroke[] {
+  const out: Stroke[] = [];
+  for (const [key, spec] of Object.entries(table.cells ?? {})) {
+    const [r, c] = key.split(',').map(Number) as [number, number];
+    const covered = /Merge=/.test(spec.attrs ?? '');
+    const spans: [number, number][] = [[1, 1]];
+    const rows = Number(/rowSpan="(\d+)"/.exec(spec.attrs ?? '')?.[1] ?? 1);
+    const cols = Number(/gridSpan="(\d+)"/.exec(spec.attrs ?? '')?.[1] ?? 1);
+    if (!covered && (rows > 1 || cols > 1)) spans.push([rows, cols]);
+    for (const tag of DIAGONAL_TAGS) {
+      const line = written(spec.tcPr ?? '', tag);
+      if (line?.rgb === undefined || line.w === undefined) continue;
+      const half = ((line.w / 12700) * SCALE) / 2;
+      for (const [h, w] of spans) {
+        let downs = [true, false];
+        if (reading !== 'all') {
+          if (reading.drawn === 'none' || (covered && reading.covered === 'ignored')) continue;
+          if ((reading.extent === 'merged') !== (h > 1 || w > 1) && spans.length > 1) continue;
+          let down = tag === 'lnTlToBr';
+          if (reading.drawn === 'swapped') down = !down;
+          if (table.rtl === true && reading.rtl === 'mirrored') down = !down;
+          downs = [down];
+        }
+        const left = table.rtl === true ? table.cols - c - w : c;
+        for (const down of downs) {
+          out.push({
+            x0: at(ORIGIN.x + left * CELL.w),
+            y0: at(ORIGIN.y + r * CELL.h),
+            x1: at(ORIGIN.x + (left + w) * CELL.w),
+            y1: at(ORIGIN.y + (r + h) * CELL.h),
+            down,
+            half,
+            rgb: line.rgb,
+          });
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/** A table's grid edges, less those whose profile a written diagonal crosses and so reads instead. */
+export function edgesClear(table: TableSpec): Edge[] {
+  const strokes = strokesOf(table, 'all');
+  return edgesOf(table).filter(
+    (edge) =>
+      !profilePixels(edge).some(([x, y]) =>
+        strokes.some((s) => distanceTo(x, y, s) < s.half + OFF_STROKE),
+      ),
+  );
+}
+
+/** How far a pixel's centre lies from a stroke's centre line. */
+function distanceTo(x: number, y: number, s: Stroke): number {
+  const [ax, ay, bx, by] = s.down ? [s.x0, s.y0, s.x1, s.y1] : [s.x0, s.y1, s.x1, s.y0];
+  const [px, py] = [x + 0.5, y + 0.5];
+  const [dx, dy] = [bx - ax, by - ay];
+  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+/** A pixel this close to a stroke's centre is wholly covered; this much past its edge, untouched. */
+const ON_STROKE = 1.5;
+const OFF_STROKE = 2.5;
+/** Clear of every grid line's pixels. */
+const GRID_CLEAR = 8;
+
+/**
+ * Points on every diagonal some reading draws, each wholly on one of them or clear of all, away
+ * from the grid lines: which reading is right is then a colour per point.
+ */
+export function diagonalPoints(table: TableSpec): [number, number][] {
+  const candidates = strokesOf(table, 'all');
+  const xs = Array.from({ length: table.cols + 1 }, (_, k) => at(ORIGIN.x + k * CELL.w));
+  const ys = Array.from({ length: table.rows + 1 }, (_, k) => at(ORIGIN.y + k * CELL.h));
+  const seen = new Set<string>();
+  const out: [number, number][] = [];
+  for (const s of candidates) {
+    for (let k = 1; k <= 9; k++) {
+      const t = k / 10;
+      const x = Math.floor(s.x0 + t * (s.x1 - s.x0));
+      const y = Math.floor(s.down ? s.y0 + t * (s.y1 - s.y0) : s.y1 - t * (s.y1 - s.y0));
+      const key = `${String(x)},${String(y)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (
+        [...xs.map((g) => Math.abs(x + 0.5 - g)), ...ys.map((g) => Math.abs(y + 0.5 - g))].some(
+          (d) => d < GRID_CLEAR,
+        )
+      )
+        continue;
+      const distances = candidates.map((c) => ({ d: distanceTo(x, y, c), c }));
+      const on = distances.filter(({ d }) => d <= ON_STROKE);
+      if (on.length !== 1) continue;
+      if (distances.some(({ d, c }) => d > ON_STROKE && d < c.half + OFF_STROKE)) continue;
+      out.push([x, y]);
+    }
+  }
+  return out;
+}
+
+/** The paint at pixel (x, y): the cell under it, by visual position. */
+function paintUnder(o: Observed, x: number, y: number): string {
+  const r = Math.floor((y - at(ORIGIN.y)) / at(CELL.h));
+  const c = Math.floor((x - at(ORIGIN.x)) / at(CELL.w));
+  return paintAt(o, r, c);
+}
+
+/** A slide's diagonal points whose pixel is a written diagonal's colour or its cell's paint. */
+export function diagonalSamples(o: Observed): { x: number; y: number; seen: string }[] {
+  const colours = new Set(strokesOf(o.table, 'all').map((s) => s.rgb));
+  return diagonalPoints(o.table)
+    .map(([x, y]) => {
+      const seen = o.pixels.diagonal[`${String(x)},${String(y)}`];
+      if (seen === undefined)
+        throw new Error(`${o.deck.id}#${String(o.slide)}: no pixel at ${String(x)},${String(y)}`);
+      return { x, y, seen };
+    })
+    .filter(({ x, y, seen }) => colours.has(seen) || seen === paintUnder(o, x, y));
+}
+
+/** Each slide with a written diagonal: the colour every reading puts at every clear point. */
+export function diagonalRows(slides: readonly Observed[]): Row<DiagonalReading>[] {
+  const rows: Row<DiagonalReading>[] = [];
+  for (const o of slides) {
+    const samples = diagonalSamples(o);
+    if (samples.length === 0) continue;
+    rows.push({
+      key: `${o.deck.id}#${String(o.slide)}:diagonals`,
+      observed: samples.map((p) => p.seen).join(' '),
+      predict: (reading) => {
+        const strokes = strokesOf(o.table, reading);
+        return samples
+          .map(
+            ({ x, y }) =>
+              strokes.findLast((s) => distanceTo(x, y, s) <= ON_STROKE)?.rgb ?? paintUnder(o, x, y),
+          )
+          .join(' ');
+      },
+    });
+  }
+  return rows;
+}
+
+/** A hard outer shadow: its offset in points and its colour. */
+interface Shadow {
+  readonly dx: number;
+  readonly dy: number;
+  readonly rgb: string;
+}
+
+function shadowsIn(xml: string): Shadow[] {
+  return [
+    ...xml.matchAll(
+      /<a:outerShdw\b[^>]*?dist="(\d+)" dir="(\d+)"[^>]*>\s*<a:srgbClr val="([0-9A-F]{6})"/g,
+    ),
+  ].map((m) => {
+    const dist = Number(m[1]) / 12700;
+    const angle = (Number(m[2]) / 60000 / 180) * Math.PI;
+    return { dx: dist * Math.cos(angle), dy: dist * Math.sin(angle), rgb: m[3] ?? '' };
+  });
+}
+
+/** The shadows a style's `tblBg` effect gives in theme C: an `a:effectRef` into its effect styles. */
+function backgroundShadows(style: TableStyle | null): Shadow[] {
+  const effect = style?.background?.effect;
+  if (effect === undefined) return [];
+  if (effect.kind === 'value')
+    throw new Error('a built-in tblBg with its own a:effect: not probed');
+  const idx = effect.ref.idx;
+  if (idx === 0) return [];
+  const xml = THEMES.C.theme.formatScheme?.effects[idx - 1];
+  if (xml === undefined) throw new Error(`theme C has no effect style ${String(idx)}`);
+  return shadowsIn(xml);
+}
+
+export interface BackgroundReading {
+  /** The style's `tblBg` effect. */
+  readonly effect: 'drawn' | 'ignored';
+  /** An `a:effectLst` in `a:tblPr`: in place of the style's, drawn over it, or ignored. */
+  readonly tblPr: 'replaces' | 'adds' | 'ignored';
+  /** What the background and its effect cover: the grid, or the frame as written. */
+  readonly box: 'grid' | 'frame';
+}
+
+/** Where theme C's samples beyond the grid were taken, in points (`pixelsOf`). */
+function samplePoints(
+  table: TableSpec,
+): Record<'right' | 'below' | 'beyondGrid', [number, number]> {
+  const right = ORIGIN.x + table.cols * CELL.w;
+  const y = ORIGIN.y + 2 * CELL.h + 30;
+  return {
+    right: [right + 3, y],
+    below: [ORIGIN.x + 36, ORIGIN.y + table.rows * CELL.h + 3],
+    beyondGrid: [right + 20, y],
+  };
+}
+
+const SHADOW_COLOURS = new Set(['C9C0E1', 'C9C0E3', 'C9C003', 'C9C004']);
+
+/** A sample as the question sees it: the page, a shadow's colour, or painted by the table. */
+const sampleClass = (hex: string): string =>
+  hex === PAGE ? 'page' : SHADOW_COLOURS.has(hex) ? hex : 'painted';
+
+function sampleAt(o: Observed, name: string): string {
+  const sample = o.pixels.samples?.[name];
+  if (typeof sample !== 'string')
+    throw new Error(`${o.deck.id}#${String(o.slide)} has no ${name} sample`);
+  return sample;
+}
+
+/** Theme C's samples beyond the grid: which shadows fall there, and whether the background does. */
+export function backgroundRows(slides: readonly Observed[]): Row<BackgroundReading>[] {
+  const rows: Row<BackgroundReading>[] = [];
+  for (const o of slides.filter((x) => x.deck.group === 'background')) {
+    const style = o.table.style === null ? null : styleById(o.table.style);
+    const own = o.table.tblPrEffects;
+    const painted = o.table.tblPrFill !== undefined || style?.background?.fill !== undefined;
+    for (const [name, [x, y]] of Object.entries(samplePoints(o.table))) {
+      rows.push({
+        key: `${o.deck.id}#${String(o.slide)}:${name}`,
+        observed: sampleClass(sampleAt(o, name)),
+        predict: (reading) => {
+          const scale = reading.box === 'frame' ? (o.table.extScale ?? 1) : 1;
+          const [w, h] = [o.table.cols * CELL.w * scale, o.table.rows * CELL.h * scale];
+          const within = (dx: number, dy: number): boolean =>
+            x >= ORIGIN.x + dx &&
+            x < ORIGIN.x + dx + w &&
+            y >= ORIGIN.y + dy &&
+            y < ORIGIN.y + dy + h;
+          if (within(0, 0)) return painted ? 'painted' : 'page';
+          const shadows = [
+            ...(reading.effect === 'drawn' && !(own !== undefined && reading.tblPr === 'replaces')
+              ? backgroundShadows(style)
+              : []),
+            ...(own !== undefined && reading.tblPr !== 'ignored' ? shadowsIn(own) : []),
+          ];
+          return shadows.findLast((s) => within(s.dx, s.dy))?.rgb ?? 'page';
+        },
+      });
+    }
+  }
+  return rows;
+}
+
+/** An `a:tcPr`'s lines and fill, as `tag:RRGGBB` in document order; empty for none. */
+export function tcPrSummary(tcPr: string): string {
+  return [
+    ...tcPr.matchAll(
+      /<a:(ln[LRTB]|lnTlToBr|lnBlToTr|solidFill)\b.*?<a:srgbClr val="([0-9A-F]{6})"/g,
+    ),
+  ]
+    .map((m) => `${m[1] ?? ''}:${m[2] ?? ''}`)
+    .join(' ');
+}
+
+/** Each covered cell that writes an `a:tcPr`, and what PowerPoint wrote there saving the deck. */
+export function resaveRows(dir: string, slides: readonly Observed[]): Row<'kept' | 'emptied'>[] {
+  const rows: Row<'kept' | 'emptied'>[] = [];
+  for (const deck of new Set(slides.filter((o) => o.deck.resave === true).map((o) => o.deck))) {
+    const path = join(dir, 'resaved', `${deck.id}.pptx`);
+    if (!existsSync(path)) throw new Error(`no resaved/${deck.id}.pptx: run read.ps1 to the end`);
+    const zip = readZip(readFileSync(path));
+    deck.slides.forEach((table, k) => {
+      const xml = new TextDecoder().decode(
+        entry(zip, `ppt/slides/slide${String(k + 1)}.xml`) ?? new Uint8Array(),
+      );
+      const saved = [...xml.matchAll(/<a:tr\b.*?<\/a:tr>/gs)].map((tr) =>
+        [...tr[0].matchAll(/<a:tc\b[^>]*?(?:\/>|>.*?<\/a:tc>)/gs)].map((tc) => tc[0]),
+      );
+      for (const [pos, spec] of Object.entries(table.cells ?? {})) {
+        if (!/Merge=/.test(spec.attrs ?? '') || spec.tcPr === undefined) continue;
+        const [r, c] = pos.split(',').map(Number) as [number, number];
+        const tc = saved[r]?.[c];
+        if (tc === undefined)
+          throw new Error(`${deck.id}#${String(k)}: PowerPoint wrote no a:tc at ${pos}`);
+        const tcPr = /<a:tcPr\b[^>]*\/>|<a:tcPr\b[^>]*>.*?<\/a:tcPr>/s.exec(tc)?.[0];
+        if (tcPr === undefined) throw new Error(`${deck.id}#${String(k)}: no a:tcPr at ${pos}`);
+        const summary = tcPrSummary(tcPr);
+        rows.push({
+          key: `${deck.id}#${String(k)}@${pos}:resaved`,
+          observed: summary,
+          predict: (how) => (how === 'kept' ? tcPrSummary(spec.tcPr ?? '') : ''),
+        });
+      }
+    });
+  }
+  return rows;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1851,6 +2318,7 @@ function encodeDeck(deck: DeckSpec, observed: readonly Observed[]): Record<strin
       ...(t.extScale === undefined ? {} : { extScale: t.extScale }),
       ...(t.ph === undefined ? {} : { ph: t.ph }),
       ...(t.cells === undefined ? {} : { cells: t.cells }),
+      ...(t.short === undefined ? {} : { short: t.short }),
       ...(o.com.background === null ? {} : { background: o.com.background }),
       codes,
     };
@@ -2025,6 +2493,27 @@ function writeFixture(dir: string): void {
           .filter((v) => v.probe === null)
           .map((v) => `${v.dimension} ${v.pair.join(' / ')} (${v.unit})`),
         background: backgroundSamples(slides),
+        dashes: dashRows(slides).map(({ key, runs, observed }) => ({ key, runs, observed })),
+        diagonals: slides
+          .map((o) => ({ o, samples: diagonalSamples(o) }))
+          .filter(({ samples }) => samples.length > 0)
+          .map(({ o, samples }) => {
+            const colours = [...new Set(samples.map((p) => p.seen))];
+            return {
+              key: `${o.deck.id}#${String(o.slide)}`,
+              colours,
+              points: samples
+                .map(
+                  ({ x, y, seen }) => `${String(x)},${String(y)},${String(colours.indexOf(seen))}`,
+                )
+                .join(' '),
+            };
+          }),
+        resaved: resaveRows(dir, slides).map((row) => ({
+          key: row.key,
+          written: row.predict('kept'),
+          saved: row.observed,
+        })),
         authored: authored(dir),
         templates,
         decks: small,
@@ -2114,6 +2603,82 @@ function mergedLineFindings(pooling: Merged): Finding[] {
     score(
       'merged cells: how far the cell after reaches',
       afters.map((after): [string, MergedLine] => [after, { ...best, after }]),
+      rows,
+    ),
+  ];
+}
+
+/** Which diagonals draw: over every combination, then each axis around the one that fits. */
+function diagonalFindings(): Finding[] {
+  const rows = diagonalRows(slides);
+  const axes = {
+    drawn: ['asWritten', 'swapped', 'none'],
+    extent: ['merged', 'position'],
+    covered: ['ignored', 'drawn'],
+    rtl: ['mirrored', 'logical'],
+  } as const;
+  const all = axes.drawn.flatMap((drawn) =>
+    axes.extent.flatMap((extent) =>
+      axes.covered.flatMap((covered) =>
+        axes.rtl.map((rtl): DiagonalReading => ({ drawn, extent, covered, rtl })),
+      ),
+    ),
+  );
+  const best = all.find((m) => rows.every((row) => row.predict(m) === row.observed)) ?? all[0];
+  if (best === undefined) throw new Error('no diagonal reading');
+  return [
+    score(
+      'diagonals: which',
+      axes.drawn.map((drawn): [string, DiagonalReading] => [drawn, { ...best, drawn }]),
+      rows,
+    ),
+    score(
+      'diagonals: a merged cell’s',
+      axes.extent.map((extent): [string, DiagonalReading] => [extent, { ...best, extent }]),
+      rows,
+    ),
+    score(
+      'diagonals: a covered cell’s own',
+      axes.covered.map((covered): [string, DiagonalReading] => [covered, { ...best, covered }]),
+      rows,
+    ),
+    score(
+      'diagonals: in an rtl table',
+      axes.rtl.map((rtl): [string, DiagonalReading] => [rtl, { ...best, rtl }]),
+      rows,
+    ),
+  ];
+}
+
+/** The background's effect: over every combination, then each axis around the one that fits. */
+function backgroundFindings(): Finding[] {
+  const rows = backgroundRows(slides);
+  const axes = {
+    effect: ['drawn', 'ignored'],
+    tblPr: ['replaces', 'adds', 'ignored'],
+    box: ['grid', 'frame'],
+  } as const;
+  const all = axes.effect.flatMap((effect) =>
+    axes.tblPr.flatMap((tblPr) =>
+      axes.box.map((box): BackgroundReading => ({ effect, tblPr, box })),
+    ),
+  );
+  const best = all.find((m) => rows.every((row) => row.predict(m) === row.observed)) ?? all[0];
+  if (best === undefined) throw new Error('no background reading');
+  return [
+    score(
+      'background: tblBg’s effect',
+      axes.effect.map((effect): [string, BackgroundReading] => [effect, { ...best, effect }]),
+      rows,
+    ),
+    score(
+      'background: an effect in a:tblPr',
+      axes.tblPr.map((tblPr): [string, BackgroundReading] => [tblPr, { ...best, tblPr }]),
+      rows,
+    ),
+    score(
+      'background: what it covers',
+      axes.box.map((box): [string, BackgroundReading] => [box, { ...best, box }]),
       rows,
     ),
   ];
@@ -2240,6 +2805,18 @@ const questions: Finding[] = [
     'tblPr fill',
     (['underCells', 'ignored', 'overCells'] as const).map((t): [string, TablePaint] => [t, t]),
     tblPrRows(slides),
+  ),
+  score(
+    'direct: a dashed line',
+    (['dashed', 'solid', 'nothing'] as const).map((d): [string, Dash] => [d, d]),
+    dashRows(slides),
+  ),
+  ...diagonalFindings(),
+  ...backgroundFindings(),
+  score(
+    'merged cells: a covered cell’s own a:tcPr, saved',
+    (['kept', 'emptied'] as const).map((how): [string, 'kept' | 'emptied'] => [how, how]),
+    resaveRows(dir, slides),
   ),
 ];
 const findings = questions;

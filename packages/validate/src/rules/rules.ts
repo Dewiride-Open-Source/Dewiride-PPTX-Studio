@@ -556,7 +556,9 @@ export const RULES = [
       '`a:lnB` or `a:lnR`, or the style where it writes none - where that cell, merged ' +
       'or not, has its anchor level with the edge. Otherwise the cell below or to the ' +
       'right draws its own `a:lnT` or `a:lnL` where its anchor is level with the edge, ' +
-      'and elsewhere the cell above or to the left keeps it. When PowerPoint sets a ' +
+      'and elsewhere the cell above or to the left keeps it. A position no `a:tc` ' +
+      'reached owns its edges as a cell writing nothing does, and a covered cell’s own ' +
+      'lines are never drawn, though PowerPoint keeps them on save. When PowerPoint sets a ' +
       'border itself it writes every side alike. The deck opens without a word, which ' +
       'is why this is a warning: the file says one border and PowerPoint draws another.',
   },

@@ -5,7 +5,8 @@
 #
 # One readings file per deck under readings/, so an interrupted run resumes where it stopped; each
 # session reads the control deck first and again last, as control-<tag> in a session of named decks.
-# Every slide is exported as PNG at 4 px per point, and each `twins` deck's first slide as BMP too.
+# Every slide is exported as PNG at 4 px per point, and each `twins` deck's first slide as BMP too;
+# a deck marked `resave` is also saved by PowerPoint under resaved/, to read back what it keeps.
 param(
     [Parameter(Mandatory = $true)][string]$Dir,
     [string]$Tag = '',
@@ -24,7 +25,7 @@ if (-not (Test-Path -LiteralPath $inputsPath)) {
     throw "no cascade-inputs.json in $root - run tools/ground-truth/model/tables/cascade/build-deck.ts first"
 }
 $inputs = (Get-Content -LiteralPath $inputsPath -Raw -Encoding UTF8) | ConvertFrom-Json
-foreach ($sub in @('readings', 'png', 'twin')) { New-Item -ItemType Directory -Force -Path (Join-Path $root $sub) | Out-Null }
+foreach ($sub in @('readings', 'png', 'twin', 'resaved')) { New-Item -ItemType Directory -Force -Path (Join-Path $root $sub) | Out-Null }
 
 # COM costs about 1.5 ms a property from PowerShell; compiled late binding saves a quarter of that.
 Add-Type -ReferencedAssemblies Microsoft.CSharp, System.Core -TypeDefinition @'
@@ -74,7 +75,10 @@ public static class CascadeReader {
                     string[] names = { "top", "left", "bottom", "right", "down", "up" };
                     for (int k = 1; k <= 6; k++) Line(sb, names[k - 1], Side(cell, k));
                 }
-                dynamic first = shape.TextFrame2.TextRange.Characters(1, 1);
+                dynamic range = shape.TextFrame2.TextRange;
+                // A padded position has no text: there is no first character to ask about.
+                if ((int)range.Length == 0) { sb.Append("text=empty\n"); continue; }
+                dynamic first = range.Characters(1, 1);
                 dynamic font = first.Font;
                 sb.Append("text=").Append(Hex((int)font.Fill.ForeColor.RGB)).Append('/').Append(Tri((int)font.Bold, "b"))
                   .Append('/').Append((string)font.Name);
@@ -168,6 +172,7 @@ foreach ($deck in $order) {
                 }
                 $record.slides += , $reading
             }
+            if ($deck.resave -and -not $deck.again) { $pres.SaveCopyAs((Join-Path (Join-Path $root 'resaved') "$name.pptx")) }
         }
         finally { try { $pres.Saved = $msoTrue; $pres.Close() } catch {} }
     }

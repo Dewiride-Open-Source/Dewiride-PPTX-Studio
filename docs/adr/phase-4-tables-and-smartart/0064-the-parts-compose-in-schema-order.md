@@ -1,13 +1,14 @@
 # 0064 — The parts compose in schema order
 
 Date: 2026-09-30
-Status: **accepted** — across 10,480 slides of tables in three themes, read cell by cell through COM
+Status: **accepted** — across 10,505 slides of tables in three themes, read cell by cell through COM
 and pixel by pixel at 4 px a point, one reading fits every row of every question. ECMA-376 says
 which parts reach a cell. The parts compose in the schema's own order, property by property: fills
 10,519/10,519, text 49/49, edges 2,693/2,693. A grid edge draws the highest claim of either cell
-(86,372/86,372). A direct border belongs to the cell above or left (92/92), and a merged cell owns
-only the segments level with its anchor (52/52, 24/24). 33/34 mutants killed; the survivor is
-equivalent on every table PowerPoint draws.
+(86,372/86,372). A direct border belongs to the cell above or left (98/98), and a merged cell owns
+only the segments level with its anchor (54/54, 24/24). Dashes, diagonals, a padded row, the
+background's effect and what a save keeps of a covered cell are measured too. 44/45 mutants killed;
+the survivor is equivalent on every table PowerPoint draws.
 
 **Sub-phase 4.3.** The plan's row says "the 13-layer table cascade". 4.2 settled which style a table
 is drawn with (ADR 0063). This settles what each of that style's thirteen parts gives each cell and
@@ -16,17 +17,18 @@ where the style sits in the walk that resolves a cell's text. ECMA-376 names the
 little about how they combine. PowerPoint is the only answer that counts, so every rule here was
 scored against what PowerPoint reported and drew.
 
-Code: `packages/model/src/{table,errors,resolve/table,resolve/text,types}.ts`, `V034` in
+Code: `packages/model/src/{table,errors,index,resolve/table,resolve/text,types}.ts`, `V034` in
 `packages/validate/src/rules/{rules,required}.ts`, `tools/ground-truth/model/tables/cascade/`,
 `tools/ground-truth/lib/png.ts`. Fixture: `corpus/ground-truth/table-cascade.json` and its siblings
 `table-cascade-ends.json`, `table-cascade-sides.json` and `table-cascade-sweep-{1,2,3}.json`.
-Changeset: `.changeset/the-parts-compose-in-schema-order.md`.
+Changesets: `.changeset/the-parts-compose-in-schema-order.md`, and
+`.changeset/diagonals-dashes-and-the-background-effect.md` for the second read.
 
 ---
 
 ## C9 — the probes
 
-250 packages, one table per slide, in three themes of our own:
+255 packages, one table per slide, in three themes of our own:
 
 - **Theme A** has a stock-like palette, Georgia and Verdana, and a clrMap that sends `bg1`, `tx1`,
   `bg2` and `tx2` to other slots.
@@ -38,11 +40,12 @@ Changeset: `.changeset/the-parts-compose-in-schema-order.md`.
 | sweep      | 76    | 4,864  | every built-in, no style and an unknown GUID, 5×5, all 64 flag sets                              |
 | ends       | 74    | 4,736  | every built-in on 1×1, 2×2, 1×3 and 3×1, the sixteen end-flag sets                               |
 | sides      | 74    | 592    | every built-in in theme B, eight flag sets; each family's plain and Accent 1 styles read in full |
-| direct     | 6     | 108    | `a:tcPr` fills and borders: conflicts, partial lines, diagonals, outer edges                     |
-| merge      | 4     | 104    | merged cells across parts and bands, and borders written on merged cells                         |
-| rtl        | 4     | 20     | `a:tblPr/@rtl`, with borders on either side                                                      |
+| direct     | 7     | 111    | `a:tcPr` fills and borders: conflicts, partial lines, diagonals, outer edges, a short row        |
+| dash       | 1     | 9      | dashed direct lines, and a dash alone, under two built-ins and the default grid                  |
+| merge      | 5     | 110    | merged cells across parts and bands, borders and diagonals written on merged and covered cells   |
+| rtl        | 5     | 22     | `a:tblPr/@rtl`, with borders on either side and diagonals                                        |
 | tblpr      | 1     | 8      | an `a:tblPr` fill under four styles                                                              |
-| background | 1     | 18     | theme C: `tblBg`, an `a:tblPr` fill or effect, the frame larger than the grid                    |
+| background | 2     | 23     | theme C: `tblBg`, an `a:tblPr` fill or effect list, the frame larger than the grid               |
 | text       | 9     | 27     | a cell's text through every level of the text cascade, three in placeholders                     |
 | control    | 1     | 3      | read first and last in every session                                                             |
 
@@ -76,8 +79,8 @@ are three order pairs on text, none of them the schema's, and `perEdge` against 
   covers is 4.4's question. Which pixels are whole, partial or bare stays exact here.
 - **Guards, before anything is scored.** Every package opened unrepaired. COM names the style that
   was built and places the table at the origin at the grid's size. Every opaque fill COM reports is
-  the paint the interior shows, and every text colour it reports is the glyph's. All 10,480 slides
-  passed.
+  the paint the interior shows, and every text colour it reports is the glyph's. A cell COM finds
+  no text in is exactly a position no `a:tc` reached. All 10,505 slides passed.
 
 ### Sessions
 
@@ -96,8 +99,11 @@ same export, byte for byte.
 4. Session `b` read those 25 decks, the four merge decks and the three new text decks: 32 in 25
    minutes.
 5. Session `c` read the four merge decks once more, in four minutes, after the band probes.
+6. Session `d`, after the release, read the five decks for what the first reads left unscored: 36
+   slides in 82 seconds. The existing packages were rebuilt byte for byte first, so every earlier
+   reading still stands for its deck.
 
-The fixture holds sessions two, `b` and `c`.
+The fixture holds sessions two, `b`, `c` and `d`.
 
 ## Which parts reach a cell
 
@@ -175,9 +181,20 @@ are rounded on their own, ties down, before they are summed (25,494/25,494). Rou
 instead fits 20,491. Painting every part's fill in order fits 19,934. Ignoring `tblBg` fits 3,178.
 
 An `a:tblPr` fill replaces `tblBg` under the cells (120/120). Painting it over them fits 60/120, and
-ignoring it fits 30/120. Theme C's gradients and shadows under `tblBg` were sampled across and around
-the table and are recorded in the fixture, not scored: a gradient's extent and a shadow's offset are
-4.4's.
+ignoring it fits 30/120.
+
+**The background's effect.** Theme C gives `tblBg` hard shadows through `a:effectRef`, one straight
+right and one straight down, and the samples 3 pt beyond the grid's right and bottom edges, and 20 pt
+beyond its right, say which fall where:
+
+| question                                  | winner                                   | rivals                    |
+| ----------------------------------------- | ---------------------------------------- | ------------------------- |
+| does `tblBg`'s effect draw                | **yes** (11/11)                          | no 0/11                   |
+| what an `a:effectLst` in `a:tblPr` does   | **replaces `tblBg`'s, even empty** (9/9) | both 6/9, ignored 0/9     |
+| what the background and its effect follow | **the grid** (12/12)                     | the frame as written 0/12 |
+
+A frame written wider than its grid, 1.25 and 1.5 times, changes nothing: all four such slides,
+the 39-colour gradient across one of them included, equal their grid-sized twins pixel for pixel.
 
 ## The default grid
 
@@ -190,12 +207,18 @@ answers ADR 0063's first open question.
 
 - **Fill.** A cell's own `a:tcPr` fill wins over every part (15/15).
 - **Which line an edge draws.** Every edge has an owner, whose `a:lnB` or `a:lnR` (or `a:lnT` or
-  `a:lnL`) draws the edge whatever the other cell writes (92/92). Owner-then-other fits 89, the
-  heavier 68, the later 56 and the style alone 18. For unmerged cells the owner is the cell above
+  `a:lnL`) draws the edge whatever the other cell writes (98/98). Owner-then-other fits 93, the
+  earlier 74, the heavier 68, the later 56 and the style alone 24. For unmerged cells the owner is the cell above
   or to the left, and the cell below or right only on the table's own top and left edges. So an
   `a:lnT` or `a:lnL` inside the table draws nothing. Merged cells refine who owns an edge, below.
 - **A partial line replaces the style's line whole** (26/26; merging attribute by attribute fits 0).
   A line with no width draws 9,525 EMU, the shape default, and a line with no fill draws nothing.
+- **A dash is drawn** (6/6; the line solid 0, no line 0). A dashed edge is read end to end along its
+  centre, where the midpoint alone would be chance, and shows the line and the paints in turn. A
+  dash alone, with no fill, draws no line, as the partial-line rule says.
+- **A position no `a:tc` reached owns its edges as a cell writing nothing does.** PowerPoint pads a
+  short row (ADR 0056), and the object model finds a styled, empty cell there. An `a:lnT` written
+  under a padded position is not drawn; the style's line is.
 - **PowerPoint writes every side alike.** Whenever it sets a border it writes the line on both
   cells, and for a merged cell on every cell along the side (`author.ps1`, twelve operations).
 
@@ -207,10 +230,10 @@ second-band row that covers a first-band row paints as the second band does, not
 
 | reading                                | paint   | edges |
 | -------------------------------------- | ------- | ----- |
-| **the anchor's, and every end pooled** | 126/126 | 48/48 |
-| every position's parts pooled          | 86/126  | 48/48 |
-| the anchor's alone                     | 110/126 | 12/48 |
-| each position's own                    | 26/126  | 0/48  |
+| **the anchor's, and every end pooled** | 130/130 | 48/48 |
+| every position's parts pooled          | 90/130  | 48/48 |
+| the anchor's alone                     | 114/130 | 12/48 |
+| each position's own                    | 26/130  | 0/48  |
 
 The edges column is scored with end parts offering the edge their kind faces: `firstRow` its
 bottom, `lastRow` its top, `firstCol` its right, `lastCol` its left, on either side of an interior
@@ -221,10 +244,10 @@ cells in each merge deck, each question scored with the other two held at their 
 
 | which segments a merged cell before an edge claims | fits  |
 | -------------------------------------------------- | ----- |
-| **those level with its anchor**                    | 52/52 |
-| its whole side                                     | 40/52 |
-| those beside its anchor's own position             | 36/52 |
-| each position by its own `a:tc`                    | 12/52 |
+| **those level with its anchor**                    | 54/54 |
+| its whole side                                     | 42/54 |
+| those beside its anchor's own position             | 38/54 |
+| each position by its own `a:tc`                    | 12/54 |
 
 | who draws a segment the cell before does not claim     | fits  |
 | ------------------------------------------------------ | ----- |
@@ -253,14 +276,31 @@ cells side by side keep the left one's `a:lnR` beside both rows, because neither
 first. PowerPoint's own writer does exactly what these rules need: for a merged cell's right border
 it writes the anchor's `a:lnR` and an `a:lnL` in each cell to the right, and for a wide cell's
 bottom an `a:lnT` in each cell below; on the table's bottom edge it writes the anchor's `a:lnB`
-alone. A covered cell's own `a:tcPr` is never read, for its lines or its fill.
+alone. A covered cell's own `a:tcPr` is never read, for its lines or its fill, yet PowerPoint keeps
+it on save, lines and fill alike (6/6; emptied 0/6).
+
+## Diagonals
+
+No built-in states a `tl2br` or `tr2bl`, so a diagonal is only ever a cell's own `a:lnTlToBr` or
+`a:lnBlToTr`. Each is read at points that lie wholly on one candidate line or clear of every one,
+away from the grid lines, and each point is the line's colour or the cell's paint:
+
+| question             | winner                            | rival                     |
+| -------------------- | --------------------------------- | ------------------------- |
+| which way it runs    | **as written** (12/12)            | the other way 0, none 0   |
+| a merged cell's      | **across its whole span** (4/4)   | its anchor's position 0/4 |
+| a covered cell's own | **never drawn** (4/4)             | drawn 0/4                 |
+| in an rtl table      | **mirrored with the table** (2/2) | as written 0/2            |
+
+A diagonal crosses the edge profiles of a tall merged cell, so those four profiles, which read the
+diagonal and not the edge, are left out of every edge question.
 
 ## Right to left
 
 `a:tblPr/@rtl` mirrors the logical table: every part, band and border is decided on logical columns,
 and the drawing is then mirrored (256/256; laying the parts over the visual columns fits 0). Direct
 borders too: a cell's `a:lnL` draws on its logical left, its visual right (8/8; on its visual left
-0/8).
+0/8). So do diagonals: an `a:lnTlToBr` runs from the visual top right.
 
 ## A cell's text
 
@@ -283,16 +323,19 @@ as a shape's own list style is. Then the style's layer, run properties at every 
 ## The model
 
 - `tablePartsAt` and `TABLE_PART_ORDER` are the two findings above; a merged cell pools as measured.
-- `tableCellFill`, `tableBackground` and `tableEdgeLine` each resolve one property and return a
-  `TableSourced` value naming where it came from: a part, `tblBg`, `tcPr`, `tblPr` or `grid`. A
-  property nobody states is `null`, not a default.
+- `tableCellFill` and `tableEdgeLine` each resolve one property and return a `TableSourced` value
+  naming where it came from: a part, `tblBg`, `tcPr`, `tblPr` or `grid`. `tableBackground` returns
+  two, the fill and the effect list, each `a:tblPr`'s in place of `tblBg`'s. A property nobody
+  states is `null`, not a default.
+- `tableCellDiagonals` gives the anchor's own diagonals at every position it covers, as drawn:
+  `down` from the visual top left, `up` from the visual bottom left, swapped in an rtl table.
 - `tableTextLayer` gives the style's bold, italic, faces and colour for a cell, each from the
   highest part that states it, as the run properties the text cascade reads at `origin:
 'tableStyle'`; what no part states is left `undefined`.
 - `tableEdgeLine` gives each segment to its owner by the level rule, and returns `null` inside a
   merged cell.
-- `themedFill` and `themedLine` follow a `fillRef` or `lnRef` into the theme's format scheme and
-  return the colour `phClr` takes there.
+- `themedFill`, `themedLine` and `themedEffects` follow a `fillRef`, `lnRef` or `effectRef` into the
+  theme's format scheme and return the colour `phClr` takes there.
 - `DEFAULT_GRID_LINE` is the default grid's line.
 - A grid position or edge the table does not have throws the new `MODEL_TABLE_POSITION`, from every
   one of these, whatever the style.
@@ -308,12 +351,14 @@ That happens for an `a:lnT` or `a:lnL` wherever the cell before owns the segment
 cell's `a:lnB` or `a:lnR` beyond its anchor's column or row, where the cell after owns it. The file
 says one border and PowerPoint draws another: the V030 pattern again. Two lines that both draw
 nothing are alike, whether by `a:noFill` or by having no fill. The message names the segment and the
-cell whose line PowerPoint draws there. PowerPoint's own writer writes every side alike, so `V034`
-never fires on its output.
+cell whose line PowerPoint draws there. A position no `a:tc` reached counts as a cell writing no
+line. Every line a covered cell writes that would draw something is a finding too, diagonals
+included: PowerPoint keeps it on save and never draws it. PowerPoint's own writer writes every side
+alike and leaves a covered cell's `a:tcPr` empty, so `V034` never fires on its output.
 
-The test holds it, line by line, to every coloured side an anchor writes in the direct and merge
-probes: it fires on exactly the lines whose colour PowerPoint did not draw along their whole
-length, once per line and never otherwise, and it is silent on all twelve authored operations.
+The test holds it, line by line, to every coloured line a cell writes in the direct and merge
+probes, covered cells' diagonals included: it fires on exactly the lines whose colour PowerPoint did
+not draw, once per line and never otherwise, and it is silent on all twelve authored operations.
 `a20-tables` writes one such `a:lnL`, and the corpus suite pins that warning beside the other three.
 
 ## Verification
@@ -328,6 +373,11 @@ length, once per line and never otherwise, and it is silent on all twelve author
   rows and every rival fewer. Each of the three rival orders is re-derived through the model and
   misses exactly as many fills as the fixture records. The reversed order, stacked translucent
   fills and the lower cell owning an edge are held to failing.
+- **The second read's tests.** Every dashed edge's centre line is classified with the colour the
+  model resolves and held to the fixture. Every clear point on a diagonal is the colour of the
+  model's diagonal there, or the cell's paint, for every grid position. Every sample beyond theme C's
+  grids is the colour of the shadow the model's effect list casts there, or the page. A padded
+  position has no text, exactly where COM found none.
 - `packages/validate/src/validate.test.ts` holds `V034` to the pixels, as above.
 - **A review, then a skeptic per finding.** Four read-only agents reviewed the model, `V034`, the C9
   scripts and the tests; a fifth, per dimension, tried to refute each finding. Seventeen survived
@@ -341,8 +391,8 @@ length, once per line and never otherwise, and it is silent on all twelve author
   - the rtl deck's direct borders were never scored.
     The rest were errors that named no part, a cell's own list style reading as inherited, and
     comments over the caps.
-- **Mutants, 33/34 killed.**
-  - **The model, 26/27.** Named by what each mutant does:
+- **Mutants, 44/45 killed.**
+  - **The model, 34/35.** Named by what each mutant does:
     - which parts reach a cell: the first row composed below the columns, row bands counted from
       zero, a corner by position alone, row or column bands reaching the ends;
     - merged cells: a merged cell pooling its bands too or taking its anchor's parts alone, no
@@ -354,9 +404,14 @@ length, once per line and never otherwise, and it is silent on all twelve author
     - text: bold or colour from the lowest part, a cell reading `p:defaultTextStyle`, the style
       above the cell's own list style, a cell reading its frame's bucket;
     - the theme: `phClr` dropped from a `fillRef`, an `lnRef` one entry off;
-    - positions: `tablePartsAt` accepting any position, the default grid skipping the check.
-  - **The firewall, 7/7:** `V034` never firing, content with any facing line, blind to `lnL`, to
-    spanning cells, to level, to `lnB` and `lnR`, and comparing lines that draw nothing by markup.
+    - positions: `tablePartsAt` accepting any position, the default grid skipping the check;
+    - the second read: diagonals not mirrored in rtl, drawn the other way, or read from a covered
+      position's own `a:tc`; `a:tblPr`'s effect list ignored, or left to `tblBg` when empty;
+      `tblBg`'s effect never drawn; an `effectRef` followed to nothing; a padded position owning
+      no edge.
+  - **The firewall, 10/10:** `V034` never firing, content with any facing line, blind to `lnL`, to
+    spanning cells, to level, to `lnB` and `lnR`, comparing lines that draw nothing by markup, blind
+    to a covered cell's lines or its diagonals, and silent under a padded position.
   - **The survivor.** Bold from the lowest part is equivalent: every `b` the built-ins state is
     `on`, so no table PowerPoint draws can tell.
   - **Row bands reaching the end rows.** Under PowerPoint's order that mutant is indistinguishable,
@@ -365,7 +420,9 @@ length, once per line and never otherwise, and it is silent on all twelve author
   - **Three survived a first run.** The 0.75-pt grid exposed a partial-pixel check that accepted
     whole pixels. `V034` checking one neighbour only had no probe with a spanning cell under two
     neighbours. A cell reading its frame's bucket rested on a rule that had never been measured.
-    Each was killed by a stricter check, a probe and a measurement respectively.
+    Each was killed by a stricter check, a probe and a measurement respectively. In the second read,
+    a covered position's own diagonal survived because the test asked the model about anchors only;
+    it now asks about every position.
 - **`pnpm check`** green before the commit that claims the sub-phase.
 
 ## What I had wrong on the way
@@ -391,6 +448,15 @@ length, once per line and never otherwise, and it is silent on all twelve author
 - I required every reading to come from one PowerPoint session, which cost a two-hour read for each
   probe added. Each session now brackets itself with the control, and the analysis holds every
   control read to the first.
+- I shipped the first release with seven questions still open on the row, five of them the
+  cascade's to answer.
+- My reader asked every cell for its first character, and a padded cell has none. I took the
+  failure for a cell COM does not have; it has one, styled and empty.
+- I first scored dashes with a partial line merged over the style's, which C9 had already refuted.
+- I read a saved `a:tcPr` up to its first `/>`, so a covered cell's fill looked dropped on save. The
+  scorer found no reading that fit, and PowerPoint had kept it.
+- My tall merged probe's diagonal runs through the profile of the line it covers, so those profiles
+  read the diagonal. They are left out of the edge questions rather than scored.
 
 ## What the release said
 
@@ -406,12 +472,17 @@ started. The site's validate page and firewall guide name `V034`, and its model 
 
 ## Deviations from the plan
 
+- **A second read, after the release.** The first release left seven questions open on this
+  sub-phase's row. Five were the cascade's to answer and are answered above, from one PowerPoint
+  session of five decks and the exports the first reads left. The other two, the corpus and a
+  vertical double line's coverage, are 4.4's and are on its row.
+
 - **`V034`**, not in the plan. The owner rule makes a written border one PowerPoint may not draw.
 - **Six fixture files, packed.** One file would be over the corpus's 512 KiB per-file cap, and the
   observations as first written would have taken the corpus to 17.1 MiB, past its 16 MiB total. So
   each deck's codes are raw DEFLATE in base64, each slide's shape is one short string, and a slide
   description many decks share is written once in the main file's `templates`. The observed values
-  stay readable. The six files are 787 KB, and the corpus is 15.9 MiB.
+  stay readable. The six files are 839 KB, and the corpus is 16.0 MiB.
 - **`MODEL_TABLE_POSITION`**, a new error code: a position outside the grid is the caller's mistake,
   not a malformed attribute.
 - **`TableStylePartName`'s comment was false**: it said the schema order is not the order the parts
@@ -423,19 +494,9 @@ started. The site's validate page and firewall guide name `V034`, and its model 
 
 ## Open questions
 
-1. **The corpus is nearly full.** 15.9 of 16 MiB. 4.4's rendering fixtures will not fit without a
-   decision on the cap, which is the owner's.
+Both are 4.4's, and its row in `docs/plan/phases.json` carries them.
+
+1. **The corpus is full.** 16.0 of 16 MiB, 14 KB free. 4.4's rendering fixtures will not fit without
+   a decision on the cap, which is the owner's.
 2. **Vertical double lines.** A vertical 4-pt double line covers its sixth pixel 0.375, not 0.5.
    The blend rule absorbs it and 4.4's rasteriser has to answer it.
-3. **`tblBg`'s effects and a gradient's extent.** Theme C's samples are in the fixture and not
-   scored.
-4. **Dashes in a direct line.** Whether an edge's midpoint lands on a dash is chance, so dashed
-   direct lines were not scored.
-5. **A covered cell's own `a:tcPr`.** PowerPoint never reads it and its writer leaves it empty.
-   Whether PowerPoint keeps one on save was not measured, and `V034` does not warn on one; 4.4,
-   which edits merged cells, has to write nothing there.
-6. **Diagonals.** No built-in states a `tl2br` or `tr2bl`, so a diagonal is only ever a cell's own
-   `a:lnTlToBr` or `a:lnBlToTr`. C9 recorded the pixels of both and did not score them; drawing
-   them is 4.4's.
-7. **A short row's padded positions.** An `a:lnT` under a position no `a:tc` reached is unmeasured,
-   and `V034` stays silent there.
