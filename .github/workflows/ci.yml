@@ -200,7 +200,7 @@ jobs:
         if: steps.baseline.outputs.gate3 == 'true'
         run: pnpm gate3 --record --bootstrap
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.baseline.outputs.needed == 'true'
         with:
           name: baselines-linux-x64
@@ -358,7 +358,7 @@ jobs:
       # The numbers, whether or not the gate held: a red run is the one whose
       # measurement is worth reading. `warn` rather than `error`, because a
       # measure step that died before writing must not add a second failure.
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: font-agreement
@@ -412,7 +412,7 @@ jobs:
           node tools/ground-truth/fonts/real-faces/analyse.ts
           "$RUNNER_TEMP/real-faces" --summary "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: font-agreement-macos
@@ -469,7 +469,7 @@ jobs:
       - name: Run the suite that re-derives the reader from it
         run: pnpm exec vitest run --project cli
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: font-metrics-windows
