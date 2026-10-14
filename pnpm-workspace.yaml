@@ -25,8 +25,8 @@ catalog:
 
   # language + build
   typescript: 6.0.3
-  tsdown: 0.23.0
-  turbo: 2.11.4
+  tsdown: 0.23.1
+  turbo: 2.11.7
 
   # lint + format
   eslint: 10.11.0
@@ -45,7 +45,7 @@ catalog:
   playwright: 1.63.0
 
   # package QA + release
-  publint: 0.3.24
+  publint: 0.3.25
   '@arethetypeswrong/cli': 0.18.5
   '@changesets/cli': 3.0.3
 
